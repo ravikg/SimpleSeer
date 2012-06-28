@@ -1,1 +1,1 @@
-from .simpleTemplate import SimpleTemplate
+from .Fastner import Fastner
