@@ -19,42 +19,47 @@ insp.save()
 """
 
 class FastenerFeature(SimpleCV.Feature):
+  def sanitizeNP64(self,derp):
+    return ((float(derp[0][0]),float(derp[0][1])),(float(derp[1][0]),float(derp[1][1])))
 
   def __init__(self,head,shaft,lbs,fillet,top,bottom,bb,img,dpi=1200):
     self.dpi = dpi
+    #FML numpy.F64 sanitization
+    self.head_left = self.sanitizeNP64(head[0].end_points)
+    self.head_right = self.sanitizeNP64(head[1].end_points)
+    self.head_width = self.head_right[0][0]-self.head_left[0][0]
 
-    self.head_left = head[0]
-    self.head_right = head[1] 
-    self.head_width = 0
+    self.shaft_left = self.sanitizeNP64(shaft[0].end_points)
+    self.shaft_right = self.sanitizeNP64(shaft[1].end_points)
+    self.shaft_width = self.shaft_right[0][0]-self.shaft_left[0][0]
 
-    self.shaft_left = shaft[0]
-    self.shaft_right = shaft[1] 
-    self.shaft_width = 0
-
-    self.lbs_left = lbs[0]
-    self.lbs_right = lbs[1] 
+    self.lbs_left = self.sanitizeNP64(lbs[0].end_points)
+    self.lbs_right = self.sanitizeNP64(lbs[1].end_points)
     self.lbs_angle = 0
 
-    self.fillet_left = fillet[0]
-    self.fillet_right = fillet[1] 
+    self.fillet_left = (float(fillet[0][0]),float(fillet[0][1]))
+    self.fillet_right = (float(fillet[1][0]),float(fillet[1][1]))
     
-    at_x = bb[0] + bb[2]/2
-    at_y = bb[1] + bb[3]/2 
+    self.top = self.sanitizeNP64(top.end_points)
+    self.bottom  = self.sanitizeNP64(bottom.end_points)
+    x = bb[0] + bb[2]/2
+    y = bb[1] + bb[3]/2 
     width = bb[2]
     height = bb[3]
     points = ((x, y), (x + width, y), (x + width, y + height), (x, y + height))
-    super(FastenerFeature, self).__init__(i, at_x, at_y, points)             
+    super(FastenerFeature, self).__init__(img, x, y, points)             
 
 
 class Fastener(base.InspectionPlugin):
   """
   Fastner
   """
-  def clipAndRecenter(toClip,a,b,img,mode="horizontal"):
+  def clipAndRecenter(self,toClip,a,b,img,mode="horizontal"):
     """
     clip and recenter toClip to fit and be centered between a and b
     mode is the direction of the toclip
     """
+    retVal = None
     if( mode == "vertical" ):
       pass
     else:
@@ -66,6 +71,46 @@ class Fastener(base.InspectionPlugin):
         retVal = Line(img,((mp-(l/2),y),(mp+(l/2),y)))
         
     return retVal
+
+  def getLongestInROI(self,lines,roi, img, mode="vertical"):
+    inRegion = FeatureSet([i for i in lines if i.isContainedWithin(roi)])
+    inRegion = inRegion.sortLength()
+    tolerance = 25
+    if( len(inRegion) > 0 ):
+        inRegion = inRegion.sortLength()
+        best = inRegion[-1]        
+        if( mode == "horizontal" ):
+            test = best.y
+            above = test+tolerance
+            below = test-tolerance
+            inRegion = FeatureSet([i for i in inRegion if(i.y < above and i.y > below )])
+            xs = []
+            for l in inRegion:
+                xs.append(l.end_points[0][0])
+                xs.append(l.end_points[1][0])
+            ys = inRegion.y()
+            xmin = np.min(xs)
+            xmax = np.max(xs)
+            y = np.average(ys)
+            retVal=Line(img,((xmin,y),(xmax,y)))
+        if( mode == "vertical" ):
+            test = best.x
+            right = test+tolerance
+            left = test-tolerance
+            inRegion = FeatureSet([i for i in inRegion if(i.x < right and i.x > left )])
+            xs = inRegion.x()
+            ys = []
+            for l in inRegion:
+                ys.append(l.end_points[0][1])
+                ys.append(l.end_points[1][1])
+            ymin = np.min(ys)
+            ymax = np.max(ys)
+            x = np.average(xs)
+            retVal=Line(img,((x,ymin),(x,ymax)))
+    else:
+        retVal = None
+
+    return retVal 
 
   def __call__(self, image):
     params = util.utf8convert(self.inspection.parameters)
@@ -99,11 +144,11 @@ class Fastener(base.InspectionPlugin):
     h = 5
     horizontal = FeatureSet([i for i in l if (i.angle() < h) and (i.angle() > -1*h)])
 
-    top = getLongestInROI(horizontal,(0,top_y,result.width,bolt_height/4), result, mode="horizontal")
-    bottom = getLongestInROI(horizontal,(0,top_y+(3*bh4),result.width,bolt_height/4), result, mode="horizontal")
+    top = self.getLongestInROI(horizontal,(0,top_y,result.width,bolt_height/4), result, mode="horizontal")
+    bottom = self.getLongestInROI(horizontal,(0,top_y+(3*bh4),result.width,bolt_height/4), result, mode="horizontal")
     #LOAD BEARING SURFACES
-    lbs_left = getLongestInROI(horizontal,(0,bolt_y-bh4,result.width/2,bolt_height/2), result, mode="horizontal")
-    lbs_right = getLongestInROI(horizontal,(bolt_x,bolt_y-bh4,result.width/2,bolt_height/2), result, mode="horizontal")
+    lbs_left = self.getLongestInROI(horizontal,(0,bolt_y-bh4,result.width/2,bolt_height/2), result, mode="horizontal")
+    lbs_right = self.getLongestInROI(horizontal,(bolt_x,bolt_y-bh4,result.width/2,bolt_height/2), result, mode="horizontal")
 
     #FROM the load bearing surfaces find the best postion 
     yavg = bolt_y+(2*bh4)
@@ -133,10 +178,10 @@ class Fastener(base.InspectionPlugin):
         warnings.warn("COULD NOT FIND BOLT HEAD")
 
     # use the load bearing surfaces to segment out the head and shaft
-    shaft_left = getLongestInROI(vertical,(0,yavg,result.width/2,bolt_y+bolt_height-yavg), result, mode="vertical")
-    shaft_right = getLongestInROI(vertical,(result.width/2,yavg,result.width/2,bolt_y+bolt_height-yavg), result, mode="vertical")
-    head_left = getLongestInROI(vertical,(top_x,0,bolt_width/2,0.8*yavg), result, mode="vertical")
-    head_right = getLongestInROI(vertical,(top_x+(bolt_width/2),0,(bolt_width/2),0.8*yavg), result, mode="vertical")
+    shaft_left = self.getLongestInROI(vertical,(0,yavg,result.width/2,bolt_y+bolt_height-yavg), result, mode="vertical")
+    shaft_right = self.getLongestInROI(vertical,(result.width/2,yavg,result.width/2,bolt_y+bolt_height-yavg), result, mode="vertical")
+    head_left = self.getLongestInROI(vertical,(top_x,0,bolt_width/2,0.8*yavg), result, mode="vertical")
+    head_right = self.getLongestInROI(vertical,(top_x+(bolt_width/2),0,(bolt_width/2),0.8*yavg), result, mode="vertical")
 
     # now render
     if( bottom is not None):
@@ -156,7 +201,8 @@ class Fastener(base.InspectionPlugin):
     fillet = ((shaft_left.x,lbs_left.y),(shaft_right.x,lbs_right.y))
     bb = (top_x,top_y,bolt_width,bolt_height)
 
-    feature = FastnerFeature(head,shaft,lbs,fillet,top,bottom,bb,result)
+    print(head)
+    feature = FastenerFeature(head,shaft,lbs,fillet,top,bottom,bb,result)
     ff.setFeature(feature)
     retVal.append(ff)
 
