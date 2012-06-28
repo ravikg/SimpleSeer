@@ -156,7 +156,7 @@ class Fastener(base.InspectionPlugin):
     fillet = ((shaft_left.x,lbs_left.y),(shaft_right.x,lbs_right.y))
     bb = (top_x,top_y,bolt_width,bolt_height)
 
-    feature = FastnerFeature(head,shaft,lbs,fillet,top,bottom,bb,result):
+    feature = FastnerFeature(head,shaft,lbs,fillet,top,bottom,bb,result)
     ff.setFeature(feature)
     retVal.append(ff)
 

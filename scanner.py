@@ -2,7 +2,7 @@ import gc
 import numpy as np
 import SimpleSeer.models as M
 from SimpleCV import Image
-
+import math
 
 @core.state('start')
 def start(state):
@@ -19,6 +19,8 @@ def waitforbuttons(state):
             return state.core.state('scan')
 
 def straightenImg(img):
+    print img.width
+    print img.height
     mask = img.threshold(20).dilate(2)
     #TRY TO GET THE BOLD ALLIGNED RIGHT
     #Try to figure out which side is most massive by color
@@ -56,8 +58,15 @@ def straightenImg(img):
     best = np.argmax(counts)
     #take the median of these to filter out outliers
     final_rotation = np.median(values[best])
-    img = img.rotate(final_rotation,fixed=False)        
-    return img
+    print '=========================================='
+    print final_rotation
+    print values
+    print counts
+    if np.max(counts) < 10 or math.isnan(final_rotation):
+        return None
+    else:
+        return img.rotate(final_rotation,fixed=False)   
+    
 
 @core.state('scan')
 def scan(state):
@@ -112,7 +121,15 @@ def scan(state):
         
         #now straigten out the image
         temp = Image(nump)
+        if( temp.width > 3500 or temp.height > 3500 ):
+            M.Alert.error("WHOA NELLY! It appears your image is a little too big. Is the shroud over the scanner?")
+            return core.state('waitforbuttons')        
+
         temp = straightenImg(temp)
+        if( temp == None ):
+            M.Alert.error("It appears your part is not sitting straight on the scanner, please try again.")
+            return core.state('waitforbuttons')        
+
         frame.image = temp
                
         process(frame)
