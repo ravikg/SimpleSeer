@@ -22,26 +22,93 @@ class FastenerFeature(SimpleCV.Feature):
   def sanitizeNP64(self,derp):
     return ((float(derp[0][0]),float(derp[0][1])),(float(derp[1][0]),float(derp[1][1])))
 
+  def angle_between(self,v1,v2):
+    print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    print v1
+    print v2
+    x0 = (v1[0][0]-v1[1][0])
+    y0 = (v1[0][1]-v1[1][1])
+    mag0 = np.sqrt((x0*x0)+(y0*y0))
+    print x0,y0,mag0
+
+    x1 = (v2[0][0]-v2[1][0])
+    y1 = (v2[0][1]-v2[1][1])
+    mag1 = np.sqrt((x1*x1)+(y1*y1))
+    print x1,y1,mag1
+
+     
+    dot = (x0*x1)+(y0*y1) / (mag0*mag1)
+    print dot
+    if( dot == 0 ):
+      retVal = 90
+    else:
+      retVal = float((np.arccos([dot][0])*360.0)/(np.pi*2))
+    return retVal
+
   def __init__(self,head,shaft,lbs,fillet,top,bottom,bb,img,dpi=1200):
     self.dpi = dpi
     #FML numpy.F64 sanitization
-    self.head_left = self.sanitizeNP64(head[0].end_points)
-    self.head_right = self.sanitizeNP64(head[1].end_points)
+    print head[0]
+    if( head[0] is not None):
+      self.head_left = self.sanitizeNP64(head[0].end_points)
+    else:
+      print "FAIL"
+      self.head_left = ((0,0),(1,1))
+
+    if( head[1] is not None):
+      self.head_right = self.sanitizeNP64(head[1].end_points)
+    else:
+      print "FAIL"
+      self.head_right = ((0,0),(1,1))
+    
     self.head_width = self.head_right[0][0]-self.head_left[0][0]
+    self.head_width_inch = self.head_width/self.dpi
+    ty = int(np.average([self.head_right[0][1],self.head_right[1][1],self.head_left[0][1],self.head_left[1][1]]))
+    self.head_line = ((self.head_right[0][0],ty),(self.head_left[0][0],ty))
 
-    self.shaft_left = self.sanitizeNP64(shaft[0].end_points)
-    self.shaft_right = self.sanitizeNP64(shaft[1].end_points)
+    if( shaft[0] is not None):
+      self.shaft_left = self.sanitizeNP64(shaft[0].end_points)
+    else:
+      print "FAIL"
+      self.shaft_left = ((0,0),(1,1))
+
+    if( shaft[1] is not None):
+      self.shaft_right = self.sanitizeNP64(shaft[1].end_points)
+    else:
+      print "FAIL"
+      self.shaft_right = ((0,0),(1,1))
+
     self.shaft_width = self.shaft_right[0][0]-self.shaft_left[0][0]
+    self.shaft_width_inch = self.shaft_width/self.dpi
 
-    self.lbs_left = self.sanitizeNP64(lbs[0].end_points)
-    self.lbs_right = self.sanitizeNP64(lbs[1].end_points)
-    self.lbs_angle = 0
+    if( lbs[0] is not None):
+      self.lbs_left = self.sanitizeNP64(lbs[0].end_points)
+    else:
+      print "FAIL"
+      self.lbs_left = ((0,0),(1,1))
+
+    if( lbs[1] is not None ):
+      self.lbs_right = self.sanitizeNP64(lbs[1].end_points)
+    else:
+      self.lbs_right = ((0,0),(1,1))
+   
+    self.lbs_width = float(np.max([self.lbs_right[0][0],self.lbs_right[1][0]])-np.min([self.lbs_left[0][0],self.lbs_left[1][0]]))
+    self.lbs_width_inch = self.lbs_width/self.dpi
+
+    self.lbs_left_angle = self.angle_between(self.lbs_left,self.shaft_left)
+    self.lbs_right_angle = self.angle_between(self.lbs_right,self.shaft_right)
 
     self.fillet_left = (float(fillet[0][0]),float(fillet[0][1]))
     self.fillet_right = (float(fillet[1][0]),float(fillet[1][1]))
     
-    self.top = self.sanitizeNP64(top.end_points)
-    self.bottom  = self.sanitizeNP64(bottom.end_points)
+    if( top is not None ):
+      self.top = self.sanitizeNP64(top.end_points)
+    else:
+      self.top = ((0,0),(1,1))
+    if( bottom is not None ):
+      self.bottom  = self.sanitizeNP64(bottom.end_points)
+    else:
+      self.bottom = ((0,0),(1,1))
     x = bb[0] + bb[2]/2
     y = bb[1] + bb[3]/2 
     width = bb[2]
@@ -113,6 +180,7 @@ class Fastener(base.InspectionPlugin):
     return retVal 
 
   def __call__(self, image):
+    print "INSPECTION BEING EXECUTED"
     params = util.utf8convert(self.inspection.parameters)
     retVal = []
     
