@@ -19,9 +19,12 @@ from .. import realtime
 from ..util import LazyProperty
 
 
-class FrameSchema(fes.Schema):	
+class FrameSchema(fes.Schema):
+    allow_extra_fields=True
+    filter_extra_fields=True
     camera = fev.UnicodeString(not_empty=True)
     metadata = V.JSON(if_empty=dict, if_missing=None)
+    notes = fev.UnicodeString()
 	#TODO, make this feasible as a formencode schema for upload
 
 
@@ -53,6 +56,7 @@ class Frame(SimpleDoc, mongoengine.Document):
     layerfile = mongoengine.FileField()
     thumbnail_file = mongoengine.FileField()
     metadata = mongoengine.DictField()
+    notes = mongoengine.StringField()
     _imgcache = ''
 
     meta = {
