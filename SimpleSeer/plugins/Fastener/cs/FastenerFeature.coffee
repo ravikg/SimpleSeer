@@ -21,17 +21,15 @@ class FastenerFeature
     pjs.strokeWeight 3
     pjs.noFill()
     pjs.line(10,10,300,300)
-    # x0 = @feature.get("featuredata").head_line[0][0]
-    # y0 = @feature.get("featuredata").head_line[0][1]
-    # x1 = @feature.get("featuredata").head_line[1][0]
-    # y1 = @feature.get("featuredata").head_line[1][1]
-    # x0 = @feature.get('x')
-    # y0 = @feature.get('y')
-    # pjs.line(x0,y0,x1,y1)
-    # pjs.line(x0,y0-10,x1,y1-10)
-    # pjs.line(x0,y0+10,x1,y1+10)
-    # pjs.triangle(x0,y0,x0+5,y0+5,x0-5,y0-5)
-    # pjs.triangle(x1,y1,x1+5,y1+5,x1-5,y1-5) 
+    x0 = @feature.get("featuredata").head_line[0][0]
+    y0 = @feature.get("featuredata").head_line[0][1]
+    x1 = @feature.get("featuredata").head_line[1][0]
+    y1 = @feature.get("featuredata").head_line[1][1]
+    pjs.line(x0,y0,x1,y1)
+    pjs.line(x0,y0-10,x0,y0-10)
+    pjs.line(x1,y1+10,x1,y1+10)
+    pjs.triangle(x0,y0,x0-5,y0+5,x0-5,y0-5)
+    pjs.triangle(x1,y1,x1+5,y1+5,x1+5,y1-5) 
     # PFont fontA = loadFont("Arial")
     # textFont(fontA, 32)
     # x = 30

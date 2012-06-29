@@ -42,7 +42,7 @@ module.exports = class Feature extends Model
       return plugin()
     return ""
   
-  render: (pjs) =>
+  _render: (pjs) =>
     plugin = @getPluginMethod(@.get("featuretype"), 'render')
     if plugin?
       return plugin(pjs)
