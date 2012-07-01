@@ -80,6 +80,8 @@ class FastenerFeature(SimpleCV.Feature):
 
     self.shaft_width = self.shaft_right[0][0]-self.shaft_left[0][0]
     self.shaft_width_inch = self.shaft_width/self.dpi
+    ty = int(np.average([self.shaft_right[0][1],self.shaft_right[1][1],self.shaft_left[0][1],self.shaft_left[1][1]]))
+    self.shaft_line = ((self.shaft_right[0][0],ty),(self.shaft_left[0][0],ty))
 
     if( lbs[0] is not None):
       self.lbs_left = self.sanitizeNP64(lbs[0].end_points)
@@ -94,6 +96,10 @@ class FastenerFeature(SimpleCV.Feature):
    
     self.lbs_width = float(np.max([self.lbs_right[0][0],self.lbs_right[1][0]])-np.min([self.lbs_left[0][0],self.lbs_left[1][0]]))
     self.lbs_width_inch = self.lbs_width/self.dpi
+    ty = int(np.average([self.lbs_right[0][1],self.lbs_right[1][1],self.lbs_left[0][1],self.lbs_left[1][1]]))
+    xleft = np.min([self.lbs_left[0][0],self.lbs_left[1][0]])
+    xright = np.max([self.lbs_right[0][0],self.lbs_right[1][0]])
+    self.lbs_line = ((xright,ty),(xleft,ty))
 
     self.lbs_left_angle = self.angle_between(self.lbs_left,self.shaft_left)
     self.lbs_right_angle = self.angle_between(self.lbs_right,self.shaft_right)

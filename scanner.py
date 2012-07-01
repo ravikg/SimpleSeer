@@ -118,19 +118,18 @@ def scan(state):
                 channels = np.where(stripe.min(0) > 10)
                 for channel in channels:
                     nump[index,:,channel] = np.round(np.mean([nump[index-1,:,channel], nump[index+1,:,channel]], 0))
-        
+            img = Image(nump)
         #now straigten out the image
-        temp = Image(nump)
-        if( temp.width > 3500 or temp.height > 3500 ):
+        if( img.width > 3500 or img.height > 3500 ):
             M.Alert.error("WHOA NELLY! It appears your image is a little too big. Is the shroud over the scanner?")
             return core.state('waitforbuttons')        
 
-        temp = straightenImg(temp)
-        if( temp == None ):
+        img = straightenImg(img)
+        if( img == None ):
             M.Alert.error("It appears your part is not sitting straight on the scanner, please try again.")
             return core.state('waitforbuttons')        
 
-        frame.image = temp
+        frame.image = img
                
         process(frame)
 	t = frame.thumbnail
