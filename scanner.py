@@ -121,7 +121,7 @@ def scan(state):
             img = Image(nump)
         #now straigten out the image
         if( img.width > 3500 or img.height > 3500 ):
-            M.Alert.error("WHOA NELLY! It appears your image is a little too big. Is the shroud over the scanner?")
+            M.Alert.error("WHOA NELLY! Is the shroud over the scanner?")
             return core.state('waitforbuttons')        
 
         img = straightenImg(img)
