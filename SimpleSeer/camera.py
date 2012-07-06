@@ -1,4 +1,4 @@
-import glob
+from glob import glob
 import gevent.queue
 from datetime import datetime
 
@@ -123,7 +123,7 @@ class StillCamera(object):
         return img
 
     def getFrame(self):
-        frame = M.Frame(capaturetime=datetime.utcnow(), camera=self.name)
+        frame = M.Frame(capturetime=datetime.utcnow(), camera=self.name)
         frame.image = self.getImage()
         return frame
 
@@ -135,7 +135,7 @@ class DirectoryCamera(FrameSource):
     counter = 0
 
     def __init__(self, path):
-        self.filelist = glob(path)
+	self.filelist = glob(path)
         self.counter = 0
 
     def getImage(self):

@@ -18,23 +18,24 @@ module.exports = class ChartView extends View
     @realtime = @model.realtime || false
     @type = @model.name.toLowerCase()
     @accumulate = @model['accumulate'] || false
+    @olap = @model.olap
+    @color = @model.color
     if @accumulate
       _m = application.charts.get @id
-      @stack = _m.pointStack()
-    this
-    tf = Math.round((new Date()).getTime() / 1000) - application.charts.timeframe
+      @stack = _m.pointStack()    
+    tf = new moment().utc().subtract('s',application.charts.timeframe).valueOf()
     @update tf,null,true
-    this  
-  setData: =>
-    return
-  addPoint: =>
-    return
-  incPoint: (d) =>
-    if @.stack
-      ep = @.stack.add d
+    this
 
-  alterPoint: =>
-    return
+  setData: (d) =>
+    return d
+  addPoint: (d) =>
+    return d
+  incPoint: (d) =>
+    return d
+  alterPoint: (d) =>
+    return d
+
   buildChart: (c=false) =>
     if c
       @_c = c
@@ -43,9 +44,11 @@ module.exports = class ChartView extends View
   afterRender: =>
     # may not need this
     @buildChart()
+    #todo: track all subscriptions. If subscribe is already in place, just bind callback, dont re-subscribe
     if @.realtime && application.socket
       application.socket.on "message:Chart/#{@.name}/", @_update
-      application.socket.emit 'subscribe', 'Chart/'+@.name+'/'
+      if !application.subscriptions['Chart/'+@.name+'/']
+        application.subscriptions['Chart/'+@.name+'/'] = application.socket.emit 'subscribe', 'Chart/'+@.name+'/'
 
   getRenderData: =>
     retVal = application.charts.get(@.anchorId)
@@ -64,13 +67,13 @@ module.exports = class ChartView extends View
       console.error 'frm and or to required'
       return false
     $.getJSON(url, (data) =>
-      #@._drawDataLegacy data.data,reset
-      @._drawData data.data,reset
+      @_drawData( @_clean(data.data), reset)
+      #@._drawData data.data,reset
       $('.alert_error').remove()
       return
      ).error =>
        SimpleSeer.alert('Connection lost','error')
-
+  """
   _drawDataLegacy: (data, reset) =>
     if data.length == 0
       return
@@ -80,15 +83,19 @@ module.exports = class ChartView extends View
         data: [d[0], d[1]]
         frame_id: d[3]
     @_drawData dd, reset
-  
+  """
   _formatChartPoint: (d) =>
-    #console.log d
+    #todo: push some of this up the abstraction chain
     if !@.model.accumulate
       cp = @.clickPoint
       mo = @.overPoint
     if @.model.xtype == 'datetime'
-      d.d[0] = moment(d.d[0])
+      d.d[0] = new moment d.d[0]
+      #console.log d.d[0]
     if @.model.accumulate
+      #if !d.d?
+      #  console.dir d
+      #  console.trace()
       _id = d.d[1]
     else
       _id = d.m[2]
@@ -101,6 +108,7 @@ module.exports = class ChartView extends View
         mouseOver: mo
         click: cp
         #unselect: @.unselectPoint #application.charts.removeFrame
+    return _point
 
   overPoint: (e) =>
     if application.charts._imageLoader
@@ -126,28 +134,46 @@ module.exports = class ChartView extends View
     return false
 
   #todo: move this to setData
-  _drawData: (data,reset) =>
+  _drawData: (data,reset=false) =>
     dd = []
     if reset
       if @.model.accumulate
         dd = @.stack.buildData data
       else
-        for d in data
-          p = @_formatChartPoint d
-          dd.push p
-        #application.charts.lastframe = d.frame_id
+        dd = data
+        #if @.name == 'Delivered Candies by Color' || @.name == 'Candies by Color Green'
+        #  console.log data
+        #for d in data
+          #if @.name == 'Delivered Candies by Color' || @.name == 'Candies by Color Green'
+          #  console.log d.d[1]
+          #if d.d[1] > 0
+            #p = @_formatChartPoint d
+            #dd.push p
+      #if @olap == 'DeliveredGreen'
+      #  console.dir dd
       @.setData dd
     else
       for d in data
+        #if @olap == 'DeliveredGreen'
+        #  console.log @_formatChartPoint d
         if @.model.accumulate
-          @.incPoint @_formatChartPoint d 
+          #console.dir d
+          #console.trace()
+          #@.incPoint @_formatChartPoint d
+          @.incPoint d
         else
-          @.addPoint(@_formatChartPoint(d),true,true)
-          application.charts.lastframe = d.frame_id
+          #@.addPoint(@_formatChartPoint(d),true,true)
+          @.addPoint(d,true,true)
 
   _update: (data) =>
-    @_drawData data.data.m
+    @_drawData @_clean data.data.m.data
 
+  _clean: (data) =>
+    refined = []
+    for d in data
+      refined.push @_formatChartPoint d
+    return refined
+    
   render: =>
     super()
     $('#chart-container').append @.$el

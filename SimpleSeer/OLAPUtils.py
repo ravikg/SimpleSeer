@@ -115,6 +115,45 @@ class OLAPFactory:
         return o
     
 
+class OLAPFunctions():
+    
+    def timeSinceUQ(self, results, key):
+        from calendar import timegm
+        from operator import itemgetter
+        
+        sortedResults = sorted(results, key=itemgetter(key))
+        uqScore = sortedResults[int(.75 * len(sortedResults))][key]
+
+        lastTime = None
+        for r in results:
+            if r[key] >= uqScore:
+                lastTime = r['capturetime']
+                r[key] = 0
+            elif lastTime is not None:
+                r[key] = (r['capturetime'] - lastTime).total_seconds()
+                
+        return results
+                
+    def timeOfUQ(self, results, key):
+        from calendar import timegm
+        from operator import itemgetter
+        
+        sortedResults = sorted(results, key=itemgetter(key))
+        uqScore = sortedResults[int(.75 * len(sortedResults))]
+
+        startTime = None
+        duration = None
+        for r in results:
+            if r[key] >= uqScore:
+                if startTime == None:
+                    startTime = r['capturetime']
+                duration = (r['capturetime'] - startTime).total_seconds()
+            elif duration is not None:
+                startTime = None
+                r[key] = duration
+            
+        return results
+        
 
 class RealtimeOLAP():
     
@@ -130,6 +169,7 @@ class RealtimeOLAP():
         for o in olaps:
             # If no statistics, just send result on its way
             if not o.statsInfo:
+                
                 data = self.resToData(o, res)
                 
                 
@@ -138,8 +178,9 @@ class RealtimeOLAP():
                     cs = Chart.objects(olap = o.name)
                     
                     for c in cs:
-                        chartData = c.mapData([data])
-                        self.sendMessage(o, chartData)
+                        thisData = data.copy()
+                        chartData = c.mapData([thisData])
+                        self.sendMessage(o, chartData, c.name)
     
     def resToData(self, o, res):
         
@@ -151,11 +192,12 @@ class RealtimeOLAP():
         if not o.customFilter:
             filterok = True
         else:
-            key, val = o.customFilter.items()[0]
-            if res.__getattribute__(key) == val:
+            key = o.customFilter['field']
+            val = o.customFilter['val']
+            if res[key] == val:
                 filterok = True
             else:
-                filterOK = False
+                filterok = False
         
         if sinceok and beforeok and filterok:
             
@@ -165,17 +207,19 @@ class RealtimeOLAP():
                 
                 # Map the values, if applicable
                 if (o.valueMap) and (o.valueMap['field'] == f):
-                    results[f] = o.valueMap.get(f, default = o.valueMap['default']) 
+                    results[f] = o.valueMap.get(results[f], o.valueMap['default']) 
+        
+            results = o.doPostProc(results, True)
         
         return results
 
-    def sendMessage(self, o, data):
+    def sendMessage(self, o, data, subname):
         if (len(data) > 0):
             msgdata = dict(
                 olap = str(o.name),
                 data = data)
             
-            olapName = 'OLAP/' + utf8convert(o.name) + '/'
+            olapName = 'Chart/%s/' % utf8convert(subname) 
             ChannelManager().publish(olapName, dict(u='data', m=msgdata))
             
 
@@ -203,6 +247,7 @@ class ScheduledOLAP():
     def skedLoop(self, interval):
         
         from datetime import datetime
+        from .models.Chart import Chart
         
         nextTime = datetime.utcnow()
         
@@ -249,10 +294,14 @@ class ScheduledOLAP():
                 o.before = endBlockEpoch
                 data = o.execute()
                 
-                # Cheat and use the realtime's send message function
-                ro = RealtimeOLAP()
-                ro.sendMessage(o, data)
-            
+                cs = Chart.objects(olap = o.name)
+                    
+                for c in cs:
+                    chartData = c.mapData(data)
+                    ro = RealtimeOLAP() # To get access to the sendMessage fn
+                    ro.sendMessage(o, chartData, c.name)
+                
+                
             # Set the beginning time interval for the next iteraction
             sleepTime = (nextTime - datetime.utcnow()).total_seconds()
             

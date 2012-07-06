@@ -17,6 +17,7 @@ Application =
     FrameSets = require 'collections/framesets'
     Pallette = require 'lib/ui_helper'
     @pallette = new Pallette()
+    @subscriptions = {}
 
     if !@.isMobile
       @.socket = io.connect '/rt'
@@ -76,7 +77,7 @@ Application =
         console.log message
         div = $("<div>",
           style: "display: none",
-          class: "alert alert-"+alert_type
+          class: "offset1 alert alert-"+alert_type
         ).html message
         $("#messages").append div
         div.show('normal')

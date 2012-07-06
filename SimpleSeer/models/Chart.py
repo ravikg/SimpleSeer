@@ -15,6 +15,7 @@ log = logging.getLogger(__name__)
 #################################
 # name: the chart's name
 # olap: the name of the olap to query to get data
+# chartid: if overlaying multiple charts, provide the ID of the parent chart
 # style: the type of chart (line, pie, area, etc.), selected from the list in the schema
 # color: If chart has just one color, use the color parameter (this is just passed through: we need to more tightly define this)
 # colormap: If chart has multipe colors, map x-series labels to their appropriate colors.  e.g., {'average': 'blue', 'max': 'red'}
@@ -33,6 +34,7 @@ log = logging.getLogger(__name__)
 class ChartSchema(fes.Schema):
     name = fev.UnicodeString()
     olap = fev.UnicodeString()
+    chartid = fev.UnicodeString()
     style = fev.UnicodeString()            
     color = fev.UnicodeString(if_missing='blue')                  
     colormap = V.JSON(if_missing={})
@@ -53,6 +55,7 @@ class Chart(SimpleDoc, mongoengine.Document):
     name = mongoengine.StringField()
     olap = mongoengine.StringField()
     style = mongoengine.StringField()
+    chartid = mongoengine.ObjectIdField()
     color = mongoengine.StringField()
     colormap = mongoengine.DictField()
     labelmap = mongoengine.DictField()
@@ -74,20 +77,20 @@ class Chart(SimpleDoc, mongoengine.Document):
         return "<Chart %s>" % self.name
     
     def mapData(self, results):
-        from calendar import timegm
-        from datetime import datetime
         data = []
         
         for r in results:
-            # Make this more generic than just capturetime
+            # TODO Make this more generic than just capturetime
             if 'capturetime' in r:
-                r['capturetime'] = timegm(datetime.timetuple(r['capturetime'])) * 1000 + r['capturetime'].microsecond / 1000
-            
-            thisData = [r[d] for d in self.dataMap]
-            thisMeta = [r[m] for m in self.metaMap]
+                if r['capturetime'] is not None:
+                    r['capturetime'] = int(float(r['capturetime'].strftime('%s.%f')) * 1000)
+                else:
+                    r['capturetime'] = 0
+            thisData = [r.get(d, 0) for d in self.dataMap]
+            thisMeta = [r.get(m, 0) for m in self.metaMap]
             
             data.append({'d': thisData, 'm': thisMeta})
-                
+            
         return data
     
     def createChart(self, **kwargs):
@@ -95,19 +98,21 @@ class Chart(SimpleDoc, mongoengine.Document):
         # Get the OLAP and its data
         o = OLAP.objects(name=self.olap)
         if len(o) == 1:
-            if ('since' in kwargs):
-                o[0].since = int(kwargs['since'] / 1000)
+            o = o[0]
+            if ('sincetime' in kwargs):
+                o.since = int(kwargs['sincetime'] / 1000)
+        
+            if 'beforetime' in kwargs:
+                o.before = int(kwargs['beforetime'] / 1000)
     
-            if 'before' in kwargs:
-                o[0].before = int(kwargs['since'] / 1000)
-    
-            data = o[0].execute()
+            data = o.execute()
         else:
             log.warn("Found %d OLAPS in query for %s" % (len(o), olap))
             data = []
-        
+                
         chartData = {'name': self.name,
                      'olap': self.olap,
+                     'chartid': self.chartid,
                      'style': self.style,
                      'color': self.color,
                      'colormap': self.colormap,
