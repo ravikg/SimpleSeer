@@ -71,6 +71,11 @@ class FrameFeature(SimpleEmbeddedDoc, mongoengine.EmbeddedDocument):
     def featurepickle(self, value):
         self.featurepickle_b64 = b2a_base64(value)
     
+
+    def getFeature(self):
+        #for test harness
+        return self._featurecache
+
     #this converts a SimpleCV Feature object into a FrameFeature
     #clean this up a bit
     def setFeature(self, data):

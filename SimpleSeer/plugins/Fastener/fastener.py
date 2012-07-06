@@ -186,8 +186,9 @@ class Fastener(base.InspectionPlugin):
     return retVal 
 
   def __call__(self, image):
-    print "INSPECTION BEING EXECUTED"
-    params = util.utf8convert(self.inspection.parameters)
+    params = None
+    if( self.inspection is not None ):
+      params = util.utf8convert(self.inspection.parameters)
     retVal = []
     
     result = image
@@ -250,6 +251,7 @@ class Fastener(base.InspectionPlugin):
         yavg = np.average([lbs_right.end_points[0][1],lbs_right.end_points[1][1]])
     else:
         warnings.warn("COULD NOT FIND BOLT HEAD")
+        return []
 
     # use the load bearing surfaces to segment out the head and shaft
     shaft_left = self.getLongestInROI(vertical,(0,yavg,result.width/2,bolt_y+bolt_height-yavg), result, mode="vertical")
@@ -268,7 +270,7 @@ class Fastener(base.InspectionPlugin):
             head_right is not None ):
             top = self.clipAndRecenter(top,head_left,head_right,result,"")
 
-    ff = M.FrameFeature()
+    
     head = (head_left, head_right)
     shaft = (shaft_left, shaft_right)
     lbs = (lbs_left, lbs_right)
@@ -276,11 +278,12 @@ class Fastener(base.InspectionPlugin):
     bb = (top_x,top_y,bolt_width,bolt_height)
 
     print(head)
+    ff = M.FrameFeature()
     feature = FastenerFeature(head,shaft,lbs,fillet,top,bottom,bb,result)
     ff.setFeature(feature)
     retVal.append(ff)
 
-    if( params.has_key("saveFile") ):
+    if( params is not None and params.has_key("saveFile") ):
       result.drawLine((bolt_x-sx, bolt_y-bh4), (bolt_x+sx, bolt_y-bh4), color=c, thickness=1)
       result.drawLine((bolt_x, bolt_y-sy-bh4), (bolt_x, bolt_y+sy-bh4), color=c, thickness=1)
       result.drawLine((bolt_x-sx, bolt_y+bh4), (bolt_x+sx, bolt_y+bh4), color=c, thickness=1)
