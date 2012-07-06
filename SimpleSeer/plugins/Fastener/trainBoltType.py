@@ -23,15 +23,7 @@ def CreateDataSets(path,dirlist,split):
 def GenerateFeatureVector(img):
     result = []
     mask = img.threshold(20).dilate(2)
-    # UH = mask.crop(0,0,img.width,img.height/2).meanColor()[0]
-    # BH = mask.crop(0,img.height/2,img.width,img.height/2).meanColor()[0]
-    # RH = mask.crop(0,img.width/2,img.width/2,img.height).meanColor()[0]
-    # LH = mask.crop(0,0,img.width/2,img.height).meanColor()[0]
-    
-    # result.append(UH)
-    # result.append(BH)
-    # result.append(RH)
-    # result.append(LH)
+
     b = img.findBlobsFromMask(mask,minsize=250)
     if( b is not None ):
         b = b[-1]
@@ -40,7 +32,10 @@ def GenerateFeatureVector(img):
         chunks = 10
         for i in range(0,chunks):
             v = temp.crop(0,temp.height*i/float(chunks),temp.width,temp.height/chunks).meanColor()[0]
+            h = temp.crop(temp.width*i/float(chunks),0,temp.width/chunks,temp.height).meanColor()[0]
+            result.append(h)
             result.append(v)
+
         for h in b.mHu:
             result.append(h)
         result.append(b.mArea/b.mPerimeter)
