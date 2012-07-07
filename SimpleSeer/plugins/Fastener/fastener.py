@@ -3,6 +3,7 @@ import numpy as np
 from SimpleCV import *
 from SimpleSeer import models as M
 from SimpleSeer import util
+from scipy import optimize
 
 from SimpleSeer.plugins import base
 """
@@ -104,8 +105,8 @@ class FastenerFeature(SimpleCV.Feature):
     self.lbs_left_angle = self.angle_between(self.lbs_left,self.shaft_left)
     self.lbs_right_angle = self.angle_between(self.lbs_right,self.shaft_right)
 
-    self.fillet_left = (float(fillet[0][0]),float(fillet[0][1]))
-    self.fillet_right = (float(fillet[1][0]),float(fillet[1][1]))
+    self.fillet_left = fillet[0]#(float(fillet[0][0]),float(fillet[0][1]))
+    self.fillet_right = fillet[1]#(float(fillet[1][0]),float(fillet[1][1]))
     
     if( top is not None ):
       self.top = self.sanitizeNP64(top.end_points)
@@ -144,6 +145,32 @@ class Fastener(base.InspectionPlugin):
         retVal = Line(img,((mp-(l/2),y),(mp+(l/2),y)))
         
     return retVal
+  
+  def fitFillet(self,roi,img):
+    img = img.crop(roi[0],roi[1],roi[2],roi[3])
+    #img = img.edges()
+    npimg = img.getGrayNumpy()
+    x,y = np.where(npimg > 128)
+    x_m = np.average(x)
+    y_m = np.average(y)
+    def calc_R(xc, yc):
+      return np.sqrt((x-xc)**2 + (y-yc)**2)
+    
+    def f_2(c):
+      Ri = calc_R(*c)
+      return Ri - Ri.mean()
+  
+    center_estimate = x_m, y_m
+    center_2, ier = optimize.leastsq(f_2, center_estimate)
+    
+    xc_2, yc_2 = center_2
+    Ri_2       = calc_R(*center_2)
+    R_2        = Ri_2.mean()
+    residu_2   = sum((Ri_2 - R_2)**2)
+
+    print xc_2,yc_2
+    print R_2
+    return((xc_2+roi[0],yc_2+roi[1]),R_2)
 
   def getLongestInROI(self,lines,roi, img, mode="vertical"):
     inRegion = FeatureSet([i for i in lines if i.isContainedWithin(roi)])
@@ -153,10 +180,12 @@ class Fastener(base.InspectionPlugin):
         inRegion = inRegion.sortLength()
         best = inRegion[-1]        
         if( mode == "horizontal" ):
-            test = best.y
+            test = best.y 
+            # find all of the lines in our region 
             above = test+tolerance
             below = test-tolerance
             inRegion = FeatureSet([i for i in inRegion if(i.y < above and i.y > below )])
+            # estimate the optimal line length 
             xs = []
             for l in inRegion:
                 xs.append(l.end_points[0][0])
@@ -165,7 +194,11 @@ class Fastener(base.InspectionPlugin):
             xmin = np.min(xs)
             xmax = np.max(xs)
             y = np.average(ys)
-            retVal=Line(img,((xmin,y),(xmax,y)))
+            # this aggregate line of all our line segments 
+            # becomes the basis of our least squares fit.             
+            retVal=Line(img,((xmin*1.05,y),(xmax*.95,y)))
+            retVal = img.fitLines([retVal.end_points])[0]
+
         if( mode == "vertical" ):
             test = best.x
             right = test+tolerance
@@ -179,7 +212,8 @@ class Fastener(base.InspectionPlugin):
             ymin = np.min(ys)
             ymax = np.max(ys)
             x = np.average(xs)
-            retVal=Line(img,((x,ymin),(x,ymax)))
+            retVal=Line(img,((x,ymin*1.05),(x,ymax*.95)))
+            retVal = img.fitLines([retVal.end_points])[0]
     else:
         retVal = None
 
@@ -195,11 +229,14 @@ class Fastener(base.InspectionPlugin):
     #flood fill ro remove noise
     result = result.floodFill(np.array([(20,20)]),20,color=Color.BLACK)
 
-    binary = result.threshold(20).dilate(1)
-    l = binary.findLines(threshold=10,minlinelength=15 )#,cannyth1=40,cannyth2=120,maxlinegap=2)
+    binary = result.threshold(30).dilate(2)
     b = result.findBlobsFromMask(mask=binary)
+    binary = Image((result.width,result.height))
+    edgeImg = binary.blit(b[-1].blobMask(),b[-1].topLeftCorner()).edges()
+    l = edgeImg.findLines(threshold=10,minlinelength=15 )#,cannyth1=40,cannyth2=120,maxlinegap=2)
+    #b = result.findBlobsFromMask(mask=binary)
     l = l.reassignImage(result)
-
+    
     # set some parameters 
     bolt_x = b[-1].x
     bolt_y = b[-1].y
@@ -219,11 +256,11 @@ class Fastener(base.InspectionPlugin):
     h = 5
     horizontal = FeatureSet([i for i in l if (i.angle() < h) and (i.angle() > -1*h)])
 
-    top = self.getLongestInROI(horizontal,(0,top_y,result.width,bolt_height/4), result, mode="horizontal")
-    bottom = self.getLongestInROI(horizontal,(0,top_y+(3*bh4),result.width,bolt_height/4), result, mode="horizontal")
+    top = self.getLongestInROI(horizontal,(0,top_y,result.width,bolt_height/4), edgeImg, mode="horizontal")
+    bottom = self.getLongestInROI(horizontal,(0,top_y+(3*bh4),result.width,bolt_height/4), edgeImg, mode="horizontal")
     #LOAD BEARING SURFACES
-    lbs_left = self.getLongestInROI(horizontal,(0,bolt_y-bh4,result.width/2,bolt_height/2), result, mode="horizontal")
-    lbs_right = self.getLongestInROI(horizontal,(bolt_x,bolt_y-bh4,result.width/2,bolt_height/2), result, mode="horizontal")
+    lbs_left = self.getLongestInROI(horizontal,(0,bolt_y-bh4,result.width/2,bolt_height/2), edgeImg, mode="horizontal")
+    lbs_right = self.getLongestInROI(horizontal,(bolt_x,bolt_y-bh4,result.width/2,bolt_height/2), edgeImg, mode="horizontal")
 
     #FROM the load bearing surfaces find the best postion 
     yavg = bolt_y+(2*bh4)
@@ -254,10 +291,10 @@ class Fastener(base.InspectionPlugin):
         return []
 
     # use the load bearing surfaces to segment out the head and shaft
-    shaft_left = self.getLongestInROI(vertical,(0,yavg,result.width/2,bolt_y+bolt_height-yavg), result, mode="vertical")
-    shaft_right = self.getLongestInROI(vertical,(result.width/2,yavg,result.width/2,bolt_y+bolt_height-yavg), result, mode="vertical")
-    head_left = self.getLongestInROI(vertical,(top_x,0,bolt_width/2,0.8*yavg), result, mode="vertical")
-    head_right = self.getLongestInROI(vertical,(top_x+(bolt_width/2),0,(bolt_width/2),0.8*yavg), result, mode="vertical")
+    shaft_left = self.getLongestInROI(vertical,(0,yavg,edgeImg.width/2,bolt_y+bolt_height-yavg), edgeImg, mode="vertical")
+    shaft_right = self.getLongestInROI(vertical,(edgeImg.width/2,yavg,edgeImg.width/2,bolt_y+bolt_height-yavg), edgeImg, mode="vertical")
+    head_left = self.getLongestInROI(vertical,(top_x,0,bolt_width/2,0.8*yavg), edgeImg, mode="vertical")
+    head_right = self.getLongestInROI(vertical,(top_x+(bolt_width/2),0,(bolt_width/2),0.8*yavg), edgeImg, mode="vertical")
 
     # now render
     if( bottom is not None):
@@ -274,8 +311,29 @@ class Fastener(base.InspectionPlugin):
     head = (head_left, head_right)
     shaft = (shaft_left, shaft_right)
     lbs = (lbs_left, lbs_right)
-    fillet = ((shaft_left.x,lbs_left.y),(shaft_right.x,lbs_right.y))
+    froi = 150
+    print "#################################################"
+    temp = edgeImg.crop(shaft_left.x-(froi/2),lbs_left.y-(froi/2),froi,froi)
+    temp.save("derp.png")
+    temp = edgeImg.crop(shaft_right.x-(froi/2),lbs_right.y-(froi/2),froi,froi)
+    temp.save("derp2.png")
+
+    fl=self.fitFillet((shaft_left.x-(froi/2),lbs_left.y-(froi/2),froi,froi),edgeImg)
+    fr=self.fitFillet((shaft_right.x-(froi/2),lbs_right.y-(froi/2),froi,froi),edgeImg)
+    print "FILLETS"
+    print (shaft_left.x,lbs_left.y)
+    print fl
+    print (shaft_right.x,lbs_right.y)
+    print fr
+
+    fillet = [fl,fr]
+
+    #fillet = ((shaft_left.x,lbs_left.y),(shaft_right.x,lbs_right.y))
     bb = (top_x,top_y,bolt_width,bolt_height)
+
+    
+
+
 
     print(head)
     ff = M.FrameFeature()

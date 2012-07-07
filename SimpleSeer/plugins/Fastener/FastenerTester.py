@@ -26,9 +26,17 @@ def renderHarness(img,fastener):
 
     img.drawLine(fastener.top[0],fastener.top[1],color=Color.BLUE, thickness = t)
     img.drawLine(fastener.bottom[0],fastener.bottom[1],color=Color.BLUE, thickness = t)
+    
+#    img.drawCircle(fastener.fillet_left[0],fastener.fillet_left[1],color=Color.BLUE, thickness = t)
+#    img.drawCircle(fastener.fillet_right[0],fastener.fillet_right[1],color=Color.BLUE, thickness = t)
 
-#    img.drawCircle(fastener.fillet_left[0],10,color=Color.ORANGE,thickness=t)
-#    img.drawCircle(fastener.fillet_right[0],10,color=Color.ORANGE,thickness=t)
+    
+    print "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+    print fastener.fillet_left
+    print fastener.fillet_right
+
+    img.drawCircle(fastener.fillet_left[0],fastener.fillet_left[1],color=Color.ORANGE,thickness=t)
+    img.drawCircle(fastener.fillet_right[0],fastener.fillet_right[1],color=Color.ORANGE,thickness=t)
 
     img = img.applyLayers()
     
@@ -46,7 +54,7 @@ for raw in imset:
         continue
     result_img = renderHarness(img,result[0].getFeature())
     print result_img
-    final =result_img.sideBySide(img)
+    final =result_img.sideBySide(img.sobel(yorder=0))
     fname = "./results/result"+str(i)+".png"
     final.scale(0.4).show()
     final.save(fname)
