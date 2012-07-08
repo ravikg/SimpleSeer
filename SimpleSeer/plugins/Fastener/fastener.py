@@ -323,8 +323,29 @@ class Fastener(base.InspectionPlugin):
         froi = froi * 1.2
 
 
-    fillet = [fl,fr]
+    max_fillet_sz = 100 
 
+    #clean up fillet stuff
+    if( fl[1] > max_fillet_sz and fr[1] > max_fillet_sz ):
+      # we totally failed just throw in the towel 
+      fl = ((shaft_left.x,lbs_left.y),2)
+      fr = ((shaft_right.x,lbs_right.y),2)
+    elif( fl[1] > max_fillet_sz ):
+      #estimate the left from the right
+      sw = shaft_right.x - shaft_left.x
+      #get the offset of the shaft to the fillet
+      foff = fr[0][0]-shaft_right.x 
+      fl = ((fr[0][0]-(2*foff)-sw,fr[0][1]),fr[1])
+    elif( fr[1] > max_fillet_sz ):
+      #estimate the left from the right
+      sw = shaft_right.x - shaft_left.x
+      #get the offset of the shaft to the fillet
+      foff = shaft_left.x-fl[0][0]
+      fr = ((fl[0][0]+sw+(2*foff),fl[0][1]),fl[1])
+
+
+    fillet = [fl,fr]
+      
     #fillet = ((shaft_left.x,lbs_left.y),(shaft_right.x,lbs_right.y))
     bb = (top_x,top_y,bolt_width,bolt_height)
 
