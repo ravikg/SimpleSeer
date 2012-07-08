@@ -192,7 +192,7 @@ class Fastener(base.InspectionPlugin):
             y = np.average(ys)
             # this aggregate line of all our line segments j
             # becomes the basis of our least squares fit.             
-            retVal=Line(img,((xmin*1.1,y),(xmax*.9,y)))
+            retVal=Line(img,((xmin*0.7,y),(xmax*1.3,y)))
             retVal = img.fitLines([retVal.end_points])[0]
 
         if( mode == "vertical" ):
@@ -208,7 +208,7 @@ class Fastener(base.InspectionPlugin):
             ymin = np.min(ys)
             ymax = np.max(ys)
             x = np.average(xs)
-            retVal=Line(img,((x,ymin*1.1),(x,ymax*.9)))
+            retVal=Line(img,((x,ymin*0.7),(x,ymax*1.3)))
             retVal = img.fitLines([retVal.end_points])[0]
     else:
         retVal = None
