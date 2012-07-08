@@ -26,14 +26,12 @@ def renderHarness(img,fastener):
 
     img.drawLine(fastener.top[0],fastener.top[1],color=Color.BLUE, thickness = t)
     img.drawLine(fastener.bottom[0],fastener.bottom[1],color=Color.BLUE, thickness = t)
-    
-#    img.drawCircle(fastener.fillet_left[0],fastener.fillet_left[1],color=Color.BLUE, thickness = t)
-#    img.drawCircle(fastener.fillet_right[0],fastener.fillet_right[1],color=Color.BLUE, thickness = t)
 
-    
-    print "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-    print fastener.fillet_left
-    print fastener.fillet_right
+    print img.width, img.height
+    print fastener.fillet_right,fastener.fillet_left
+    if fastener.fillet_right[1] <= 2 or fastener.fillet_left[1] <= 2:
+        img = img.applyLayers()
+        return img
 
     img.drawCircle(fastener.fillet_left[0],fastener.fillet_left[1],color=Color.ORANGE,thickness=t)
     img.drawCircle(fastener.fillet_right[0],fastener.fillet_right[1],color=Color.ORANGE,thickness=t)
@@ -43,19 +41,20 @@ def renderHarness(img,fastener):
 
     return img
 
-path = "./data/angle/"
-imset = ImageSet(path)
+path = ["./data/angle/","./data/flat/"]
 i = 0 
-for raw in imset:
-    img = scanner_preprocess(raw)
-    result = extract_measurements(img)
-    print result 
-    if( len(result) == 0 ):
-        continue
-    result_img = renderHarness(img,result[0].getFeature())
-    print result_img
-    final =result_img.sideBySide(img.sobel(yorder=0))
-    fname = "./results/result"+str(i)+".png"
-    final.scale(0.4).show()
-    final.save(fname)
-    i = i + 1
+for p in path:
+    imset = ImageSet(p)
+    for raw in imset:
+        img = scanner_preprocess(raw)
+        result = extract_measurements(img)
+        print result 
+        if( len(result) == 0 ):
+            continue
+        result_img = renderHarness(img,result[0].getFeature())
+        print result_img
+        final =result_img#.sideBySide(img)
+        fname = "./results/result"+str(i)+".png"
+        final.scale(0.4).show()
+        final.save(fname)
+        i = i + 1

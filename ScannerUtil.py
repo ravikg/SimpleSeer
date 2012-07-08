@@ -42,10 +42,6 @@ def straightenImg(img):
     best = np.argmax(counts)
     #take the median of these to filter out outliers
     final_rotation = np.median(values[best])
-    print '=========================================='
-    print final_rotation
-    print values
-    print counts
     if np.max(counts) < 10 or math.isnan(final_rotation):
         return None
     else:

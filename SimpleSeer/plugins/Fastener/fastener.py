@@ -5,6 +5,8 @@ from SimpleSeer import models as M
 from SimpleSeer import util
 from scipy import optimize
 
+counter = 0
+
 from SimpleSeer.plugins import base
 """
 Overly simplified template matching plugin
@@ -24,22 +26,16 @@ class FastenerFeature(SimpleCV.Feature):
     return ((float(derp[0][0]),float(derp[0][1])),(float(derp[1][0]),float(derp[1][1])))
 
   def angle_between(self,v1,v2):
-    print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-    print v1
-    print v2
     x0 = (v1[0][0]-v1[1][0])
     y0 = (v1[0][1]-v1[1][1])
     mag0 = np.sqrt((x0*x0)+(y0*y0))
-    print x0,y0,mag0
-
+    
     x1 = (v2[0][0]-v2[1][0])
     y1 = (v2[0][1]-v2[1][1])
     mag1 = np.sqrt((x1*x1)+(y1*y1))
-    print x1,y1,mag1
 
-     
     dot = (x0*x1)+(y0*y1) / (mag0*mag1)
-    print dot
+    
     if( dot == 0 ):
       retVal = 90
     else:
@@ -49,7 +45,6 @@ class FastenerFeature(SimpleCV.Feature):
   def __init__(self,head,shaft,lbs,fillet,top,bottom,bb,img,dpi=1200):
     self.dpi = dpi
     #FML numpy.F64 sanitization
-    print head[0]
     if( head[0] is not None):
       self.head_left = self.sanitizeNP64(head[0].end_points)
     else:
@@ -128,6 +123,7 @@ class Fastener(base.InspectionPlugin):
   """
   Fastner
   """
+
   def clipAndRecenter(self,toClip,a,b,img,mode="horizontal"):
     """
     clip and recenter toClip to fit and be centered between a and b
@@ -148,9 +144,10 @@ class Fastener(base.InspectionPlugin):
   
   def fitFillet(self,roi,img):
     img = img.crop(roi[0],roi[1],roi[2],roi[3])
-    #img = img.edges()
     npimg = img.getGrayNumpy()
     x,y = np.where(npimg > 128)
+    if( len(x) < 10 or len(y) < 10 ):
+      return None
     x_m = np.average(x)
     y_m = np.average(y)
     def calc_R(xc, yc):
@@ -165,12 +162,11 @@ class Fastener(base.InspectionPlugin):
     
     xc_2, yc_2 = center_2
     Ri_2       = calc_R(*center_2)
-    R_2        = Ri_2.mean()
+    R_2        = int(Ri_2.mean())
     residu_2   = sum((Ri_2 - R_2)**2)
-
-    print xc_2,yc_2
-    print R_2
-    return((xc_2+roi[0],yc_2+roi[1]),R_2)
+    if( R_2 == 0 ):
+      R_2 = 1
+    return((int(xc_2+roi[0]),int(yc_2+roi[1])),R_2)
 
   def getLongestInROI(self,lines,roi, img, mode="vertical"):
     inRegion = FeatureSet([i for i in lines if i.isContainedWithin(roi)])
@@ -194,9 +190,9 @@ class Fastener(base.InspectionPlugin):
             xmin = np.min(xs)
             xmax = np.max(xs)
             y = np.average(ys)
-            # this aggregate line of all our line segments 
+            # this aggregate line of all our line segments j
             # becomes the basis of our least squares fit.             
-            retVal=Line(img,((xmin*1.05,y),(xmax*.95,y)))
+            retVal=Line(img,((xmin*1.1,y),(xmax*.9,y)))
             retVal = img.fitLines([retVal.end_points])[0]
 
         if( mode == "vertical" ):
@@ -212,7 +208,7 @@ class Fastener(base.InspectionPlugin):
             ymin = np.min(ys)
             ymax = np.max(ys)
             x = np.average(xs)
-            retVal=Line(img,((x,ymin*1.05),(x,ymax*.95)))
+            retVal=Line(img,((x,ymin*1.1),(x,ymax*.9)))
             retVal = img.fitLines([retVal.end_points])[0]
     else:
         retVal = None
@@ -233,6 +229,10 @@ class Fastener(base.InspectionPlugin):
     b = result.findBlobsFromMask(mask=binary)
     binary = Image((result.width,result.height))
     edgeImg = binary.blit(b[-1].blobMask(),b[-1].topLeftCorner()).edges()
+    global counter
+    fname = str(counter)+".png"
+    counter = counter + 1
+    edgeImg.save(fname)
     l = edgeImg.findLines(threshold=10,minlinelength=15 )#,cannyth1=40,cannyth2=120,maxlinegap=2)
     #b = result.findBlobsFromMask(mask=binary)
     l = l.reassignImage(result)
@@ -311,31 +311,23 @@ class Fastener(base.InspectionPlugin):
     head = (head_left, head_right)
     shaft = (shaft_left, shaft_right)
     lbs = (lbs_left, lbs_right)
-    froi = 150
-    print "#################################################"
-    temp = edgeImg.crop(shaft_left.x-(froi/2),lbs_left.y-(froi/2),froi,froi)
-    temp.save("derp.png")
-    temp = edgeImg.crop(shaft_right.x-(froi/2),lbs_right.y-(froi/2),froi,froi)
-    temp.save("derp2.png")
 
-    fl=self.fitFillet((shaft_left.x-(froi/2),lbs_left.y-(froi/2),froi,froi),edgeImg)
-    fr=self.fitFillet((shaft_right.x-(froi/2),lbs_right.y-(froi/2),froi,froi),edgeImg)
-    print "FILLETS"
-    print (shaft_left.x,lbs_left.y)
-    print fl
-    print (shaft_right.x,lbs_right.y)
-    print fr
+    
+    froi = 50
+    fl = None
+    fr = None
+    while( fl == None or fr == None ):
+      fl=self.fitFillet((shaft_left.x-(froi*.75),lbs_left.y-(froi*.75),froi,froi),edgeImg)
+      fr=self.fitFillet((shaft_right.x-(froi*.25),lbs_right.y-(froi*.75),froi,froi),edgeImg)
+      if( fl is None or fr is None ):
+        froi = froi * 1.2
+
 
     fillet = [fl,fr]
 
     #fillet = ((shaft_left.x,lbs_left.y),(shaft_right.x,lbs_right.y))
     bb = (top_x,top_y,bolt_width,bolt_height)
 
-    
-
-
-
-    print(head)
     ff = M.FrameFeature()
     feature = FastenerFeature(head,shaft,lbs,fillet,top,bottom,bb,result)
     ff.setFeature(feature)
