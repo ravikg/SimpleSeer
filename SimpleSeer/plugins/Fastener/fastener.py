@@ -107,6 +107,8 @@ class FastenerFeature(SimpleCV.Feature):
 
     self.fillet_left = (float(fillet[0][0][0]),float(fillet[0][0][1]))#(float(fillet[0][0]),float(fillet[0][1]))
     self.fillet_right = (float(fillet[1][0][0]),float(fillet[1][0][1]))#(float(fillet[1][0]),float(fillet[1][1]))
+    self.fillet_left_r = float(fillet[0][1])
+    self.fillet_right_r = float(fillet[1][1])
     
     if( top is not None ):
       self.top = self.sanitizeNP64(top.end_points)

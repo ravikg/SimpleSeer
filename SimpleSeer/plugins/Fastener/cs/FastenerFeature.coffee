@@ -86,9 +86,15 @@ class FastenerFeature
     pjs.stroke 180, 180, 0, 255
     fsz = 100
     p = 3.1415962
-    offset = 100
+    offset = 60
     x0 = @feature.get("featuredata").fillet_left[0]
-    y0 = @feature.get("featuredata").fillet_left[1]+offset
+    y0 = @feature.get("featuredata").fillet_left[1]
+    r0 = @feature.get("featuredata").fillet_left_r
+    pjs.ellipse(x0,y0,2*r0,2*r0)
+
+    x0 = x0-offset
+    y0 = y0+offset
+
     pjs.line(x0,y0,x0-fsz,y0)
     pjs.line(x0,y0,x0,y0+fsz)
     pjs.arc(x0,y0,fsz,fsz,p/2,p)
@@ -101,9 +107,15 @@ class FastenerFeature
     pjs.text(txt,xtxt,ytxt)
     pjs.noFill()  
 
+
+    
  
     x0 = @feature.get("featuredata").fillet_right[0]
-    y0 = @feature.get("featuredata").fillet_right[1]+offset
+    y0 = @feature.get("featuredata").fillet_right[1]
+    r0 = @feature.get("featuredata").fillet_right_r
+    pjs.ellipse(x0,y0,2*r0,2*r0)
+    x0 = x0+offset
+    y0 = y0+offset
     pjs.line(x0,y0,x0+fsz,y0)
     pjs.line(x0,y0,x0,y0+fsz)
     pjs.arc(x0,y0,fsz,fsz,0,p/2)
@@ -116,6 +128,8 @@ class FastenerFeature
     pjs.text(txt,xtxt,ytxt)
     pjs.noFill()  
                    
+
+
 
 #<Name of the python class we map to>:<the class upstairs>
 plugin this, FastenerFeature:FastenerFeature
