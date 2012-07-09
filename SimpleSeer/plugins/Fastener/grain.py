@@ -14,7 +14,7 @@ for p in path:
     imset = ImageSet(p)
     for raw in imset:
         img = scanner_preprocess(raw)
-        temp = img.equalize().binarize(blocksize=15) #sobel(aperature=7).edges()
+        temp = img.equalize().binarize(blocksize=15).erode() #sobel(aperature=7).edges()
         fname = str(i)+".png"
         i = i + 1
         temp.save(fname)

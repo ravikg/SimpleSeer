@@ -1,9 +1,26 @@
 import gc
 import numpy as np
 import SimpleSeer.models as M
-from SimpleCV import Image
+#from SimpleCV import Image
+from datetime import datetime # for frame capture faking
+from SimpleCV import *
 import math
 from ScannerUtil import *
+# for non-blocking io
+import sys
+import select
+
+# I apologize for the globals but I am hacking a test harness
+# There is a place in hell for me for global variables
+# and a place in heave for duct-tape testing. 
+testMode = True 
+globalImSet = None 
+globalPath = "/home/kscottz/SimpleSeer/SimpleSeer/plugins/Fastener/data/angle/"
+globalCount = 0
+
+#if( testMode ):
+#    globalImSet = ImageSet(path)
+
 
 @core.state('start')
 def start(state):
@@ -16,63 +33,54 @@ def waitforbuttons(state):
     while True:
         core.tick()
         scan = core.cameras[0]
-        if scan.device.email or scan.device.file or scan.device.copy or scan.device.dev.get_option(30):
-            return state.core.state('scan')
-
-# def straightenImg(img):
-#     print img.width
-#     print img.height
-#     mask = img.threshold(20).dilate(2)
-#     #TRY TO GET THE BOLD ALLIGNED RIGHT
-#     #Try to figure out which side is most massive by color
-#     UH = mask.crop(0,0,img.width,img.height/2).meanColor()[0]
-#     BH = mask.crop(0,img.height/2,img.width,img.height/2).meanColor()[0]
-#     RH = mask.crop(0,img.width/2,img.width/2,img.height).meanColor()[0]
-#     LH = mask.crop(0,0,img.width/2,img.height).meanColor()[0]
-#     sidethresh = 3
-#     if( RH > sidethresh*LH ):
-#         img = img.rotate(90,fixed=False)
-#         mask = img.threshold(20).dilate(2)
-#     elif( LH > sidethresh*RH):
-#         img = img.rotate(-90,fixed=False)
-#         mask = img.threshold(20).dilate(2)
-    
-#     if( BH > UH ):
-#         img = img.rotate(180,fixed=False)
-#         mask = img.threshold(20).dilate(2)
-
-#     b = img.findBlobsFromMask(mask,minsize=250)
-#     outer = b[-1].mMask.edges()
-#     lines = outer.findLines()
-#     angles = lines.angle()
-#     #go through our lines and pick the near vertical and 
-#     # horizontal lines that have the greatest numbers of samples 
-#     a = 30
-#     testhp = angles[(angles<a)&(angles>0)]
-#     testhn = angles[(angles>-1*a)&(angles<0)]
-#     a = 70
-#     testvp = -1*(90-angles[(angles>a)])
-#     testvn = -1*(-90-angles[(angles<-1*a)])
-#     values = [testhp,testhn,testvp,testvn]
-#     #get the one with the most values
-#     counts = [len(testhp),len(testhn),len(testvp),len(testvn)]
-#     best = np.argmax(counts)
-#     #take the median of these to filter out outliers
-#     final_rotation = np.median(values[best])
-#     print '=========================================='
-#     print final_rotation
-#     print values
-#     print counts
-#     if np.max(counts) < 10 or math.isnan(final_rotation):
-#         return None
-#     else:
-#         return img.rotate(final_rotation,fixed=False)   
-    
-
+        global testMode
+        fakeScan = False
+        if( testMode ):
+            i,o,e = select.select([sys.stdin],[],[],0.0001)
+            for s in i:
+                if s == sys.stdin:
+                    input = sys.stdin.readline()
+                    if input is not None:
+                        fakeScan = True
+            
+            if(fakeScan):
+                return state.core.state('scan')
+        else:
+            if scan.device.email or scan.device.file or scan.device.copy or scan.device.dev.get_option(30):
+                return state.core.state('scan')
+        
 @core.state('scan')
 def scan(state):
     core = state.core
     scan = core.cameras[0]
+    
+    # This may be better living in SimpleSeer.py
+    global testMode
+    if( testMode ):
+        global globalPath
+        global globalImSet
+        global globalCount
+        if( globalImSet is None ):
+            globalImSet = ImageSet(globalPath)
+        M.Alert.info("Scanning.... Please wait")
+        id = '' 
+        if( globalCount > len(globalImSet) ):
+            globalCount = 0
+        img = globalImSet[globalCount]
+        globalCount = globalCount + 1
+        img = straightenImg(img)            
+        frame = M.Frame(capturetime = datetime.utcnow(), 
+                        camera= img.filename )
+        frame.image = img
+        process(frame)
+        M.Alert.info("Straightening the image")
+	t = frame.thumbnail
+        frame.save()
+        id = frame.id
+        M.Alert.clear()
+        M.Alert.redirect("frame/" + str(id))
+        return core.state('waitforbuttons')
+
     
     scan.setProperty("resolution", 75)
     scan.setProperty("mode", "gray")

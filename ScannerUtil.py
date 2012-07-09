@@ -3,8 +3,6 @@ from SimpleCV import Image
 import math
 
 def straightenImg(img):
-    print img.width
-    print img.height
     mask = img.threshold(20).dilate(2)
     #TRY TO GET THE BOLD ALLIGNED RIGHT
     #Try to figure out which side is most massive by color

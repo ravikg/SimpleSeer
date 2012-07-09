@@ -1,6 +1,8 @@
 import gevent
 
-import mmm
+import mmm # Mongo DB Serves Many Masters
+# https://github.com/rick446/mmm.git
+# sudo pip install MongoMultiMaster
 
 from .base import Command
 

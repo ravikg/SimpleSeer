@@ -26,20 +26,25 @@ class FastenerFeature(SimpleCV.Feature):
     return ((float(derp[0][0]),float(derp[0][1])),(float(derp[1][0]),float(derp[1][1])))
 
   def angle_between(self,v1,v2):
+    
     x0 = (v1[0][0]-v1[1][0])
     y0 = (v1[0][1]-v1[1][1])
-    mag0 = np.sqrt((x0*x0)+(y0*y0))
+    p0=np.array([x0,y0])
+    p0=p0/np.sqrt(np.vdot(p0,p0))
     
-    x1 = (v2[0][0]-v2[1][0])
-    y1 = (v2[0][1]-v2[1][1])
-    mag1 = np.sqrt((x1*x1)+(y1*y1))
 
-    dot = (x0*x1)+(y0*y1) / (mag0*mag1)
-    
+
+    x1 = np.array([v2[0][0]-v2[1][0]])
+    y1 = np.array([v2[0][1]-v2[1][1]])
+    p1=np.array([x1,y1])
+    p1=p1/np.sqrt(np.vdot(p1,p1))
+
+    dot = np.vdot(p0,p1)
     if( dot == 0 ):
       retVal = 90
     else:
-      retVal = float((np.arccos([dot][0])*360.0)/(np.pi*2))
+      retVal = float((np.arccos(dot)*360.0)/(np.pi*2))
+    
     return retVal
 
   def __init__(self,head,shaft,lbs,fillet,top,bottom,bb,img,dpi=1200):
@@ -100,8 +105,8 @@ class FastenerFeature(SimpleCV.Feature):
     self.lbs_left_angle = self.angle_between(self.lbs_left,self.shaft_left)
     self.lbs_right_angle = self.angle_between(self.lbs_right,self.shaft_right)
 
-    self.fillet_left = fillet[0]#(float(fillet[0][0]),float(fillet[0][1]))
-    self.fillet_right = fillet[1]#(float(fillet[1][0]),float(fillet[1][1]))
+    self.fillet_left = (float(fillet[0][0][0]),float(fillet[0][0][1]))#(float(fillet[0][0]),float(fillet[0][1]))
+    self.fillet_right = (float(fillet[1][0][0]),float(fillet[1][0][1]))#(float(fillet[1][0]),float(fillet[1][1]))
     
     if( top is not None ):
       self.top = self.sanitizeNP64(top.end_points)
@@ -116,6 +121,7 @@ class FastenerFeature(SimpleCV.Feature):
     width = bb[2]
     height = bb[3]
     points = ((x, y), (x + width, y), (x + width, y + height), (x, y + height))
+
     super(FastenerFeature, self).__init__(img, x, y, points)             
 
 
