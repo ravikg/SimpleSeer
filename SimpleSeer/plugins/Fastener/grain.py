@@ -59,19 +59,27 @@ def getLocalMin(imgNP,pt,win):
     xmin = np.clip(pt[0]-win,0,w).astype(int)
     xmax = np.clip(pt[0]+win,0,w).astype(int)
     ymin = np.clip(pt[1]+1,0,h).astype(int)
-    ymax = np.clip(pt[1]+win+1,0,h).astype(int)
+    ymax = np.clip(pt[1]+(2*win)+1,0,h).astype(int)
     subimg = imgNP[xmin:xmax,ymin:ymax]
-    minv = np.min(subimg)
-    x,y = np.where(subimg==minv)
-    dist = ((x-win)**2)+(y**2)
-    loc = np.where(dist==np.min(dist))
+    meansx = np.mean(subimg,axis=1)
+    minvx = np.min(meansx)
+    meansy = np.mean(subimg,axis=0)
+    minvy = np.min(meansy)
 
-    xf = pt[0]+x[loc]-((xmax-xmin)/2)
-    yf = pt[1]+y[loc]+1
-    print xf[0],yf[0]
-    return (xf[0],yf[0])
+    xm = np.where(meansx==minvx)
+    if(len(xm) > 1 ):
+        print "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
+    ym = np.where(meansy==minvy)
+    #x,y= np.where(subimg==minv)
+    #dist = ((np.array(xm)-win)**2)
+    #xloc = np.where(dist==np.min(dist))
 
-def getGrains2(img,seeds=20,win=5):
+    xf = pt[0]+xm[0]-((xmax-xmin)/2)
+    yf = pt[1]+1#y[loc]+1
+#    print xf[0],yf[0]
+    return (xf[0],yf)
+
+def getGrains2(img,seeds=20,win=3):
     retVal = []
     seedpts = np.floor(np.linspace(0,img.width,seeds))
     y = np.zeros([seeds])
@@ -112,7 +120,7 @@ for p in path:
         rawData = rawData
         temp = Image((rawData.width,rawData.height))
         temp = temp.blit(rawData,mask=grain).smooth().smooth(aperature=15)
-        result = getGrains2(rawData.equalize())
+        result = getGrains2(rawData.equalize().invert().sobel(xorder=0))
         result.show()
         result.save(fname)
 
