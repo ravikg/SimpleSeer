@@ -2,6 +2,7 @@ application = require '../../application'
 ChartView = require '../chart'
 
 module.exports = class HighchartsLib extends ChartView
+  stacked = false
   template: require '../templates/chart'
   initialize:(d) =>
     @lib = 'highcharts'
@@ -10,7 +11,6 @@ module.exports = class HighchartsLib extends ChartView
 
   buildChart: () =>
     if @model.chartid
-      #todo : make sure this doesnt clone graphs
       @template = ''
       @$el.html ''
       m = application.charts.get @model.chartid
@@ -27,7 +27,9 @@ module.exports = class HighchartsLib extends ChartView
         xAxis:
           tickInterval: @model.tickerinterval * 1000 || null
           type:
-            @model.xtype || 'datetime'
+            @model.xtype || 'linear'
+          title:
+            text: @model.xTitle
           labels:
             formatter: -> 
               if this.axis.options.type == 'datetime'
@@ -39,20 +41,41 @@ module.exports = class HighchartsLib extends ChartView
                 else
                   return this.value
         yAxis:
+          title:
+            text: @model.yTitle
           min:@model.minval
           max:@model.maxval
       chart.id = @id
-    super chart
+      if @model.useLabels
+        chart.xAxis[0].setCategories @model.labelmap
+      super chart
 
-  addPoint: (d,redraw=true,shift=true) =>
+  setStackPoints: (d=false) =>
+    if @stacked == true || @_c.series.length > 1
+      @stacked=true
+      @stackPoints = []
+      for i,s of @_c.series
+        l = s.data.length
+        p = s.data[--l]
+        if d && d.x > p.x
+          p.x = d.x
+          s.addPoint(p, false,true)
+        @stackPoints[i] = p
+
+  addPoint: (d,redraw=true,shift=false) =>
     super(d)
     if @.stack
       @.stack.add d
-    series = @._c.get @.id
-    series.addPoint(d,redraw,shift)
+    else
+      series = @._c.get @.id
+      series.addPoint(d,false,shift)
+    @setStackPoints(d)
+    if redraw
+      series.chart.redraw();
 
   setData: (d) =>
     super(d)
+    @setStackPoints()
     series = @._c.get @.id
     #series.setData([])
     #for _d in d
@@ -96,5 +119,8 @@ module.exports = class HighchartsLib extends ChartView
     color:@color || 'blue'
     marker:
       enabled: true
-      radius: 1
+      radius: 2
     data:[]
+    
+  isStacked: =>
+    return @._c.series.length > 1 ? true : false

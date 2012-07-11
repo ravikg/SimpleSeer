@@ -48,8 +48,49 @@ meas3 = Measurement( name="Delivery Time", label="Seconds", method = "timebetwee
   parameters = dict( inspection = insp.id ))
 meas3.save()
 
+meas4 = Measurement ( name="Delivery Count", label="Count", method = "countbetween_manual", inspection = insp.id)
+meas4.save()
 
 
+
+## Count before delivery
+o0 = OLAP()
+o0.name = 'DeliveryCount'  
+o0.maxLen = 1000 
+o0.queryType = 'measurement_id' 
+o0.queryId = meas4.id 
+o0.fields = ['capturetime','numeric', 'string', 'measurement_id', 'inspection_id', 'frame_id']
+o0.valueMap = {'red': 0, 'green': 1, 'yellow': 2, 'orange': 3, 'purple': 4, 'field': 'string', 'default': 5}
+o0.since = None
+o0.before = None
+o0.customFilter = {} 
+o0.statsInfo = []
+o0.notNull = 0
+o0.save()
+
+c0 = Chart()
+c0.name = 'Candies Analyzed'
+c0.description = 'How many candies were analyzed per selection.'
+c0.olap = o0.name
+c0.style = 'line'
+c0.color = '#777'
+c0.minval = 0
+c0.maxval = None
+c0.xtype = None
+c0.colormap = {'0': 'red', '1': 'green', '2': 'yellow','3': u'orange','4': 'purple'}
+c0.labelmap = {}
+c0.xTitle = 'Button Press'
+c0.yTitle = 'Count'
+c0.accumulate = False
+c0.renderorder = 10
+c0.halfsize = False
+c0.realtime = True
+c0.dataMap = ['capturetime','numeric']
+c0.metaMap = ['string', 'measurement_id', 'inspection_id', 'frame_id']
+c0.save()
+
+
+"""
 ## Histogram of color of gumballs evaluated
 o1 = OLAP()
 o1.name = 'EvaledColor'  
@@ -80,7 +121,7 @@ c1.realtime = True
 c1.dataMap = ['capturetime','string']
 c1.metaMap = ['measurement_id', 'inspection_id', 'frame_id']
 c1.save()
-
+"""
 
 ## Histogram of color of gumballs delivered
 o2 = OLAP()
@@ -98,22 +139,27 @@ o2.save()
 
 c2 = Chart()
 c2.name = 'Color Delivered'
+c2.description = 'The number of times a selected color was delivered.'
 c2.olap = o2.name
 c2.style = 'column'
 c2.minval = 0
 c2.maxval = None
+c2.color = '#777'
 c2.xtype = 'linear'
 c2.colormap = {'0': 'red', '1': 'green', '2': 'yellow','3': u'orange','4': 'purple'}
 c2.labelmap = {'0': 'red', '1': 'green', '2': 'yellow','3': u'orange','4': 'purple'}
+c2.xTitle = 'Candy Color'
+c2.yTitle = 'Count'
+c2.useLabels = True
 c2.accumulate = True
 c2.renderorder = 3
-c2.halfsize = True
+c2.halfsize = False
 c2.realtime = True
 c2.dataMap = ['capturetime','string']
 c2.metaMap = ['measurement_id', 'inspection_id', 'frame_id']
 c2.save()
 
-
+"""
 ## Delivery time
 o3 = OLAP()
 o3.name = 'DeliveryTime'  
@@ -135,8 +181,8 @@ c3.style = 'spline'
 c3.minval = 0
 c3.maxval = None
 c3.xtype = 'datetime'
-c3.colormap = {}
-c3.labelmap = {}
+c3.colormap = None
+c3.labelmap = None
 c3.accumulate = False
 c3.renderorder = 100
 c3.halfsize = False
@@ -144,8 +190,8 @@ c3.realtime = True
 c3.dataMap = ['capturetime','numeric']
 c3.metaMap = ['measurement_id', 'inspection_id', 'frame_id']
 c3.save()
-
-
+"""
+"""
 ## Yellow gumball evaled
 o4 = OLAP()
 o4.name = 'DeliveredYellow'  
@@ -165,7 +211,7 @@ o4.save()
 c4 = Chart()
 c4.name = 'Candies'
 c4.olap = o4.name
-c4.style = 'spline'
+c4.style = 'area'
 c4.minval = 0
 c4.maxval = None
 c4.xtype = 'datetime'
@@ -179,7 +225,6 @@ c4.realtime = True
 c4.dataMap = ['capturetime','string']
 c4.metaMap = ['measurement_id', 'inspection_id', 'frame_id']
 c4.save()
-
 
 ## Green gumball evaled
 o5 = OLAP()
@@ -201,7 +246,7 @@ c5 = Chart()
 c5.name = 'Candies by Color Green'
 c5.olap = o5.name
 c5.chartid = c4.id
-c5.style = 'spline'
+c5.style = 'area'
 c5.minval = 0
 c5.maxval = None
 c5.xtype = 'datetime'
@@ -215,9 +260,6 @@ c5.realtime = True
 c5.dataMap = ['capturetime','string']
 c5.metaMap = ['measurement_id', 'inspection_id', 'frame_id']
 c5.save()
-
-
-
 
 ## Purple gumball evaled
 o6 = OLAP()
@@ -239,7 +281,7 @@ c6 = Chart()
 c6.name = 'Candies by Color Purple'
 c6.olap = o6.name
 c6.chartid = c4.id
-c6.style = 'spline'
+c6.style = 'area'
 c6.minval = 0
 c6.maxval = None
 c6.xtype = 'datetime'
@@ -275,7 +317,7 @@ c7 = Chart()
 c7.name = 'Candies by Color Orange'
 c7.olap = o7.name
 c7.chartid = c4.id
-c7.style = 'spline'
+c7.style = 'area'
 c7.minval = 0
 c7.maxval = None
 c7.xtype = 'datetime'
@@ -289,8 +331,6 @@ c7.realtime = True
 c7.dataMap = ['capturetime','string']
 c7.metaMap = ['measurement_id', 'inspection_id', 'frame_id']
 c7.save()
-
-
 
 ## Red gumball evaled
 o8 = OLAP()
@@ -312,7 +352,7 @@ c8 = Chart()
 c8.name = 'Candies by Color Red'
 c8.olap = o8.name
 c8.chartid = c4.id
-c8.style = 'spline'
+c8.style = 'area'
 c8.minval = 0
 c8.maxval = None
 c8.xtype = 'datetime'
@@ -326,7 +366,7 @@ c8.realtime = True
 c8.dataMap = ['capturetime','string']
 c8.metaMap = ['measurement_id', 'inspection_id', 'frame_id']
 c8.save()
-
+"""
 
 ## PassFail
 o9 = OLAP()
@@ -335,24 +375,24 @@ o9.maxLen = 1000
 o9.queryType = 'measurement_id' 
 o9.queryId = meas.id 
 o9.fields = ['capturetime','string', 'measurement_id', 'inspection_id', 'frame_id']
+o9.valueMap = {'red': 0, 'green': 1, 'yellow': 2, 'orange': 3, 'purple': 4, 'field': 'string', 'default': 5}
 o9.since = None
 o9.before = None
-o9.valueMap = {'purple': 0, 'default':1, 'field': 'string'}
 o9.customFilter = {} 
 o9.statsInfo = []
 o9.save()
 
 c9 = Chart()
-c9.name = 'Candies Overview'
+c9.name = 'Stats'
 c9.olap = o9.name
 c9.style = 'marbleoverview'
 c9.minval = 0
 c9.maxval = None
 c9.xtype = 'datetime'
 c9.colormap = {'0': 'red', '1': 'green', '2': 'yellow','3': u'orange','4': 'purple'}
-c9.labelmap = {}
+c9.labelmap = None
 #c9.accumulate = True
-c9.renderorder = c4.renderorder + 1
+c9.renderorder = 1
 c9.halfsize = False
 c9.realtime = True
 c9.dataMap = ['capturetime','string']

@@ -7,6 +7,7 @@ application = require '../application'
 module.exports = class ChartView extends View
   template: ''
   lastframe: ''
+  _counter:0
   
   initialize: =>
     #todo: find a way to make this work:
@@ -89,7 +90,9 @@ module.exports = class ChartView extends View
     if !@.model.accumulate
       cp = @.clickPoint
       mo = @.overPoint
-    if @.model.xtype == 'datetime'
+    if !@.model.xtype
+      d.d[0] = @_counter++
+    else if @.model.xtype == 'datetime'
       d.d[0] = new moment d.d[0]
       #console.log d.d[0]
     if @.model.accumulate
@@ -100,6 +103,7 @@ module.exports = class ChartView extends View
     else
       _id = d.m[2]
     _point =
+      marker:{}
       y:d.d[1]
       x:d.d[0]
       id:_id
@@ -108,6 +112,9 @@ module.exports = class ChartView extends View
         mouseOver: mo
         click: cp
         #unselect: @.unselectPoint #application.charts.removeFrame
+    for i,s of @model.metaMap
+      if s == 'string' && @model.colormap
+        _point.marker.fillColor = @model.colormap[d.m[i]]
     return _point
 
   overPoint: (e) =>
@@ -151,7 +158,7 @@ module.exports = class ChartView extends View
             #dd.push p
       #if @olap == 'DeliveredGreen'
       #  console.dir dd
-      @.setData dd
+      @.setData dd, true
     else
       for d in data
         #if @olap == 'DeliveredGreen'

@@ -1,7 +1,7 @@
 View = require './view'
 FrameView = require './frame'
-template = require './templates/home'
 application = require 'application'
+template = require application.settings.template_paths['home_view'] || './templates/home'
 
 module.exports = class HomeView extends View
   initialize: =>
@@ -17,24 +17,38 @@ module.exports = class HomeView extends View
       yAxis:
         title:
           text: ''
+          style:
+            color: '#5B5B5B'
+      xAxis:
+        title:
+          text: ''
+          style:
+            color: '#5B5B5B'
       tooltip:
-        snap:100
+        snap:50
         crosshairs:true
         #enabled:false
       plotOptions:
         series:
+          #connectNulls: true
           #stickyTracking: false
-          lineWidth:2
+          lineWidth:1
+        area:
+          stacking: 'percent'
+        pie:
+          dataLabels:
+            enabled: false
+        column:
+          dataLabels:
+            enabled: true
+
       credits:
         enabled:
           false
       legend:
         enabled: false
       chart:
-        animation: false
-
-
-
+        animation: true
   
   events:
     "click #realtimecontrol": "realtimeControl"
@@ -114,7 +128,8 @@ module.exports = class HomeView extends View
         obj.view.update _dtf,_dtt
     else
       application.charts.timeframe = $('#chart-interval').attr('value')
-      tf = new moment().subtract('minutes',application.charts.timeframe).valueOf()
+      #console.log application.charts.timeframe
+      tf = new moment().subtract('seconds',(application.charts.timeframe*1000)).valueOf()
       for obj in application.charts.models
         obj.view.update tf
   toggleControlBar: =>
@@ -147,3 +162,20 @@ module.exports = class HomeView extends View
       search_bar.addClass 'subnav-fixed'
     else
       search_bar.removeClass 'subnav-fixed'
+
+  toggleView: (link, objID) ->
+    detector = document.getElementById("frame-container")
+    video = document.getElementById("demo_video")
+    if link is "detector"
+      detector.style.display = "block"
+      video.style.display = "none"
+    else
+      detector.style.display = "none"
+      video.style.display = "block"
+    linksArray = document.getElementById("toggle").getElementsByTagName("a")
+    i = 0
+  
+    while i < linksArray.length
+      linksArray[i].style.color = "#7c7c7c"
+      i++
+    objID.style.color = "#000000"
