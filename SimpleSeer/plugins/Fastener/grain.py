@@ -53,7 +53,7 @@ def scanner_preprocess(img):
 #     img.applyLayers()
 #     return img
 
-def getLocalMin(imgNP,pt,win):
+def getLocalMin(imgNP,pt,prevPt,win):
     w = imgNP.shape[0]
     h = imgNP.shape[1]
     xmin = np.clip(pt[0]-win,0,w).astype(int)
@@ -66,20 +66,42 @@ def getLocalMin(imgNP,pt,win):
     meansy = np.mean(subimg,axis=0)
     minvy = np.min(meansy)
 
-    xm = np.where(meansx==minvx)
-    if(len(xm) > 1 ):
-        print "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
-    ym = np.where(meansy==minvy)
+    xm = np.where(meansx==minvx)[0][0]
+    ym = np.where(meansy==minvy)[0][0]
     #x,y= np.where(subimg==minv)
     #dist = ((np.array(xm)-win)**2)
     #xloc = np.where(dist==np.min(dist))
+    xf = xm-(pt[0]-xmin)
+    yf = ym+1#y[loc]+1
+ #   print xf,yf
+    pVec = [(pt[0]-prevPt[0]),(pt[1]-prevPt[1])]
+    cVec = [xf,yf]
+    #calculate the direction as the sum of the prior and our current estimate
+    xd = (pVec[0]+cVec[0])/2
+    yd = (pVec[1]+cVec[1])/2
+    # print "###################################"
+    # print "last point    " +str(pt)
+    # print "old direction " +str(pVec)
+    # print "cur direction " + str((xf,yf))
+    # print "sug direction " +str((xd,yd))
+    xf = pt[0]+xd
+    yf = pt[1]+yd
+#    print (xf,yf)
+#    time.sleep(1)
+#    print "nex point     " + str((xf,yf))
+    return (np.clip(xf,0,w),np.clip(yf,0,h))
 
-    xf = pt[0]+xm[0]-((xmax-xmin)/2)
-    yf = pt[1]+1#y[loc]+1
-#    print xf[0],yf[0]
-    return (xf[0],yf)
 
-def getGrains2(img,seeds=20,win=3):
+# def generateSteeringArray(win):
+#     x = np.mgrid[0:(2*win)+1,(-1*win):win+1][1]
+#     y = np.mgrid[0:(2*win)+1,0:(2*win)+1][0]
+#     r = np.sqrt((x*x)+(y*y))
+#     print r
+#     tx = x/r
+#     ty = y/r 
+#     return tx,ty
+    
+def getGrains2(img,seeds=20,win=10):
     retVal = []
     seedpts = np.floor(np.linspace(0,img.width,seeds))
     y = np.zeros([seeds])
@@ -89,10 +111,14 @@ def getGrains2(img,seeds=20,win=3):
         print "Doing point"
         print pt
         line_pts = [pt]
-        newPt = pt
-        while(ymax-newPt[1] > win+1 ):
-            newPt = getLocalMin(img.getGrayNumpy(),newPt,win)
-            line_pts.append(newPt)
+        nextPt = pt
+        prevPt = np.array([pt[0],-2])
+        while(ymax-nextPt[1] > win+1 ):
+           currentPt = getLocalMin(img.getGrayNumpy(),nextPt,prevPt,win)
+           prevPt = nextPt            
+           nextPt = currentPt
+
+           line_pts.append(nextPt)
         retVal.append(line_pts)
 
     for r in retVal:
@@ -103,25 +129,28 @@ def getGrains2(img,seeds=20,win=3):
     return img 
 
    
-path = ["./data/angle/","./data/flat/"]
+path = ["./data/"]#angle/","./data/flat/"]
 i = 0 
 for p in path:
     imset = ImageSet(p)
     for raw in imset:
-        img = scanner_preprocess(raw)
-        binary = img.threshold(20).dilate(3)
-        temp = img.equalize().binarize(blocksize=15)
-        b = temp.findBlobsFromMask(binary)
-        fname = str(i)+".png"
+        img = raw
+#        img = scanner_preprocess(raw)
+        # binary = img.threshold(20).dilate(3)
+        # temp = img.equalize().binarize(blocksize=15)
+        # b = temp.findBlobsFromMask(binary)
+        fname = str(i)+".jpg"
         i = i + 1
-        grain = b[-1].blobImage()
-        grain = grain.crop(raw.width*(3/16.0),raw.height/8,raw.width*(9/16.0),raw.height/3)
-        rawData = raw.crop(raw.width*(3/16.0),raw.height/8,raw.width*(9/16.0),raw.height/3)
-        rawData = rawData
-        temp = Image((rawData.width,rawData.height))
-        temp = temp.blit(rawData,mask=grain).smooth().smooth(aperature=15)
-        result = getGrains2(rawData.equalize().invert().sobel(xorder=0))
+        # i = i + 1
+        # grain = b[-1].blobImage()
+        # grain = grain.crop(raw.width*(3/16.0),raw.height/8,raw.width*(9/16.0),raw.height/3)
+        # rawData = raw.crop(raw.width*(3/16.0),raw.height/8,raw.width*(9/16.0),raw.height/3)
+        # rawData = raw
+        # temp = Image((rawData.width,rawData.height))
+        # temp = temp.blit(rawData,mask=grain).smooth().smooth(aperature=15)
+        result = getGrains2(raw)#.equalize().threshold(128))
         result.show()
+        #rawData.equalize.erode().show()
         result.save(fname)
 
         
