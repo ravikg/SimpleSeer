@@ -80,7 +80,7 @@ class FastenerFeature(SimpleCV.Feature):
       print "FAIL"
       self.shaft_right = ((0,0),(1,1))
 
-    self.shaft_width = self.shaft_right[0][0]-self.shaft_left[0][0]
+    self.shaft_width = np.max([self.shaft_right[0][0],self.shaft_right[1][0]])-np.min([self.shaft_left[0][0],self.shaft_left[1][0]])
     self.shaft_width_mm = (self.shaft_width/self.dpi)*inches_to_mm
     ty = int(np.average([self.shaft_right[0][1],self.shaft_right[1][1],self.shaft_left[0][1],self.shaft_left[1][1]]))
     self.shaft_line = ((self.shaft_right[0][0],ty),(self.shaft_left[0][0],ty))

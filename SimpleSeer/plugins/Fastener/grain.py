@@ -142,30 +142,41 @@ def getGrains2(img,seeds=40,win=6):
             prev = p
     return img 
 
-def grainFlow3(img,slices=10):
+def grainFlow3(img,slices=15):
     sw = img.height/slices
+    # b = img.findBlobs(minsize=9)
+    # # b = FeatureSet([ml for ml in b if ml.area() < 200])
+    # # b2 = FeatureSet([ml for ml in b if np.fabs(ml.angle()) > 45])
+    # # metric = float(len(b2))/float(len(b))
+    # # metric = metric / float(img.area())
+    # # b = metric*1000000
+    # b = b.aspectRatios()
+    # total = len(b)
+    # b = len([bs for bs in b if bs > .8 and bs < 1.2])
+    # metric = (float(b)/float(total))/(float(img.area()))
+    # b = metric * 10000000
+    # b = np.clip(np.round(b),1,5)
+    # print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+    # print b
+    # print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
     result = []
     for i in range(0,slices):
         sample = img.crop(0,i*sw,img.width,sw)
         #l=sample.findLines(threshold=10)#threshold=1,minlinelength=10,maxlinegap=3,cannyth1=50, cannyth2=100)
-        l = sample.findBlobs(minsize=3)
+        l = sample.findBlobs(minsize=11)
         l = FeatureSet([ml for ml in l if ml.area() < sample.width*sample.height/20])
         l1 = FeatureSet([ml for ml in l if np.fabs(ml.angle()) > 45])
         l2 = FeatureSet([ml for ml in l if np.fabs(ml.angle()) <= 45])
         l1.draw(color=Color.RED,width=2)
         l2.draw(color=Color.BLUE,width=2)
         sample.show()
-        print "-------------"
         v = np.mean(np.fabs(l.angle()))
-        print v
         result.append(v)
-        rc = int((v/180.0)*255.0)
-        print rc
         if( v < 45.0 ):
             img.dl().rectangle((0,i*sw),(img.width,sw),color=Color.BLUE,filled=True,alpha=100)
         else:
             img.dl().rectangle((0,i*sw),(img.width,sw),color=Color.RED,filled=True,alpha=100)
-        #time.sleep(1)
+    #img.dl().ezViewText(str(b),(20,20))
     return img.applyLayers()
         
    
@@ -174,31 +185,26 @@ i = 0
 for p in path:
     imset = ImageSet(p)
     for raw in imset:
-        img = raw
         img = scanner_preprocess(raw)
-        binary = img.threshold(20).dilate(3)
+        #build the mask to get bolt
+        binary = img.threshold(20).dilate(3) 
+        #and get the grain image
         temp = img.equalize().binarize(blocksize=15)
+        # get the biggest blob's grain image
         b = temp.findBlobsFromMask(binary)
+        grain = b[-1].blobImage()
+        # now do the same for the raw area
+        b = img.findBlobsFromMask(binary)
+        raw = b[-1].blobImage()
+        # lob off the head approximately
+        grain = grain.crop(raw.width*(3/16.0),raw.height/8,raw.width*(9/16.0),raw.height/3)
+        raw = raw.crop(raw.width*(3/16.0),raw.height/8,raw.width*(9/16.0),raw.height/3)
+
+        result = grainFlow3(grain)
+        result.show()
+
         fname = str(i)+".jpg"
         i = i + 1
-        # i = i + 1
-        grain = b[-1].blobImage()
-        grain = grain.crop(raw.width*(3/16.0),raw.height/8,raw.width*(9/16.0),raw.height/3)
-        rawData = raw.crop(raw.width*(3/16.0),raw.height/8,raw.width*(9/16.0),raw.height/3)
-        #rawData = raw
-        temp = Image((rawData.width,rawData.height))
-        temp = temp.blit(rawData,mask=grain)
-        temp = temp.smooth(aperature=15)
-        result = grain
-        
-#        result.findLines().show()
-        #result = temp.edges()
-        result = grainFlow3(temp.equalize().binarize().invert().erode())
-        #result = getGrains2(grain.invert().erode())
-#        time.sleep(3)
-        result.show()
-#        time.sleep(5)
-        #rawData.equalize.erode().show()
         result.save(fname)
 
         
