@@ -4,7 +4,7 @@ class FastenerFeature
     @feature = feature
    
   
-  icon: () => "/img/template.png" 
+  icon: () => "/img/fastener.png" 
     
   represent: () =>
     "Fastener Form Analysis"
