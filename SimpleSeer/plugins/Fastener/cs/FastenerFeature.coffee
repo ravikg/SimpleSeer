@@ -75,13 +75,13 @@ class FastenerFeature
     temp = @feature.get("featuredata").shaft_width_inch.toPrecision(3).toString() + " in."
     dropshadow(pjs,[x0,y0],[x1,y1],[180,180,0],temp )
 
-    shift = -60
-    x0 = @feature.get("featuredata").lbs_line[0][0]
-    y0 = @feature.get("featuredata").lbs_line[0][1]+shift
-    x1 = @feature.get("featuredata").lbs_line[1][0]
-    y1 = @feature.get("featuredata").lbs_line[1][1]+shift
-    temp = @feature.get("featuredata").lbs_width_inch.toPrecision(3).toString() + " in." 
-    dropshadow(pjs,[x0,y0],[x1,y1],[180,180,0],temp)
+    #shift = 20
+    #x0 = @feature.get("featuredata").lbs_line[0][0]
+    #y0 = @feature.get("featuredata").lbs_line[0][1]+shift
+    #x1 = @feature.get("featuredata").lbs_line[1][0]
+    #y1 = @feature.get("featuredata").lbs_line[1][1]+shift
+    #temp = @feature.get("featuredata").lbs_width_inch.toPrecision(3).toString() + " in." 
+    #dropshadow(pjs,[x0,y0],[x1,y1],[180,180,0],temp)
 
     pjs.stroke 180, 180, 0, 255
     fsz = 100

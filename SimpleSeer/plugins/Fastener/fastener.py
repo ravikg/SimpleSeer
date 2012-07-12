@@ -4,8 +4,9 @@ from SimpleCV import *
 from SimpleSeer import models as M
 from SimpleSeer import util
 from scipy import optimize
+import warnings
 
-counter = 0
+#counter = 0
 
 from SimpleSeer.plugins import base
 """
@@ -53,13 +54,13 @@ class FastenerFeature(SimpleCV.Feature):
     if( head[0] is not None):
       self.head_left = self.sanitizeNP64(head[0].end_points)
     else:
-      print "FAIL"
+      warnings.warn("could not find left side of head")
       self.head_left = ((0,0),(1,1))
 
     if( head[1] is not None):
       self.head_right = self.sanitizeNP64(head[1].end_points)
     else:
-      print "FAIL"
+      warnings.warn("could not find right side of head")
       self.head_right = ((0,0),(1,1))
     
     self.head_width = self.head_right[0][0]-self.head_left[0][0]
@@ -70,13 +71,13 @@ class FastenerFeature(SimpleCV.Feature):
     if( shaft[0] is not None):
       self.shaft_left = self.sanitizeNP64(shaft[0].end_points)
     else:
-      print "FAIL"
+      warnings.warn("could not find left side of shaft")
       self.shaft_left = ((0,0),(1,1))
 
     if( shaft[1] is not None):
       self.shaft_right = self.sanitizeNP64(shaft[1].end_points)
     else:
-      print "FAIL"
+      warnings.warn("could not find right side of shaft")
       self.shaft_right = ((0,0),(1,1))
 
     self.shaft_width = self.shaft_right[0][0]-self.shaft_left[0][0]
@@ -219,6 +220,7 @@ class Fastener(base.InspectionPlugin):
             retVal=Line(img,((x,ymin*0.7),(x,ymax*1.3)))
             retVal = img.fitLines([retVal.end_points])[0]
     else:
+        warnings.warn("Couldn't find line in ROI")
         retVal = None
 
     return retVal 
@@ -237,10 +239,10 @@ class Fastener(base.InspectionPlugin):
     b = result.findBlobsFromMask(mask=binary)
     binary = Image((result.width,result.height))
     edgeImg = binary.blit(b[-1].blobMask(),b[-1].topLeftCorner()).edges()
-    global counter
-    fname = str(counter)+".png"
-    counter = counter + 1
-    edgeImg.save(fname)
+    #global counter
+    #fname = str(counter)+".png"
+    #counter = counter + 1
+    #edgeImg.save(fname)
     l = edgeImg.findLines(threshold=10,minlinelength=15 )#,cannyth1=40,cannyth2=120,maxlinegap=2)
     #b = result.findBlobsFromMask(mask=binary)
     l = l.reassignImage(result)

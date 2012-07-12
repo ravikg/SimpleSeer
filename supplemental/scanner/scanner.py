@@ -130,7 +130,7 @@ def scan(state):
             img = Image(nump)
         #now straigten out the image
         if( img.width > 3500 or img.height > 3500 ):
-            M.Alert.error("WHOA NELLY! Is the shroud over the scanner?")
+            M.Alert.error("Image is too bright. Is the shroud over the scanner?")
             return core.state('waitforbuttons')        
 
         img = straightenImg(img)
@@ -160,7 +160,16 @@ def process(frame):
             return
         if inspection.camera and inspection.camera != frame.camera:
             return
-        results = inspection.execute(frame.image)
+        try:
+            results = inspection.execute(frame.image)
+        except:
+            if 'notes' not in frame.metadata:
+                frame.metadata['notes'] = ''
+            else:
+                frame.metadata['notes'] += " "
+            
+            frame.metadata['notes'] += "Inspection failed"
+        
         frame.features += results
         for m in inspection.measurements:
             m.execute(frame, results)
