@@ -49,6 +49,7 @@ class FastenerFeature(SimpleCV.Feature):
 
   def __init__(self,head,shaft,lbs,fillet,top,bottom,bb,img,dpi=1200):
     self.dpi = dpi
+    inches_to_mm = 25.4
     #FML numpy.F64 sanitization
     if( head[0] is not None):
       self.head_left = self.sanitizeNP64(head[0].end_points)
@@ -63,7 +64,7 @@ class FastenerFeature(SimpleCV.Feature):
       self.head_right = ((0,0),(1,1))
     
     self.head_width = self.head_right[0][0]-self.head_left[0][0]
-    self.head_width_inch = self.head_width/self.dpi
+    self.head_width_mm = (self.head_width/self.dpi)*inches_to_mm
     ty = int(np.average([self.head_right[0][1],self.head_right[1][1],self.head_left[0][1],self.head_left[1][1]]))
     self.head_line = ((self.head_right[0][0],ty),(self.head_left[0][0],ty))
 
@@ -80,7 +81,7 @@ class FastenerFeature(SimpleCV.Feature):
       self.shaft_right = ((0,0),(1,1))
 
     self.shaft_width = self.shaft_right[0][0]-self.shaft_left[0][0]
-    self.shaft_width_inch = self.shaft_width/self.dpi
+    self.shaft_width_mm = (self.shaft_width/self.dpi)*inches_to_mm
     ty = int(np.average([self.shaft_right[0][1],self.shaft_right[1][1],self.shaft_left[0][1],self.shaft_left[1][1]]))
     self.shaft_line = ((self.shaft_right[0][0],ty),(self.shaft_left[0][0],ty))
 
@@ -96,7 +97,7 @@ class FastenerFeature(SimpleCV.Feature):
       self.lbs_right = ((0,0),(1,1))
    
     self.lbs_width = float(np.max([self.lbs_right[0][0],self.lbs_right[1][0]])-np.min([self.lbs_left[0][0],self.lbs_left[1][0]]))
-    self.lbs_width_inch = self.lbs_width/self.dpi
+    self.lbs_width_mm = (self.lbs_width/self.dpi)*inches_to_mm
     ty = int(np.average([self.lbs_right[0][1],self.lbs_right[1][1],self.lbs_left[0][1],self.lbs_left[1][1]]))
     xleft = np.min([self.lbs_left[0][0],self.lbs_left[1][0]])
     xright = np.max([self.lbs_right[0][0],self.lbs_right[1][0]])
