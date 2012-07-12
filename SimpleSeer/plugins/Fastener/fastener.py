@@ -200,7 +200,7 @@ class Fastener(base.InspectionPlugin):
             y = np.average(ys)
             # this aggregate line of all our line segments j
             # becomes the basis of our least squares fit.             
-            retVal=Line(img,((xmin*0.7,y),(xmax*1.3,y)))
+            retVal=Line(img,((xmin*1.02,y),(xmax*.98,y)))
             retVal = img.fitLines([retVal.end_points])[0]
 
         if( mode == "vertical" ):
@@ -216,7 +216,7 @@ class Fastener(base.InspectionPlugin):
             ymin = np.min(ys)
             ymax = np.max(ys)
             x = np.average(xs)
-            retVal=Line(img,((x,ymin*0.7),(x,ymax*1.3)))
+            retVal=Line(img,((x,ymin*1.02),(x,ymax*.98)))
             retVal = img.fitLines([retVal.end_points])[0]
     else:
         retVal = None
@@ -237,10 +237,10 @@ class Fastener(base.InspectionPlugin):
     b = result.findBlobsFromMask(mask=binary)
     binary = Image((result.width,result.height))
     edgeImg = binary.blit(b[-1].blobMask(),b[-1].topLeftCorner()).edges()
-    global counter
-    fname = str(counter)+".png"
-    counter = counter + 1
-    edgeImg.save(fname)
+    #global counter
+    #fname = str(counter)+".png"
+    #counter = counter + 1
+    #edgeImg.save(fname)
     l = edgeImg.findLines(threshold=10,minlinelength=15 )#,cannyth1=40,cannyth2=120,maxlinegap=2)
     #b = result.findBlobsFromMask(mask=binary)
     l = l.reassignImage(result)

@@ -59,8 +59,8 @@ def getLocalMin(imgNP,pt,prevPt,win):
     xmin = np.clip(pt[0]-win,0,w).astype(int)
     xmax = np.clip(pt[0]+win,0,w).astype(int)
     ymin = np.clip(pt[1]+1,0,h).astype(int)
-    ymax = np.clip(pt[1]+(2*win)+1,0,h).astype(int)
-    subimg = imgNP[xmin:xmax,ymin:ymax]
+    ymax = np.clip(pt[1]+win*2+1,0,h).astype(int)
+    subimg = imgNP[xmin:xmax+1,ymin:ymax+1]
     meansx = np.mean(subimg,axis=1)
     minvx = np.min(meansx)
     meansy = np.mean(subimg,axis=0)
@@ -71,21 +71,35 @@ def getLocalMin(imgNP,pt,prevPt,win):
     #x,y= np.where(subimg==minv)
     #dist = ((np.array(xm)-win)**2)
     #xloc = np.where(dist==np.min(dist))
-    xf = xm-(pt[0]-xmin)
-    yf = ym+1#y[loc]+1
+    print (xmin,xmax,pt[0])
+    print subimg.shape
+    if(minvx > 200):
+        xf = (pt[0]-prevPt[0])
+    else:
+        xf = xm-win
+
+    if(np.fabs(xf) == win and minvy < 52 and np.random.rand(1)[0] > 0.2):
+        xf = xf*2
+        yf = 0
+    else :
+        yf = win/2
+#    if(minvy > 128 ):
+ #       yf = 1
+ #   else:
+ #       yf = 1#ym+1#y[loc]+1
  #   print xf,yf
     pVec = [(pt[0]-prevPt[0]),(pt[1]-prevPt[1])]
     cVec = [xf,yf]
     #calculate the direction as the sum of the prior and our current estimate
-    xd = (pVec[0]+cVec[0])/2
-    yd = (pVec[1]+cVec[1])/2
+    xd = xf#(pVec[0]+cVec[0])/2
+    yd = yf#(pVec[1]+cVec[1])/2
     # print "###################################"
     # print "last point    " +str(pt)
     # print "old direction " +str(pVec)
-    # print "cur direction " + str((xf,yf))
+#    print "cur direction " + str((xf,yf))
     # print "sug direction " +str((xd,yd))
-    xf = pt[0]+xd
-    yf = pt[1]+yd
+    xf = np.round(pt[0]+xd)
+    yf = np.round(pt[1]+yd)
 #    print (xf,yf)
 #    time.sleep(1)
 #    print "nex point     " + str((xf,yf))
@@ -101,7 +115,7 @@ def getLocalMin(imgNP,pt,prevPt,win):
 #     ty = y/r 
 #     return tx,ty
     
-def getGrains2(img,seeds=20,win=10):
+def getGrains2(img,seeds=40,win=6):
     retVal = []
     seedpts = np.floor(np.linspace(0,img.width,seeds))
     y = np.zeros([seeds])
@@ -124,32 +138,66 @@ def getGrains2(img,seeds=20,win=10):
     for r in retVal:
         prev = r[0]
         for p in r:
-            img.drawLine(prev,p,color=Color.RED,thickness=3)
+            img.drawLine(prev,p,color=Color.RED,thickness=2)
             prev = p
     return img 
 
+def grainFlow3(img,slices=10):
+    sw = img.height/slices
+    result = []
+    for i in range(0,slices):
+        sample = img.crop(0,i*sw,img.width,sw)
+        #l=sample.findLines(threshold=10)#threshold=1,minlinelength=10,maxlinegap=3,cannyth1=50, cannyth2=100)
+        l = sample.findBlobs(minsize=3)
+        l = FeatureSet([ml for ml in l if ml.area() < sample.width*sample.height/20])
+        l1 = FeatureSet([ml for ml in l if np.fabs(ml.angle()) > 45])
+        l2 = FeatureSet([ml for ml in l if np.fabs(ml.angle()) <= 45])
+        l1.draw(color=Color.RED,width=2)
+        l2.draw(color=Color.BLUE,width=2)
+        sample.show()
+        print "-------------"
+        v = np.mean(np.fabs(l.angle()))
+        print v
+        result.append(v)
+        rc = int((v/180.0)*255.0)
+        print rc
+        if( v < 45.0 ):
+            img.dl().rectangle((0,i*sw),(img.width,sw),color=Color.BLUE,filled=True,alpha=100)
+        else:
+            img.dl().rectangle((0,i*sw),(img.width,sw),color=Color.RED,filled=True,alpha=100)
+        #time.sleep(1)
+    return img.applyLayers()
+        
    
-path = ["./data/"]#angle/","./data/flat/"]
+path = ["./data/angle/","./data/flat/"]
 i = 0 
 for p in path:
     imset = ImageSet(p)
     for raw in imset:
         img = raw
-#        img = scanner_preprocess(raw)
-        # binary = img.threshold(20).dilate(3)
-        # temp = img.equalize().binarize(blocksize=15)
-        # b = temp.findBlobsFromMask(binary)
+        img = scanner_preprocess(raw)
+        binary = img.threshold(20).dilate(3)
+        temp = img.equalize().binarize(blocksize=15)
+        b = temp.findBlobsFromMask(binary)
         fname = str(i)+".jpg"
         i = i + 1
         # i = i + 1
-        # grain = b[-1].blobImage()
-        # grain = grain.crop(raw.width*(3/16.0),raw.height/8,raw.width*(9/16.0),raw.height/3)
-        # rawData = raw.crop(raw.width*(3/16.0),raw.height/8,raw.width*(9/16.0),raw.height/3)
-        # rawData = raw
-        # temp = Image((rawData.width,rawData.height))
-        # temp = temp.blit(rawData,mask=grain).smooth().smooth(aperature=15)
-        result = getGrains2(raw)#.equalize().threshold(128))
+        grain = b[-1].blobImage()
+        grain = grain.crop(raw.width*(3/16.0),raw.height/8,raw.width*(9/16.0),raw.height/3)
+        rawData = raw.crop(raw.width*(3/16.0),raw.height/8,raw.width*(9/16.0),raw.height/3)
+        #rawData = raw
+        temp = Image((rawData.width,rawData.height))
+        temp = temp.blit(rawData,mask=grain)
+        temp = temp.smooth(aperature=15)
+        result = grain
+        
+#        result.findLines().show()
+        #result = temp.edges()
+        result = grainFlow3(temp.equalize().binarize().invert().erode())
+        #result = getGrains2(grain.invert().erode())
+#        time.sleep(3)
         result.show()
+#        time.sleep(5)
         #rawData.equalize.erode().show()
         result.save(fname)
 
