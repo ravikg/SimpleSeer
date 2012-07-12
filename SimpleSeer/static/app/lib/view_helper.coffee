@@ -87,7 +87,19 @@ Handlebars.registerHelper 'featuresummary', (featureset) ->
     icon = ""
     if f.icon()
       icon = "<img src=\"" + f.icon() + "\">"
-    ret += "<li class=feature>" + icon + f.represent() + "</li>"
+    ret += "<li class=feature>" + icon + "<b>" + f.represent() + "</b>"
+    count = 0
+    tds = f.tableData()
+    if tds
+       ret += "<ul>"
+    for th in f.tableHeader()
+      ret += "<li><label>" + th + ":</label> " + tds[count] + "</li>"
+      count++
+    if tds
+       ret += "</ul>"
+       
+    ret += "</li>"
+       
     
   new Handlebars.SafeString(ret)
   

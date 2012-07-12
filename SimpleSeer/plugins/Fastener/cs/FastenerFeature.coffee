@@ -7,15 +7,15 @@ class FastenerFeature
   icon: () => "/img/template.png" 
     
   represent: () =>
-    "Fastener Detected at (" + @feature.get("x") + ", " + @feature.get("y") + ")."
+    "Fastener Form Analysis"
  
   tableOk: => true
     
   tableHeader: () =>
-    ["X Positon", "Y Position", "Head Width (mm)", "Shaft Width (mm)", "LBS Diameter (mm)","Left Fillet Angle","Right Fillet Angle" ]
+    ["Head Width (mm)", "Shaft Width (mm)", "LBS Diameter (mm)","Left Fillet Angle","Right Fillet Angle" ]
     
   tableData: () =>
-    [@feature.get("x"), @feature.get("y"), @feature.get("featuredata").head_width_mm.toPrecision(3),@feature.get("featuredata").shaft_width_mm.toPrecision(3), @feature.get("featuredata").lbs_width_mm.toPrecision(3),@feature.get("featuredata").lbs_left_angle.toPrecision(4), @feature.get("featuredata").lbs_right_angle.toPrecision(4)]
+    [@feature.get("featuredata").head_width_mm.toPrecision(3),@feature.get("featuredata").shaft_width_mm.toPrecision(3), @feature.get("featuredata").lbs_width_mm.toPrecision(3),@feature.get("featuredata").lbs_left_angle.toPrecision(4), @feature.get("featuredata").lbs_right_angle.toPrecision(4)]
 
 
 
@@ -25,14 +25,14 @@ class FastenerFeature
     end_line = 25
     ds = 5
     pjs.fill(color[0],color[1],color[2]) 
-    pjs.stroke 0,0,0,128
-    pjs.line(pt1[0],pt1[1]+ds,pt2[0],pt2[1]+ds)
-    pjs.line(pt1[0]-ds,pt1[1]+end_line,pt1[0]-ds,pt1[1]-end_line)
-    pjs.line(pt2[0]+ds,pt2[1]+end_line,pt2[0]+ds,pt2[1]-end_line)
-    pjs.triangle(pt1[0]-ds,pt1[1]+ds,pt1[0]-arrow_sz-ds,pt1[1]+arrow_sz+ds,pt1[0]-arrow_sz-ds,pt1[1]-arrow_sz+ds)
-    pjs.triangle(pt2[0]+ds,pt2[1]+ds,pt2[0]+arrow_sz+ds,pt2[1]+arrow_sz+ds,pt2[0]+arrow_sz+ds,pt2[1]-arrow_sz+ds) 
+    #pjs.stroke 0,0,0,128
+    #pjs.line(pt1[0],pt1[1]+ds,pt2[0],pt2[1]+ds)
+    #pjs.line(pt1[0]-ds,pt1[1]+end_line,pt1[0]-ds,pt1[1]-end_line)
+    #pjs.line(pt2[0]+ds,pt2[1]+end_line,pt2[0]+ds,pt2[1]-end_line)
+    #pjs.triangle(pt1[0]-ds,pt1[1]+ds,pt1[0]-arrow_sz-ds,pt1[1]+arrow_sz+ds,pt1[0]-arrow_sz-ds,pt1[1]-arrow_sz+ds)
+    #pjs.triangle(pt2[0]+ds,pt2[1]+ds,pt2[0]+arrow_sz+ds,pt2[1]+arrow_sz+ds,pt2[0]+arrow_sz+ds,pt2[1]-arrow_sz+ds) 
     # Do a drop shaddow
-    pjs.stroke color[0], color[1], color[2], 255
+    pjs.stroke color[0], color[1], color[2], 192
     pjs.line(pt1[0],pt1[1],pt2[0],pt2[1])
     pjs.line(pt1[0],pt1[1]+end_line,pt1[0],pt1[1]-end_line)
     pjs.line(pt2[0],pt2[1]+end_line,pt2[0],pt2[1]-end_line)
@@ -54,7 +54,7 @@ class FastenerFeature
  
     pjs.textFont(pjs.createFont("arial",32))
     pjs.stroke 180, 0, 180, 128              
-    pjs.strokeWeight 5
+    pjs.strokeWeight 2
     pjs.noFill()
     ds = 5
 
@@ -97,16 +97,16 @@ class FastenerFeature
     x0 = @feature.get("featuredata").fillet_left[0]
     y0 = @feature.get("featuredata").fillet_left[1]
     r0 = @feature.get("featuredata").fillet_left_r
-    pjs.ellipse(x0,y0,2*r0,2*r0)
+    #pjs.ellipse(x0,y0,2*r0,2*r0)
 
     x0 = x0-offset
     y0 = y0+offset
 
     pjs.line(x0,y0,x0-fsz,y0)
     pjs.line(x0,y0,x0,y0+fsz)
-    pjs.arc(x0,y0,fsz,fsz,p/2,p)
+    pjs.arc(x0,y0,fsz,fsz,p/2 * 1.01,p) #slight compensation to start to fix stray pixel
 
-    txt=@feature.get("featuredata").lbs_left_angle.toPrecision(4).toString()
+    txt=@feature.get("featuredata").lbs_left_angle.toPrecision(4).toString() + String.fromCharCode(186)
     tw = pjs.textWidth(txt)
     xtxt = (x0-(fsz/2))-(tw/2)
     ytxt = (y0+fsz-20)
@@ -120,14 +120,14 @@ class FastenerFeature
     x0 = @feature.get("featuredata").fillet_right[0]
     y0 = @feature.get("featuredata").fillet_right[1]
     r0 = @feature.get("featuredata").fillet_right_r
-    pjs.ellipse(x0,y0,2*r0,2*r0)
+    #pjs.ellipse(x0,y0,2*r0,2*r0)
     x0 = x0+offset
     y0 = y0+offset
     pjs.line(x0,y0,x0+fsz,y0)
     pjs.line(x0,y0,x0,y0+fsz)
     pjs.arc(x0,y0,fsz,fsz,0,p/2)
 
-    txt=@feature.get("featuredata").lbs_right_angle.toPrecision(4).toString()
+    txt=@feature.get("featuredata").lbs_right_angle.toPrecision(4).toString() + String.fromCharCode(186)
     tw = pjs.textWidth(txt)
     xtxt = (x0+(fsz/2))-(tw/2)
     ytxt = (y0+fsz-20)

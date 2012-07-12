@@ -10,10 +10,10 @@
   </div>
   <div class="span7">
     <ul class="information">
-        <li><b>Camera</b>: {{camera}}</li>
-        <li><b>Time</b>: {{capturetime}}</li>
+        <li><label>Camera:</label> {{camera}}</li>
+        <li><label>Time:</label> {{capturetime}}</li>
         {{#if features}}
-        <li><b>Features</b>:<ul class="features">{{featuresummary features}}</ul></li>
+        {{featuresummary features}}
         {{/if}}
     </ul>
   </div>
