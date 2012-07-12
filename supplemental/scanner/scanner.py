@@ -1,6 +1,10 @@
+from gevent import monkey
+monkey.patch_all()
+
 import gc
 import numpy as np
 import SimpleSeer.models as M
+
 #from SimpleCV import Image
 from datetime import datetime # for frame capture faking
 from SimpleCV import *
@@ -9,17 +13,6 @@ from ScannerUtil import *
 # for non-blocking io
 import sys
 import select
-
-# I apologize for the globals but I am hacking a test harness
-# There is a place in hell for me for global variables
-# and a place in heave for duct-tape testing. 
-testMode = True 
-globalImSet = None 
-globalPath = "/home/kscottz/SimpleSeer/SimpleSeer/plugins/Fastener/data/angle/"
-globalCount = 0
-
-#if( testMode ):
-#    globalImSet = ImageSet(path)
 
 
 @core.state('start')
@@ -33,55 +26,15 @@ def waitforbuttons(state):
     while True:
         core.tick()
         scan = core.cameras[0]
-        global testMode
-        fakeScan = False
-        if( testMode ):
-            i,o,e = select.select([sys.stdin],[],[],0.0001)
-            for s in i:
-                if s == sys.stdin:
-                    input = sys.stdin.readline()
-                    if input is not None:
-                        fakeScan = True
-            
-            if(fakeScan):
-                return state.core.state('scan')
-        else:
-            if scan.device.email or scan.device.file or scan.device.copy or scan.device.dev.get_option(30):
-                return state.core.state('scan')
+        if scan.device.email or scan.device.file or scan.device.copy or scan.device.dev.get_option(30):
+            return state.core.state('scan')
         
 @core.state('scan')
 def scan(state):
     core = state.core
     scan = core.cameras[0]
-    
-    # This may be better living in SimpleSeer.py
-    global testMode
-    if( testMode ):
-        global globalPath
-        global globalImSet
-        global globalCount
-        if( globalImSet is None ):
-            globalImSet = ImageSet(globalPath)
-        M.Alert.info("Scanning.... Please wait")
-        id = '' 
-        if( globalCount > len(globalImSet) ):
-            globalCount = 0
-        img = globalImSet[globalCount]
-        globalCount = globalCount + 1
-        img = straightenImg(img)            
-        frame = M.Frame(capturetime = datetime.utcnow(), 
-                        camera= img.filename )
-        frame.image = img
-        process(frame)
-        M.Alert.info("Straightening the image")
-	t = frame.thumbnail
-        frame.save()
-        id = frame.id
-        M.Alert.clear()
-        M.Alert.redirect("frame/" + str(id))
-        return core.state('waitforbuttons')
 
-    
+    scan.setROI()
     scan.setProperty("resolution", 75)
     scan.setProperty("mode", "gray")
     M.Alert.clear()
@@ -130,7 +83,7 @@ def scan(state):
             img = Image(nump)
         #now straigten out the image
         if( img.width > 3500 or img.height > 3500 ):
-            M.Alert.error("WHOA NELLY! Is the shroud over the scanner?")
+            M.Alert.error("Image is too bright. Is the shroud over the scanner?")
             return core.state('waitforbuttons')        
 
         img = straightenImg(img)
@@ -141,12 +94,11 @@ def scan(state):
         frame.image = img
                
         process(frame)
-	t = frame.thumbnail
+        t = frame.thumbnail
         frame.save()
         id = frame.id
         
 
-    scan.setROI()
     M.Alert.clear()
     M.Alert.redirect("frame/" + str(id))
     return core.state('waitforbuttons')
@@ -155,13 +107,18 @@ def scan(state):
 def process(frame):
     frame.features = []
     frame.results = []
+    import pdb; pdb.set_trace()
+    #k because we sometimes lose connection to mongo
     for inspection in M.Inspection.objects:
         if inspection.parent:
             return
         if inspection.camera and inspection.camera != frame.camera:
             return
-        results = inspection.execute(frame.image)
-        frame.features += results
+        try:
+            frame.features += inspection.execute(frame.image)
+        except:
+            frame.metadata['notes'] += "Inspection failed"
+        
         for m in inspection.measurements:
             m.execute(frame, results)
     

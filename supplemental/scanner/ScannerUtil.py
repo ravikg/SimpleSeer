@@ -41,7 +41,7 @@ def straightenImg(img):
     #take the median of these to filter out outliers
     final_rotation = np.median(values[best])
     if np.max(counts) < 10 or math.isnan(final_rotation):
-        return None
+        return img
     else:
         return img.rotate(final_rotation,fixed=False)   
     
