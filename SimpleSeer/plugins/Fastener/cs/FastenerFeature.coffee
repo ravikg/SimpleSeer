@@ -12,10 +12,10 @@ class FastenerFeature
   tableOk: => true
     
   tableHeader: () =>
-    ["X Positon", "Y Position", "Head Width (in)", "Shaft Width (in)", "LBS Diameter (in)","Left Fillet Angle","Right Fillet Angle" ]
+    ["X Positon", "Y Position", "Head Width (mm)", "Shaft Width (mm)", "LBS Diameter (mm)","Left Fillet Angle","Right Fillet Angle" ]
     
   tableData: () =>
-    [@feature.get("x"), @feature.get("y"), @feature.get("featuredata").head_width_inch.toPrecision(3),@feature.get("featuredata").shaft_width_inch.toPrecision(3), @feature.get("featuredata").lbs_width_inch.toPrecision(3),@feature.get("featuredata").lbs_left_angle.toPrecision(4), @feature.get("featuredata").lbs_right_angle.toPrecision(4)]
+    [@feature.get("x"), @feature.get("y"), @feature.get("featuredata").head_width_mm.toPrecision(3),@feature.get("featuredata").shaft_width_mm.toPrecision(3), @feature.get("featuredata").lbs_width_mm.toPrecision(3),@feature.get("featuredata").lbs_left_angle.toPrecision(4), @feature.get("featuredata").lbs_right_angle.toPrecision(4)]
 
 
 
@@ -65,23 +65,30 @@ class FastenerFeature
     y0 = @feature.get("featuredata").head_line[0][1]
     x1 = @feature.get("featuredata").head_line[1][0]
     y1 = @feature.get("featuredata").head_line[1][1]
-    String temp = @feature.get("featuredata").head_width_inch.toPrecision(3).toString() + " in."
+    String temp = @feature.get("featuredata").head_width_mm.toPrecision(3).toString() + " mm"
     dropshadow(pjs,[x0,y0],[x1,y1],[180,180,0],temp )
     
     x0 = @feature.get("featuredata").shaft_line[0][0]
     y0 = @feature.get("featuredata").shaft_line[0][1]
     x1 = @feature.get("featuredata").shaft_line[1][0]
     y1 = @feature.get("featuredata").shaft_line[1][1]
-    temp = @feature.get("featuredata").shaft_width_inch.toPrecision(3).toString() + " in."
+    temp = @feature.get("featuredata").shaft_width_mm.toPrecision(3).toString() + " mm"
     dropshadow(pjs,[x0,y0],[x1,y1],[180,180,0],temp )
 
-    #shift = 20
-    #x0 = @feature.get("featuredata").lbs_line[0][0]
-    #y0 = @feature.get("featuredata").lbs_line[0][1]+shift
-    #x1 = @feature.get("featuredata").lbs_line[1][0]
-    #y1 = @feature.get("featuredata").lbs_line[1][1]+shift
-    #temp = @feature.get("featuredata").lbs_width_inch.toPrecision(3).toString() + " in." 
-    #dropshadow(pjs,[x0,y0],[x1,y1],[180,180,0],temp)
+    shift = -20
+    x0 = @feature.get("featuredata").lbs_left[1][0]
+    y0 = @feature.get("featuredata").lbs_left[1][1]+shift
+    x1 = @feature.get("featuredata").lbs_left[0][0]
+    y1 = @feature.get("featuredata").lbs_left[0][1]+shift
+    temp = ""#@feature.get("featuredata").lbs_width_mm.toPrecision(3).toString() + " mm"
+    dropshadow(pjs,[x0,y0],[x1,y1],[180,180,0],temp)
+
+    x0 = @feature.get("featuredata").lbs_right[1][0]
+    y0 = @feature.get("featuredata").lbs_right[1][1]+shift
+    x1 = @feature.get("featuredata").lbs_right[0][0]
+    y1 = @feature.get("featuredata").lbs_right[0][1]+shift
+    temp = ""#@feature.get("featuredata").lbs_width_mm.toPrecision(3).toString() + " mm" 
+    dropshadow(pjs,[x0,y0],[x1,y1],[180,180,0],temp)
 
     pjs.stroke 180, 180, 0, 255
     fsz = 100
