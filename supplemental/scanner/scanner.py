@@ -113,8 +113,7 @@ def process(frame):
             return
         try:
             frame.features += inspection.execute(frame.image)
-        except Exception e:
-            print e
+        except:
             frame.metadata['notes'] = "Inspection failed"
         
         for m in inspection.measurements:

@@ -6,6 +6,7 @@ import numpy as np
 from SimpleSeer import models as M
 from SimpleSeer import util
 from scipy import optimize
+from scipy.spatial.distance import euclidean
 import warnings
 
 #counter = 0
@@ -102,6 +103,9 @@ class FastenerFeature(SimpleCV.Feature):
    
     self.lbs_width = float(np.max([self.lbs_right[0][0],self.lbs_right[1][0]])-np.min([self.lbs_left[0][0],self.lbs_left[1][0]]))
     self.lbs_width_mm = (self.lbs_width/self.dpi)*inches_to_mm
+    self.lbs_left_width_mm = inches_to_mm * float(euclidean(self.lbs_left[0], self.lbs_left[1])) / self.dpi 
+    self.lbs_right_width_mm = inches_to_mm * float(euclidean(self.lbs_right[0], self.lbs_right[1])) / self.dpi 
+
     ty = int(np.average([self.lbs_right[0][1],self.lbs_right[1][1],self.lbs_left[0][1],self.lbs_left[1][1]]))
     xleft = np.min([self.lbs_left[0][0],self.lbs_left[1][0]])
     xright = np.max([self.lbs_right[0][0],self.lbs_right[1][0]])
