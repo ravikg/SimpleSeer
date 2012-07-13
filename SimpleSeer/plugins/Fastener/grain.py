@@ -59,7 +59,7 @@ def getLocalMin(imgNP,pt,prevPt,win):
     xmin = np.clip(pt[0]-win,0,w).astype(int)
     xmax = np.clip(pt[0]+win,0,w).astype(int)
     ymin = np.clip(pt[1]+1,0,h).astype(int)
-    ymax = np.clip(pt[1]+win*2+1,0,h).astype(int)
+    ymax = np.clip(pt[1]+win+1,0,h).astype(int)
     subimg = imgNP[xmin:xmax+1,ymin:ymax+1]
     meansx = np.mean(subimg,axis=1)
     minvx = np.min(meansx)
@@ -68,41 +68,26 @@ def getLocalMin(imgNP,pt,prevPt,win):
 
     xm = np.where(meansx==minvx)[0][0]
     ym = np.where(meansy==minvy)[0][0]
-    #x,y= np.where(subimg==minv)
-    #dist = ((np.array(xm)-win)**2)
-    #xloc = np.where(dist==np.min(dist))
-    print (xmin,xmax,pt[0])
-    print subimg.shape
-    if(minvx > 200):
-        xf = (pt[0]-prevPt[0])
-    else:
-        xf = xm-win
 
-    if(np.fabs(xf) == win and minvy < 52 and np.random.rand(1)[0] > 0.2):
-        xf = xf*2
-        yf = 0
-    else :
-        yf = win/2
-#    if(minvy > 128 ):
- #       yf = 1
- #   else:
- #       yf = 1#ym+1#y[loc]+1
- #   print xf,yf
+    xxx,yyy = np.where(subimg==np.min(subimg))
+    xf = xxx[0]-win
+    yf = yyy[0]+1
+#    print(xf,yf)
+    # print apt
+
+    # if(minvx > 50):
+    #     xf = (pt[0]-prevPt[0])
+    # else:
+    #     xf = xm-win
+
+    # yf = 1
     pVec = [(pt[0]-prevPt[0]),(pt[1]-prevPt[1])]
     cVec = [xf,yf]
     #calculate the direction as the sum of the prior and our current estimate
     xd = xf#(pVec[0]+cVec[0])/2
     yd = yf#(pVec[1]+cVec[1])/2
-    # print "###################################"
-    # print "last point    " +str(pt)
-    # print "old direction " +str(pVec)
-#    print "cur direction " + str((xf,yf))
-    # print "sug direction " +str((xd,yd))
     xf = np.round(pt[0]+xd)
     yf = np.round(pt[1]+yd)
-#    print (xf,yf)
-#    time.sleep(1)
-#    print "nex point     " + str((xf,yf))
     return (np.clip(xf,0,w),np.clip(yf,0,h))
 
 
@@ -115,14 +100,13 @@ def getLocalMin(imgNP,pt,prevPt,win):
 #     ty = y/r 
 #     return tx,ty
     
-def getGrains2(img,seeds=40,win=6):
+def getGrains2(img,seeds=60,win=3):
     retVal = []
     seedpts = np.floor(np.linspace(0,img.width,seeds))
     y = np.zeros([seeds])
     start_pts = zip(seedpts,y)
     ymax = img.height
     for pt in start_pts:
-        print "Doing point"
         print pt
         line_pts = [pt]
         nextPt = pt
@@ -240,32 +224,34 @@ def grainFlow4(img,hslice=7,wslice=10):
 
 
             
-path = ["./data/flat/","./data/angle/"]
+path = ["./data/angle/","./data/flat/"]
 i = 0 
 for p in path:
     imset = ImageSet(p)
     print "SET SIZE " + str(len(imset))
     for raw in imset:
-        
         print i
         img = scanner_preprocess(raw)
-        raw.show()
         #build the mask to get bolt
         binary = img.threshold(20).dilate(3) 
         #and get the grain image
-        temp = img.equalize().binarize(blocksize=15)
+        temp = img.equalize().binarize(blocksize=31)
         # get the biggest blob's grain image
         b = temp.findBlobsFromMask(binary)
         grain = b[-1].blobImage()
         # now do the same for the raw area
         b = img.findBlobsFromMask(binary)
+
         raw = b[-1].blobImage()
         # lob off the head approximately
         grain = grain.crop(raw.width*(3/16.0),raw.height/8,raw.width*(9/16.0),raw.height/3)
         raw = raw.crop(raw.width*(3/16.0),raw.height/8,raw.width*(9/16.0),raw.height/3)
 
         #result = grain
-        result = grainFlow4(grain)
+        #result = grainFlow4(grain)
+        #result = grainFlow4(grain.morphClose().skeletonize())
+        #        result = grain.dilate().skeletonize().d ilate().invert()
+        result = getGrains2(grain.invert().smooth(aperature=15,grayscale=True,sigma=2,spatial_sigma=2))
         result.show()
 
         fname = str(i)+".jpg"
