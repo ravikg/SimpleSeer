@@ -179,13 +179,77 @@ def grainFlow3(img,slices=15):
     #img.dl().ezViewText(str(b),(20,20))
     return img.applyLayers()
         
-   
-path = ["./data/angle/","./data/flat/"]
+def grainFlow4(img,hslice=7,wslice=10):
+    sv = img.height/hslice
+    sh = img.width/wslice
+    output = img.copy()
+    for xs in range(0,wslice):
+        for ys in range(0,hslice):
+            sample = img.crop(xs*sh,ys*sv,sh,sv)
+            b = sample.findBlobs(minsize=11)
+            if( b is None ):
+                 continue
+
+            b = [bs for bs in b if bs.area() < 200]
+            if len(b)==0:
+                 continue
+            low = 10
+            high = 80
+            v = len([bs for bs in b if np.fabs(bs.angle()) > high ])
+            h = len([bs for bs in b if np.fabs(bs.angle()) < low ])
+            r = len([bs for bs in b if bs.angle() <= high and bs.angle() >= low ])
+            l = len([bs for bs in b if bs.angle() >= -1*high and bs.angle() <= -1*low ])
+
+            support = np.array([v,h,r,l])
+                
+            
+            best = np.where(support==np.max(support))[0]
+            if( len(best) > 1):
+                best = None
+            else:
+                best = best[0]
+            alpha = 56
+            pt0 = (xs*sh,ys*sv)
+            pt1 = ((xs*sh)+sh,(ys*sv)+sv)
+            if(best==0):
+                output.dl().rectangle(pt0,pt1,color=Color.RED,filled=True,alpha=alpha)
+                ptA = (xs*sh+(sh/2),ys*sv)
+                ptB = (xs*sh+(sh/2),(ys*sv)+sv)
+                output.drawLine(ptA,ptB,color=Color.RED,thickness=3)
+            elif(best==1):
+                output.dl().rectangle(pt0,pt1,color=Color.BLUE,filled=True,alpha=alpha)
+                ptA = (int(xs*sh),int(ys*sv+(sv/2)))
+                ptB = (int(xs*sh+sh),int(ys*sv+(sv/2)))
+                output.drawLine(ptA,ptB,color=Color.RED,thickness=3)
+
+            elif(best==2):
+                output.dl().rectangle(pt0,pt1,color=Color.GREEN,filled=True,alpha=alpha)
+                ptA = (xs*sh,ys*sv)
+                ptB = (xs*sh+sh,ys*sv+sv)
+                output.drawLine(ptA,ptB,color=Color.RED,thickness=3)
+
+            elif(best==3):
+                output.dl().rectangle(pt0,pt1,color=Color.YELLOW,filled=True,alpha=alpha)
+                ptA = (xs*sh+sh,ys*sv)
+                ptB = (xs*sh,ys*sv+sv)
+                output.drawLine(ptA,ptB,color=Color.RED,thickness=3)
+
+    return output
+
+            
+
+
+            
+path = ["./data/flat/","./data/angle/"]
 i = 0 
 for p in path:
     imset = ImageSet(p)
+    print "SET SIZE " + str(len(imset))
     for raw in imset:
+        
+        print i
         img = scanner_preprocess(raw)
+        raw.show()
         #build the mask to get bolt
         binary = img.threshold(20).dilate(3) 
         #and get the grain image
@@ -200,7 +264,8 @@ for p in path:
         grain = grain.crop(raw.width*(3/16.0),raw.height/8,raw.width*(9/16.0),raw.height/3)
         raw = raw.crop(raw.width*(3/16.0),raw.height/8,raw.width*(9/16.0),raw.height/3)
 
-        result = grainFlow3(grain)
+        #result = grain
+        result = grainFlow4(grain)
         result.show()
 
         fname = str(i)+".jpg"
