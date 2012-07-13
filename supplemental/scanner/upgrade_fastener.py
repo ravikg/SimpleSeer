@@ -21,7 +21,7 @@ else:
    insp = inspections[0]
 
 
-for f in Frame.objects:
+for f in Frame.objects.order_by("-capturetime"):
     print "analysing features for frame %s" % str(f.id)
     try:
         img = f.image

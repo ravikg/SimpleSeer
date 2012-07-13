@@ -12,10 +12,10 @@ class FastenerFeature
   tableOk: => true
     
   tableHeader: () =>
-    ["Head Width (mm)", "Shaft Width (mm)", "LBS Diameter (mm)","Left Fillet Angle","Right Fillet Angle" ]
+    ["Head Width (mm)", "Shaft Width (mm)","Left Fillet Angle","Right Fillet Angle" ]
     
   tableData: () =>
-    [@feature.get("featuredata").head_width_mm.toPrecision(3),@feature.get("featuredata").shaft_width_mm.toPrecision(3), @feature.get("featuredata").lbs_width_mm.toPrecision(3),@feature.get("featuredata").lbs_left_angle.toPrecision(4), @feature.get("featuredata").lbs_right_angle.toPrecision(4)]
+    [@feature.get("featuredata").head_width_mm.toFixed(2),@feature.get("featuredata").shaft_width_mm.toFixed(2),@feature.get("featuredata").lbs_left_angle.toFixed(1), @feature.get("featuredata").lbs_right_angle.toFixed(1)]
 
 
 
@@ -65,14 +65,14 @@ class FastenerFeature
     y0 = @feature.get("featuredata").head_line[0][1]
     x1 = @feature.get("featuredata").head_line[1][0]
     y1 = @feature.get("featuredata").head_line[1][1]
-    String temp = @feature.get("featuredata").head_width_mm.toPrecision(3).toString() + " mm"
+    String temp = @feature.get("featuredata").head_width_mm.toFixed(2).toString() + " mm"
     dropshadow(pjs,[x0,y0],[x1,y1],[180,180,0],temp )
     
     x0 = @feature.get("featuredata").shaft_line[0][0]
     y0 = @feature.get("featuredata").shaft_line[0][1]
     x1 = @feature.get("featuredata").shaft_line[1][0]
     y1 = @feature.get("featuredata").shaft_line[1][1]
-    temp = @feature.get("featuredata").shaft_width_mm.toPrecision(3).toString() + " mm"
+    temp = @feature.get("featuredata").shaft_width_mm.toFixed(2).toString() + " mm"
     dropshadow(pjs,[x0,y0],[x1,y1],[180,180,0],temp )
 
     shift = -20
@@ -80,14 +80,14 @@ class FastenerFeature
     y0 = @feature.get("featuredata").lbs_left[1][1]+shift
     x1 = @feature.get("featuredata").lbs_left[0][0]
     y1 = @feature.get("featuredata").lbs_left[0][1]+shift
-    temp = ""#@feature.get("featuredata").lbs_width_mm.toPrecision(3).toString() + " mm"
+    temp = @feature.get("featuredata").lbs_left_width_mm.toFixed(2).toString() + " mm"
     dropshadow(pjs,[x0,y0],[x1,y1],[180,180,0],temp)
 
     x0 = @feature.get("featuredata").lbs_right[1][0]
     y0 = @feature.get("featuredata").lbs_right[1][1]+shift
     x1 = @feature.get("featuredata").lbs_right[0][0]
     y1 = @feature.get("featuredata").lbs_right[0][1]+shift
-    temp = ""#@feature.get("featuredata").lbs_width_mm.toPrecision(3).toString() + " mm" 
+    temp = @feature.get("featuredata").lbs_right_width_mm.toFixed(2).toString() + " mm" 
     dropshadow(pjs,[x0,y0],[x1,y1],[180,180,0],temp)
 
     pjs.stroke 180, 180, 0, 255
@@ -106,7 +106,7 @@ class FastenerFeature
     pjs.line(x0,y0,x0,y0+fsz)
     pjs.arc(x0,y0,fsz,fsz,p/2 * 1.01,p) #slight compensation to start to fix stray pixel
 
-    txt=@feature.get("featuredata").lbs_left_angle.toPrecision(4).toString() + String.fromCharCode(186)
+    txt=@feature.get("featuredata").lbs_left_angle.toFixed(1).toString() + String.fromCharCode(186)
     tw = pjs.textWidth(txt)
     xtxt = (x0-(fsz/2))-(tw/2)
     ytxt = (y0+fsz-20)
@@ -127,7 +127,7 @@ class FastenerFeature
     pjs.line(x0,y0,x0,y0+fsz)
     pjs.arc(x0,y0,fsz,fsz,0,p/2)
 
-    txt=@feature.get("featuredata").lbs_right_angle.toPrecision(4).toString() + String.fromCharCode(186)
+    txt=@feature.get("featuredata").lbs_right_angle.toFixed(1).toString() + String.fromCharCode(186)
     tw = pjs.textWidth(txt)
     xtxt = (x0+(fsz/2))-(tw/2)
     ytxt = (y0+fsz-20)

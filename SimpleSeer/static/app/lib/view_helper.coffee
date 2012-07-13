@@ -91,12 +91,11 @@ Handlebars.registerHelper 'featuresummary', (featureset) ->
     count = 0
     tds = f.tableData()
     if tds
-       ret += "<ul>"
-    for th in f.tableHeader()
-      ret += "<li><label>" + th + ":</label> " + tds[count] + "</li>"
-      count++
-    if tds
-       ret += "</ul>"
+      ret += "<ul>"
+      for th in f.tableHeader()
+        ret += "<li><label>" + th + ":</label> " + tds[count] + "</li>"
+        count++
+      ret += "</ul>"
        
     ret += "</li>"
        
