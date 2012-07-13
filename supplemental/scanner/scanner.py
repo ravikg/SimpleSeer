@@ -1,15 +1,12 @@
-from gevent import monkey
-monkey.patch_all()
-
 import gc
 import numpy as np
 import SimpleSeer.models as M
 
 #from SimpleCV import Image
 from datetime import datetime # for frame capture faking
-from SimpleCV import *
+from SimpleCV import Image
 import math
-from ScannerUtil import *
+from ScannerUtil import straightenImg
 # for non-blocking io
 import sys
 import select
@@ -18,6 +15,7 @@ import select
 @core.state('start')
 def start(state):
     state.core.set_rate(10.0)
+    core.inspections = list(M.Inspection.objects)
     return state.core.state('waitforbuttons')
     
 @core.state('waitforbuttons')
@@ -92,9 +90,9 @@ def scan(state):
             return core.state('waitforbuttons')        
 
         frame.image = img
-               
-        process(frame)
         t = frame.thumbnail
+        frame.save()       
+        process(frame)
         frame.save()
         id = frame.id
         
@@ -107,17 +105,17 @@ def scan(state):
 def process(frame):
     frame.features = []
     frame.results = []
-    import pdb; pdb.set_trace()
     #k because we sometimes lose connection to mongo
-    for inspection in M.Inspection.objects:
+    for inspection in core.inspections:
         if inspection.parent:
             return
         if inspection.camera and inspection.camera != frame.camera:
             return
         try:
             frame.features += inspection.execute(frame.image)
-        except:
-            frame.metadata['notes'] += "Inspection failed"
+        except Exception e:
+            print e
+            frame.metadata['notes'] = "Inspection failed"
         
         for m in inspection.measurements:
             m.execute(frame, results)

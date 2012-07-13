@@ -1,6 +1,8 @@
 import numpy as np
 
-from SimpleCV import *
+import SimpleCV
+from SimpleCV import Image, Color, FeatureSet, Feature, Line
+import numpy as np
 from SimpleSeer import models as M
 from SimpleSeer import util
 from scipy import optimize
@@ -89,12 +91,13 @@ class FastenerFeature(SimpleCV.Feature):
     if( lbs[0] is not None):
       self.lbs_left = self.sanitizeNP64(lbs[0].end_points)
     else:
-      print "FAIL"
+      warnings.warn("could not find left bearing surface")
       self.lbs_left = ((0,0),(1,1))
 
     if( lbs[1] is not None ):
       self.lbs_right = self.sanitizeNP64(lbs[1].end_points)
     else:
+      warnings.warn("could not find right bearing surface")
       self.lbs_right = ((0,0),(1,1))
    
     self.lbs_width = float(np.max([self.lbs_right[0][0],self.lbs_right[1][0]])-np.min([self.lbs_left[0][0],self.lbs_left[1][0]]))
@@ -179,7 +182,7 @@ class Fastener(base.InspectionPlugin):
     return((int(xc_2+roi[0]),int(yc_2+roi[1])),R_2)
 
   def getLongestInROI(self,lines,roi, img, mode="vertical"):
-    inRegion = FeatureSet([i for i in lines if i.isContainedWithin(roi)])
+    inRegion = lines.filter([l.isContainedWithin(roi) for l in lines])
     inRegion = inRegion.sortLength()
     tolerance = 25
     if( len(inRegion) > 0 ):
@@ -236,10 +239,16 @@ class Fastener(base.InspectionPlugin):
     #flood fill ro remove noise
     result = result.floodFill(np.array([(20,20)]),20,color=Color.BLACK)
 
-    binary = result.threshold(30).dilate(2)
-    b = result.findBlobsFromMask(mask=binary)
+    #binary = result.threshold(30).dilate(2)
+    #b = result.findBlobsFromMask(mask=binary)
     binary = Image((result.width,result.height))
-    edgeImg = binary.blit(b[-1].blobMask(),b[-1].topLeftCorner()).edges()
+    b = result.findBlobs()
+    #edgeImg = binary.blit(b[-1].blobMask(),b[-1].topLeftCorner()).edges()
+    fastener = b[-1]
+    fastener.image = binary
+    b[-1].drawOutline(color=(255,255,255))
+    edgeImg = binary.applyLayers() * 2
+    
     #global counter
     #fname = str(counter)+".png"
     #counter = counter + 1
@@ -262,10 +271,10 @@ class Fastener(base.InspectionPlugin):
     c = Color.ORANGE
     #filter out the lines 
     v = 80
-    vertical = FeatureSet([i for i in l if (i.angle() > v) or (i.angle() < -1*v)])
+    vertical = l.filter(np.abs(l.angle()) > v) #FeatureSet([i for i in l if (i.angle() > v) or (i.angle() < -1*v)])
 
     h = 5
-    horizontal = FeatureSet([i for i in l if (i.angle() < h) and (i.angle() > -1*h)])
+    horizontal = l.filter(np.abs(l.angle()) < h) #FeatureSet([i for i in l if (i.angle() < h) and (i.angle() > -1*h)])
 
     top = self.getLongestInROI(horizontal,(0,top_y,result.width,bolt_height/4), edgeImg, mode="horizontal")
     bottom = self.getLongestInROI(horizontal,(0,top_y+(3*bh4),result.width,bolt_height/4), edgeImg, mode="horizontal")
