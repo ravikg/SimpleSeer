@@ -1,5 +1,6 @@
 from SimpleCV import *
 from fastener import *
+import cv2 as cv2
 import numpy as np
 from ScannerUtil import *
 def scanner_preprocess(img):
@@ -69,18 +70,60 @@ def getLocalMin(imgNP,pt,prevPt,win):
     xm = np.where(meansx==minvx)[0][0]
     ym = np.where(meansy==minvy)[0][0]
 
-    xxx,yyy = np.where(subimg==np.min(subimg))
-    xf = xxx[0]-win
-    yf = yyy[0]+1
-#    print(xf,yf)
-    # print apt
+    lmin = np.min(subimg)
+    tuner = 0.0
+    lmin_relaxed = (1.0+tuner)*lmin
 
-    # if(minvx > 50):
-    #     xf = (pt[0]-prevPt[0])
-    # else:
-    #     xf = xm-win
+    xxx,yyy = np.where(subimg<=lmin_relaxed)
+    if( len(xxx) > 1 or len(yyy) > 1):
+        #take the point most in our direction of travel.
+        pVec = np.array([(pt[0]-prevPt[0]),(pt[1]-prevPt[1])])
+        
+        l = np.sqrt(np.sum(pVec**2))
+        pVec = pVec/l
+        vector_x = xxx-pt[0]
+        vector_y = yyy-pt[1]
+        l = np.sqrt((vector_x**2)+(vector_y**2))
+        np.seterr(invalid='raise')
+        dots = [((vector_x*pVec[0]))+((vector_y*pVec[1]))]
+        try:
+            dots = dots/l
+        except Exception as e:
+            print "------------------------"
+            print vector_x
+            print vector_y
+            print dots
+            print l
+            print "------------------------"
+ 
+        dots = dots[0]
 
-    # yf = 1
+  
+        try:
+            angles = np.arccos(dots)
+        except Exception as e:
+            print "------------------------"
+            print e
+            print vector_x
+            print vector_y
+            print dots
+            print l
+            print "------------------------"
+            angles = np.zeros([len(dots)])
+#        print angles
+#        print np.min(angles)
+        best = np.where( angles == np.min(angles))
+        best = best[0]
+        if( len(best) > 1 ):
+            best = best[0]
+        best = 0
+        xf = xxx[best]-win
+        yf = yyy[best]+1
+
+    else:
+        xf = xxx[0]-win
+        yf = yyy[0]+1
+
     pVec = [(pt[0]-prevPt[0]),(pt[1]-prevPt[1])]
     cVec = [xf,yf]
     #calculate the direction as the sum of the prior and our current estimate
@@ -107,7 +150,7 @@ def getGrains2(img,seeds=60,win=3):
     start_pts = zip(seedpts,y)
     ymax = img.height
     for pt in start_pts:
-        print pt
+        #print pt
         line_pts = [pt]
         nextPt = pt
         prevPt = np.array([pt[0],-2])
@@ -119,8 +162,16 @@ def getGrains2(img,seeds=60,win=3):
            line_pts.append(nextPt)
         retVal.append(line_pts)
 
+    prev = retVal[0] 
     for r in retVal:
         prev = r[0]
+       # r = [(int(rp[0]),int(rp[1])) for rp in r]
+       # r = img.fitContour(r)
+       # print np.transpose(r)
+       # r = np.transpose(np.array([r],'float32'))
+       # print r.shape
+       # r = cv2.approxPolyDP(r,3,True)
+#        print r
         for p in r:
             img.drawLine(prev,p,color=Color.RED,thickness=2)
             prev = p
@@ -244,17 +295,17 @@ for p in path:
 
         raw = b[-1].blobImage()
         # lob off the head approximately
-        grain = grain.crop(raw.width*(3/16.0),raw.height/8,raw.width*(9/16.0),raw.height/3)
-        raw = raw.crop(raw.width*(3/16.0),raw.height/8,raw.width*(9/16.0),raw.height/3)
+        grain = grain.crop(raw.width*(4/16.0),raw.height/8,raw.width*(9/16.0),raw.height/3)
+        raw = raw.crop(raw.width*(4/16.0),raw.height/8,raw.width*(9/16.0),raw.height/3)
 
         #result = grain
         #result = grainFlow4(grain)
         #result = grainFlow4(grain.morphClose().skeletonize())
         #        result = grain.dilate().skeletonize().d ilate().invert()
-        result = getGrains2(grain.invert().smooth(aperature=15,grayscale=True,sigma=2,spatial_sigma=2))
+        result = getGrains2(grain.invert().smooth(aperature=(13,13),grayscale=True,sigma=2,spatial_sigma=2))
         result.show()
 
-        fname = str(i)+".jpg"
+        fname = str(i)+"b.jpg"
         i = i + 1
         result.save(fname)
 
