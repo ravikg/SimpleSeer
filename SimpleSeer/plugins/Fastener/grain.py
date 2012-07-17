@@ -1,13 +1,80 @@
+import matplotlib 
+matplotlib.use('AGG') 
+
 from SimpleCV import *
 from fastener import *
+#from pylab import *
+import matplotlib.pyplot as plt
+
 import cv2 as cv2
 import numpy as np
+import scipy.signal as sps #.resample
 from ScannerUtil import *
 def scanner_preprocess(img):
     retVal = straightenImg(img)
     if( retVal is None ):
         retVal = img
     return retVal
+
+def smooth(x,window_len=11,window='blackman'):
+    """smooth the data using a window with requested size.
+    
+    This method is based on the convolution of a scaled window with the signal.
+    The signal is prepared by introducing reflected copies of the signal 
+    (with the window size) in both ends so that transient parts are minimized
+    in the begining and end part of the output signal.
+    
+    input:
+        x: the input signal 
+        window_len: the dimension of the smoothing window; should be an odd integer
+        window: the type of window from 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'
+            flat window will produce a moving average smoothing.
+
+    output:
+        the smoothed signal
+        
+    example:
+
+    t=linspace(-2,2,0.1)
+    x=sin(t)+randn(len(t))*0.1
+    y=smooth(x)
+    
+    see also: 
+    
+    np.hanning, np.hamming, np.bartlett, np.blackman, np.convolve
+    scipy.signal.lfilter
+ 
+    TODO: the window parameter could be the window itself if an array instead of a string
+    NOTE: length(output) != length(input), to correct this: return y[(window_len/2-1):-(window_len/2)] instead of just y.
+    """
+
+    if x.ndim != 1:
+        raise ValueError, "smooth only accepts 1 dimension arrays."
+
+    if x.size < window_len:
+        raise ValueError, "Input vector needs to be bigger than window size."
+
+
+    if window_len<3:
+        return x
+
+
+    if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
+        raise ValueError, "Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'"
+
+
+    s=np.r_[x[window_len-1:0:-1],x,x[-1:-window_len:-1]]
+    #print(len(s))
+    if window == 'flat': #moving average
+        w=np.ones(window_len,'d')
+    else:
+        w=eval('np.'+window+'(window_len)')
+
+    y=np.convolve(w/w.sum(),s,mode='valid')
+    return y
+
+
+
 
 # def maxInWin(slice,ic,win):
 #     result = []
@@ -134,15 +201,6 @@ def getLocalMin(imgNP,pt,prevPt,win):
     return (np.clip(xf,0,w),np.clip(yf,0,h))
 
 
-# def generateSteeringArray(win):
-#     x = np.mgrid[0:(2*win)+1,(-1*win):win+1][1]
-#     y = np.mgrid[0:(2*win)+1,0:(2*win)+1][0]
-#     r = np.sqrt((x*x)+(y*y))
-#     print r
-#     tx = x/r
-#     ty = y/r 
-#     return tx,ty
-    
 def getGrains2(img,seeds=60,win=3):
     retVal = []
     seedpts = np.floor(np.linspace(0,img.width,seeds))
@@ -162,20 +220,50 @@ def getGrains2(img,seeds=60,win=3):
            line_pts.append(nextPt)
         retVal.append(line_pts)
 
-    prev = retVal[0] 
+    sz = img.height
+    dx = np.zeros(sz)
+
     for r in retVal:
         prev = r[0]
-       # r = [(int(rp[0]),int(rp[1])) for rp in r]
-       # r = img.fitContour(r)
-       # print np.transpose(r)
-       # r = np.transpose(np.array([r],'float32'))
-       # print r.shape
-       # r = cv2.approxPolyDP(r,3,True)
-#        print r
+        s = np.array(r)
+        x = s[:,0] 
+        x0 = np.abs(x[0:len(s)-1]-x[1:])
+        x0 = sps.resample(x0,sz) #slick python shit
+        dx = dx+x0
         for p in r:
             img.drawLine(prev,p,color=Color.RED,thickness=2)
             prev = p
-    return img 
+
+
+    smoothed = smooth(dx,window_len=61)
+    smoothed = sps.resample(smoothed,len(dx))
+    
+    # find the top two local maxima
+    local_max = np.r_[True, smoothed[1:] > smoothed[:-1]] & np.r_[smoothed[:-1] > smoothed[1:], True] 
+    local_max = np.where(local_max==True)[0]
+    local_max_val = smoothed[local_max]
+    local_max_sorted = local_max
+    pairs = zip(local_max,local_max_val)
+    sorted(pairs, key=lambda pairs: pairs[1]) 
+
+    best = pairs#[-2:]
+    for b in best:
+        img.drawLine((0,b[0]),(img.width,b[0]),color=Color.GREEN, thickness=5)
+
+    # try just using above average local maxima
+    img = img.applyLayers()
+    fig = plt.figure()
+    plt.grid(True)
+    ax = fig.add_subplot(111)
+    derp = ax.plot(dx,'b.')
+    derp = ax.plot(smoothed,'r-')
+    derp = ax.plot(local_max,local_max_val,'go')
+    fig.savefig("derp.png")
+    img2 = Image('derp.png')
+    img = img.rotate90()
+    img2 = img2.resize(600,600)
+    result = img2.sideBySide(img,scale=False)
+    return result
 
 def grainFlow3(img,slices=15):
     sw = img.height/slices
