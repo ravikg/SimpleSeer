@@ -16,7 +16,7 @@ def scanner_preprocess(img):
         retVal = img
     return retVal
 
-def smooth(x,window_len=11,window='blackman'):
+def smooth(x,window_len=11,window='hanning'):
     """smooth the data using a window with requested size.
     
     This method is based on the convolution of a scaled window with the signal.
@@ -73,24 +73,6 @@ def smooth(x,window_len=11,window='blackman'):
     y=np.convolve(w/w.sum(),s,mode='valid')
     return y
 
-
-
-
-# def maxInWin(slice,ic,win):
-#     result = []
-#     w = len(slice)-2
-#     for sp in ic:
-#         ub = np.clip(sp+win,0,len(slice))
-#         lb =np.clip(sp-win,0,len(slice))
-#         mv = np.min(slice[lb:ub])
-#         loc = np.where(slice[lb:ub]==mv)[0]
-#         if(len(loc) == 1 ):
-#             result.append(np.clip(loc[0]+lb,0,w))
-#         else:
-#             temp = (loc-(win))**2
-#             idx = np.where(temp==np.min(temp))[0]
-#             result.append(np.clip(loc[idx][0]+lb,0,w))
-#     return result
 
 # def getGrains(img,seeds=40,win=5):
 #     retVal = []
@@ -151,17 +133,14 @@ def getLocalMin(imgNP,pt,prevPt,win):
         vector_x = xxx-pt[0]
         vector_y = yyy-pt[1]
         l = np.sqrt((vector_x**2)+(vector_y**2))
+        # set standard warning to actually raise errors
+        # this lets us catch when arccos bombs out 
         np.seterr(invalid='raise')
         dots = [((vector_x*pVec[0]))+((vector_y*pVec[1]))]
         try:
             dots = dots/l
         except Exception as e:
-            print "------------------------"
-            print vector_x
-            print vector_y
-            print dots
-            print l
-            print "------------------------"
+            print e
  
         dots = dots[0]
 
@@ -169,16 +148,9 @@ def getLocalMin(imgNP,pt,prevPt,win):
         try:
             angles = np.arccos(dots)
         except Exception as e:
-            print "------------------------"
             print e
-            print vector_x
-            print vector_y
-            print dots
-            print l
-            print "------------------------"
             angles = np.zeros([len(dots)])
-#        print angles
-#        print np.min(angles)
+
         best = np.where( angles == np.min(angles))
         best = best[0]
         if( len(best) > 1 ):
@@ -237,16 +209,24 @@ def getGrains2(img,seeds=60,win=3):
 
     smoothed = smooth(dx,window_len=61)
     smoothed = sps.resample(smoothed,len(dx))
-    
-    # find the top two local maxima
+    avg = np.average(smoothed)
+    std = np.std(smoothed)
+    # find the top two local maxima - as far as I am concerned this
+    # is some strange black magic shit. 
     local_max = np.r_[True, smoothed[1:] > smoothed[:-1]] & np.r_[smoothed[:-1] > smoothed[1:], True] 
+    print local_max
+
     local_max = np.where(local_max==True)[0]
     local_max_val = smoothed[local_max]
     local_max_sorted = local_max
     pairs = zip(local_max,local_max_val)
     sorted(pairs, key=lambda pairs: pairs[1]) 
+    good_pairs = []
+    for p in pairs:
+        if( p[1] > avg+(1*std) ):
+            good_pairs.append(p)
 
-    best = pairs#[-2:]
+    best = good_pairs#[-2:]
     for b in best:
         img.drawLine((0,b[0]),(img.width,b[0]),color=Color.GREEN, thickness=5)
 
@@ -367,9 +347,7 @@ path = ["./data/angle/","./data/flat/"]
 i = 0 
 for p in path:
     imset = ImageSet(p)
-    print "SET SIZE " + str(len(imset))
     for raw in imset:
-        print i
         img = scanner_preprocess(raw)
         #build the mask to get bolt
         binary = img.threshold(20).dilate(3) 
@@ -393,8 +371,8 @@ for p in path:
         result = getGrains2(grain.invert().smooth(aperature=(13,13),grayscale=True,sigma=2,spatial_sigma=2))
         result.show()
 
-        fname = str(i)+"b.jpg"
         i = i + 1
+        fname = str(i)+"b.jpg"
         result.save(fname)
-
-        
+        fname = str(i)+"Source.jpg"
+        img.save(fname)
