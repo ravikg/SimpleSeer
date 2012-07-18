@@ -174,13 +174,13 @@ def getLocalMin(imgNP,pt,prevPt,win):
 
 
 def getGrains2(img,seeds=60,win=3):
+    img = img.rotate(180, fixed=False)
     retVal = []
     seedpts = np.floor(np.linspace(0,img.width,seeds))
     y = np.zeros([seeds])
     start_pts = zip(seedpts,y)
     ymax = img.height
     for pt in start_pts:
-        #print pt
         line_pts = [pt]
         nextPt = pt
         prevPt = np.array([pt[0],-2])
@@ -192,29 +192,42 @@ def getGrains2(img,seeds=60,win=3):
            line_pts.append(nextPt)
         retVal.append(line_pts)
 
+    
+    appx = []
+    for r in retVal:
+        a = cv2.approxPolyDP(np.array([r],'float32'),2,True)      
+        temp = []
+        for p in a:
+            temp.append((int(p[0][0]),int(p[0][1])))
+        appx.append(temp)
+        prev = temp[0]
+        for ap in temp:
+            img.drawLine(prev,ap,color=Color.RED,thickness=2)
+            prev = ap
+
     sz = img.height
     dx = np.zeros(sz)
-
-    for r in retVal:
-        prev = r[0]
+    for r in appx:
+        #print type(r)
+        #prev = r[0]
         s = np.array(r)
+        #print r.shape
         x = s[:,0] 
-        x0 = np.abs(x[0:len(s)-1]-x[1:])
+        x0 = np.abs(x[0:len(x)-1]-x[1:])
         x0 = sps.resample(x0,sz) #slick python shit
         dx = dx+x0
-        for p in r:
-            img.drawLine(prev,p,color=Color.RED,thickness=2)
-            prev = p
 
 
-    smoothed = smooth(dx,window_len=61)
-    smoothed = sps.resample(smoothed,len(dx))
+
+    dx = dx - np.average(dx)
+    smoothed = smooth(dx,window_len=3)
+    smoothed = smoothed[0:sz]
+    #sps.resample(smoothed,len(dx))
     avg = np.average(smoothed)
     std = np.std(smoothed)
     # find the top two local maxima - as far as I am concerned this
     # is some strange black magic shit. 
     local_max = np.r_[True, smoothed[1:] > smoothed[:-1]] & np.r_[smoothed[:-1] > smoothed[1:], True] 
-    print local_max
 
     local_max = np.where(local_max==True)[0]
     local_max_val = smoothed[local_max]
@@ -223,7 +236,7 @@ def getGrains2(img,seeds=60,win=3):
     sorted(pairs, key=lambda pairs: pairs[1]) 
     good_pairs = []
     for p in pairs:
-        if( p[1] > avg+(1*std) ):
+        if( p[1] > std ):
             good_pairs.append(p)
 
     best = good_pairs#[-2:]
@@ -247,25 +260,9 @@ def getGrains2(img,seeds=60,win=3):
 
 def grainFlow3(img,slices=15):
     sw = img.height/slices
-    # b = img.findBlobs(minsize=9)
-    # # b = FeatureSet([ml for ml in b if ml.area() < 200])
-    # # b2 = FeatureSet([ml for ml in b if np.fabs(ml.angle()) > 45])
-    # # metric = float(len(b2))/float(len(b))
-    # # metric = metric / float(img.area())
-    # # b = metric*1000000
-    # b = b.aspectRatios()
-    # total = len(b)
-    # b = len([bs for bs in b if bs > .8 and bs < 1.2])
-    # metric = (float(b)/float(total))/(float(img.area()))
-    # b = metric * 10000000
-    # b = np.clip(np.round(b),1,5)
-    # print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-    # print b
-    # print ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
     result = []
     for i in range(0,slices):
         sample = img.crop(0,i*sw,img.width,sw)
-        #l=sample.findLines(threshold=10)#threshold=1,minlinelength=10,maxlinegap=3,cannyth1=50, cannyth2=100)
         l = sample.findBlobs(minsize=11)
         l = FeatureSet([ml for ml in l if ml.area() < sample.width*sample.height/20])
         l1 = FeatureSet([ml for ml in l if np.fabs(ml.angle()) > 45])
