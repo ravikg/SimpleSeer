@@ -120,14 +120,13 @@ def getLocalMin(imgNP,pt,prevPt,win):
     ym = np.where(meansy==minvy)[0][0]
 
     lmin = np.min(subimg)
-    tuner = 0.0
+    tuner = 0.1
     lmin_relaxed = (1.0+tuner)*lmin
 
     xxx,yyy = np.where(subimg<=lmin_relaxed)
     if( len(xxx) > 1 or len(yyy) > 1):
         #take the point most in our direction of travel.
         pVec = np.array([(pt[0]-prevPt[0]),(pt[1]-prevPt[1])])
-        
         l = np.sqrt(np.sum(pVec**2))
         pVec = pVec/l
         vector_x = xxx-pt[0]
@@ -143,7 +142,6 @@ def getLocalMin(imgNP,pt,prevPt,win):
             print e
  
         dots = dots[0]
-
   
         try:
             angles = np.arccos(dots)
@@ -156,31 +154,28 @@ def getLocalMin(imgNP,pt,prevPt,win):
         if( len(best) > 1 ):
             best = best[0]
         best = 0
-        xf = xxx[best]-win
+        xf = xxx[best]-win+1
         yf = yyy[best]+1
 
     else:
-        xf = xxx[0]-win
+        xf = xxx[0]-win+1
         yf = yyy[0]+1
 
-    pVec = [(pt[0]-prevPt[0]),(pt[1]-prevPt[1])]
-    cVec = [xf,yf]
-    #calculate the direction as the sum of the prior and our current estimate
-    xd = xf#(pVec[0]+cVec[0])/2
-    yd = yf#(pVec[1]+cVec[1])/2
-    xf = np.round(pt[0]+xd)
-    yf = np.round(pt[1]+yd)
+    xf = np.rint(pt[0]+xf)
+    yf = np.rint(pt[1]+yf)
     return (np.clip(xf,0,w),np.clip(yf,0,h))
 
 
-def getGrains2(img,seeds=60,win=3):
+def getGrains2(img,seeds=20,win=3,flip=False):
     img = img.rotate(180, fixed=False)
     retVal = []
+    
     seedpts = np.floor(np.linspace(0,img.width,seeds))
     y = np.zeros([seeds])
     start_pts = zip(seedpts,y)
     ymax = img.height
     for pt in start_pts:
+        print "--------------------------"
         line_pts = [pt]
         nextPt = pt
         prevPt = np.array([pt[0],-2])
@@ -188,37 +183,45 @@ def getGrains2(img,seeds=60,win=3):
            currentPt = getLocalMin(img.getGrayNumpy(),nextPt,prevPt,win)
            prevPt = nextPt            
            nextPt = currentPt
-
            line_pts.append(nextPt)
         retVal.append(line_pts)
 
-    
+   
     appx = []
     for r in retVal:
-        a = cv2.approxPolyDP(np.array([r],'float32'),2,True)      
+        a = cv2.approxPolyDP(np.array([r],'float32'),2,False)      
         temp = []
         for p in a:
-            temp.append((int(p[0][0]),int(p[0][1])))
+            if(flip):
+                temp.append((int(p[0][0]),int(p[0][1])))
+            else:
+                temp.append((img.width-int(p[0][0]), img.height-int(p[0][1])))
         appx.append(temp)
-        prev = temp[0]
-        for ap in temp:
+    
+    return appx
+
+def estimateGrainAngles(img,appxTop,appxBottom):
+    for r in appxTop:
+        prev = r[0]
+        for ap in r[1:]:
             img.drawLine(prev,ap,color=Color.RED,thickness=2)
             prev = ap
-
+    for r in appxBottom:
+        prev = r[0]
+        for ap in r[1:]:
+            img.drawLine(prev,ap,color=Color.BLUE,thickness=2)
+            prev = ap
+    appxTop= appxTop+appxBottom
     sz = img.height
     dx = np.zeros(sz)
-    for r in appx:
-        #print type(r)
-        #prev = r[0]
+    for r in appxTop:
         s = np.array(r)
-        #print r.shape
         x = s[:,0] 
         x0 = np.abs(x[0:len(x)-1]-x[1:])
         x0 = sps.resample(x0,sz) #slick python shit
         dx = dx+x0
 
-
-
+    dx = dx/len(appxTop)
     dx = dx - np.average(dx)
     smoothed = smooth(dx,window_len=3)
     smoothed = smoothed[0:sz]
@@ -258,87 +261,83 @@ def getGrains2(img,seeds=60,win=3):
     result = img2.sideBySide(img,scale=False)
     return result
 
-def grainFlow3(img,slices=15):
-    sw = img.height/slices
-    result = []
-    for i in range(0,slices):
-        sample = img.crop(0,i*sw,img.width,sw)
-        l = sample.findBlobs(minsize=11)
-        l = FeatureSet([ml for ml in l if ml.area() < sample.width*sample.height/20])
-        l1 = FeatureSet([ml for ml in l if np.fabs(ml.angle()) > 45])
-        l2 = FeatureSet([ml for ml in l if np.fabs(ml.angle()) <= 45])
-        l1.draw(color=Color.RED,width=2)
-        l2.draw(color=Color.BLUE,width=2)
-        sample.show()
-        v = np.mean(np.fabs(l.angle()))
-        result.append(v)
-        if( v < 45.0 ):
-            img.dl().rectangle((0,i*sw),(img.width,sw),color=Color.BLUE,filled=True,alpha=100)
-        else:
-            img.dl().rectangle((0,i*sw),(img.width,sw),color=Color.RED,filled=True,alpha=100)
-    #img.dl().ezViewText(str(b),(20,20))
-    return img.applyLayers()
+# def grainFlow3(img,slices=15):
+#     sw = img.height/slices
+#     result = []
+#     for i in range(0,slices):
+#         sample = img.crop(0,i*sw,img.width,sw)
+#         l = sample.findBlobs(minsize=11)
+#         l = FeatureSet([ml for ml in l if ml.area() < sample.width*sample.height/20])
+#         l1 = FeatureSet([ml for ml in l if np.fabs(ml.angle()) > 45])
+#         l2 = FeatureSet([ml for ml in l if np.fabs(ml.angle()) <= 45])
+#         l1.draw(color=Color.RED,width=2)
+#         l2.draw(color=Color.BLUE,width=2)
+#         sample.show()
+#         v = np.mean(np.fabs(l.angle()))
+#         result.append(v)
+#         if( v < 45.0 ):
+#             img.dl().rectangle((0,i*sw),(img.width,sw),color=Color.BLUE,filled=True,alpha=100)
+#         else:
+#             img.dl().rectangle((0,i*sw),(img.width,sw),color=Color.RED,filled=True,alpha=100)
+#     #img.dl().ezViewText(str(b),(20,20))
+#     return img.applyLayers()
         
-def grainFlow4(img,hslice=7,wslice=10):
-    sv = img.height/hslice
-    sh = img.width/wslice
-    output = img.copy()
-    for xs in range(0,wslice):
-        for ys in range(0,hslice):
-            sample = img.crop(xs*sh,ys*sv,sh,sv)
-            b = sample.findBlobs(minsize=11)
-            if( b is None ):
-                 continue
+# def grainFlow4(img,hslice=7,wslice=10):
+#     sv = img.height/hslice
+#     sh = img.width/wslice
+#     output = img.copy()
+#     for xs in range(0,wslice):
+#         for ys in range(0,hslice):
+#             sample = img.crop(xs*sh,ys*sv,sh,sv)
+#             b = sample.findBlobs(minsize=11)
+#             if( b is None ):
+#                  continue
 
-            b = [bs for bs in b if bs.area() < 200]
-            if len(b)==0:
-                 continue
-            low = 10
-            high = 80
-            v = len([bs for bs in b if np.fabs(bs.angle()) > high ])
-            h = len([bs for bs in b if np.fabs(bs.angle()) < low ])
-            r = len([bs for bs in b if bs.angle() <= high and bs.angle() >= low ])
-            l = len([bs for bs in b if bs.angle() >= -1*high and bs.angle() <= -1*low ])
+#             b = [bs for bs in b if bs.area() < 200]
+#             if len(b)==0:
+#                  continue
+#             low = 10
+#             high = 80
+#             v = len([bs for bs in b if np.fabs(bs.angle()) > high ])
+#             h = len([bs for bs in b if np.fabs(bs.angle()) < low ])
+#             r = len([bs for bs in b if bs.angle() <= high and bs.angle() >= low ])
+#             l = len([bs for bs in b if bs.angle() >= -1*high and bs.angle() <= -1*low ])
 
-            support = np.array([v,h,r,l])
+#             support = np.array([v,h,r,l])
                 
             
-            best = np.where(support==np.max(support))[0]
-            if( len(best) > 1):
-                best = None
-            else:
-                best = best[0]
-            alpha = 56
-            pt0 = (xs*sh,ys*sv)
-            pt1 = ((xs*sh)+sh,(ys*sv)+sv)
-            if(best==0):
-                output.dl().rectangle(pt0,pt1,color=Color.RED,filled=True,alpha=alpha)
-                ptA = (xs*sh+(sh/2),ys*sv)
-                ptB = (xs*sh+(sh/2),(ys*sv)+sv)
-                output.drawLine(ptA,ptB,color=Color.RED,thickness=3)
-            elif(best==1):
-                output.dl().rectangle(pt0,pt1,color=Color.BLUE,filled=True,alpha=alpha)
-                ptA = (int(xs*sh),int(ys*sv+(sv/2)))
-                ptB = (int(xs*sh+sh),int(ys*sv+(sv/2)))
-                output.drawLine(ptA,ptB,color=Color.RED,thickness=3)
+#             best = np.where(support==np.max(support))[0]
+#             if( len(best) > 1):
+#                 best = None
+#             else:
+#                 best = best[0]
+#             alpha = 56
+#             pt0 = (xs*sh,ys*sv)
+#             pt1 = ((xs*sh)+sh,(ys*sv)+sv)
+#             if(best==0):
+#                 output.dl().rectangle(pt0,pt1,color=Color.RED,filled=True,alpha=alpha)
+#                 ptA = (xs*sh+(sh/2),ys*sv)
+#                 ptB = (xs*sh+(sh/2),(ys*sv)+sv)
+#                 output.drawLine(ptA,ptB,color=Color.RED,thickness=3)
+#             elif(best==1):
+#                 output.dl().rectangle(pt0,pt1,color=Color.BLUE,filled=True,alpha=alpha)
+#                 ptA = (int(xs*sh),int(ys*sv+(sv/2)))
+#                 ptB = (int(xs*sh+sh),int(ys*sv+(sv/2)))
+#                 output.drawLine(ptA,ptB,color=Color.RED,thickness=3)
 
-            elif(best==2):
-                output.dl().rectangle(pt0,pt1,color=Color.GREEN,filled=True,alpha=alpha)
-                ptA = (xs*sh,ys*sv)
-                ptB = (xs*sh+sh,ys*sv+sv)
-                output.drawLine(ptA,ptB,color=Color.RED,thickness=3)
+#             elif(best==2):
+#                 output.dl().rectangle(pt0,pt1,color=Color.GREEN,filled=True,alpha=alpha)
+#                 ptA = (xs*sh,ys*sv)
+#                 ptB = (xs*sh+sh,ys*sv+sv)
+#                 output.drawLine(ptA,ptB,color=Color.RED,thickness=3)
 
-            elif(best==3):
-                output.dl().rectangle(pt0,pt1,color=Color.YELLOW,filled=True,alpha=alpha)
-                ptA = (xs*sh+sh,ys*sv)
-                ptB = (xs*sh,ys*sv+sv)
-                output.drawLine(ptA,ptB,color=Color.RED,thickness=3)
+#             elif(best==3):
+#                 output.dl().rectangle(pt0,pt1,color=Color.YELLOW,filled=True,alpha=alpha)
+#                 ptA = (xs*sh+sh,ys*sv)
+#                 ptB = (xs*sh,ys*sv+sv)
+#                 output.drawLine(ptA,ptB,color=Color.RED,thickness=3)
 
-    return output
-
-            
-
-
+#     return output
             
 path = ["./data/angle/","./data/flat/"]
 i = 0 
@@ -365,7 +364,10 @@ for p in path:
         #result = grainFlow4(grain)
         #result = grainFlow4(grain.morphClose().skeletonize())
         #        result = grain.dilate().skeletonize().d ilate().invert()
-        result = getGrains2(grain.invert().smooth(aperature=(13,13),grayscale=True,sigma=2,spatial_sigma=2))
+        grain = grain.invert().smooth(aperature=(13,13),grayscale=True,sigma=2,spatial_sigma=2)
+        resultTop = getGrains2(grain,flip=False)
+        resultBottom = getGrains2(grain.rotate(180,fixed=False),flip=True)
+        result = estimateGrainAngles(grain,resultTop,resultBottom)                            
         result.show()
 
         i = i + 1
