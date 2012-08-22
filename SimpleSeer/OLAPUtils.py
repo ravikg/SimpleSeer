@@ -19,6 +19,44 @@ import logging
 log = logging.getLogger(__name__)
 
 
+class ChartFactory:
+    
+    def fromFields(self, xaxis, yaxis, options = {}):
+        allFields = [xaxis] + yaxis
+        
+        of = OLAPFactory()
+        o = of.fromFields(allFields)
+        
+        c = Chart()
+        c.olap = o.name
+        c.dataMap = allFields
+        
+        if xaxis['name'] == 'capturetime':
+            c.xtype = 'datetime'
+        
+        for key in options:
+            c.__setattr__(key, options[key])
+            
+        return self.fillChart(c)
+        
+    
+    def fillChart(self, c):
+        # Fill in default values for common fields if not assigned
+        if not c.name:
+            c.name = 'GeneratedChart_' + str(randint(1, 1000000))
+        if not c.style:
+            c.style = 'line'
+        if not c.color: 
+            c.color = 'blue'
+        if not c.minval:
+            c.minval = 0
+        if not c.maxval:
+            c.maxval = None
+        if not c.xtype:
+            c.xtype = 'linear'
+        if not c.realtime:
+            c.realtime = 'true'
+        
 class OLAPFactory:
     
     @classmethod
@@ -120,7 +158,6 @@ class OLAPFactory:
         # Fill in the rest with default values
         return self.fillOLAP(o)
         
-    
     def fillOLAP(self, o):
         # Fills in default values for undefined fields of an OLAP
         
@@ -151,7 +188,7 @@ class OLAPFactory:
             
             # If to long, do the aggregation
             if len(results) > o.maxLen:
-                self.autoAggregate(results, autoUpdate=False)
+                o.autoAggregate(results, autoUpdate=False)
             
         # Return the result
         # NOTE: This OLAP is not saved 
@@ -165,8 +202,8 @@ class RealtimeOLAP():
         
         charts = Chart.objects()
         
-        # Functions below assume frame is a dict not an object 
-        #frame = frame.__dict__['_data']
+        # The incoming frame has time in epoch seconds.  Should be in milliseconds
+        frame['capturetime'] *= 1000
         
         for chart in charts:
             # If no statistics, send result on its way

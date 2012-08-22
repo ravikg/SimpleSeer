@@ -108,18 +108,14 @@ class Chart(SimpleDoc, mongoengine.Document):
         
         # Get the OLAP and its data
         o = OLAP.objects(name=self.olap)
-        if len(o) == 1:
-            o = o[0]
-            if ('sincetime' in kwargs):
-                o.since = int(kwargs['sincetime'] / 1000)
-        
-            if 'beforetime' in kwargs:
-                o.before = int(kwargs['beforetime'] / 1000)
+        o = o[0]
+        if ('sincetime' in kwargs):
+            o.since = int(kwargs['sincetime'] / 1000)
     
-            data = o.execute()
-        else:
-            log.warn("Found %d OLAPS in query for %s" % (len(o), olap))
-            data = []
+        if 'beforetime' in kwargs:
+            o.before = int(kwargs['beforetime'] / 1000)
+
+        data = o.execute()
                 
         chartData = {'name': self.name,
                      'olap': self.olap,
@@ -175,7 +171,7 @@ class Chart(SimpleDoc, mongoengine.Document):
             of = OLAPFactory()
             cname, o = of.createTransient(allParams['query'], self)
         else:
-            o = OLAP.objects(name=self.olap)
+            o = OLAP.objects(name=self.olap)[0]
             cname = self.name
             
         if 'limit' in allParams:
