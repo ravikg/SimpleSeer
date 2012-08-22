@@ -20,16 +20,25 @@ log = logging.getLogger(__name__)
 
 
 class ChartFactory:
+
+    def processWebFields(self, xaxis, yaxis, name):
+        field_type, dot, field_name = xaxis.partition('.')
+        xaxis = {'type': field_type, 'name': field_name}
+        
+        field_type, dot, field_name = yaxis.partition('.')
+        yaxis = {'type': field_type, 'name': field_name}
+        
+        c, o = self.fromFields(xaxis, yaxis)
+        c.name = name
+        return c, o
     
     def fromFields(self, xaxis, yaxis, options = {}):
-        allFields = [xaxis] + yaxis
-        
         of = OLAPFactory()
-        o = of.fromFields(allFields)
+        o = of.fromFields([xaxis, yaxis])
         
         c = Chart()
         c.olap = o.name
-        c.dataMap = allFields
+        c.dataMap = [xaxis['name'], yaxis['name']]
         
         if xaxis['name'] == 'capturetime':
             c.xtype = 'datetime'
@@ -37,7 +46,7 @@ class ChartFactory:
         for key in options:
             c.__setattr__(key, options[key])
             
-        return self.fillChart(c)
+        return self.fillChart(c), o
         
     
     def fillChart(self, c):
@@ -55,7 +64,9 @@ class ChartFactory:
         if not c.xtype:
             c.xtype = 'linear'
         if not c.realtime:
-            c.realtime = 'true'
+            c.realtime = True
+        
+        return c
         
 class OLAPFactory:
     
