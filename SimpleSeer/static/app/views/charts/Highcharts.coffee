@@ -66,8 +66,25 @@ module.exports = class HighchartsLib extends ChartView
           s.addPoint(p, false,true)
         @stackPoints[i] = p
     """
-  addPoint: (d,redraw=true,shift=false) =>
-    super(d)
+
+  shiftPoint: (d,sid,redraw=true) =>
+    super(d,sid)
+    series = @._c.get sid
+    series.addPoint(d,false,true)
+    if redraw
+      series.chart.redraw();
+
+  addPoint: (d,sid,redraw=true) =>
+    super(d,sid)
+    series = @._c.get sid
+    #s = @._c.get @.id
+    #points = @points[@id]
+    #console.log points
+    #series.setData(points)
+
+    series.addPoint(d,false,false)
+    if redraw
+      series.chart.redraw();
     """
     if @.stack
       @.stack.add d
@@ -128,7 +145,7 @@ module.exports = class HighchartsLib extends ChartView
     ###
     id:@model.id
     name: @model.attributes.name || ''
-    #shadow:false
+    shadow:false
     color: @model.attributes.color || 'blue'
     marker:
       enabled: true
