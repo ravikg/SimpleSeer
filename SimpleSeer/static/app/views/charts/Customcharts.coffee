@@ -3,12 +3,12 @@ ChartView = require '../chart'
 
 module.exports = class Customcharts extends ChartView
   template: require '../templates/chart'
-  initialize:(d) =>
+  initialize: =>
     #@.$el = $ "<div/>", id: @id
     @lib = 'customchart'
     _m = application.charts.get @id
     @stack = _m.pointStack()
-    super d
+    super()
     this
 
   buildChart: =>
@@ -44,9 +44,6 @@ module.exports = class Customcharts extends ChartView
       for _d in d
         @.stack.add _d
     #@.update()
-
-  render: =>
-    super()
 
   showTooltip: (id) =>
     return
