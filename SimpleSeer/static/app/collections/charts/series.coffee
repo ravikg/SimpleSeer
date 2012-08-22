@@ -10,10 +10,14 @@ module.exports = class Series extends Collection
   marker:
     enabled: true
     radius: 2
+  pointEvents:
+    over:->
+    click:->
+    out:->
   
   initialize: (args={}) =>
     @name = args.name || ''
-    #shadow:false
+    @id = args.id
     @color = args.color || 'blue'
     # Bind view to collection so we know where our widgets live
     if args.view?
@@ -24,14 +28,9 @@ module.exports = class Series extends Collection
     args.realtime = true
     if args.realtime
       @subscribe()
+    @fetch()
     return @
     
-  toJSON: ->
-    options = _.clone @options
-    # Nest the data points to match the Highcharts options
-    options.data = super
-    return options
-
   parse: (response) =>
     return @_clean response.data
 
@@ -74,6 +73,12 @@ module.exports = class Series extends Collection
   _drawData: =>
     data = @models
     points = []
+    
+    diff = data.length - @view.maxPointSize
+    if @view.maxPointSize != 0
+      while diff > 0
+        data.shift()
+        diff--      
     for p in data
       points.push p.attributes
     @view.setData points
@@ -130,7 +135,11 @@ module.exports = class Series extends Collection
     for o in data.data.m.data
       o.d[0] = o.d[0] * 1000
       p = @_formatChartPoint o
-      @view._c.series[0].addPoint p
+      if @models.length - @view.maxPointSize >= 0
+        @view.shiftPoint p, @id
+      else
+        @view.addPoint p, @id
+      @add @_formatChartPoint o
     @view._c.redraw()
     ###
     dm = @view.model.attributes.dataMap
