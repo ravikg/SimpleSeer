@@ -511,19 +511,17 @@ def chart_meta(chart_name):
     c = M.Chart.objects.get(name=chart_name)
     return c.chartMeta()
     
-@route('/chart/new/<chart_name>/<chart_options>', methods=['GET'])
-def chart_new(chart_name, chart_options):
+@route('/chart/new/', methods=['POST'])
+@util.jsonify
+def chart_new():
     from .OLAPUtils import ChartFactory
-    from .base import jsondecode
-    from HTMLParser import HTMLParser
     
-    p = HTMLParser()
-    nohtml = str(p.unescape(chart_options))
-    opts = jsondecode(nohtml)
+    opts = request.values.to_dict()
     
     cf = ChartFactory()
-    c = cf.fromFields(opts['xaxis'], opts['yaxis'])
+    c, o = cf.processWebFields(opts['xaxis'], opts['yaxis'], opts['chart_name'])
     c.save()
+    o.save()
     
     return c.createChart() 
     
