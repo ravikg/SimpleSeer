@@ -1,56 +1,60 @@
 application = require '../../application'
 ChartView = require '../chart'
+series = require '../../collections/charts/series'
+
 
 module.exports = class HighchartsLib extends ChartView
   stacked = false
   template: require '../templates/chart'
-  initialize:(d) =>
+  initialize: =>
     @lib = 'highcharts'
-    super d
+    super()
     this
 
   buildChart: () =>
-    if @model.chartid
+    if @model.attributes.chartid
       @template = ''
       @$el.html ''
-      m = application.charts.get @model.chartid
+      m = @collection.get @model.id
       m.view._c.addSeries @createSeries()
       chart = m.view._c
     else
-      _target = @.$el.find '.graph-container'
+      _target = @$el.find '.graph-container'
       chart = new Highcharts.Chart
         chart:
           renderTo: _target[0]
-          type: @model.style.toLowerCase()
-          height: @model.height || '150'
+          type: @model.attributes.style.toLowerCase()
+          height: @model.attributes.height || '150'
         series: [ @createSeries() ]
         xAxis:
           tickInterval: @model.tickerinterval * 1000 || null
           type:
-            @model.xtype || 'linear'
+            @model.attributes.xtype || 'linear'
           title:
-            text: @model.xTitle
+            text: @model.attributes.xTitle
           labels:
             formatter: -> 
               if this.axis.options.type == 'datetime'
                 Highcharts.dateFormat('%m/%d<br>%I:%M:%S', this.value)
               else
-                m = application.charts.get @.chart.id
+                m = application.charts.get @model.id
                 if m.attributes.labelmap && m.attributes.labelmap[this.value]
                   return m.attributes.labelmap[this.value]
                 else
                   return this.value
         yAxis:
           title:
-            text: @model.yTitle
-          min:@model.minval
-          max:@model.maxval
+            text: @model.attributes.yTitle
+          min:@model.attributes.minval
+          max:@model.attributes.maxval
       chart.id = @id
-      if @model.useLabels
-        chart.xAxis[0].setCategories @model.labelmap
+      if @model.attributes.useLabels
+        chart.xAxis[0].setCategories @model.attributes.labelmap
       super chart
 
   setStackPoints: (d=false) =>
+    return
+    """
     if @stacked == true || @_c.series.length > 1
       @stacked=true
       @stackPoints = []
@@ -61,9 +65,10 @@ module.exports = class HighchartsLib extends ChartView
           p.x = d.x
           s.addPoint(p, false,true)
         @stackPoints[i] = p
-
+    """
   addPoint: (d,redraw=true,shift=false) =>
     super(d)
+    """
     if @.stack
       @.stack.add d
     else
@@ -72,10 +77,10 @@ module.exports = class HighchartsLib extends ChartView
     @setStackPoints(d)
     if redraw
       series.chart.redraw();
-
+    """
   setData: (d) =>
     super(d)
-    @setStackPoints()
+    #@setStackPoints()
     series = @._c.get @.id
     #series.setData([])
     #for _d in d
@@ -113,10 +118,18 @@ module.exports = class HighchartsLib extends ChartView
     return
 
   createSeries: =>
-    id:@id
-    name:@name
-    shadow:false
-    color:@color || 'blue'
+    ###
+    new series
+      view: @
+      accumlate: @model.attributes.accumulate
+      xtype: @model.attributes.xtype
+      name: @model.attributes.name
+      color: @model.attributes.color
+    ###
+    id:@model.id
+    name: @model.attributes.name || ''
+    #shadow:false
+    color: @model.attributes.color || 'blue'
     marker:
       enabled: true
       radius: 2

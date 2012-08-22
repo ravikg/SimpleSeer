@@ -18,7 +18,7 @@ module.exports = SeerApplication =
     Inspections = require 'collections/inspections'
     Measurements = require 'collections/measurements'
     Frames = require 'collections/frames'
-    OLAPs = require 'collections/OLAPs'
+    #OLAPs = require 'collections/OLAPs'
     FrameSets = require 'collections/framesets'
     Pallette = require 'lib/ui_helper'
     Frame = require "../models/frame"
@@ -43,7 +43,7 @@ module.exports = SeerApplication =
       @.socket.emit 'subscribe', 'alert/'
     @inspections = new Inspections()
     @inspections.fetch()
-    @charts = new OLAPs()
+    #@charts = new OLAPs()
     @measurements = new Measurements()
     @measurements.fetch()
     @frames = new Frames()
