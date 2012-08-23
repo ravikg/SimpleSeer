@@ -96,7 +96,8 @@ class Chart(SimpleDoc, mongoengine.Document):
         for r in results:
             if 'capturetime' in r:
                 if type(r['capturetime']) == datetime:
-                    r['capturetime'] = timegm(r['capturetime'].timetuple()) * 1000
+                    ms = r['capturetime'].microsecond / 1000
+                    r['capturetime'] = timegm(r['capturetime'].timetuple()) * 1000 + ms
             thisData = [r.get(d, 0) for d in self.dataMap]
             thisMeta = [r.get(m, 0) for m in self.metaMap]
             
