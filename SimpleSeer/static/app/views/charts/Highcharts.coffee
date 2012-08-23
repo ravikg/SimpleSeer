@@ -27,6 +27,7 @@ module.exports = class HighchartsLib extends ChartView
           height: @model.attributes.height || '150'
         series: [ @createSeries() ]
         xAxis:
+          id:''
           tickInterval: @model.tickerinterval * 1000 || null
           type:
             @model.attributes.xtype || 'linear'
@@ -43,6 +44,7 @@ module.exports = class HighchartsLib extends ChartView
                 else
                   return this.value
         yAxis:
+          id:''
           title:
             text: @model.attributes.yTitle
           min:@model.attributes.minval
@@ -52,58 +54,24 @@ module.exports = class HighchartsLib extends ChartView
         chart.xAxis[0].setCategories @model.attributes.labelmap
       super chart
 
-  setStackPoints: (d=false) =>
-    return
-    """
-    if @stacked == true || @_c.series.length > 1
-      @stacked=true
-      @stackPoints = []
-      for i,s of @_c.series
-        l = s.data.length
-        p = s.data[--l]
-        if d && d.x > p.x
-          p.x = d.x
-          s.addPoint(p, false,true)
-        @stackPoints[i] = p
-    """
-
-  shiftPoint: (d,sid,redraw=true) =>
-    super(d,sid)
+  shiftPoint: (sid,redraw=true) =>
+    super(sid)
     series = @._c.get sid
-    series.addPoint(d,false,true)
+    series.data[0].remove(false)
     if redraw
-      series.chart.redraw();
+      series.chart.redraw()
 
   addPoint: (d,sid,redraw=true) =>
     super(d,sid)
     series = @._c.get sid
-    #s = @._c.get @.id
-    #points = @points[@id]
-    #console.log points
-    #series.setData(points)
-
     series.addPoint(d,false,false)
     if redraw
-      series.chart.redraw();
-    """
-    if @.stack
-      @.stack.add d
-    else
-      series = @._c.get @.id
-      series.addPoint(d,false,shift)
-    @setStackPoints(d)
-    if redraw
-      series.chart.redraw();
-    """
-  setData: (d) =>
-    super(d)
-    #@setStackPoints()
-    series = @._c.get @.id
-    #series.setData([])
-    #for _d in d
-    #  @.addPoint(_d, false, false)
-    #@_c.redraw()
-    series.setData(d)
+      series.chart.redraw()
+
+  setData: (d,sid,redraw=true) =>
+    super(d,sid)
+    series = @._c.get sid
+    series.setData(d,redraw)
     
   showTooltip: (id) =>
     point = @._c.get id
@@ -114,7 +82,8 @@ module.exports = class HighchartsLib extends ChartView
 
   hideTooltip: =>
     @._c.tooltip.hide()
-    
+  
+  #TODO: update
   alterPoint: (pId, v=0) =>
     super(pId, v)
     p = @._c.get(pId)
@@ -123,9 +92,8 @@ module.exports = class HighchartsLib extends ChartView
         v = ++p.y
       p.update(v)
 
+  #TODO: update
   incPoint: (d) =>
-    #todo: refactor so we dont re-draw chart
-    #p = @._c.get d.id
     d.y = 1
     super d
     if @.stack
@@ -135,14 +103,6 @@ module.exports = class HighchartsLib extends ChartView
     return
 
   createSeries: =>
-    ###
-    new series
-      view: @
-      accumlate: @model.attributes.accumulate
-      xtype: @model.attributes.xtype
-      name: @model.attributes.name
-      color: @model.attributes.color
-    ###
     id:@model.id
     name: @model.attributes.name || ''
     shadow:false

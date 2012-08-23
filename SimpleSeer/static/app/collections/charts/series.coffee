@@ -4,7 +4,7 @@ application = require '../../application'
 module.exports = class Series extends Collection
   url: ""
   redraw: false
-  xAxis:{categories:{}}
+  xAxis:{}
   yAxis:{}
   data:[]
   marker:
@@ -28,6 +28,7 @@ module.exports = class Series extends Collection
     args.realtime = true
     if args.realtime
       @subscribe()
+    @on("remove",@shiftChart)
     @fetch()
     return @
     
@@ -71,17 +72,11 @@ module.exports = class Series extends Collection
     return refined
 
   _drawData: =>
-    data = @models
+    @shiftStack(true)
     points = []
-    
-    diff = data.length - @view.maxPointSize
-    if @view.maxPointSize != 0
-      while diff > 0
-        data.shift()
-        diff--      
-    for p in data
+    for p in @models
       points.push p.attributes
-    @view.setData points
+    @view.setData points, @id    
     return
   
     dd = []
@@ -116,10 +111,8 @@ module.exports = class Series extends Collection
       x:d.d[0]
       id:_id
       events:
-        #click: application.charts.callFrame
-        mouseOver: mo
-        click: cp
-        #unselect: @.unselectPoint #application.charts.removeFrame
+        mouseOver: @pointEvents.over
+        click: @pointEvents.click
     #for i,s of @model.metaMap
     #  if s == 'string' && @model.colormap
     #    _point.marker.fillColor = @model.colormap[d.m[i]]
@@ -131,16 +124,24 @@ module.exports = class Series extends Collection
       if !application.subscriptions["Chart/#{@.name}/"]
         application.subscriptions["Chart/#{@.name}/"] = application.socket.emit 'subscribe', "Chart/#{@.name}/"
   
+  shiftStack: (silent=false)=>
+    #TODO: remove against, grab from filter
+    against = new moment().subtract('seconds',5000)
+    if @xAxis.type == "datetime"
+      while @.at(0).attributes.x < against
+        @shift {silent:silent}
+    while @models.length - @view.maxPointSize >= silent
+      @shift {silent:silent}
+    return
+  
   receive: (data) =>
     for o in data.data.m.data
-      o.d[0] = o.d[0] * 1000
       p = @_formatChartPoint o
-      if @models.length - @view.maxPointSize >= 0
-        @view.shiftPoint p, @id
-      else
-        @view.addPoint p, @id
+      @shiftStack()
+      @view.addPoint p, @id
       @add @_formatChartPoint o
-    @view._c.redraw()
+    return
+    
     ###
     dm = @view.model.attributes.dataMap
     mdm = @view.model.attributes.metaMap
@@ -156,5 +157,6 @@ module.exports = class Series extends Collection
       console.dir d
       console.dir m
     ###
-
-
+  
+  shiftChart: =>
+    @view.shiftPoint @id, false    
