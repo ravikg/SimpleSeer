@@ -8,8 +8,8 @@ module.exports = class HighchartsLib extends ChartView
   template: require '../templates/chart'
   initialize: =>
     @lib = 'highcharts'
-    super()
-    this
+    super
+    return @
 
   buildChart: () =>
     if @model.attributes.chartid
