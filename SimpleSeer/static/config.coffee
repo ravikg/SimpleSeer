@@ -53,6 +53,7 @@ exports.config =
         'stylesheets/seer.css': (path) -> true
       order:
         before: [
+          'vendor/styles/gridsystem.css',
           'vendor/styles/bootstrap.css'
         ]
         after: [

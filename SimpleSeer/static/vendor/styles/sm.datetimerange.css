@@ -1,13 +1,12 @@
 .ui-datetimerange {
-  box-shadow: inset 0px 0px 0px 1px #F3F3F3;
-  position: absolute;
-  background: #EEE;
-  border: 1px solid #D0D0D0;
-  border-radius: 2px;
+  position: fixed;
+  background: #fafafa;
   margin-top: 14px;
-  padding: 6px;
+  padding: 10px;
   font-size: 13px;
   font-family: sans-serif;
+  box-shadow: rgba(0, 0, 0, 0.296875) 0px 5px 22px;
+  border: 1px solid rgba(0,0,0,.2)
 }
 
 .ui-datetimerange .left,
@@ -18,22 +17,35 @@
 }
 
 .ui-datetimerange .right {
+  margin-left: 6px;
+  padding-left: 14px;
+  padding-top: 3px;
   padding-right: 3px;
-  margin-left: 1px;
+  
   border-left: 1px solid #D0D0D0;
-  padding-left: 10px;
-  padding-top: 6px;
   box-sizing: border-box;
 }
 
+.ui-datetimerange .right .block {
+  margin-bottom: 10px; 
+}
+
 .ui-datetimerange .right .block label {
-  margin-top: 6px;
+  margin-bottom: 3px;
   display: block;
 }
 
+.ui-datetimerange .bottom button {
+  padding: 3px 10px;
+}
+
+.ui-datetimerange .bottom button[disabled] {
+  opacity: 0.1 !important;
+  cursor: default;
+}
+
 .ui-datetimerange .bottom {
-  padding-top: 17px;
-  margin-top: -8px;
+  margin-top: 13px;
   text-align: right;
 }
 
@@ -59,7 +71,7 @@
   
   background: #fff;
   border: 1px solid #ccc;
-  box-shadow: 0px 1px 0px #F8F8F8, inset 0px 0px 4px rgba(0, 0, 0, .05);
+  box-shadow: 0px 1px 0px #F8F8F8;
   
   /* Disables text selection */        
   -webkit-touch-callout: none;
@@ -76,6 +88,8 @@
 }
 
 .ss-calendar caption {
+  text-align: center;
+  line-height: 14px;
   color: #333;
   border-bottom: 1px solid #ccc;
   padding: 2px 0;
@@ -93,7 +107,15 @@
   margin-bottom: 0;
 }
 
-.ss-calendar thead tr,
+.ss-calendar thead tr {
+  border: none;
+}
+
+.ss-calendar thead tr th {
+  text-align: center;
+  font-weight: bold;
+}
+
 .ss-calendar tbody td {
   text-align: center;
   
@@ -117,7 +139,7 @@
 .ss-calendar .cell {
   width: 14px;
   height: 14px;
-  
+  line-height: 14px;
   padding: 2px;
   margin: 0;
 }
