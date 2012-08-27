@@ -8,12 +8,18 @@ def load_ipython_extension(ipython):
     from . import models as M
     import zmq
     
+    from .util import load_plugins
+    
+    load_plugins()
+    
+    
     s = Session("simpleseer.cfg")
     ipython.push(
         dict(
             Frame = M.Frame,
             Result = M.Result,
             OLAP = M.OLAP,
+            Chart = M.Chart,
             FrameSet = M.FrameSet,
             Inspection = M.Inspection,
             Measurement = M.Measurement,
