@@ -19,6 +19,74 @@ import logging
 log = logging.getLogger(__name__)
 
 
+class ChartFactory:
+
+    def processWebFields(self, xaxis, yaxis, opts):
+        field_type, dot, field_name = xaxis.partition('.')
+        xfield = {'type': field_type, 'name': field_name}
+        
+        yfields = []
+        for y in yaxis:
+            print y
+            field_type, dot, field_name = y.partition('.')
+            yfields.append({'type': field_type, 'name': field_name})
+        
+        c = None
+        if 'chart_id' in opts:
+            cid = opts.pop('chart_id')
+            cs = Chart.objects(id = cid)
+            if len(cs) == 1:
+                c = cs[0]
+            else:
+                log.warn('Could not load chart %d' % cid)
+        
+        c, o = self.fromFields(xfield, yfields, opts, c)
+
+        return c, o
+    
+    def fromFields(self, xfield, yfields, options = {}, c = None):
+        of = OLAPFactory()
+        print [xfield] + yfields
+        o = of.fromFields([xfield] + yfields)
+        
+        if not c:
+            c = Chart()
+        
+        c.olap = o.name
+        c.dataMap = [xfield['name']]
+        for y in yfields:
+            c.dataMap.append(y['name'])
+        
+        if xfield['name'] == 'capturetime':
+            c.xtype = 'datetime'
+        
+        for key in options:
+            c.__setattr__(key, options[key])
+            
+        return self.fillChart(c), o
+        
+    
+    def fillChart(self, c):
+        # Fill in default values for common fields if not assigned
+        if not c.name:
+            c.name = 'GeneratedChart_' + str(randint(1, 1000000))
+        if not c.style:
+            c.style = 'line'
+        if not c.color: 
+            c.color = 'blue'
+        if not c.minval:
+            c.minval = 0
+        if not c.maxval:
+            c.maxval = None
+        if not c.xtype:
+            c.xtype = 'linear'
+        if not c.realtime:
+            c.realtime = True
+        if not c.metaMap:
+            c.metamap = ['id']
+        
+        return c
+        
 class OLAPFactory:
     
     @classmethod
@@ -120,7 +188,6 @@ class OLAPFactory:
         # Fill in the rest with default values
         return self.fillOLAP(o)
         
-    
     def fillOLAP(self, o):
         # Fills in default values for undefined fields of an OLAP
         
@@ -151,7 +218,7 @@ class OLAPFactory:
             
             # If to long, do the aggregation
             if len(results) > o.maxLen:
-                self.autoAggregate(results, autoUpdate=False)
+                o.autoAggregate(results, autoUpdate=False)
             
         # Return the result
         # NOTE: This OLAP is not saved 
@@ -165,8 +232,8 @@ class RealtimeOLAP():
         
         charts = Chart.objects()
         
-        # Functions below assume frame is a dict not an object 
-        #frame = frame.__dict__['_data']
+        # The incoming frame has time in epoch seconds.  Should be in milliseconds
+        frame['capturetime'] *= 1000
         
         for chart in charts:
             # If no statistics, send result on its way

@@ -115,9 +115,11 @@ class Filter():
                     if f['name'] == 'capturetime':
                         f['lt'] = datetime.fromtimestamp(f['lt'] / 1000)
                     comp['$lt'] = f['lt']
+            if 'exists' in f:
+                comp = {'$exists': True}
              
             filters[f['name']] = comp
-         
+        
         return [{'$match': filters}]
     
     def filterMeasurements(self, measQuery):

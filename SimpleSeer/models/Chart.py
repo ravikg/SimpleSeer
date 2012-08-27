@@ -51,6 +51,7 @@ class ChartSchema(fes.Schema):
     maxval = fev.Int(if_missing=100)
     xtype = fev.OneOf(['linear', 'logarithmic', 'datetime'], if_missing='datetime')
     accumulate = fev.Bool(if_missing=False)
+    maxPointSize = fev.Int(if_missing=100,if_empty=100)
     renderorder = fev.Int(if_missing=1)
     halfsize = fev.Bool(if_missing=False)
     realtime = fev.Bool(if_missing=True)
@@ -75,6 +76,7 @@ class Chart(SimpleDoc, mongoengine.Document):
     maxval = mongoengine.IntField()
     xtype = mongoengine.StringField()
     accumulate = mongoengine.BooleanField()
+    maxPointSize = mongoengine.IntField()
     renderorder = mongoengine.IntField()
     halfsize = mongoengine.BooleanField()
     realtime = mongoengine.BooleanField()
@@ -94,7 +96,8 @@ class Chart(SimpleDoc, mongoengine.Document):
         for r in results:
             if 'capturetime' in r:
                 if type(r['capturetime']) == datetime:
-                    r['capturetime'] = timegm(r['capturetime'].timetuple()) * 1000
+                    ms = r['capturetime'].microsecond / 1000
+                    r['capturetime'] = timegm(r['capturetime'].timetuple()) * 1000 + ms
             thisData = [r.get(d, 0) for d in self.dataMap]
             thisMeta = [r.get(m, 0) for m in self.metaMap]
             
@@ -106,18 +109,14 @@ class Chart(SimpleDoc, mongoengine.Document):
         
         # Get the OLAP and its data
         o = OLAP.objects(name=self.olap)
-        if len(o) == 1:
-            o = o[0]
-            if ('sincetime' in kwargs):
-                o.since = int(kwargs['sincetime'] / 1000)
-        
-            if 'beforetime' in kwargs:
-                o.before = int(kwargs['beforetime'] / 1000)
+        o = o[0]
+        if ('sincetime' in kwargs):
+            o.since = int(kwargs['sincetime'] / 1000)
     
-            data = o.execute()
-        else:
-            log.warn("Found %d OLAPS in query for %s" % (len(o), olap))
-            data = []
+        if 'beforetime' in kwargs:
+            o.before = int(kwargs['beforetime'] / 1000)
+
+        data = o.execute()
                 
         chartData = {'name': self.name,
                      'olap': self.olap,
@@ -173,7 +172,7 @@ class Chart(SimpleDoc, mongoengine.Document):
             of = OLAPFactory()
             cname, o = of.createTransient(allParams['query'], self)
         else:
-            o = OLAP.objects(name=self.olap)
+            o = OLAP.objects(name=self.olap)[0]
             cname = self.name
             
         if 'limit' in allParams:

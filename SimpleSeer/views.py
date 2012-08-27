@@ -510,7 +510,27 @@ def chart_data(chart_name, filter_params):
 def chart_meta(chart_name):
     c = M.Chart.objects.get(name=chart_name)
     return c.chartMeta()
-
+    
+@route('/chart/new/', methods=['POST'])
+@util.jsonify
+def chart_new():
+    from .OLAPUtils import ChartFactory
+    
+    opts = request.values.to_dict()
+    # have to manually pull off yaxis because it is a select multiple and the key names collide
+    yaxis = request.form.getlist('yaxis')
+    
+    cf = ChartFactory()
+    
+    xaxis = opts.pop('xaxis')
+    opts.pop('yaxis')
+    
+    c, o = cf.processWebFields(xaxis, yaxis, opts)
+    c.save()
+    o.save()
+    
+    return c.createChart() 
+    
 @route('/chart/<chart_name>/since/<timestamp>', methods=['GET'])
 @util.jsonify
 def chart_since(chart_name, timestamp):

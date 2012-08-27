@@ -44,6 +44,7 @@ exports.config =
           'vendor/scripts/jquery.ui.zoomify.js',
           'vendor/scripts/jquery.autogrow-textarea.js',
           'vendor/scripts/jquery.tinyscrollbar.js',
+          'vendor/scripts/jquery.gridster.js',
           'vendor/scripts/sm.datetimerange.js']
 
     stylesheets:
@@ -52,6 +53,7 @@ exports.config =
         'stylesheets/seer.css': (path) -> true
       order:
         before: [
+          'vendor/styles/gridsystem.css',
           'vendor/styles/bootstrap.css'
         ]
         after: [
