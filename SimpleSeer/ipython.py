@@ -6,6 +6,9 @@ def load_ipython_extension(ipython):
     from SimpleCV import Display, Image, ImageSet, Color
     import zmq
     
+    from .util import load_plugins
+    
+    load_plugins()
 
     s = Session("simpleseer.cfg")
     ipython.push(
@@ -13,6 +16,7 @@ def load_ipython_extension(ipython):
             Frame = M.Frame,
             Result = M.Result,
             OLAP = M.OLAP,
+            Chart = M.Chart,
             FrameSet = M.FrameSet,
             Inspection = M.Inspection,
             Measurement = M.Measurement,
