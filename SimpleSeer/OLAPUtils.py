@@ -32,7 +32,7 @@ class ChartFactory:
             yfields.append({'type': field_type, 'name': field_name})
         
         c = None
-        if 'chart_id' in opts:
+        if 'chart_id' in opts and opts['chart_id']:
             cid = opts.pop('chart_id')
             cs = Chart.objects(id = cid)
             if len(cs) == 1:
