@@ -517,9 +517,15 @@ def chart_new():
     from .OLAPUtils import ChartFactory
     
     opts = request.values.to_dict()
+    # have to manually pull off yaxis because it is a select multiple and the key names collide
+    yaxis = request.form.getlist('yaxis')
     
     cf = ChartFactory()
-    c, o = cf.processWebFields(opts['xaxis'], opts['yaxis'], opts['chart_name'])
+    
+    xaxis = opts.pop('xaxis')
+    opts.pop('yaxis')
+    
+    c, o = cf.processWebFields(xaxis, yaxis, opts)
     c.save()
     o.save()
     
