@@ -1,5 +1,5 @@
 from cStringIO import StringIO
-
+from calendar import timegm
 import mongoengine
 
 from SimpleSeer.base import Image, pil, pygame
