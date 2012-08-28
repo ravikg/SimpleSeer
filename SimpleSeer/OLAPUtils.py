@@ -21,49 +21,30 @@ log = logging.getLogger(__name__)
 
 class ChartFactory:
 
-    def processWebFields(self, xaxis, yaxis, opts):
+    def processOLAPFields(self, xaxis, yaxis):
         field_type, dot, field_name = xaxis.partition('.')
         xfield = {'type': field_type, 'name': field_name}
         
         yfields = []
         for y in yaxis:
-            print y
             field_type, dot, field_name = y.partition('.')
             yfields.append({'type': field_type, 'name': field_name})
         
-        c = None
-        if 'chart_id' in opts and opts['chart_id']:
-            cid = opts.pop('chart_id')
-            cs = Chart.objects(id = cid)
-            if len(cs) == 1:
-                c = cs[0]
-            else:
-                log.warn('Could not load chart %d' % cid)
-        
-        c, o = self.fromFields(xfield, yfields, opts, c)
-
-        return c, o
+        return xfield, yfields
     
-    def fromFields(self, xfield, yfields, options = {}, c = None):
-        of = OLAPFactory()
-        print [xfield] + yfields
-        o = of.fromFields([xfield] + yfields)
+    def fromFields(self, xfield, yfields, chart = None):
         
-        if not c:
-            c = Chart()
+        if not chart:
+            chart = Chart()
         
-        c.olap = o.name
-        c.dataMap = [xfield['name']]
+        chart.dataMap = [xfield['name']]
         for y in yfields:
-            c.dataMap.append(y['name'])
+            chart.dataMap.append(y['name'])
         
         if xfield['name'] == 'capturetime_epoch':
-            c.xtype = 'datetime'
+            chart.xtype = 'datetime'
         
-        for key in options:
-            c.__setattr__(key, options[key])
-            
-        return self.fillChart(c), o
+        return self.fillChart(chart)
         
     
     def fillChart(self, c):
@@ -83,8 +64,10 @@ class ChartFactory:
         if not c.realtime:
             c.realtime = True
         if not c.metaMap:
-            c.metamap = ['id']
-        
+            c.metaMap = ['id']
+        if not c.chartid:
+            c.chartid = None
+            
         return c
         
 class OLAPFactory:
@@ -138,7 +121,7 @@ class OLAPFactory:
             
         return self.fillOLAP(newOLAP)
     
-    def fromFields(self, fields):
+    def fromFields(self, fields, olap = None):
         # Create an OLAP object from a list of fields desired
         # Each field should be specified in the same was as Filter fields
         #   type: one of (frame, framefeature, measurement)
@@ -148,12 +131,14 @@ class OLAPFactory:
         for f in fields:
             f['exists'] = 1
         
-        # Put together the OLAP
-        o = OLAP()
-        o.olapFilter = fields
+        # Create a new olap if none exists
+        if not olap:
+            olap = OLAP()
+        
+        olap.olapFilter = fields
         
         # Fill in the rest with default values
-        return self.fillOLAP(o)
+        return self.fillOLAP(olap)
         
     def fromObject(self, obj):
         # Create an OLAP object from another query-able object
@@ -191,11 +176,12 @@ class OLAPFactory:
     def fillOLAP(self, o):
         # Fills in default values for undefined fields of an OLAP
         
-        if o.olapFilter:
-            o.name = o.olapFilter[0]['name'] + '_' + str(randint(1, 1000000))
-        else:
-            o.name = 'GeneratedOLAP_' + str(randint(1, 1000000))
-            
+        if not o.name:
+            if o.olapFilter:
+                o.name = o.olapFilter[0]['name'] + '_' + str(randint(1, 1000000))
+            else:
+                o.name = 'GeneratedOLAP_' + str(randint(1, 1000000))
+                
         # Default to max query length of 1000
         if not o.maxLen:
             o.maxLen = 1000
