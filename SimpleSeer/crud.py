@@ -86,10 +86,7 @@ class ModelHandler(object):
     def update(self, **kwargs):
         id = kwargs.values()[0]
         obj = self._get_object(id)
-        json = flask.request.json
-        if '0' in json:
-            del json['0']
-        values = self._get_body(json)
+        values = self._get_body(flask.request.json)
         obj.update_from_json(values)
         obj.save()
         return 200, obj
