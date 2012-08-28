@@ -42,7 +42,7 @@ class ChartFactory:
         for y in yfields:
             c.dataMap.append(y['name'])
         
-        if xfield['name'] == 'capturetime':
+        if xfield['name'] == 'capturetime_epoch':
             c.xtype = 'datetime'
         
         return self.fillChart(c)
@@ -217,7 +217,8 @@ class RealtimeOLAP():
         charts = Chart.objects()
         
         # The incoming frame has time in epoch seconds.  Should be in milliseconds
-        frame['capturetime'] *= 1000
+        #frame['capturetime'] *= 1000
+        #Kurt needs to test this
         
         for chart in charts:
             # If no statistics, send result on its way

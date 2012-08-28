@@ -195,6 +195,7 @@ class OLAP(SimpleDoc, mongoengine.Document):
     def defaultOLAP(self):
         from bson import ObjectId
         # Returns data set of all default values, formatted for this olap
+        # TODO, remove these empty data points
         
         fakeResult = {}
         

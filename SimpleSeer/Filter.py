@@ -60,10 +60,7 @@ class Filter():
                 results = results[skip:skip+limit]
         else:
             return 0, []
-        
-        if timeEpoch:
-            map(lambda x: x.__setitem__('capturetime', timegm(x['capturetime'].timetuple()) * 1000), results)
-            
+                
         return len(cmd['result']), results    
         
     def initialFields(self):
@@ -102,17 +99,17 @@ class Filter():
         filters = {}
         for f in frameQuery:    
             if 'eq' in f:
-                if f['name'] == 'capturetime':
+                if f['name'] == 'capturetime_epoch':
                     f['eq'] = datetime.fromtimestamp(f['eq'] / 1000)
                 comp = f['eq']
             else:
                 comp = {}
                 if 'gt' in f and f['gt']:
-                    if f['name'] == 'capturetime':
+                    if f['name'] == 'capturetime_epoch':
                         f['gt'] = datetime.fromtimestamp(f['gt'] / 1000)
                     comp['$gt'] = f['gt']
                 if 'lt' in f and f['lt']:
-                    if f['name'] == 'capturetime':
+                    if f['name'] == 'capturetime_epoch':
                         f['lt'] = datetime.fromtimestamp(f['lt'] / 1000)
                     comp['$lt'] = f['lt']
             if 'exists' in f:
