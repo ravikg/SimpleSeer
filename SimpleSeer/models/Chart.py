@@ -98,18 +98,25 @@ class Chart(SimpleDoc, mongoengine.Document):
         return "<Chart %s>" % self.name
 
     def save(self, *args, **kwargs):
-        from ..OLAPUtils import ChartFactory, OLAPFactory
-        cf = ChartFactory()
-        of = OLAPFactory()
         
-        xf, yf = cf.processOLAPFields(self.olap_xaxis, self.olap_yaxis)
-        o = of.fromFields([xf] + yf)
-        self.olap = o.name
+        print 'saving chart'
+        print self.olap_xaxis
+        print self.olap_yaxis
         
-        cf.fromFields(xf, yf, self)
+        # If the related OLAP axis values are set, this is coming from the chart builder
+        # in which case, use the olap and chart factories to put together the pieces
+        if self.olap_xaxis and self.olap_yaxis:
+            from ..OLAPUtils import ChartFactory, OLAPFactory
+            cf = ChartFactory()
+            of = OLAPFactory()
+        
+            xf, yf = cf.processOLAPFields(self.olap_xaxis, self.olap_yaxis)
+            o = of.fromFields([xf] + yf)
+            o.save()
+            self.olap = o.name
+        
+            self = cf.fromFields(xf, yf, self)
 
-        print 'saving!'
-        print self.id
         
         super(Chart, self).save(*args, **kwargs)
         

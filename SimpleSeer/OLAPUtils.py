@@ -27,25 +27,24 @@ class ChartFactory:
         
         yfields = []
         for y in yaxis:
-            print y
             field_type, dot, field_name = y.partition('.')
             yfields.append({'type': field_type, 'name': field_name})
         
         return xfield, yfields
     
-    def fromFields(self, xfield, yfields, c = None):
+    def fromFields(self, xfield, yfields, chart = None):
         
-        if not c:
-            c = Chart()
+        if not chart:
+            chart = Chart()
         
-        c.dataMap = [xfield['name']]
+        chart.dataMap = [xfield['name']]
         for y in yfields:
-            c.dataMap.append(y['name'])
+            chart.dataMap.append(y['name'])
         
         if xfield['name'] == 'capturetime_epoch':
-            c.xtype = 'datetime'
+            chart.xtype = 'datetime'
         
-        return self.fillChart(c)
+        return self.fillChart(chart)
         
     
     def fillChart(self, c):
@@ -65,7 +64,7 @@ class ChartFactory:
         if not c.realtime:
             c.realtime = True
         if not c.metaMap:
-            c.metamap = ['id']
+            c.metaMap = ['id']
         if not c.chartid:
             c.chartid = None
             
