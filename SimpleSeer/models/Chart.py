@@ -99,10 +99,6 @@ class Chart(SimpleDoc, mongoengine.Document):
 
     def save(self, *args, **kwargs):
         
-        print 'saving chart'
-        print self.olap_xaxis
-        print self.olap_yaxis
-        
         # If the related OLAP axis values are set, this is coming from the chart builder
         # in which case, use the olap and chart factories to put together the pieces
         if self.olap_xaxis and self.olap_yaxis:
