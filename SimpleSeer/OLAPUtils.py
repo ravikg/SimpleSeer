@@ -121,7 +121,7 @@ class OLAPFactory:
             
         return self.fillOLAP(newOLAP)
     
-    def fromFields(self, fields):
+    def fromFields(self, fields, olap = None):
         # Create an OLAP object from a list of fields desired
         # Each field should be specified in the same was as Filter fields
         #   type: one of (frame, framefeature, measurement)
@@ -131,12 +131,14 @@ class OLAPFactory:
         for f in fields:
             f['exists'] = 1
         
-        # Put together the OLAP
-        o = OLAP()
-        o.olapFilter = fields
+        # Create a new olap if none exists
+        if not olap:
+            olap = OLAP()
+        
+        olap.olapFilter = fields
         
         # Fill in the rest with default values
-        return self.fillOLAP(o)
+        return self.fillOLAP(olap)
         
     def fromObject(self, obj):
         # Create an OLAP object from another query-able object
@@ -174,11 +176,12 @@ class OLAPFactory:
     def fillOLAP(self, o):
         # Fills in default values for undefined fields of an OLAP
         
-        if o.olapFilter:
-            o.name = o.olapFilter[0]['name'] + '_' + str(randint(1, 1000000))
-        else:
-            o.name = 'GeneratedOLAP_' + str(randint(1, 1000000))
-            
+        if not o.name:
+            if o.olapFilter:
+                o.name = o.olapFilter[0]['name'] + '_' + str(randint(1, 1000000))
+            else:
+                o.name = 'GeneratedOLAP_' + str(randint(1, 1000000))
+                
         # Default to max query length of 1000
         if not o.maxLen:
             o.maxLen = 1000
