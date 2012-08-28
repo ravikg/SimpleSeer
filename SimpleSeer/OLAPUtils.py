@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 
 class ChartFactory:
 
-    def processWebFields(self, xaxis, yaxis, opts):
+    def processOLAPFields(self, xaxis, yaxis):
         field_type, dot, field_name = xaxis.partition('.')
         xfield = {'type': field_type, 'name': field_name}
         
@@ -31,28 +31,13 @@ class ChartFactory:
             field_type, dot, field_name = y.partition('.')
             yfields.append({'type': field_type, 'name': field_name})
         
-        c = None
-        if 'chart_id' in opts:
-            cid = opts.pop('chart_id')
-            cs = Chart.objects(id = cid)
-            if len(cs) == 1:
-                c = cs[0]
-            else:
-                log.warn('Could not load chart %d' % cid)
-        
-        c, o = self.fromFields(xfield, yfields, opts, c)
-
-        return c, o
+        return xfield, yfields
     
-    def fromFields(self, xfield, yfields, options = {}, c = None):
-        of = OLAPFactory()
-        print [xfield] + yfields
-        o = of.fromFields([xfield] + yfields)
+    def fromFields(self, xfield, yfields, c = None):
         
         if not c:
             c = Chart()
         
-        c.olap = o.name
         c.dataMap = [xfield['name']]
         for y in yfields:
             c.dataMap.append(y['name'])
@@ -60,10 +45,7 @@ class ChartFactory:
         if xfield['name'] == 'capturetime':
             c.xtype = 'datetime'
         
-        for key in options:
-            c.__setattr__(key, options[key])
-            
-        return self.fillChart(c), o
+        return self.fillChart(c)
         
     
     def fillChart(self, c):
@@ -84,7 +66,9 @@ class ChartFactory:
             c.realtime = True
         if not c.metaMap:
             c.metamap = ['id']
-        
+        if not c.chartid:
+            c.chartid = None
+            
         return c
         
 class OLAPFactory:
