@@ -29,8 +29,8 @@ module.exports = class FilterCollection extends Collection
     @
 
   #comparator: (chapter) =>
-  #  return -chapter.get("capturetime")
-  #  return chapter.get("capturetime")
+  #  return -chapter.get("capturetime_epoch")
+  #  return chapter.get("capturetime_epoch")
 
   getFilter: (name) ->
     #if !@filters?
@@ -63,11 +63,11 @@ module.exports = class FilterCollection extends Collection
       skip:skip
       limit:limit
       query:_json
-      sortkey: @sortParams.sortkey || 'capturetime'
+      sortkey: @sortParams.sortkey || 'capturetime_epoch'
       sortorder: @sortParams.sortorder || -1
       sortinfo:
         type: @sortParams.sorttype || ''
-        name: @sortParams.sortkey || 'capturetime'
+        name: @sortParams.sortkey || 'capturetime_epoch'
         order: @sortParams.sortorder || -1
     if addParams
       _json = _.extend _json, addParams

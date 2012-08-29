@@ -102,7 +102,7 @@ module.exports = class TabContainer extends View
       _id = i+'_tab'
       @tabs[_id] = @addSubview _id, o, '#tabs', {append:_id}
     #if @empty==true and @filtercollection.at(0)
-    #  @newest = @filtercollection.at(0).get('capturetime')
+    #  @newest = @filtercollection.at(0).get('capturetime_epoch')
     #_(@_frameViews).each (fv) =>
     #  @$el.find('#frame_holder').append(fv.render().el)
     #@$el.find('#loading_message').hide()
