@@ -15,7 +15,8 @@ SimpleSeerDateHelper = {
     },
     
     prettyDate: function(date) {
-        return date.toLocaleDateString().match(/\w+\s\d+\,\s\d+/)[0];
+        var str = [this.monthNames[date.getMonth()], " ", date.getDate(), ", ", date.getFullYear()];
+	return str.join("");
     },
     
     prettyTime: function(d) {
