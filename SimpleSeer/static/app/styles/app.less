@@ -280,6 +280,72 @@ a { font-size: 13px; color: #08C; font-family: "Helvetica Neue", Helvetica, Aria
     .message { font-size: 20px; text-align: center; margin-top: 20px; }
 }
 
+#config{
+  position: fixed;
+  margin-left: 22px;
+}
+
+#stage{
+  margin-left: 343px;
+}
+
+.filter_widget{
+  border-bottom: 1px solid #ddd;
+  margin-bottom:10px;
+  padding-bottom: 14px;
+  h4 { margin: 4px; font-weight: bold; }
+}
+
+.filter_widget:last-child {
+  border-bottom: none;
+  margin-bottom: 0px;
+}
+
+#filter_form{
+  clear:both;
+  padding:15px;
+  color: #000;
+}
+
+#filter_form input:not([type=checkbox]) {
+  color: #000;
+  width:199px;
+}
+
+#filter_form .ui-combobox input{
+  cursor: pointer;
+	box-shadow: none;
+	border-radius: 3px 0 0 3px;
+  width:174px;
+}
+
+#filter_form .oneLine input[type=text] {
+  width: 192px;
+  height: 12px;  
+  margin-left: 3px;
+  margin-bottom: 0;  
+  margin-top: -7px;
+}
+
+#filter_form .oneLine label {
+  width: 34px;
+  text-align: right;
+}
+
+#filter_form .oneLine {
+  margin-top: 10px;
+  vertical-align: middle;
+}
+
+#filter_form .oneLine input[type=text], label {
+  display: inline-block;
+}
+
+.ui-slider .ui-slider-handle {
+  width: 6px;
+  margin-left: -3px;
+}
+
 /**
  * Begin jQuery Hacks
  */
