@@ -9,16 +9,22 @@ module.exports = class ChartView extends SubView
   template: ''
   lastframe: ''
   _counter:0
-  points:[]
+  points:{}
   type: ''
   olap: ''
+  maxPointSize:0
   
   initialize: =>
     super()
     # TODO: each chart should have mutliple series
     @type = @model.attributes.name.toLowerCase()
-    @points.push new series
+    if @model.attributes.maxPointSize?
+      @maxPointSize = @model.attributes.maxPointSize
+    else
+      @maxPointSize = 20
+    @points[@id] = new series
       view: @
+      id: @id
       accumlate: @model.attributes.accumulate
       xtype: @model.attributes.xtype
       name: @model.attributes.name
@@ -30,13 +36,15 @@ module.exports = class ChartView extends SubView
     return @
 
   #TODO: put these in the _.collection 
-  setData: (d) =>
+  setData: (d, sid) =>
     return d
-  addPoint: (d) =>
+  addPoint: (d, sid) =>
     return d
-  incPoint: (d) =>
+  shiftPoint: (sid) =>
+    return
+  incPoint: (d, sid) =>
     return d
-  alterPoint: (d) =>
+  alterPoint: (d, sid) =>
     return d
 
   buildChart: (c=false) =>

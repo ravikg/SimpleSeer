@@ -5,7 +5,7 @@ application = require 'application'
 module.exports = class DateTimeFilterView extends _filter
   id: 'datetime-filter-view'
   template: template
-  _vals:[]
+  _vals: []
 
   initialize: () =>
     super()
@@ -15,39 +15,39 @@ module.exports = class DateTimeFilterView extends _filter
     @options.params.constraints.max = tt
     @_vals['from'] = tf.valueOf()
     @_vals['to'] = tt.valueOf()
-    @
-
-  afterRender: () =>
-    tf = @$el.find('input[name=time_from]').datetimepicker {timeFormat: "h:mm tt", onClose: @setValue, ampm:true}
-    tt = @$el.find('input[name=time_to]').datetimepicker {timeFormat: "h:mm tt", onClose: @setValue, ampm:true}
-    #console.log @options.params.constraints.min-application.timeOffset
-    #begin24 = (@options.params.constraints.min-application.timeOffset) % 86400000
-    #end24 = begin24 + 86400000
-    tf.datepicker( "setDate",  new Date(@options.params.constraints.min-application.timeOffset))
-    tt.datepicker( "setDate",  new Date(@options.params.constraints.max-application.timeOffset))
-    #console.log @options.params.constraints
-    super()
-
+    return @
     
-  #setValue ALWAYS expects a date in the local time
-  setValue :(e,u) =>
-    dt = new moment(e)
-    dt.add('ms',application.timeOffset)
-    id = u.id.replace(@options.params.name,'')
-    #v = dt.valueOf()
-    """
-    if id == 'to'
-      if @_vals['to'] < @_vals['from']
-        SimpleSeer.alert('Invalid DT sett\'n','dterror')
-    else if id == 'from'
-      if @_vals['to'] < @_vals['from']
-        SimpleSeer.alert('Invalid DT sett\'n','dterror')
-    else
-      return
-    """
-    @_vals[id] = dt.valueOf()
-    if @_vals['to']? && @_vals['from']?
-      super([@_vals['from'],@_vals['to']],true)
+  displayPrettyDate:(s, e) =>
+    @$el.find('input[name=time_range]').attr("value", "#{SimpleSeerDateHelper.prettyDate(s)} - #{ SimpleSeerDateHelper.prettyDate(e)}")
+    return
+
+  afterRender: =>
+    startDate = new Date(@options.params.constraints.min-application.timeOffset)
+    endDate = new Date(@options.params.constraints.max-application.timeOffset)
+    
+    tf = @$el.find('input[name=time_range]').datetimerange
+      timeFormat: "h:mm tt"
+      onUpdate: @setValue
+      ampm: true
+      startDate: startDate
+      endDate: endDate
+      
+    @displayPrettyDate(startDate, endDate)
+    super()
+    return
+
+  setValue:(e, ui) =>
+    @displayPrettyDate(ui.startDate, ui.endDate)
+    
+    date_from = new moment(ui.startDate)
+    date_from.add('ms', application.timeOffset)
+    @_vals["from"] = date_from.valueOf()
+    date_to = new moment(ui.endDate)
+    date_to.add('ms', application.timeOffset)
+    @_vals["to"] = date_to.valueOf()    
+
+    super([@_vals["from"], @_vals["to"]], true)
+    return
       
 
   getRenderData: () =>
@@ -61,4 +61,4 @@ module.exports = class DateTimeFilterView extends _filter
         lt:vals[1]
         gt:vals[0]
         name:@options.params.field_name
-    retVal
+    return retVal

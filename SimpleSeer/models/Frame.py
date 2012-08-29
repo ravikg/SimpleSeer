@@ -1,5 +1,5 @@
 from cStringIO import StringIO
-
+from calendar import timegm
 import mongoengine
 
 from SimpleSeer.base import Image, pil, pygame
@@ -44,6 +44,7 @@ class Frame(SimpleDoc, mongoengine.Document):
         >>> 
     """
     capturetime = mongoengine.DateTimeField()
+    capturetime_epoch = mongoengine.IntField(default = 0)
     camera = mongoengine.StringField()
     features = mongoengine.ListField(mongoengine.EmbeddedDocumentField(FrameFeature))
     results = mongoengine.ListField(mongoengine.EmbeddedDocumentField(ResultEmbed))
@@ -61,13 +62,13 @@ class Frame(SimpleDoc, mongoengine.Document):
     _imgcache = ''
 
     meta = {
-        'indexes': ["capturetime", "-capturetime", ('camera', '-capturetime')]
+        'indexes': ["capturetime", "-capturetime", ('camera', '-capturetime'), "-capturetime_epoch", "capturetime_epoch"]
     }
     
     @classmethod
     #which fields we care about for Filter.py
     def filterFieldNames(cls):
-        return ['_id', 'camera', 'capturetime', 'results', 'features', 'metadata', 'notes', 'height', 'width', 'imgfile']
+        return ['_id', 'camera', 'capturetime', 'capturetime_epoch', 'results', 'features', 'metadata', 'notes', 'height', 'width', 'imgfile']
 
 
     @LazyProperty
@@ -151,6 +152,11 @@ class Frame(SimpleDoc, mongoengine.Document):
                 self.layerfile.replace(pygame.image.tostring(mergedlayer._mSurface, "RGBA"))
                 #TODO, make layerfile a compressed object
             #self._imgcache = ''
+        
+        
+        epoch_ms = timegm(self.capturetime.timetuple()) * 1000 + self.capturetime.microsecond / 1000
+        if self.capturetime_epoch != epoch_ms:
+            self.capturetime_epoch = epoch_ms 
         
         super(Frame, self).save(*args, **kwargs)
 

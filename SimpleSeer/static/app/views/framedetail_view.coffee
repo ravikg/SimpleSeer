@@ -1,7 +1,7 @@
-View = require './view'
-template = require './templates/framedetail'
-application = require('application')
-markupImage = require './widgets/markupImage'
+View = require "./view"
+template = require "./templates/framedetail"
+application = require "application"
+markupImage = require "./widgets/markupImage"
 
 # FrameDetailView contains a full-screen annotated
 # view of a frame record, and provides manipulation
@@ -19,21 +19,21 @@ module.exports = class FrameDetailView extends View
     super()
     for k in application.settings.ui_metadata_keys
       if !frame.model.attributes.metadata[k]?
-        frame.model.attributes.metadata[k] = ''
+        frame.model.attributes.metadata[k] = ""
     @frame = frame.model
     $(window).resize => @updateScale()
+    return
   
   # Event handlers.
   events:
-    'click #toggleProcessing' : 'togglePro'
-    'change .notes-field' : 'updateNotes'
-    'dblclick #display-zoom': 'clickZoom'
+    "click #toggleProcessing" : "togglePro"
+    "change .notes-field" : "updateNotes"
+    "dblclick #display-zoom": "clickZoom"
 
   # Show / hide the canvas markup layer
   # for the view.
-  togglePro: =>
-    $("#display canvas").toggle()
-    
+  togglePro: => $("#display canvas").toggle()
+
   # Returns the annotated frame properties
   # to the template.
   getRenderData: =>
@@ -46,13 +46,13 @@ module.exports = class FrameDetailView extends View
       data[k] = @model.attributes[k]
     data.disabled = application.settings.mongo.is_slave || false
 
-    md = @frame.get('metadata')
+    md = @frame.get("metadata")
     metadata = []
     for i in application.settings.ui_metadata_keys
       metadata.push {key:i,val:md[i]}
       
     data.metadata = metadata
-    data.capturetime = new moment(parseInt @frame.get('capturetime')+'000').format("M/D/YYYY h:mm a")
+    data.capturetime = new moment(parseInt(@frame.get("capturetime")+"000")).format("M/D/YYYY h:mm a")
     return data
 
   # Loops through table keys and values
@@ -62,20 +62,22 @@ module.exports = class FrameDetailView extends View
     metadata = {}
     rows = @$el.find(".editableMeta tr")
     rows.each (id, obj) ->
-      tds = $(obj).find('td')
-      input = $(tds[0]).find('input')
-      span = $(tds[0]).find('span')[0]
-      metadata[$(span).html()] = input.attr('value')
+      tds = $(obj).find("td")
+      input = $(tds[0]).find("input")
+      span = $(tds[0]).find("span")[0]
+      metadata[$(span).html()] = input.attr("value")
     @model.save {metadata: metadata}
+    return
 
   # Saves the notes field to the database.
   updateNotes: (e) =>
-    @model.save {notes:$(".notes-field").attr('value')}
+    @model.save {notes:$(".notes-field").attr("value")}
+    return
     
   # Called when the user double-clicks on
   # the view. Will zoom in by a set percent.
   clickZoom: (e) ->
-    viewPort = $('#display-zoom')
+    viewPort = $("#display-zoom")
     scale = $("#zoomer").data("orig-scale")
     
     # Get the current zoom level and add 20%.
@@ -104,31 +106,33 @@ module.exports = class FrameDetailView extends View
     # Update the view's frame with the new
     # size calculations.
     $("#zoomer").zoomify("option", {zoom: Math.floor((fakeZoom*100))/100, x: (-x) / newWidth, y: (-y)/ newHeight})
-    $('#display').css("height", (@.model.attributes.height * scale))    
+    $('#display').css("height", (@.model.attributes.height * scale))
+    return
   
   # Called when the user activates the
   # slider on the zoomify widget.
   zoom: (e, ui) ->
     scale = $("#zoomer").data("orig-scale")
-    $('#display').css "height", @.model.attributes.height * scale
-    $('#display-zoom').css
-      'position': 'relative',
-      'top': '-'+(@.model.attributes.height * ui.zoom * ui.y)+'px',
-      'left': '-'+(@.model.attributes.width * ui.zoom * ui.x)+'px',
-      'width': (@.model.attributes.width * ui.zoom)+'px',
-      'height': (@.model.attributes.height * ui.zoom)+'px',
+    $("#display").css "height", @.model.attributes.height * scale
+    $("#display-zoom").css
+      "position": "relative",
+      "top": "-" + (@.model.attributes.height * ui.zoom * ui.y) + "px",
+      "left": "-" + (@.model.attributes.width * ui.zoom * ui.x) + "px",
+      "width": (@.model.attributes.width * ui.zoom) + "px",
+      "height": (@.model.attributes.height * ui.zoom) + "px",
     
     # Update the markup canvas only if the
     # zoom level changed since last time.
     if ui.zoom != Number($("#zoomer").data("last-zoom")) then @imagePreview.renderProcessing()
-    $("#zoomer").data("last-zoom", ui.zoom)    
+    $("#zoomer").data("last-zoom", ui.zoom)
+    return
 
   # Repeated function to calculate the
   # scale based off of the model's real
   # width and the display's width.
   calculateScale: =>
     framewidth = @model.get("width")
-    realwidth = $('#display').width()
+    realwidth = $("#display").width()
     scale = realwidth / framewidth
     return scale
 
@@ -144,31 +148,32 @@ module.exports = class FrameDetailView extends View
       fullHeight = $(window).height() - 48
       ui = {zoom: $("#zoomer").data("last-zoom")}
       
-      $('#display-zoom').css
-        'position': 'relative',
-        'width': (@.model.attributes.width * ui.zoom)+'px',
-        'height': (@.model.attributes.height * ui.zoom)+'px',
+      $("#display-zoom").css
+        "position": "relative",
+        "width": (@.model.attributes.width * ui.zoom) + "px",
+        "height": (@.model.attributes.height * ui.zoom) + "px",
       
-      $('#display').css "height", @.model.attributes.height * scale
-      $("#zoomer").data "orig-scale", scale
+      $("#display").css("height", @.model.attributes.height * scale)
+      $("#zoomer").data("orig-scale", scale)
       $("#zoomer").zoomify "option",
         min: (scale.toFixed(2)) * 100,
         max: 400,
         height: (fullHeight / @model.get("height")) / scale,
-        zoom: scale.toFixed(2),
+        zoom: scale.toFixed(2)
+        
+    return
   
   # Initialize all of the widgets and
   # ui elements in the view.
   postRender: =>
-    # Throbber will not go away on its own!
     application.throbber.clear()
     scale = @calculateScale()
     scaleFixed = scale.toFixed(2)
     displayHeight = $(window).height() - 48;
 
     # Create new markupImage in the view.
-    @imagePreview =  @addSubview "display-zoom", markupImage, "#display-zoom"
-    @imagePreview.setModel @model
+    @imagePreview =  @addSubview("display-zoom", markupImage, "#display-zoom")
+    @imagePreview.setModel(@model)
     
     # Zoomify widget for image navigation.
     $("#zoomer")
@@ -203,4 +208,6 @@ module.exports = class FrameDetailView extends View
         if -1*ui.position.left + w0 > w then ui.position.left = w0 - w
         if -1*ui.position.top + h0 > h then ui.position.top = h0 - h
         $("#zoomer").zoomify("option", {"x": -1*ui.position.left / w, "y": -1*ui.position.top / h})
+    
+    return
     

@@ -20,24 +20,31 @@ log = logging.getLogger(__name__)
 
 
 class ChartFactory:
+
+    def processOLAPFields(self, xaxis, yaxis):
+        field_type, dot, field_name = xaxis.partition('.')
+        xfield = {'type': field_type, 'name': field_name}
+        
+        yfields = []
+        for y in yaxis:
+            field_type, dot, field_name = y.partition('.')
+            yfields.append({'type': field_type, 'name': field_name})
+        
+        return xfield, yfields
     
-    def fromFields(self, xaxis, yaxis, options = {}):
-        allFields = [xaxis] + yaxis
+    def fromFields(self, xfield, yfields, chart = None):
         
-        of = OLAPFactory()
-        o = of.fromFields(allFields)
+        if not chart:
+            chart = Chart()
         
-        c = Chart()
-        c.olap = o.name
-        c.dataMap = allFields
+        chart.dataMap = [xfield['name']]
+        for y in yfields:
+            chart.dataMap.append(y['name'])
         
-        if xaxis['name'] == 'capturetime':
-            c.xtype = 'datetime'
+        if xfield['name'] == 'capturetime_epoch':
+            chart.xtype = 'datetime'
         
-        for key in options:
-            c.__setattr__(key, options[key])
-            
-        return self.fillChart(c)
+        return self.fillChart(chart)
         
     
     def fillChart(self, c):
@@ -55,7 +62,13 @@ class ChartFactory:
         if not c.xtype:
             c.xtype = 'linear'
         if not c.realtime:
-            c.realtime = 'true'
+            c.realtime = True
+        if not c.metaMap:
+            c.metaMap = ['id']
+        if not c.chartid:
+            c.chartid = None
+            
+        return c
         
 class OLAPFactory:
     
@@ -108,7 +121,7 @@ class OLAPFactory:
             
         return self.fillOLAP(newOLAP)
     
-    def fromFields(self, fields):
+    def fromFields(self, fields, olap = None):
         # Create an OLAP object from a list of fields desired
         # Each field should be specified in the same was as Filter fields
         #   type: one of (frame, framefeature, measurement)
@@ -118,12 +131,14 @@ class OLAPFactory:
         for f in fields:
             f['exists'] = 1
         
-        # Put together the OLAP
-        o = OLAP()
-        o.olapFilter = fields
+        # Create a new olap if none exists
+        if not olap:
+            olap = OLAP()
+        
+        olap.olapFilter = fields
         
         # Fill in the rest with default values
-        return self.fillOLAP(o)
+        return self.fillOLAP(olap)
         
     def fromObject(self, obj):
         # Create an OLAP object from another query-able object
@@ -161,11 +176,12 @@ class OLAPFactory:
     def fillOLAP(self, o):
         # Fills in default values for undefined fields of an OLAP
         
-        if o.olapFilter:
-            o.name = o.olapFilter[0]['name'] + '_' + str(randint(1, 1000000))
-        else:
-            o.name = 'GeneratedOLAP_' + str(randint(1, 1000000))
-            
+        if not o.name:
+            if o.olapFilter:
+                o.name = o.olapFilter[0]['name'] + '_' + str(randint(1, 1000000))
+            else:
+                o.name = 'GeneratedOLAP_' + str(randint(1, 1000000))
+                
         # Default to max query length of 1000
         if not o.maxLen:
             o.maxLen = 1000
@@ -203,7 +219,8 @@ class RealtimeOLAP():
         charts = Chart.objects()
         
         # The incoming frame has time in epoch seconds.  Should be in milliseconds
-        frame['capturetime'] *= 1000
+        #frame['capturetime'] *= 1000
+        #Kurt needs to test this
         
         for chart in charts:
             # If no statistics, send result on its way
