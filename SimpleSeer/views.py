@@ -510,21 +510,7 @@ def chart_data(chart_name, filter_params):
 def chart_meta(chart_name):
     c = M.Chart.objects.get(name=chart_name)
     return c.chartMeta()
-    
-@route('/chart/new/', methods=['POST'])
-@util.jsonify
-def chart_new():
-    from .OLAPUtils import ChartFactory
-    
-    opts = request.values.to_dict()
-    
-    cf = ChartFactory()
-    c, o = cf.processWebFields(opts['xaxis'], opts['yaxis'], opts['chart_name'])
-    c.save()
-    o.save()
-    
-    return c.createChart() 
-    
+        
 @route('/chart/<chart_name>/since/<timestamp>', methods=['GET'])
 @util.jsonify
 def chart_since(chart_name, timestamp):
@@ -538,7 +524,6 @@ def chart_since_before(chart_name, sincetimestamp, beforetimestamp):
     c = M.Chart.objects.get(name = chart_name)
 
     return c.createChart(sincetime = int(float(sincetimestamp)), beforetime = int(float(beforetimestamp)))
-
 
 
 @route('/start', methods=['GET', 'POST'])

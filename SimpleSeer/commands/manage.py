@@ -66,6 +66,10 @@ def WatchCommand(ManageCommand):
         'SimpleSeer', 'static'))
     tgt_brunch = path(cwd) / package / 'brunch_src'
     
+    BuildCommand("").run()
+    #run a build first, to make sure stuff's up to date
+    
+    
     #i'm not putting this in pip, since this isn't necessary in production
     from watchdog.observers import Observer
     from watchdog.events import FileSystemEventHandler
@@ -93,6 +97,7 @@ def WatchCommand(ManageCommand):
     
     seer_observer.start()
     local_observer.start()
+    
     
     while True:
         if len(seer_event_handler.eventqueue):
