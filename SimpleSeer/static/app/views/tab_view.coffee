@@ -11,13 +11,11 @@ module.exports = class Tab extends SubView
     if !@options.parent.$('#'+@options.append).length
       @options.parent.$(@options.selector).append('<div id="'+@options.append+'" class="tab" />')
     super()
-    if @selected
-      @select()
-
     
   select: =>
     @selected = true
     @render()
+    #console.log @options.parent.$el.tabs
     
   unselect: =>
     @selected = false
