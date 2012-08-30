@@ -6,8 +6,7 @@ module.exports = class Tab extends SubView
   
   initialize: () =>
     ul = @options.parent.$el.find('ul')
-    ul.append('<li><a href="#'+@options.append+'" class="tab">'+(@title || '')+'</a></li>')
-        
+    $(ul[0]).append('<li><a href="#'+@options.append+'" class="tab">'+(@title || '')+'</a></li>')   
     if !@options.parent.$('#'+@options.append).length
       @options.parent.$(@options.selector).append('<div id="'+@options.append+'" class="tab" />')
     super()
