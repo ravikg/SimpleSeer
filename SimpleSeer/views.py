@@ -498,7 +498,6 @@ def confirmTransient(channel_name):
 @util.jsonify
 def chart(chart_name):
     c = M.Chart.objects.get(name = chart_name)
-    
     return c.createChart()
 
 @route('/chart/data/<chart_name>/<filter_params>', methods=['GET'])
@@ -510,21 +509,6 @@ def chart_data(chart_name, filter_params):
 def chart_meta(chart_name):
     c = M.Chart.objects.get(name=chart_name)
     return c.chartMeta()
-        
-@route('/chart/<chart_name>/since/<timestamp>', methods=['GET'])
-@util.jsonify
-def chart_since(chart_name, timestamp):
-    c = M.Chart.objects.get(name = chart_name)
-
-    return c.createChart(sincetime = int(float(timestamp)))
-
-@route('/chart/<chart_name>/since/<sincetimestamp>/before/<beforetimestamp>', methods=['GET'])
-@util.jsonify
-def chart_since_before(chart_name, sincetimestamp, beforetimestamp):
-    c = M.Chart.objects.get(name = chart_name)
-
-    return c.createChart(sincetime = int(float(sincetimestamp)), beforetime = int(float(beforetimestamp)))
-
 
 @route('/start', methods=['GET', 'POST'])
 def start():
