@@ -52,7 +52,7 @@ module.exports = class FrameDetailView extends View
       metadata.push {key:i,val:md[i]}
       
     data.metadata = metadata
-    data.capturetime = new moment(parseInt(@frame.get("capturetime")+"000")).format("M/D/YYYY h:mm a")
+    data.capturetime_epoch = new moment(parseInt(@frame.get("capturetime_epoch")+"000")).format("M/D/YYYY h:mm a")
     return data
 
   # Loops through table keys and values
