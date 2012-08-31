@@ -99,17 +99,17 @@ class Filter():
         filters = {}
         for f in frameQuery:    
             if 'eq' in f:
-                if f['name'] == 'capturetime_epoch':
+                if f['name'] == 'capturetime':
                     f['eq'] = datetime.fromtimestamp(f['eq'] / 1000)
                 comp = f['eq']
             else:
                 comp = {}
                 if 'gt' in f and f['gt']:
-                    if f['name'] == 'capturetime_epoch':
+                    if f['name'] == 'capturetime':
                         f['gt'] = datetime.fromtimestamp(f['gt'] / 1000)
                     comp['$gt'] = f['gt']
                 if 'lt' in f and f['lt']:
-                    if f['name'] == 'capturetime_epoch':
+                    if f['name'] == 'capturetime':
                         f['lt'] = datetime.fromtimestamp(f['lt'] / 1000)
                     comp['$lt'] = f['lt']
             if 'exists' in f:
