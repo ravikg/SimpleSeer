@@ -5,6 +5,9 @@ $ ->
     _.templateSettings = {interpolate : /\{\{(.+?)\}\}/g}
 
     window.SimpleSeer = application
-    application.settings = data.settings
+    #TODO: bind initalize events
+    application._init(data.settings)
     application.initialize()
     Backbone.history.start()
+    # Freeze the object
+    Object.freeze? application
