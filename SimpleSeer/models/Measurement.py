@@ -127,6 +127,12 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
         frame.results.extend(results)
         return results
     
+    def save(self, *args, **kwargs):
+        from ..realtime import ChannelManager
+        
+        super(Measurement, self).save(*args, **kwargs)
+        ChannelManager().publish('meta/', self)
+
     def __repr__(self):
         return "<Measurement: " + str(self.inspection) + " " + self.method + " " + str(self.featurecriteria) + ">"
             

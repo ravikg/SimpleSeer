@@ -215,5 +215,11 @@ class OLAP(SimpleDoc, mongoengine.Document):
                 
         return [fakeResult, fake2]
 
+    def save(self, *args, **kwargs):
+        from ..realtime import ChannelManager
+        
+        super(OLAP, self).save(*args, **kwargs)
+        ChannelManager().publish('meta/', self)
+        
 
     
