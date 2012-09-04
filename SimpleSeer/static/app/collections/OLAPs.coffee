@@ -10,31 +10,44 @@ module.exports = class OLAPs extends Collection
   model: OLAP
   paused: false
   timeframe:300
+  
+  initialize: (args={}) =>
+    # Bind view to collection so we know where our widgets live
+    if args.view?
+      @view = args.view
+    super(args)
 
-  onSuccess: (d1, d2) =>
-    d2.sort (a,b) ->
+  fetch: (args={}) =>
+    # Create default success action if none supplied to fetch
+    if !args.success?
+      _.extend args,
+        success: @onSuccess
+    super(args)
+  
+  # Default success action
+  onSuccess: (obj, rawJson) =>
+    # Sort charts by render order
+    # To be deprecated with grid layout
+    rawJson.sort (a,b) ->
       (a.renderorder || 100) - (b.renderorder || 101)
-    for me in d2
-      #console.log me.name, me.renderorder
-      #d1.buildChart d1.get me.id
-
-      mod = d1.get me.id
-      if !mod.view
-        cn = ''
-        if inHalf
-          cn = 'graph-half-size'
-          inHalf = false
-        else if me.halfsize
-          cn = 'graph-half-size'
-          inHalf = true
-        #mod.view = new ChartView({id:me.id,model:me,className:cn})
-        if charts[me.style]
-          mod.view = new charts[me.style]({id:me.id,model:me,className:cn})
-          mod.view.render()
+    for rawObj in rawJson
+      # Get model
+      model = @get rawObj.id
+      ################
+      # TODO: check if chart has chartid
+      #       if chartid, get chart and add series
+      #       pass in chart type so highcharts can support line pie stack
+      #       http://jsfiddle.net/gh/get/jquery/1.7.2/highslide-software/highcharts.com/tree/master/samples/highcharts/demo/combo/
+      if !model.view
+        if charts[rawObj.style]
+          _id = rawObj.name
+          vi = @view.addSubview _id, charts[rawObj.style], '#charts', {append:_id,id:rawObj.id,model:model}
+          vi.render()
         else
-          console.error me.style + ' is not a valid chart type'
+          console.error rawObj.style + ' is not a valid chart type'
     return
 
+###
   previewImage: (fId) =>
     if application.charts.paused
       @.changeFrameImage fId
@@ -96,3 +109,4 @@ module.exports = class OLAPs extends Collection
   
   removeFrame: (id) =>
     $('#image_'+id).remove()
+###

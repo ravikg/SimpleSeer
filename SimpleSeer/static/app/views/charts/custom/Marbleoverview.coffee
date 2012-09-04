@@ -2,7 +2,7 @@ ChartView = require '../Customcharts'
 
 module.exports = class marbleoverview extends ChartView
   
-  initialize: (d) =>
+  initialize: =>
     @data = {
       total:0
       meantime:0
@@ -31,7 +31,7 @@ module.exports = class marbleoverview extends ChartView
         </p>
         <div style="clear:both;"></div>
       </div>'
-    super d
+    super()
     #@.render($('#'+@id))
     this
 

@@ -9,6 +9,7 @@ from SimpleSeer import validators as V
 
 from datetime import datetime
 from calendar import timegm
+from datetime import datetime
 
 from .OLAP import OLAP
 
@@ -35,28 +36,36 @@ log = logging.getLogger(__name__)
 #################################
 
 class ChartSchema(fes.Schema):
-    name = fev.UnicodeString()
-    description = fev.UnicodeString()
-    olap = fev.UnicodeString()
-    chartid = fev.UnicodeString()
-    style = fev.UnicodeString()            
-    color = fev.UnicodeString(if_missing='blue')                  
-    colormap = V.JSON(if_empty=None, if_missing=None)
-    labelmap = V.JSON(if_empty=None, if_missing=None)
+    name = fev.UnicodeString(if_empty='default', if_missing='default')
+    style = fev.UnicodeString(if_empyt='line', if_missing='line')            
+    xtype = fev.OneOf(['linear', 'logarithmic', 'datetime'], if_missing='datetime')
+    
     xTitle = fev.UnicodeString(if_empty='', if_missing='')
     yTitle = fev.UnicodeString(if_empty='', if_missing='')
-    #stupid hack because i cant get labelmap to default to None
-    useLabels = fev.Bool(if_missing=False)
-    minval = fev.Int(if_missing=0)
-    maxval = fev.Int(if_missing=100)
-    xtype = fev.OneOf(['linear', 'logarithmic', 'datetime'], if_missing='datetime')
-    accumulate = fev.Bool(if_missing=False)
-    renderorder = fev.Int(if_missing=1)
-    halfsize = fev.Bool(if_missing=False)
-    realtime = fev.Bool(if_missing=True)
-    dataMap = V.JSON(if_missing=[])
-    metaMap = V.JSON(if_missing=[])
+    description = fev.UnicodeString(if_empty='', if_missing='')
 
+    olap = fev.UnicodeString(if_empty='', if_missing='')    
+    dataMap = fev.Set(if_empty = [], if_missing=[])
+    metaMap = fev.Set(if_empty = [], if_missing=[])
+    realtime = fev.Bool(if_empyt=True, if_missing=True)
+
+    # Needed to pass through and save the appropriate OLAP
+    olap_xaxis = fev.UnicodeString(if_empty='', if_missing='')
+    olap_yaxis = fev.Set(if_empty = [], if_missing=[])
+
+    chartid = fev.UnicodeString(if_empty='', if_missing='')
+    color = fev.UnicodeString(if_empty='', if_missing='')                  
+    colormap = V.JSON(if_empty=None, if_missing=None)
+    labelmap = V.JSON(if_empty=None, if_missing=None)
+    #stupid hack because i cant get labelmap to default to None
+    useLabels = fev.Bool(if_empty=False, if_missing=False)
+    minval = fev.Int(if_empty=0, if_missing=0)
+    maxval = fev.Int(if_empty=0, if_missing=100)
+    accumulate = fev.Bool(if_empty=False, if_missing=False)
+    maxPointSize = fev.Int(if_missing=100,if_empty=100)
+    renderorder = fev.Int(if_empty=1, if_missing=1)
+    halfsize = fev.Bool(if_empty=False,if_missing=False)
+    
 
 class Chart(SimpleDoc, mongoengine.Document):
 
@@ -75,6 +84,7 @@ class Chart(SimpleDoc, mongoengine.Document):
     maxval = mongoengine.IntField()
     xtype = mongoengine.StringField()
     accumulate = mongoengine.BooleanField()
+    maxPointSize = mongoengine.IntField()
     renderorder = mongoengine.IntField()
     halfsize = mongoengine.BooleanField()
     realtime = mongoengine.BooleanField()
@@ -87,17 +97,44 @@ class Chart(SimpleDoc, mongoengine.Document):
 
     def __repr__(self):
         return "<Chart %s>" % self.name
-    
+
+    def save(self, *args, **kwargs):
+                
+        # If the related OLAP axis values are set, this is coming from the chart builder
+        # in which case, use the olap and chart factories to put together the pieces
+        if 'olap_xaxis' in self and 'olap_yaxis' in self:
+            from ..OLAPUtils import ChartFactory, OLAPFactory
+            cf = ChartFactory()
+            of = OLAPFactory()
+
+            # If no olap exists, create it
+            # If it does exist and no other charts point to it, edit the current one
+            # If it does exist and other charts point to it, create a new one
+            if not self.olap:
+                olap = OLAP()
+            else:
+                charts = Chart.objects(olap=self.olap)
+                if len(charts) > 1:
+                    olap = OLAP()
+                else:
+                    olap = OLAP.objects(name=self.olap)[0]
+                
+            xf, yf = cf.processOLAPFields(self.olap_xaxis, self.olap_yaxis)
+            o = of.fromFields([xf] + yf, olap=olap)
+            o.save()
+            self.olap = o.name
+            self = cf.fromFields(xf, yf, self)
+            
+        super(Chart, self).save(*args, **kwargs)
+        
     def mapData(self, results):
         data = []
         
         for r in results:
-            # TODO Make this more generic than just capturetime
-            # Capturetimes should now come from filter in epoch seconds already
             if 'capturetime' in r:
                 if type(r['capturetime']) == datetime:
-                    r['capturetime'] = timegm(r['capturetime'].timetuple()) * 1000
-            
+                    ms = r['capturetime'].microsecond / 1000
+                    r['capturetime'] = timegm(r['capturetime'].timetuple()) * 1000 + ms
             thisData = [r.get(d, 0) for d in self.dataMap]
             thisMeta = [r.get(m, 0) for m in self.metaMap]
             
@@ -116,18 +153,14 @@ class Chart(SimpleDoc, mongoengine.Document):
         
         # Get the OLAP and its data
         o = OLAP.objects(name=self.olap)
-        if len(o) == 1:
-            o = o[0]
-            if ('sincetime' in kwargs):
-                o.since = int(kwargs['sincetime'] / 1000)
-        
-            if 'beforetime' in kwargs:
-                o.before = int(kwargs['beforetime'] / 1000)
+        o = o[0]
+        if ('sincetime' in kwargs):
+            o.since = int(kwargs['sincetime'] / 1000)
     
-            data = o.execute()
-        else:
-            log.warn("Found %d OLAPS in query for %s" % (len(o), olap))
-            data = []
+        if 'beforetime' in kwargs:
+            o.before = int(kwargs['beforetime'] / 1000)
+
+        data = o.execute()
                 
         chartData = {'name': self.name,
                      'olap': self.olap,
@@ -175,16 +208,33 @@ class Chart(SimpleDoc, mongoengine.Document):
 
         return meta
 
-    def chartData(self, filter_params = []):
+    def chartData(self, allParams = []):
+        from SimpleSeer.OLAPUtils import OLAPFactory
+        
         # Get the OLAP and its data
-        o = OLAP.objects(name=self.olap)
-        if len(o) == 1:
-            o = o[0]
-            data = o.execute(filter_params)
-            # TODO: Need to work with jim to do handoff to temp olap for realtime
+        if self.realtime and 'query' in allParams:
+            of = OLAPFactory()
+            cname, o = of.createTransient(allParams['query'], self)
         else:
-            log.warn("Found %d OLAPS in query for %s" % (len(o), o))
-            data = []
+            o = OLAP.objects(name=self.olap)[0]
+            cname = self.name
+            
+        if 'limit' in allParams:
+            o.limit = allParams['limit']
+        if 'skip' in allParams:
+            o.skip = allParams['skip']
+
+        if 'sortinfo' in allParams:
+            o.sortInfo = allParams['sortinfo']
+        else:
+            o.sortInfo = {}
         
-        return self.mapData(data)
-        
+        if 'query' in allParams:    
+            query = allParams['query']
+        else:
+            query = []
+            
+        data = self.mapData(o.execute(query))
+        res = dict(chart = str(cname), data = data)
+
+        return res

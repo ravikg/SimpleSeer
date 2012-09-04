@@ -19,6 +19,57 @@ import logging
 log = logging.getLogger(__name__)
 
 
+class ChartFactory:
+
+    def processOLAPFields(self, xaxis, yaxis):
+        field_type, dot, field_name = xaxis.partition('.')
+        xfield = {'type': field_type, 'name': field_name}
+        
+        yfields = []
+        for y in yaxis:
+            field_type, dot, field_name = y.partition('.')
+            yfields.append({'type': field_type, 'name': field_name})
+        
+        return xfield, yfields
+    
+    def fromFields(self, xfield, yfields, chart = None):
+        
+        if not chart:
+            chart = Chart()
+        
+        chart.dataMap = [xfield['name']]
+        for y in yfields:
+            chart.dataMap.append(y['name'])
+        
+        if xfield['name'] == 'capturetime_epoch':
+            chart.xtype = 'datetime'
+        
+        return self.fillChart(chart)
+        
+    
+    def fillChart(self, c):
+        # Fill in default values for common fields if not assigned
+        if not c.name:
+            c.name = 'GeneratedChart_' + str(randint(1, 1000000))
+        if not c.style:
+            c.style = 'line'
+        if not c.color: 
+            c.color = 'blue'
+        if not c.minval:
+            c.minval = 0
+        if not c.maxval:
+            c.maxval = None
+        if not c.xtype:
+            c.xtype = 'linear'
+        if not c.realtime:
+            c.realtime = True
+        if not c.metaMap:
+            c.metaMap = ['id']
+        if not c.chartid:
+            c.chartid = None
+            
+        return c
+        
 class OLAPFactory:
     
     @classmethod
@@ -33,9 +84,17 @@ class OLAPFactory:
         # This is needed for OLAPs that publish realtime but are the result of filters
         
         from .models.Chart import Chart
-        
-        # First, create the core OLAP
         originalOLAP = OLAP.objects(name = originalChart.olap)[0]
+            
+        # Check for previous similar OLAPs
+        existing = OLAP.objects(olapFilter = filters, skip=originalOLAP.skip, limit=originalOLAP.limit)
+        if len(existing) > 0:
+            o = existing[0]
+            o.confirmed = True
+            c = Chart.objects(olap = o.name)[0]
+            return c.name, o 
+            
+        # First, create the core OLAP
         o = self.fromFilter(filters, originalOLAP)
         o.transient = True
         o.confirmed = True
@@ -49,6 +108,8 @@ class OLAPFactory:
         c.dataMap = originalChart.dataMap
         c.olap = o.name
         c.save()
+        
+        return c.name, o
     
     def fromFilter(self, filters, oldOLAP = None):
         
@@ -60,7 +121,7 @@ class OLAPFactory:
             
         return self.fillOLAP(newOLAP)
     
-    def fromFields(self, fields):
+    def fromFields(self, fields, olap = None):
         # Create an OLAP object from a list of fields desired
         # Each field should be specified in the same was as Filter fields
         #   type: one of (frame, framefeature, measurement)
@@ -70,12 +131,14 @@ class OLAPFactory:
         for f in fields:
             f['exists'] = 1
         
-        # Put together the OLAP
-        o = OLAP()
-        o.olapFilter = fields
+        # Create a new olap if none exists
+        if not olap:
+            olap = OLAP()
+        
+        olap.olapFilter = fields
         
         # Fill in the rest with default values
-        return self.fillOLAP(o)
+        return self.fillOLAP(olap)
         
     def fromObject(self, obj):
         # Create an OLAP object from another query-able object
@@ -110,15 +173,15 @@ class OLAPFactory:
         # Fill in the rest with default values
         return self.fillOLAP(o)
         
-    
     def fillOLAP(self, o):
         # Fills in default values for undefined fields of an OLAP
         
-        if o.olapFilter:
-            o.name = o.olapFilter[0]['name'] + '_' + str(randint(1, 1000000))
-        else:
-            o.name = 'GeneratedOLAP_' + str(randint(1, 1000000))
-            
+        if not o.name:
+            if o.olapFilter:
+                o.name = o.olapFilter[0]['name'] + '_' + str(randint(1, 1000000))
+            else:
+                o.name = 'GeneratedOLAP_' + str(randint(1, 1000000))
+                
         # Default to max query length of 1000
         if not o.maxLen:
             o.maxLen = 1000
@@ -128,12 +191,12 @@ class OLAPFactory:
             o.valueMap = []
     
         # No since constratint
-        if not o.since:
-            o.since = None
+        if not o.skip:
+            o.skip = 0
         
         # No before constraint
-        if not o.before:
-            o.before = None
+        if not o.limit:
+            o.limit = float("inf")
             
         # Finally, run once to see if need to aggregate
         if not o.statsInfo:
@@ -141,7 +204,7 @@ class OLAPFactory:
             
             # If to long, do the aggregation
             if len(results) > o.maxLen:
-                self.autoAggregate(results, autoUpdate=False)
+                o.autoAggregate(results, autoUpdate=False)
             
         # Return the result
         # NOTE: This OLAP is not saved 
@@ -155,8 +218,9 @@ class RealtimeOLAP():
         
         charts = Chart.objects()
         
-        # Functions below assume frame is a dict not an object 
-        frame = frame.__dict__['_data']
+        # The incoming frame has time in epoch seconds.  Should be in milliseconds
+        #frame['capturetime'] *= 1000
+        #Kurt needs to test this
         
         for chart in charts:
             # If no statistics, send result on its way
@@ -176,14 +240,14 @@ class RealtimeOLAP():
                         f['name'] = field
                         part = False
                         for r in frame['results']:
-                            part = part or (r._data['measurement_name'] == name and self.checkFilter(f, r._data))
+                            part = part or (r['py/state']['measurement_name'] == name and self.checkFilter(f, r['py/state']))
                         olapOK = part
                     elif f['type'] == 'framefeature':
                         name, dot, field = f['name'].partition('.')
                         f['name'] = field
                         part = False
                         for fe in frame['features']:
-                            part = part or (fe._data['featuretype'] == name and self.checkFilter(f, fe._data))
+                            part = part or (fe['py/state']['featuretype'] == name and self.checkFilter(f, fe['py/state']))
                         olapOK = part
                     else:
                         olapOK = self.checkFilter(f, frame)
@@ -241,9 +305,20 @@ class RealtimeOLAP():
             msgdata = dict(
                 chart = str(chart.name),
                 data = data)
-        
+            
             chartName = 'Chart/%s/' % utf8convert(chart.name) 
             ChannelManager().publish(chartName, dict(u='data', m=msgdata))
+    
+    def monitorRealtime(self):
+        from .base import jsondecode
+        
+        cm = ChannelManager()
+        sock = cm.subscribe('frame/')
+        
+        while True:
+            cname = sock.recv()
+            frame = jsondecode(sock.recv())
+            self.realtime(frame)
             
 
 class ScheduledOLAP():
@@ -267,7 +342,6 @@ class ScheduledOLAP():
         # Join all the greenlets
         for g in glets:
             g.join()
-    
     
     def checkTransient(self):
         while True:

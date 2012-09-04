@@ -61,17 +61,9 @@ class SimpleSeerProjectTemplate(Template):
 
         # Copy (built) seer.js & seer.css
         dn = open("/dev/null")
-        #print "Ignoring in git: {0}".format(src_public / 'javascripts/seer.js')
-        subprocess.call(['git','rm','--cached',src_public / 'javascripts/seer.js'],stderr=dn)
-        #print "Ignoring in git: {0}".format(tgt_public / 'javascripts/app.js')
-        subprocess.call(['git','rm','--cached',tgt_public / 'javascripts/app.js'],stderr=dn)
-        #print "Ignoring in git: {0}".format(tgt_public / 'javascripts/vendor.js')
-        subprocess.call(['git','rm','--cached',tgt_public / 'javascripts/vendor.js'],stderr=dn)
-        
-        #print "Ignoring in git: {0}".format(src_public / 'stylesheets/seer.css')
-        subprocess.call(['git','rm','--cached',src_public / 'stylesheets/seer.css'],stderr=dn)
-        #print "Ignoring in git: {0}".format(tgt_brunch / 'vendor/stylesheets/seer.css')
-        #subprocess.call(['git','rm','--cached',tgt_brunch / 'vendor/stylesheets/seer.css'])
+        subprocess.call(['git','rm','--cached',tgt_brunch / 'vendor/javascripts/seer.js'],stderr=dn)
+        subprocess.call(['git','rm','--cached',tgt_brunch / 'vendor/stylesheets/seer.css'],stderr=dn)
+        subprocess.call(['git','rm','--cached','-r',tgt_public],stderr=dn)
         overwrite(
             src_public / 'javascripts/seer.js',
             tgt_brunch / 'vendor/javascripts/seer.js')
@@ -91,6 +83,8 @@ class SimpleSeerProjectTemplate(Template):
 
 def overwrite(src, dst):
     if dst.exists(): dst.remove()
+    if not dst.parent.exists(): dst.parent.makedirs()
+   
     src.copy(dst)
 
 def overlay(src, dst, force=False):
