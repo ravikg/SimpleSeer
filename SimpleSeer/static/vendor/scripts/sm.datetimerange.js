@@ -122,8 +122,8 @@ $.widget("ui.datetimerange", {
                         .hide()
                         .addClass("ui-datetimerange")
                         .css({
-                            "top": element.offset().top + element.height(),
-                            "left": element.offset().left
+                            "top": element.offset().top + element.height() - $(window).scrollTop(),
+                            "left": element.position().left
                         })
                         .appendTo("body");
                         
@@ -295,7 +295,7 @@ $.widget("ui.datetimerange", {
         }
         
         self.window.css({
-            "top": element.offset().top + element.height(),
+            "top": element.offset().top + element.height() - $(window).scrollTop(),
             "left": element.offset().left
         }).show();        
     },
