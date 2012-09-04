@@ -40,8 +40,13 @@ module.exports = class FrameDetailView extends View
       metadata.push {key:i,val:md[i]}
       
     data.metadata = metadata
+<<<<<<< Updated upstream
     data.capturetime = new moment(parseInt @frame.get('capturetime')+'000').format("M/D/YYYY h:mm a")
     data
+=======
+    data.capturetime_epoch = new moment(parseInt(@frame.get("capturetime_epoch"))).format("M/D/YYYY h:mm a")
+    return data
+>>>>>>> Stashed changes
 
   updateMetaData: (self) =>  
     metadata = {}
