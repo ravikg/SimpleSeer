@@ -199,6 +199,7 @@ module.exports = class FrameDetailView extends View
     # display.
     $("#display-zoom").draggable
       drag: (e, ui) ->
+        $(window).scrollTop(0)
         w0 = $("#frameHolder").width()
         h0 = $("#frameHolder").height()
         w = $("#display-zoom").width()
