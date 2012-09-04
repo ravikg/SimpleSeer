@@ -26,8 +26,9 @@ module.exports = class FrameDetailView extends View
   
   # Event handlers.
   events:
+    "change .clickEdit": "updateMetaData"
     "click #toggleProcessing" : "togglePro"
-    "change .notes-field" : "updateNotes"
+    "change .notes-field" : "updateMetaData"
     "dblclick #display-zoom": "clickZoom"
 
   # Show / hide the canvas markup layer
@@ -52,26 +53,21 @@ module.exports = class FrameDetailView extends View
       metadata.push {key:i,val:md[i]}
       
     data.metadata = metadata
-    data.capturetime_epoch = new moment(parseInt(@frame.get("capturetime_epoch")+"000")).format("M/D/YYYY h:mm a")
+    data.capturetime_epoch = new moment(parseInt(@frame.get("capturetime_epoch"))).format("M/D/YYYY h:mm a")
     return data
 
   # Loops through table keys and values
   # and updates the database with the
   # inputs.
-  updateMetaData: (self) =>  
-    metadata = {}
+  updateMetaData: =>
     rows = @$el.find(".editableMeta tr")
-    rows.each (id, obj) ->
+    rows.each (id, obj) =>
       tds = $(obj).find("td")
       input = $(tds[0]).find("input")
       span = $(tds[0]).find("span")[0]
-      metadata[$(span).html()] = input.attr("value")
-    @model.save {metadata: metadata}
-    return
-
-  # Saves the notes field to the database.
-  updateNotes: (e) =>
-    @model.save {notes:$(".notes-field").attr("value")}
+      @model.attributes.metadata[$(span).html()] = input.attr("value")
+    @model.attributes.notes = $(".notes-field").attr("value")
+    @model.save()
     return
     
   # Called when the user double-clicks on
