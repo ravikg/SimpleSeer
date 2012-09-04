@@ -115,6 +115,7 @@ module.exports = class TabContainer extends View
       @_tabs[ui.panel.id].select()
     for i,o of @_tabs
       if o.selected
+        o.select()
         $('#tabs',@$el).tabs("select", o.options.append)
 
     return this
