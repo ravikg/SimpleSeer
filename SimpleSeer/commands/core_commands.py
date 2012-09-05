@@ -77,7 +77,20 @@ def OlapCommand(self):
     
     ro = RealtimeOLAP()
     ro.monitorRealtime()
+
+@Command.simple(use_gevent=False, remote_seer=False)    
+def ExportMeta(self):
+    from SimpleSeer.Backup import Backup
     
+    Backup.exportAll()    
+    Backup.listen()
+    
+@Command.simple(use_gevent=False, remote_seer=False)    
+def ImportMeta(self):
+    from SimpleSeer.Backup import Backup
+    
+    #TODO: all to pass file names?
+    Backup.importAll()
     
 @Command.simple(use_gevent=True, remote_seer=True)
 def WebCommand(self):

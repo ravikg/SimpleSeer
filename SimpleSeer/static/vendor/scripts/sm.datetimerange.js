@@ -96,6 +96,8 @@ $.widget("ui.datetimerange", {
     rightSide: "",
     calendarModels: [],
     calendarViews: [],
+    prevStartDate: "",
+    prevEndDate: "",
     
     _setVisibleMonth: function() {
         var self = this;
@@ -110,11 +112,9 @@ $.widget("ui.datetimerange", {
     
     _create: function() {
         var self = this;
-        var options = this.options;
-        
-        // Set the beginning month.
         self._setVisibleMonth();
         
+        var options = this.options;        
         var element = this.element;
         element.bind("focus", function(e, ui) { self.appear(e, ui); });
         
@@ -145,7 +145,8 @@ $.widget("ui.datetimerange", {
                     ' - '+
                     '<input class="ss-time-to" type="text" value="'+SimpleSeerDateHelper.prettyTime(options.endDate)+'">'+
                 '</div>'+
-                '<div class="bottom">'+                
+                '<div class="bottom">'+
+                    '<button class="cancel">Cancel</button>'+  
                     '<button class="apply">Apply</button>'+            
                 '</div>'+                
             '</div>'
@@ -165,7 +166,7 @@ $.widget("ui.datetimerange", {
                 endDate: options.endDate,
                 month: SimpleSeerDateHelper.offsetMonth(self._theMonth, -1 + e)
             });
-        }12
+        }
         
         var goNextMonth = $("<button>&raquo;</button>").addClass("switch").appendTo(this.leftSide);
         
@@ -180,6 +181,7 @@ $.widget("ui.datetimerange", {
             if( self._inChange == false ) {
                 self._inChange = true;
                 applyButton.attr("disabled", "disabled");
+                cancelButton.attr("disabled", "disabled");
                 
                 options.startDate = eleDate;
                 options.endDate = eleDate;
@@ -189,6 +191,7 @@ $.widget("ui.datetimerange", {
             } else if( eleDate >= options.startDate ) {
                 self._inChange = false;
                 applyButton.removeAttr("disabled");
+                cancelButton.removeAttr("disabled");
                 options.endDate = eleDate;
                 
                 $(".ss-date-from").addClass("alter");
@@ -216,6 +219,16 @@ $.widget("ui.datetimerange", {
            }
         });
         
+        var cancelButton = self.rightSide.find(".cancel");
+        cancelButton.click(function() {
+            
+            self.disappear();
+            options.startDate = self.prevStartDate;
+            options.endDate = self.prevEndDate;
+            self.updateCalendars();
+            
+        });
+        
         var applyButton = self.rightSide.find(".apply");
         applyButton.click(function() {
             if( self._inChange === true ) { return; }
@@ -232,8 +245,10 @@ $.widget("ui.datetimerange", {
             });
             
             self.disappear();
+            self.setPreviousDates();
         });
         
+        this.setPreviousDates();
         this.updateCalendars();
         this._onUpdate();
     },
@@ -279,6 +294,12 @@ $.widget("ui.datetimerange", {
     setEndDate: function(date) {   
         options.endDate = date;
         this.updateCalendars();
+    },
+    
+    setPreviousDates: function() {
+        var options = this.options;
+        this.prevStartDate = options.startDate;
+        this.prevEndDate = options.endDate;
     },
     
     /**

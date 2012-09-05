@@ -71,11 +71,8 @@ header, #navbar {
 }
 
 #main {
+  margin-top: 48px;
   padding-top: 25px;
-}
-
-#messages {
-  margin-top : 50px;
 }
 
 #loading_message{
@@ -389,7 +386,17 @@ a { font-size: 13px; color: #08C; font-family: "Helvetica Neue", Helvetica, Aria
 /**
  * Bootstrap alerts
  */
+#messages {
+  position: fixed;
+  top: 55px;
+  width: 800px;
+  margin-left: -400px;
+  left: 50%;
+  z-index: 9999;
+}
 .alert {
+  position: relative;
+  z-index: 9999;
   padding: 8px 35px 8px 14px;
   margin-bottom: 20px;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
