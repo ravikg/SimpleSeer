@@ -37,6 +37,7 @@
 
 .ui-datetimerange .bottom button {
   padding: 3px 10px;
+  margin-left: 6px;
 }
 
 .ui-datetimerange .bottom button[disabled] {
@@ -59,6 +60,7 @@
 }
 
 .ui-datetimerange input.alter {
+  background: #F0F7FF;
   border: 1px solid #07C;
   border-top: 1px solid #0064AB;
 }
