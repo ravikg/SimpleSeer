@@ -5,6 +5,8 @@ import models as M
 
 from .realtime import ChannelManager
 
+import logging
+log = logging.getLogger(__name__)
 
 class Backup:
     
@@ -31,6 +33,7 @@ class Backup:
             ts = '_%s' % datetime.utcnow().strftime('%Y%m%d%H%M%S')
         filename = 'seer_export%s.yaml' % ts
         
+        log.info('Logging to %s' % filename)
         f = open(filename, 'w')
         f.write(yaml)
         f.close()
@@ -38,11 +41,14 @@ class Backup:
     @classmethod
     def listen(self):
         
+        log.info('Subscribing to meta/ channel for updates')
+        
         cm = ChannelManager()
         sock = cm.subscribe('meta/')
         
         while True:
             cname = sock.recv()
+            log.info('Update from %s, exporting metadata' % cname)
             Export.exportAll()
 
     @classmethod
@@ -51,10 +57,16 @@ class Backup:
         if not fname:
             fname = 'seer_export.yaml'
             
-        f = open(fname, 'r')
-        yaml = f.read()
-        f.close()
-        
+        log.info('Importing from %s' % fname)
+        try:
+            f = open(fname, 'r')
+            yaml = f.read()
+            f.close()
+        except IOError as err:
+            log.warn('Import failed: %s' % err.strerror)
+            return
+            
+            
         objs = load(yaml)
         
         for o in objs:
