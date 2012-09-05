@@ -67,11 +67,4 @@ class Backup:
             
             model.save()
             
-    def buildStack(self, pluginName, pluginParams = None):
-        
-        plugins = Inspection.register_plugins('seer.plugins.inspection')
-        if not pluginName in plugins:
-            log.warn('Plugin not a known Inspection plugin')
-            return 0
-        
     
