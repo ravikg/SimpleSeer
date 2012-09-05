@@ -6,9 +6,8 @@ import models as M
 from .realtime import ChannelManager
 
 
-class Export:
+class Backup:
     
-        
     @classmethod
     def exportAll(overwrite = True):
         # Serializes (json-ifies) non-data objects 
@@ -46,9 +45,6 @@ class Export:
             cname = sock.recv()
             Export.exportAll()
 
-
-class Import:
-
     @classmethod
     def importAll(self, fname=None):
         
@@ -71,5 +67,11 @@ class Import:
             
             model.save()
             
-    def buildStack(self,     
+    def buildStack(self, pluginName, pluginParams = None):
+        
+        plugins = Inspection.register_plugins('seer.plugins.inspection')
+        if not pluginName in plugins:
+            log.warn('Plugin not a known Inspection plugin')
+            return 0
+        
     
