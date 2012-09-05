@@ -26,9 +26,22 @@ module.exports = class FrameDetailView extends View
   
   # Event handlers.
   events:
+    "click .clickEdit": "setDirty"
+    "click .notes-field": "setDirty"
+    "change .clickEdit": "updateMetaData"
     "click #toggleProcessing" : "togglePro"
-    "change .notes-field" : "updateNotes"
+    "change .notes-field" : "updateMetaData"
     "dblclick #display-zoom": "clickZoom"
+    "click .savebtn": "setSaved"
+    "focus .clickEdit": "showSaved"
+    "blur .clickEdit": "hideSaved"
+    "focus .notes-field": "showSaved"
+    "blur .notes-field": "hideSaved"
+
+  # Handles the display of the save button in the
+  # metadata box.
+  showSaved: => @$el.find(".savebtn").show()
+  hideSaved: => @$el.find(".savebtn").hide()
 
   # Show / hide the canvas markup layer
   # for the view.
@@ -52,26 +65,33 @@ module.exports = class FrameDetailView extends View
       metadata.push {key:i,val:md[i]}
       
     data.metadata = metadata
-    data.capturetime = new moment(parseInt(@frame.get("capturetime")+"000")).format("M/D/YYYY h:mm a")
+    data.capturetime_epoch = new moment(parseInt(@frame.get("capturetime_epoch"))).format("M/D/YYYY h:mm a")
     return data
+
+  setSaved: =>
+    @$el.find(".savebtn").button("option", "label", "Saved")
+    @$el.find(".savebtn").button("disable")
+    return
+
+  setDirty: =>
+    @$el.find('.savebtn').button("enable")
+    @$el.find('.savebtn').button("option", "label", "Save")
+    @$el.find('.savebtn').show()
+    return
 
   # Loops through table keys and values
   # and updates the database with the
   # inputs.
-  updateMetaData: (self) =>  
-    metadata = {}
+  updateMetaData: =>
     rows = @$el.find(".editableMeta tr")
-    rows.each (id, obj) ->
+    rows.each (id, obj) =>
       tds = $(obj).find("td")
       input = $(tds[0]).find("input")
       span = $(tds[0]).find("span")[0]
-      metadata[$(span).html()] = input.attr("value")
-    @model.save {metadata: metadata}
-    return
-
-  # Saves the notes field to the database.
-  updateNotes: (e) =>
-    @model.save {notes:$(".notes-field").attr("value")}
+      @model.attributes.metadata[$(span).html()] = input.attr("value")
+    @model.attributes.notes = $(".notes-field").attr("value")
+    @model.save()
+    @setSaved()
     return
     
   # Called when the user double-clicks on
@@ -166,6 +186,10 @@ module.exports = class FrameDetailView extends View
   # Initialize all of the widgets and
   # ui elements in the view.
   postRender: =>
+    @$el.find(".savebtn").button()
+    @$el.find(".savebtn").hide()
+    @setSaved()
+
     application.throbber.clear()
     scale = @calculateScale()
     scaleFixed = scale.toFixed(2)
@@ -199,6 +223,7 @@ module.exports = class FrameDetailView extends View
     # display.
     $("#display-zoom").draggable
       drag: (e, ui) ->
+        $(window).scrollTop(0)
         w0 = $("#frameHolder").width()
         h0 = $("#frameHolder").height()
         w = $("#display-zoom").width()

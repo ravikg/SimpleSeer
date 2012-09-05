@@ -15,7 +15,8 @@ SimpleSeerDateHelper = {
     },
     
     prettyDate: function(date) {
-        return date.toLocaleDateString().match(/\w+\s\d+\,\s\d+/)[0];
+        var str = [this.monthNames[date.getMonth()], " ", date.getDate(), ", ", date.getFullYear()];
+	return str.join("");
     },
     
     prettyTime: function(d) {
@@ -121,8 +122,8 @@ $.widget("ui.datetimerange", {
                         .hide()
                         .addClass("ui-datetimerange")
                         .css({
-                            "top": element.offset().top + element.height(),
-                            "left": element.offset().left
+                            "top": element.offset().top + element.height() - $(window).scrollTop(),
+                            "left": element.position().left
                         })
                         .appendTo("body");
                         
@@ -294,7 +295,7 @@ $.widget("ui.datetimerange", {
         }
         
         self.window.css({
-            "top": element.offset().top + element.height(),
+            "top": element.offset().top + element.height() - $(window).scrollTop(),
             "left": element.offset().left
         }).show();        
     },

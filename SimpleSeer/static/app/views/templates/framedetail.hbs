@@ -8,7 +8,7 @@
           <div id="properties" class="ivi-right">
             <div>
             <p class="item-detail">Capture Time:</p>
-            <p class="item-detail-value">{{capturetime}}</p>
+            <p class="item-detail-value">{{capturetime_epoch}}</p>
             </div>
             <div class="tableSpacer">
                 {{#featurelist features}}{{/featurelist}}          
@@ -26,6 +26,9 @@
             </div>
             <div class="item-detail tableSpacer">Notes:</div>
             <textarea class="notes-field">{{notes}}</textarea>  
+            <div class="tableSpacer">
+              <button class="btn savebtn">Save</button>
+            </div>
           </div>
        </div>
        

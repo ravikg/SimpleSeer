@@ -60,10 +60,7 @@ class Filter():
                 results = results[skip:skip+limit]
         else:
             return 0, []
-        
-        if timeEpoch:
-            map(lambda x: x.__setitem__('capturetime', timegm(x['capturetime'].timetuple()) * 1000), results)
-            
+                
         return len(cmd['result']), results    
         
     def initialFields(self):

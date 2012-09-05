@@ -62,21 +62,24 @@ module.exports = class FramelistFrameView extends View
 
   # Loop through the input table and update the db
   # with the new fields.
-  updateMetaData:(self) =>  
+  updateMetaData:(self) =>
     metadata = {}
     rows = $(self).find("tr")
-    rows.each (id, obj) ->
+    rows.each (id, obj) =>
       tds = $(obj).find("td")
       input = $(tds[1]).find("input")
       span = $(tds[0]).find("span")
-      metadata[$(span).html()] = input.attr("value")
-    @model.save {metadata: metadata, notes: $(".notes-field").attr("value")}
+      #metadata[$(span).html()] = input.attr("value")
+      @model.attributes.metadata[$(span).html()] = input.attr("value")
+    @model.save()
     @setSaved()
     return
 
   # Save the notes field in the database.
   updateNotes:(e) =>
-    @model.save({notes: $(".notes-field").attr("value")})
+    @model.attributes.notes = $(".notes-field").attr("value")
+    #@model.save({notes: $(".notes-field").attr("value")})
+    @model.save()
     @setSaved()
     return
 
@@ -102,7 +105,7 @@ module.exports = class FramelistFrameView extends View
     for i in application.settings.ui_metadata_keys
       metadata.push {key: i, val: md[i]}
     retVal =
-      capturetime: new moment(parseInt(@frame.get("capturetime"))).format("M/D/YYYY h:mm a")
+      capturetime_epoch: new moment(parseInt(@frame.get("capturetime_epoch"))).format("M/D/YYYY h:mm a")
       camera: @frame.get("camera")
       imgfile: @frame.get("imgfile")
       thumbnail_file: @frame.get("thumbnail_file")
@@ -129,7 +132,7 @@ module.exports = class FramelistFrameView extends View
   renderTableRow:(table) =>
     awesomeRow = []
     rd = @getRenderData()
-    awesomeRow["Capture Time"] = rd.capturetime
+    awesomeRow["Capture Time"] = rd.capturetime_epoch
     for i in rd.metadata
       awesomeRow[i.key] = i.val
     if rd.features.models
