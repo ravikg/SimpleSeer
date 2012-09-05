@@ -1,9 +1,10 @@
 template = require './templates/dashboard'
 application = require '../application'
-Tab = require '.tab_view'
+Tab = require './tab_view'
 
 module.exports = class Dashboard extends Tab
   building:false
+  template: template
   
   initialize: () =>
     #load or create collection from server
