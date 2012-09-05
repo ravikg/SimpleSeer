@@ -238,3 +238,10 @@ class Chart(SimpleDoc, mongoengine.Document):
         res = dict(chart = str(cname), data = data)
 
         return res
+
+    def save(self, *args, **kwargs):
+        from ..realtime import ChannelManager
+        
+        super(Chart, self).save(*args, **kwargs)
+        ChannelManager().publish('meta/', self)
+        

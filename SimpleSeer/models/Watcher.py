@@ -60,6 +60,12 @@ class Watcher(SimpleDoc, WithPlugins, mongoengine.Document):
                     function_ref = self.get_plugin(handler)
                 function_ref(results)
 
+    def save(self, *args, **kwargs):
+        from ..realtime import ChannelManager
+        
+        super(Watcher, self).save(*args, **kwargs)
+        ChannelManager().publish('meta/', self)
+
     @classmethod
     def info_handler(cls, results, message='info'):
         Alert.info(message)
