@@ -7,6 +7,7 @@ from formencode import validators as fev
 from formencode import schema as fes
 from SimpleSeer import validators as V
 
+from datetime import datetime
 from calendar import timegm
 from datetime import datetime
 
@@ -138,6 +139,13 @@ class Chart(SimpleDoc, mongoengine.Document):
             thisMeta = [r.get(m, 0) for m in self.metaMap]
             
             data.append({'d': thisData, 'm': thisMeta})
+            
+#        if len(data) == 0:
+#            thisData = [0 for d in self.dataMap]
+#            thisMeta = [0 for d in self.metaMap]
+            
+#            data.append({'d': thisData, 'm': thisMeta})
+#            data.append({'d': thisData, 'm': thisMeta})
             
         return data
     
