@@ -23,7 +23,15 @@ module.exports = class DateTimeFilterView extends _filter
 
   afterRender: =>
     startDate = new Date(@options.params.constraints.min-application.timeOffset)
+    startDate.setHours(0);
+    startDate.setMinutes(0);
+    startDate.setSeconds(0);
+    
     endDate = new Date(@options.params.constraints.max-application.timeOffset)
+    endDate.setDate(endDate.getDate() + 1)
+    endDate.setHours(0);
+    endDate.setMinutes(0);
+    endDate.setSeconds(0);
     
     tf = @$el.find('input[name=time_range]').datetimerange
       timeFormat: "h:mm tt"
