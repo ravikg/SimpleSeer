@@ -1,16 +1,19 @@
 template = require './templates/dashboard'
 application = require '../application'
 Tab = require './tab_view'
+model = require '../models/dashboard'
 
 module.exports = class Dashboard extends Tab
   building:false
   template: template
   
-  initialize: () =>
+  initialize: =>
+    @model = new model {id:"5047bc49fb920a538c000000",view:@}
+    @model.fetch()
     #load or create collection from server
     #cycle through, and @addGraph(new graph)
     super()
-    
+  
   createGraph: =>
     #create graph from settings
     #graph = new GraphView

@@ -128,7 +128,7 @@ module.exports = class Series extends Collection
     #TODO: remove against, grab from filter
     against = new moment().subtract('seconds',5000)
     if @xAxis.type == "datetime"
-      while @.at(0).attributes.x < against
+      while @.at(0) && @.at(0).attributes.x < against
         @shift {silent:silent}
     while @models.length - @view.maxPointSize >= silent
       @shift {silent:silent}

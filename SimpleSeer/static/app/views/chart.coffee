@@ -17,6 +17,7 @@ module.exports = class ChartView extends SubView
   initialize: =>
     super()
     # TODO: each chart should have mutliple series
+    console.log @model
     @type = @model.attributes.name.toLowerCase()
     if @model.attributes.maxPointSize?
       @maxPointSize = @model.attributes.maxPointSize
