@@ -82,10 +82,9 @@ class SimpleSeerProjectTemplate(Template):
 
 
 def overwrite(src, dst):
-    if dst.exists():
-        dst.remove()
-    else:
-        dst.splitpath()[0].makedirs()
+    if dst.exists(): dst.remove()
+    if not dst.parent.exists(): dst.parent.makedirs()
+   
     src.copy(dst)
 
 def overlay(src, dst, force=False):

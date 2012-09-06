@@ -7,7 +7,7 @@ Frame = require "../models/frame"
 module.exports = class TabContainer extends View  
   template: template
   sideBarOpen: application.settings.showMenu
-  tabs:{}
+  _tabs:{}
   #lastModel: ""
   
   initialize: (options)=>
@@ -71,12 +71,12 @@ module.exports = class TabContainer extends View
     if !callback then callback = =>
     
     if @sideBarOpen
-      for i,o of @tabs
+      for i,o of @_tabs
         if o.hideMenuCallback
           o.hideMenuCallback()
       @hideMenu(callback)
     else
-      for i,o of @tabs
+      for i,o of @_tabs
         if o.showMenuCallback
           o.showMenuCallback()
       @showMenu(callback)
@@ -100,9 +100,9 @@ module.exports = class TabContainer extends View
     super()
     for i,o of @tabLib
       _id = i+'_tab'
-      @tabs[_id] = @addSubview _id, o, '#tabs', {append:_id}
+      @_tabs[_id] = @addSubview _id, o, '#tabs', {append:_id}
     #if @empty==true and @filtercollection.at(0)
-    #  @newest = @filtercollection.at(0).get('capturetime')
+    #  @newest = @filtercollection.at(0).get('capturetime_epoch')
     #_(@_frameViews).each (fv) =>
     #  @$el.find('#frame_holder').append(fv.render().el)
     #@$el.find('#loading_message').hide()
@@ -111,6 +111,11 @@ module.exports = class TabContainer extends View
     $('#tabs',@$el).tabs select: (event, ui) =>
       sid = $('#tabs',@$el).tabs('option', 'selected')
       tabs = $('.ui-tabs-panel',@$el)
-      @tabs[tabs[sid].id].unselect()
-      @tabs[ui.panel.id].select()
+      @_tabs[tabs[sid].id].unselect()
+      @_tabs[ui.panel.id].select()
+    for i,o of @_tabs
+      if o.selected
+        o.select()
+        $('#tabs',@$el).tabs("select", o.options.append)
+
     return this

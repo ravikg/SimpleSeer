@@ -110,7 +110,7 @@ Handlebars.registerHelper 'featuredetail', (features) ->
   ret += "</tbody></table>"
   new Handlebars.SafeString(ret)
 
-Handlebars.registerHelper 'featurelist', (features) ->
+Handlebars.registerHelper 'featurelist', (features = []) ->
   unless features.length > 0
     return new Handlebars.SafeString("")
   ret = ""

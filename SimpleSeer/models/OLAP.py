@@ -111,7 +111,6 @@ class OLAP(SimpleDoc, mongoengine.Document):
         
     def doPostProc(self, results):
         # Remap fields if necessary
-        
         if len(results) > 0:
             for vmap in self.valueMap:
                 field = vmap['field']
@@ -121,7 +120,7 @@ class OLAP(SimpleDoc, mongoengine.Document):
                 results[field] = results[field].apply(lambda x: newvals.get(x, default))
             
         return results
-
+        
     def doStats(self, results):
         for stat in self.statsInfo:
             field = stat['field']
@@ -195,6 +194,7 @@ class OLAP(SimpleDoc, mongoengine.Document):
     def defaultOLAP(self):
         from bson import ObjectId
         # Returns data set of all default values, formatted for this olap
+        # TODO, remove these empty data points
         
         fakeResult = {}
         
@@ -215,5 +215,11 @@ class OLAP(SimpleDoc, mongoengine.Document):
                 
         return [fakeResult, fake2]
 
+    def save(self, *args, **kwargs):
+        from ..realtime import ChannelManager
+        
+        super(OLAP, self).save(*args, **kwargs)
+        ChannelManager().publish('meta/', self)
+        
 
     
