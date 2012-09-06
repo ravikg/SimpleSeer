@@ -1,154 +1,3 @@
-<style type="text/css">
-  .graphBuilderControls {
-    box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    width: 360px;
-    float: left;
-    margin: 20px;
-  }
-  
-  .accordion {
-    margin-top: 20px;
-    margin-left: 10px;
-    border: 1px solid #ccc;
-  }
-  
-  .accordion .head {
-    box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    background: #F8F8F8;
-    border-top: 1px solid #FEFEFE;
-    border-bottom: 1px solid #CCC;
-    height: 30px;
-    line-height: 27px;
-    width: 100%;
-    cursor: pointer;
-  }
-  
-  .accordion .head h2 {
-    display: inline-block;
-    margin-left: 8px;
-    color: #0090D6;
-  }  
-  
-  .accordion .head .toggle {
-    float: right;
-    margin-top: 7px;
-    margin-right: 6px;
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-    background-image: url("/img/arrows-down.png");
-    background-repeat: no-repeat;
-  }
-  
-  .accordion .group.expanded .head .toggle {
-    background-image: url("/img/arrows-up.png");
-  }
-  
-  .accordion .group {
-    border-top: 1px solid #ccc;
-    margin-bottom: 10px;
-  }
-  
-  .accordion .group:first-child {
-    border-top: none;
-  }
-  
-  .accordion .content {
-    display: none;
-    padding: 20px;
-  }
-  
-  button.save {
-    width: 150px;
-    height: 35px;
-    margin-top: 3px;
-    margin-right: 12px;
-    margin-bottom: 12px;
-  }
-  
-  button.save {
-    display: inline-block;
-    outline: none;
-    cursor: pointer;
-    text-align: center;
-    text-decoration: none;
-    font: 14px/100% Arial, Helvetica, sans-serif;
-    padding: .5em 2em .55em;
-    text-shadow: 0 1px 1px rgba(0,0,0,.3);
-    -webkit-border-radius: 3px; 
-    -moz-border-radius: 3px;
-    border-radius: 3px;
-    -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.2);
-    -moz-box-shadow: 0 1px 2px rgba(0,0,0,.2);
-    box-shadow: 0 1px 2px rgba(0,0,0,.2);
-    color: #fef4e9;
-    border: solid 1px #da7c0c;
-    background: #f78d1d;
-    background: -webkit-gradient(linear, left top, left bottom, from(#faa51a), to(#f47a20));
-    background: -moz-linear-gradient(top,  #faa51a,  #f47a20);
-    filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#faa51a', endColorstr='#f47a20');    
-  }
-  
-  button.save:hover {
-    text-decoration: none;
-    background: #f47c20;
-    background: -webkit-gradient(linear, left top, left bottom, from(#f88e11), to(#f06015));
-    background: -moz-linear-gradient(top,  #f88e11,  #f06015);
-    filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#f88e11', endColorstr='#f06015');    
-  }
-  
-  button.save:active {
-    position: relative;
-    top: 1px;
-    color: #fcd3a5;
-    background: -webkit-gradient(linear, left top, left bottom, from(#f47a20), to(#faa51a));
-    background: -moz-linear-gradient(top,  #f47a20,  #faa51a);
-    filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#f47a20', endColorstr='#faa51a');    
-  }  
-  
-  .chartStyleType {
-    height: 50px;
-    margin-bottom: 20px;
-    clear: both;
-  }
-  
-  .chartStyleType:last-child {
-    margin-bottom: 0px;
-  }
-  
-  .chartStyleType label {
-    line-height: 50px;
-    font-weight: bold;
-    font-size: 13px;
-  }
-  
-  .chartStyleType button {
-    width: 85px;
-    height: 50px;
-    float: right;
-    margin-left: 20px;
-  }
-  
-  .breadcrumb {
-    font-size: 17px;
-    font-weight: bold;
-  }
-  
-  .breadcrumb span {
-    color: #0090D6;
-  }
-  
-  .graphBuilderPreview {
-    float: right;
-  }
-  
-  #slidey { float: right }
-</style>
-
-<button id="slidey">Slide</button>
-
 <div class="clearfix">
   <div class="graphBuilderControls">
     <div class="breadcrumb">
@@ -252,5 +101,18 @@
   </div>
   
   <div class="dashboardGrid">
+    <ul id="widget_grid" class="clearfix">
+      {{#each widgets}}
+      <li class="widget_container" cols="{{this.cols}}" style="width: {{this.width}}%;{{#if this.boxHeight}} height:{{this.boxHeight}}px;{{/if}}">
+        <div class="widget"{{#if this.height}} style="height:{{this.height}}px;"{{/if}}>
+          <div class="header">
+            <h2>{{this.title}}</h2>
+            <div class="button config"/>
+            <div class="button close"/>
+          </div>
+        </div>
+      </li>
+      {{/each}}
+    </ul>    
   </div>
 </div>
