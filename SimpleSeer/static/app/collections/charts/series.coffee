@@ -33,7 +33,9 @@ module.exports = class Series extends Collection
     return @
     
   parse: (response) =>
-    return @_clean response.data
+    super(response)
+    clean = @_clean response.data
+    return clean
 
   fetch: (args={}) =>
     # Create default success action if none supplied to fetch
@@ -126,7 +128,7 @@ module.exports = class Series extends Collection
   
   shiftStack: (silent=false)=>
     #TODO: remove against, grab from filter
-    against = new moment().subtract('seconds',5000)
+    against = new moment().subtract('days',5000)
     if @xAxis.type == "datetime"
       while @.at(0) && @.at(0).attributes.x < against
         @shift {silent:silent}
