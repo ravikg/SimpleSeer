@@ -1,4 +1,4 @@
-import json
+import yaml
 import logging
 import mongoengine
 
@@ -21,13 +21,13 @@ class Session():
     __shared_state = dict(
         _config = {})
     
-    def __init__(self, json_config = ''):
+    def __init__(self, yaml_config = ''):
         self.__dict__ = self.__shared_state
         
-        if not json_config:
+        if not yaml_config:
             return  #return the existing shared context
 
-        config_dict = json.load(open(json_config), object_hook=_decode_dict)
+        config_dict = yaml.load(open(yaml_config))
         self.configure(config_dict)
 
     def configure(self, d):
