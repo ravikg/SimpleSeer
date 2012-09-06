@@ -4,6 +4,7 @@ from datetime import datetime
 import models as M
 
 from .realtime import ChannelManager
+import mongoengine
 
 import logging
 log = logging.getLogger(__name__)
@@ -23,8 +24,17 @@ class Backup:
         for exportName in exportable:
             objClass = M.__getattribute__(exportName)
             for obj in objClass.objects:
+                
+                objDict = obj.__dict__
+                # yaml does not take kindly to mongoengine BaseLists in the _data
+                # so convert them to lists
+                if '_data' in objDict:
+                    for k, v in objDict['_data'].iteritems():
+                        if type(v) == mongoengine.base.BaseList:
+                            objDict['_data'][k] = list(v)
+                    
                 # yaml dump does not take kindly to mongoeninge docs, so just store the dict
-                toExport.append({'type': exportName, 'obj': obj.__dict__})
+                toExport.append({'type': exportName, 'obj': objDict})
         
         yaml = dump(toExport)
         
@@ -65,7 +75,6 @@ class Backup:
         except IOError as err:
             log.warn('Import failed: %s' % err.strerror)
             return
-            
             
         objs = load(yaml)
         
