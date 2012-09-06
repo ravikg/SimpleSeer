@@ -143,6 +143,8 @@
   .graphBuilderPreview {
     float: right;
   }
+  
+  #slidey { float: right }
 </style>
 
 <button id="slidey">Slide</button>
@@ -192,7 +194,44 @@
           <div class="toggle"></div>
         </div>
         
-        <div class="content">Shit 1</div>
+        <div class="content">
+          <table>
+            <tr>
+              <td>Name:</td>
+              <td><input type="text" name="name" value="" id="#chartinput"></td>
+            </tr>
+            <tr>
+              <td>X Axis:</td>
+              <td>
+                <select name="olap_xaxis" id="#chartinput">
+                  <option value="" ></option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td>X Title:</td>
+              <td><input type="text" name="xTitle" value="" id="#chartinput"></td> 
+            </tr>
+            <tr>
+              <td>Y Axis:</td>
+              <td><select  name="olap_yaxis" id="#chartinput">
+                 
+                    <option value="ha" selected="selected">Option1 </option>
+                  
+                  </select><br>
+                  <select name="color"  id="#chartinput">
+                 
+                    <option value="" selected="selected"></option>
+                  
+                  </select>
+              </td>
+            </tr>
+            <tr>
+              <td>Y Title:</td>
+              <td><input type="text" name="yTitle" value="" id="#chartinput"></td> 
+            </tr>
+          </table>           
+        </div>
       </div>
       
       <div class="group">
