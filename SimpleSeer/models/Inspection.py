@@ -5,7 +5,6 @@ from formencode import validators as fev
 from formencode import schema as fes
 import formencode as fe
 
-
 from SimpleSeer import validators as V
 from SimpleSeer import util
 
@@ -78,7 +77,7 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
     }
 
     def __repr__(self):
-      return "[%s Object <%s> ]" % (self.__class__.__name__, self.name)
+      return "<%s: %s>" % (self.__class__.__name__, self.name)
                                            
     def execute(self, image, parents = {}):
         """
@@ -130,7 +129,13 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
                 
         
         return featureset
-    
+
+    def save(self, *args, **kwargs):
+        from ..realtime import ChannelManager
+        
+        super(Inspection, self).save(*args, **kwargs)
+        ChannelManager().publish('meta/', self)
+            
     @property
     def children(self):
         return Inspection.objects(parent = self.id)

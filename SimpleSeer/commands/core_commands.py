@@ -77,8 +77,7 @@ def OlapCommand(self):
     
     ro = RealtimeOLAP()
     ro.monitorRealtime()
-    
-    
+
 @Command.simple(use_gevent=True, remote_seer=True)
 def WebCommand(self):
     'Run the web server'
@@ -146,6 +145,35 @@ def NotebookCommand(self):
     subprocess.call(["ipython", "notebook",
             '--port', '5050',
             '--ext', 'SimpleSeer.notebook', '--pylab', 'inline'], stderr=subprocess.STDOUT)
+
+class ExportMetaCommand(Command):
+    
+    def __init__(self, subparser):
+        subparser.add_argument("--listen", help="Set to true to run as daemon listing for changes and exporting when changes found.", default="false")
+        
+    def run(self):
+        from SimpleSeer.Backup import Backup
+        
+        listen = self.options.listen
+        
+        Backup.exportAll()
+        
+        if listen.upper() == 'TRUE': 
+            gevent.spawn_link_exception(Backup.listen())
+    
+
+class ImportMetaCommand(Command):
+    
+    def __init__(self, subparser):
+        subparser.add_argument("--file", help="The file name to import.  If blank, defaults to seer_export.yaml", default="seer_export.yaml")
+        
+    def run(self):
+        from SimpleSeer.Backup import Backup
+        
+        filename = self.options.file
+        Backup.importAll(filename)
+    
+
 
 
 class ExportImagesCommand(Command):
