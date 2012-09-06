@@ -6,7 +6,7 @@ application = require 'application'
 TabContainer = require "views/tabcontainer_view"
 
 module.exports = class SeerRouter extends Backbone.Router
-  routes: application.settings['ui_routes'] || {}
+  routes: application.settings['ui_routes'] || {"":"home", "frames": "framelist", "frame/:id": "frame"}
 
   #for route, name of application.settings['ui_navurls']
     #$('.nav').append '<li class="'+name.toLowerCase()+'"><a href="#'+route+'">'+name+'</a></li>'
