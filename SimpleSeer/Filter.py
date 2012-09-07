@@ -78,6 +78,9 @@ class Filter():
         fields['features'] = 1
         fields['results'] = 1
         
+        # Always want the 'id' field, which sometimes comes through as _id
+        fields['id'] = '$_id'
+        
         return [{'$project': fields}]
     
     
@@ -133,17 +136,12 @@ class Filter():
             proj['measok'] = self.condMeas(measQuery)
             group['allmeasok'] = {'$sum': '$measok'}
         
-        parts.append({'$unwind': '$results'})
-        parts.append({'$project': proj})
+            parts.append({'$unwind': '$results'})
+            parts.append({'$project': proj})
             
-        ## If the unit of analysis is not 'results', re-group the result objects and filter at the group level
-        #if unit != 'result':
-        parts.append({'$group': group})
-        if measQuery:
+            parts.append({'$group': group})
             parts.append({'$match': {'allmeasok': len(measQuery)}})
     
-        #elif measQuery:
-        #    parts.append({'$match': {'measok': 1}})
         
         return parts
     
@@ -158,15 +156,11 @@ class Filter():
             proj['featok'] = self.condFeat(featQuery)
             group['allfeatok'] = {'$sum': '$featok'}
             
-        parts.append({'$unwind': '$features'})
-        parts.append({'$project': proj})
-        
-        #if unit != 'feature':
-        parts.append({'$group': group})
-        if featQuery:
+            parts.append({'$unwind': '$features'})
+            parts.append({'$project': proj})
+            
+            parts.append({'$group': group})
             parts.append({'$match': {'allfeatok': len(featQuery)}})
-        #elif featQuery:
-        #    parts.append({'$match': {'featok': 1}})
         
         return parts
     

@@ -26,6 +26,7 @@ def load_ipython_extension(ipython):
             M=M,
             Image = Image,
             ImageSet = ImageSet,
+            Dashboard= M.Dashboard,
             Color = Color,
             display=Display(displaytype="notebook"), 
             cm=ChannelManager(zmq.Context.instance())),

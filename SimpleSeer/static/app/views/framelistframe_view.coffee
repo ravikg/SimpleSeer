@@ -135,7 +135,7 @@ module.exports = class FramelistFrameView extends View
     awesomeRow["Capture Time"] = rd.capturetime_epoch
     for i in rd.metadata
       awesomeRow[i.key] = i.val
-    if rd.features.models
+    if rd.features and rd.features.models
       f = rd.features.models[0].getPluginMethod(rd.features.models[0].get("featuretype"), "metadata")()
     else
       f = {}
