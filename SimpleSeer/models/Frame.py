@@ -155,6 +155,7 @@ class Frame(SimpleDoc, mongoengine.Document):
                 self.layerfile.replace(pygame.image.tostring(mergedlayer._mSurface, "RGBA"))
                 #TODO, make layerfile a compressed object
             #self._imgcache = ''
+            self._imgcache_dirty = False
         
         
         epoch_ms = timegm(self.capturetime.timetuple()) * 1000 + self.capturetime.microsecond / 1000
