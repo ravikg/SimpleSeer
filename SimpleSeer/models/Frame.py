@@ -60,6 +60,8 @@ class Frame(SimpleDoc, mongoengine.Document):
     metadata = mongoengine.DictField()
     notes = mongoengine.StringField()
     _imgcache = ''
+    _imgcache_dirty = False
+    
 
     meta = {
         'indexes': ["capturetime", "-capturetime", ('camera', '-capturetime'), "-capturetime_epoch", "capturetime_epoch"]
@@ -115,6 +117,7 @@ class Frame(SimpleDoc, mongoengine.Document):
 
     @image.setter
     def image(self, value):
+        self._imgcache_dirty = True
         self.width, self.height = value.size()
         self._imgcache = value
 
@@ -135,7 +138,7 @@ class Frame(SimpleDoc, mongoengine.Document):
         
         #TODO: sometimes we want a frame with no image data, basically at this
         #point we're trusting that if that were the case we won't call .image
-        if self._imgcache != '':
+        if self._imgcache != '' and self._imgcache_dirty:
             s = StringIO()
             img = self._imgcache
             if self.clip_id is None:
