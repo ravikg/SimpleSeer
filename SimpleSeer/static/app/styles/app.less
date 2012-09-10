@@ -656,6 +656,8 @@ height: 1%;
   margin:5px;
   height:190px;
   box-shadow: 0px 1px 1px #f8f8f8;
+  
+  position: relative;
 }
 
 #widget_grid .widget_container {
@@ -669,6 +671,12 @@ height: 1%;
 }
 
 #widget_grid .widget .header {
+  z-index: 1029;
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+
   box-sizing: border-box;
   -moz-box-sizing: border-box;
   background: #f8f8f8;
@@ -677,6 +685,8 @@ height: 1%;
   height: 30px;
   width: 100%;
 }
+
+#widget_grid .widget:hover .header { display: block; }
 
 #widget_grid .widget .header h2 {
   text-shadow: 0px 1px 0px white;
