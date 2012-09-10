@@ -457,7 +457,7 @@ a { font-size: 13px; color: #08C; font-family: "Helvetica Neue", Helvetica, Aria
   background: white;
   box-sizing: border-box;
   -moz-box-sizing: border-box;
-  width: 360px;
+  width: 343px;
   position: absolute;
   left: 30px
   top: 30px;
@@ -465,6 +465,7 @@ a { font-size: 13px; color: #08C; font-family: "Helvetica Neue", Helvetica, Aria
 }
 
 .accordion {
+  height: 435px;
   margin-top: 20px;
   margin-left: 10px;
   border: 1px solid #ccc;
@@ -582,10 +583,10 @@ button.save:active {
 }
 
 .chartStyleType button {
-  width: 75px;
+  width: 70px;
   height: 40px;
   float: right;
-  margin-left: 8px;
+  margin-left: 5px;
 }
 
 .breadcrumb {
@@ -613,25 +614,75 @@ button.save:active {
   a { display: block; }
 }
 
+#palette_preview {
+  margin-left: 71px;
+  margin-top: 6px;
+}
+
+.graphBuilderControls .oneLine {
+  width: 100%;
+  margin-bottom: 25px;
+  
+  &:last-child {
+    margin-bottom: 0px;
+  }
+  
+  &.floated {
+    label { float: left; }
+    .color-block { float: right; }
+  }
+  
+  label {
+    font-weight: bold;
+    margin-right: 20px;
+  }
+  
+  .category {
+    height: 18px;
+    line-height: 16px;
+    font-size: 13px;
+    margin-bottom: 4px;
+    
+    span {
+      float: left;
+      width: 220px;
+      text-align: right;
+      margin-right: 11px;
+    }
+    
+    &:first-child {
+      margin-top: -16px;
+    }
+  }
+}
+
+.color-block {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 2px;
+  border: 1px solid rgba(0, 0, 0, .1);
+}
+
 .clearfix:after {
-content: ".";
-display: block;
-clear: both;
-visibility: hidden;
-line-height: 0;
-height: 0;
+  content: ".";
+  display: block;
+  clear: both;
+  visibility: hidden;
+  line-height: 0;
+  height: 0;
 }
 
 .clearfix {
-display: inline-block;
+ display: inline-block;
 }
 
 html[xmlns] .clearfix {
-display: block;
+  display: block;
 }
 
 * html .clearfix {
-height: 1%;
+  height: 1%;
 }
 
 #dash_content {width: 100%;}
