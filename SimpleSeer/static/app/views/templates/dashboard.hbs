@@ -43,43 +43,7 @@
           <div class="toggle"></div>
         </div>
         
-        <div class="content">
-          <table>
-            <tr>
-              <td>Name:</td>
-              <td><input type="text" name="name" value="" id="#chartinput"></td>
-            </tr>
-            <tr>
-              <td>X Axis:</td>
-              <td>
-                <select name="olap_xaxis" id="#chartinput">
-                  <option value="" ></option>
-                </select>
-              </td>
-            </tr>
-            <tr>
-              <td>X Title:</td>
-              <td><input type="text" name="xTitle" value="" id="#chartinput"></td> 
-            </tr>
-            <tr>
-              <td>Y Axis:</td>
-              <td><select  name="olap_yaxis" id="#chartinput">
-                 
-                    <option value="ha" selected="selected">Option1 </option>
-                  
-                  </select><br>
-                  <select name="color"  id="#chartinput">
-                 
-                    <option value="" selected="selected"></option>
-                  
-                  </select>
-              </td>
-            </tr>
-            <tr>
-              <td>Y Title:</td>
-              <td><input type="text" name="yTitle" value="" id="#chartinput"></td> 
-            </tr>
-          </table>           
+        <div class="content">         
         </div>
       </div>
       
@@ -89,7 +53,41 @@
           <div class="toggle"></div>
         </div>
         
-        <div class="content">Shit 2</div>
+        <div class="content">
+          <div class="oneLine">
+            <label>Palette:</label>
+            <select id="palette_select">
+            {{#each palettes}}
+              <option value="{{this.id}}">{{this.title}}</option>
+            {{/each}}
+            </select>
+            <div id="palette_preview"></div>
+          </div>
+          
+          <div class="oneLine">
+            <label>Categories:</label>
+              <div class="categories">
+              <div class="category">
+                <span>Number Evaluated</span>
+                <div class="color-block"></div>
+              </div>
+              <div class="category">
+                <span>Failed Evaluation</span>
+                <div class="color-block"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="oneLine floated clearfix">
+            <label>Chart Title:</label>
+            <div class="color-block"></div>
+          </div>
+          
+          <div class="oneLine floated clearfix">
+            <label>Labels:</label>
+            <div class="color-block"></div>
+          </div>          
+        </div>
       </div>
       
       <div style="text-align: right"><button class="save">Save</button></div>

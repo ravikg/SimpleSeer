@@ -28,10 +28,10 @@ module.exports = SeerApplication =
     Frames = require 'collections/frames'
     #OLAPs = require 'collections/OLAPs'
     FrameSets = require 'collections/framesets'
-    Pallette = require 'lib/ui_helper'
+    Palette = require 'lib/ui_helper'
     Frame = require "../models/frame"
     
-    @pallette = new Pallette()
+    @palette = new Palette()
     @subscriptions = {}
     @timeOffset = (new Date()).getTimezoneOffset() * 60 * 1000
     @filters = require 'views/filters/init'
