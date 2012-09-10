@@ -5,6 +5,7 @@ import logging
 import mongoengine
 from .base import SimpleDoc
 
+import numpy as np
 import pandas as pd
 
 log = logging.getLogger(__name__)
@@ -77,182 +78,136 @@ class Predictive(SimpleDoc, mongoengine.Document):
         return model1.resid, model2.resid
 
 class NelsonRules:
-    # Note as True value indicates failure
+    
+    # Note True value indicates failure
+    
+    @classmethod
+    def convolve(self, arr, windowSize, thresh = None):
+        # Do the convolutions in calculating the rules
+        # In this case, that really just means computing moving averages
+        # To find the number of matches
+        # E.g., if the avg is 1, then all elements in the window matched.  If .5, then half matched.
+        
+        if not thresh:
+            thresh = 1
+        
+        window = np.repeat(1.0 / windowSize, windowSize)
+        arrConv = np.convolve(arr, window)[:-(windowSize - 1)]
+        
+        # Can get burned by floating point precision when testing equality to one
+        # Note: value will never be greater than one, so shaving off eps will solve problem
+        adjThresh = thresh - np.finfo(float).eps
+        
+        return len(arrConv[arrConv >= adjThresh])
     
     @classmethod
     def rule1(self, points, mean, sd):
         # If a point is more than 3 standard deviations from mean
+        # Assumes that points is a numpy array
         upper = mean + (3 * sd)
         lower = mean - (3 * sd)
-        for p in points:
-            if p > upper or p < lower:
-                return True
-        return False
-    
+        
+        u = len(points[points > upper])
+        l = len(points[points < lower])
+        
+        return (u + l) > 3
+        
     @classmethod    
     def rule2(self, points, mean):
         # if 9 or more points in a row lie on same side of mean
-        aboveBelow = 0
-        run = 0
+        # assumes points is a numpy array
         
-        for p in points:
-            if p > mean:
-                if aboveBelow != 1:
-                    # if change from below to above mean, reset run counter
-                    run = 0
-                aboveBelow = 1
-            if p < mean:
-                if aboveBelow != -1:
-                    # if change from above to below mean, reset run counter
-                    run = 0
-                aboveBelow = -1
-            run += 1
-            
-            if run == 9:
-                return True
-    
-        return False    
+        aboveArr = points > mean
+        belowArr = points < mean
+        
+        a = NelsonRules.convolve(aboveArr, 9)
+        b = NelsonRules.convolve(belowArr, 9)
+        
+        return a + b > 0
         
     @classmethod
     def rule3(self, points):
         # 6 or more increasing or decreasing
         
-        last = points.pop(0)
-        gtOrLt = 0
-        run = 0
+        incArr = points[0:-1] > points[1:len(points)]
+        decArr = points[0:-1] < points[1:len(points)]
         
-        for p in points:
-            if p > last:
-                if gtOrLt != 1:
-                    run = 0
-                gtOrLt = 1
-            if p < last:
-                if gtOrLt != -1:
-                    run = 0
-                gtOrLt = -1
-            run += 1
-            if run == 5:
-                return True
+        # 5 gt or lt comparisons will involve 6 points, so window size is 5
+        i = NelsonRules.convolve(incArr, 5)
+        d = NelsonRules.convolve(decArr, 5)
         
-            last = p
-        
-        return False
+        return i + d > 0
             
     @classmethod
     def rule4(self, points):
         # 14 or more points alternating
-        last = points.pop(0)
-        gtOrLt = 0
-        run = 0
         
-        for p in points:
-            if p > last:
-                if gtOrLt != -1:
-                    run = 0
-                gtOrLt = 1
-            if p < last:
-                if gtOrLt != 1:
-                    run = 0
-                gtOrLt = -1
-            
-            run += 1
-            if run == 13:
-                return True
-                
-            last = p
-            
-        return False
-
+        incArr = points[0:-1] > points[1:len(points)]
+        altArr = (incArr[0:-1] != incArr[1:len(incArr)])
+        
+        # 14 alternating points requires 12 comparisons with the previous two points
+        alt = NelsonRules.convolve(altArr, 12)
+        
+        return alt > 0
+        
     @classmethod
     def rule5(self, points, mean, sd):
         # two out of three points in a row more than 2 standard devs from mean
         
-        if len(points) < 2:
-            return False
+        aboveThresh = mean + 2*sd
+        belowThresh = mean - 2*sd
         
-        twoBack = points.pop(0)
-        threeBack = points.pop(0)
+        aboveArr = points > aboveThresh
+        belowArr = points < belowThresh
         
-        upper = mean + (2 * sd)
-        lower = mean - (2 * sd)
+        a = NelsonRules.convolve(aboveArr, 3, (2/3))
+        b = NelsonRules.convolve(belowArr, 3, (2/3))
         
-        for p in points:
-            numOut = 0
-            if threeBack > upper or threeBack < lower:
-                numOut += 1 
-            if twoBack > upper or twoBack < lower:
-                numOut += 1
-            if p > upper or p < lower:
-                numOut += 1
-                
-            if numOut >= 2:
-                return True
-        
-            threeBack = twoBack
-            twoBack = p
-        
-        return False
+        return a + b > 0
         
     @classmethod
     def rule6(self, points, mean, sd):
         # four out of five points in a row more than 1 standard dev from mean
-        if len(points) < 5:
-            return False
         
-        upper = mean + sd
-        lower = mean - sd
+        aboveThresh = mean + sd
+        belowThresh = mean - sd
         
-        for i in range(len(points)-4):
-            above = 0
-            for x in range(i,i+5):
-                if points[x] > upper or points[x] < lower:
-                    above += 1
-            
-            if above >= 4:
-                return True
-            
-        return False
-            
+        aboveArr = points > aboveThresh
+        belowArr = points < belowThresh
+        
+        a = NelsonRules.convolve(aboveArr, 5, (4/5))
+        b = NelsonRules.convolve(belowArr, 5, (4/5))
+        
+        return a + b > 0
+        
     @classmethod
     def rule7(self, points, mean, sd):
         # 15 or more points in a row within 1 standard dev from mean
-        if len(points) < 15:
-            return False
         
-        upper = mean + sd
-        lower = mean - sd
-        run = 0
-            
-        for i in range(len(points)):
-            if points[i] > upper or points[i] < lower:
-                run = 0
-            
-            run += 1
-            
-            if run == 15:
-                return True
+        upperThresh = mean + sd
+        lowerThres = mean - sd
         
-        return False
+        belowUpperArr = points < upperThresh
+        aboveLowerArr = points > lowerThresh
+        withinArr = belowUpperArr and aboveLowerArr
+        
+        count = NelsonRules.convolve(withinArr, 15)
+        
+        return count > 0
         
     @classmethod
     def rule8(self, points, mean, sd):
         # 8 points in a row with none within a standard deviation of mean
-        if len(points) < 8:
-            return False
         
-        upper = mean + sd
-        lower = mean - sd
+        upperThresh = mean + sd
+        lowerThres = mean - sd
         
-        run = 0
+        aboveUpperArr = points > upperThresh
+        belowLowerArr = points < lowerThresh
         
-        for i in range(len(points)):
-            if points[i] < upper and points[i] > lower:
-                run = 0
-            
-            run += 1
-            
-            if run == 8:
-                return True
+        outsideArr = aboveUpperArr or belowLowerArr
         
-        return False
+        count = NelsonRules.convole(outsideArr, 8)
+        
+        return count > 0
         
