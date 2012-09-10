@@ -35,6 +35,7 @@ def register(app):
         ModelHandler(M.Measurement, M.MeasurementSchema, 'measurement', '/measurement'),
         ModelHandler(M.Frame, M.FrameSchema, 'frame', "/frame"),
         ModelHandler(M.FrameSet, M.FrameSetSchema, 'frameset', '/frameset'),
+        ModelHandler(M.Dashboard, M.DashboardSchema, 'dashboard', '/dashboard'),
         ModelHandler(M.Chart, M.ChartSchema, 'chart', '/chart')
        ]
 

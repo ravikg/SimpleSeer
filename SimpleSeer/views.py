@@ -499,6 +499,12 @@ def confirmTransient(channel_name):
     of.confirmTransient(channel_name)
     return ""
 
+@route('/dashboard/<dashboard_id>', methods=['GET'])
+@util.jsonify
+def dashboard(dashboard_id):
+    c = M.Dashboard.objects.get(id = dashboard_id)
+    return c
+
 @route('/chart/<chart_name>', methods=['GET'])
 @util.jsonify
 def chart(chart_name):
