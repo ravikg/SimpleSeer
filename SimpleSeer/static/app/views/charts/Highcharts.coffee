@@ -25,7 +25,13 @@ module.exports = class HighchartsLib extends ChartView
           renderTo: _target[0]
           type: @model.attributes.style.toLowerCase()
           height: @model.attributes.height || '150'
+        title:
+          text: @model.attributes.name
         series: [ @createSeries() ]
+        credits:
+          enabled: false
+        legend:
+          enabled: false
         xAxis:
           id:''
           tickInterval: @model.tickerinterval * 1000 || null
