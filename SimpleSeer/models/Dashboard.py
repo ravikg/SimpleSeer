@@ -20,4 +20,12 @@ class Dashboard(SimpleDoc, mongoengine.Document):
     widgets = mongoengine.ListField(mongoengine.DictField())
 
     def __repr__(self):
-      return "[%s Object <%s> ]" % (self.__class__.__name__, self.name)
+        return "[%s Object <%s> ]" % (self.__class__.__name__, self.name)
+      
+    def save(self, *args, **kwargs):
+        from ..realtime import ChannelManager
+        
+        super(OLAP, self).save(*args, **kwargs)
+        ChannelManager().publish('meta/', self)
+
+
