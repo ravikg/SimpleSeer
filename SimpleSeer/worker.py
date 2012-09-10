@@ -64,7 +64,6 @@ def update_frame(frameid, inspection):
   frame = M.Frame.objects(id=frameid)
   if not frame:
     print "Frame ID (%s) was not found" % frameid
-    #~ return "Frame ID (%s) was not found" % frameid
     raise RetryTaskError("Frame ID (%s) was not found" % frameid)
   
   frame = frame[0]
@@ -81,24 +80,18 @@ def update_frame(frameid, inspection):
          Exception("couldn't read image")
   except:
       print "could not read image for frame %s" % str(frame.id)
-      return "could not read image for frame %s" % str(frame.id)
-  if img.width > 5000:
-      print "skipping frame too wide"
-      return "skipping frame too wide"
-      
+      raise Exception("couldn't read image")
+
   if not img:
       print "image is empty"
       return "image is empty"
 
-  #~ import pdb;pdb.set_trace()
       
   if insp.id in [feat.inspection for feat in frame.features]:
       frame.features = [feat for feat in frame.features if feat.inspection != insp.id]
   
 
   frame.features += insp.execute(img)
-  frame._imgcache = ""
   frame.save()
   print "saved features for frame %s" % str(frame.id)
-
   return 'frame %s update successful' % str(frame.id)
