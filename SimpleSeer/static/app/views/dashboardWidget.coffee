@@ -2,7 +2,7 @@ application = require '../../../application'
 SubView = require './subview'
 template = require './templates/dashboardWidget'
 
-module.exports = class Dashboard extends SubView
+module.exports = class DashboardWidget extends SubView
   name:''
   cols:1
   template:template
@@ -11,12 +11,13 @@ module.exports = class Dashboard extends SubView
   
   initialize: (attr) =>
     super(attr)
-    @htmltags["cols"] = 1
-    @htmltags["style"] = "width: 100%"
     #style="width: {{width}}%;{{#if boxHeight}} height:{{boxHeight}}px;{{/if}}"
     @widget = attr.widget
       
   render: =>
+    cw = 100/@options.parent.cols
+    #@htmltags["cols"] = @widget.cols
+    @htmltags["style"] = "width: "+(cw*@widget.cols)+"%"
     super()
     if @widget.view
       view = require "/views"+@widget.view
@@ -32,12 +33,10 @@ module.exports = class Dashboard extends SubView
 
   getRenderData: =>
     widgets = []
-    cw = 100/@options.parent.cols
     _w = {}
     _w["id"] = @widget.id
     _w["cols"] = @widget.cols
     _w["title"] = @widget.name
-    _w["width"] = cw*@widget.cols
     #if o.height
     #  _w["boxHeight"] = o.height + 10
     #  _w["height"] = o.height

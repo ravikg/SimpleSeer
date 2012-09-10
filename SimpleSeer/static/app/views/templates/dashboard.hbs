@@ -102,17 +102,6 @@
   
   <div class="dashboardGrid">
     <ul id="widget_grid" class="clearfix">
-      {{#each widgets}}
-      <li class="widget_container" cols="{{this.cols}}" style="width: {{this.width}}%;{{#if this.boxHeight}} height:{{this.boxHeight}}px;{{/if}}">
-        <div class="widget"{{#if this.height}} style="height:{{this.height}}px;"{{/if}}>
-          <div class="header">
-            <h2>{{this.title}}</h2>
-            <div class="button config"/>
-            <div class="button close"/>
-          </div>
-        </div>
-      </li>
-      {{/each}}
     </ul>    
   </div>
 </div>

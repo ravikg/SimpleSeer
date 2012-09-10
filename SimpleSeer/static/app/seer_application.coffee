@@ -10,6 +10,8 @@ module.exports = SeerApplication =
   # necessary modules. Configures the page
   # and 
   _init: (settings) ->
+    #if Highcharts
+    #  Highcharts.credits.enabled = false
     @settings = _.extend @settings, settings
     
     if @settings.mongo.is_slave
@@ -21,7 +23,6 @@ module.exports = SeerApplication =
     ViewHelper = require 'lib/view_helper'
     HomeView = require 'views/home_view'
     FrameDetailView = require 'views/framedetail_view'
-    Router = require 'lib/router'
     Inspections = require 'collections/inspections'
     Measurements = require 'collections/measurements'
     Frames = require 'collections/frames'
@@ -64,8 +65,6 @@ module.exports = SeerApplication =
         Ok: ->
           $( this ).dialog( "close" )
 
-    # Instantiate the router.
-    @router = new Router()
 
   # Sends an alert window to the client
   # with the specified message and severity.
