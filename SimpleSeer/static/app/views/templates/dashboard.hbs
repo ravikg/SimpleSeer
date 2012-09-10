@@ -58,7 +58,7 @@
             <label>Palette:</label>
             <select id="palette_select">
             {{#each palettes}}
-              <option value="{{this.id}}">{{this.title}}</option>
+              <option {{#if this.default}}selected="selected" {{/if}}value="{{this.id}}">{{this.title}}</option>
             {{/each}}
             </select>
             <div id="palette_preview"></div>
@@ -69,23 +69,23 @@
               <div class="categories">
               <div class="category">
                 <span>Number Evaluated</span>
-                <div class="color-block"></div>
+                <div id="numEvalColor" class="color-block"></div>
               </div>
               <div class="category">
                 <span>Failed Evaluation</span>
-                <div class="color-block"></div>
+                <div id="failedEvalColor" class="color-block"></div>
               </div>
             </div>
           </div>
           
           <div class="oneLine floated clearfix">
             <label>Chart Title:</label>
-            <div class="color-block"></div>
+            <div id="chartTitleColor" class="color-block"></div>
           </div>
           
           <div class="oneLine floated clearfix">
             <label>Labels:</label>
-            <div class="color-block"></div>
+            <div id="chartLabelColor" class="color-block"></div>
           </div>          
         </div>
       </div>

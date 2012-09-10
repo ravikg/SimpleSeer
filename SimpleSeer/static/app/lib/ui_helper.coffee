@@ -1,13 +1,13 @@
 #application = require '../application'
 
 module.exports = class Palette
-  currentScheme: "basic"
+  currentScheme: "candy"
   
   schemes:
     basic:
       title: "Primary Colors"
       colors:
-        black: {default: 0, shades: ["#000000"]}
+        black: {default: 0, shades: ["#111111"]}
         red: {default: 0, shades: ["#ff0000"]}
         orange: {default: 0, shades: ["#ff9000"]}
         yellow: {default: 0, shades: ["#ffff00"]}
@@ -20,7 +20,7 @@ module.exports = class Palette
     candy:
       title: "Candy Colors"
       colors:
-        black: {default: 0, shades: ["#000000"]}
+        black: {default: 0, shades: ["#111111"]}
         red: {default: 2, shades: ["#C53B3B", "#F80000", "#BA0000", "#F84A4A", "#780000"]}
         orange: {default: 2, shades: ["#FF8859", "#7F2906", "#FF510D", "#7F442C", "#CC420A"]}
         yellow: {default: 2, shades: ["#FFB04C", "#7F4800", "#FF8F00", "#7F5826", "#CC7300"]}
@@ -32,7 +32,6 @@ module.exports = class Palette
 
   getPalette:(scheme = @currentScheme) =>
     colors = []
-    console.log @schemes[scheme]
     for i of @schemes[scheme].colors
       color = @schemes[scheme].colors[i]
       colors.push color.shades[color.default]
@@ -50,8 +49,11 @@ module.exports = class Palette
       schemes.push {id: i, title: @schemes[i].title}
     return schemes
   
+  getScheme: =>
+    return @currentScheme
+  
   setScheme: (scheme) =>
-    if scheme in @schemes
-      @.currentScheme = scheme
+    if @schemes[scheme]
+      @currentScheme = scheme
     else
       console.error "invalid scheme"
