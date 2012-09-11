@@ -13,6 +13,11 @@ class BlobsFeature(SimpleCV.Blob):
     pass
 
 class Blobs(base.InspectionPlugin):
+
+    @classmethod
+    def reverseParams(cls):
+        return {'Color.' + col: 'color' for col in dir(Color)}
+
     def __call__(self, image):
         params = util.utf8convert(self.inspection.parameters)
         #params = self.inspection.parameters
