@@ -68,6 +68,10 @@ class ModelHandler(object):
         return objs[0]
 
     def _get_body(self, body):
+        # Ignore backbone's version control keys, which are in the form of numbers
+        for key in body.keys():
+            if key.isdigit():
+                del body[key]
         try:
             try:
                 del body['id']

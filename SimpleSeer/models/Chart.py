@@ -98,7 +98,8 @@ class Chart(SimpleDoc, mongoengine.Document):
         return "<Chart %s>" % self.name
 
     def save(self, *args, **kwargs):
-                
+        from ..realtime import ChannelManager
+        
         # If the related OLAP axis values are set, this is coming from the chart builder
         # in which case, use the olap and chart factories to put together the pieces
         if 'olap_xaxis' in self and 'olap_yaxis' in self:
@@ -125,6 +126,8 @@ class Chart(SimpleDoc, mongoengine.Document):
             self = cf.fromFields(xf, yf, self)
             
         super(Chart, self).save(*args, **kwargs)
+        ChannelManager().publish('meta/', self)
+        
         
     def mapData(self, results):
         data = []
@@ -231,8 +234,3 @@ class Chart(SimpleDoc, mongoengine.Document):
 
         return res
 
-    def save(self, *args, **kwargs):
-        from ..realtime import ChannelManager
-        super(Chart, self).save(*args, **kwargs)
-        ChannelManager().publish('meta/', self)
-        
