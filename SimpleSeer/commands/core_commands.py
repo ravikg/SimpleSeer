@@ -1,5 +1,6 @@
 import time
 import gevent
+import os, subprocess
 from .base import Command
 
 class CoreStatesCommand(Command):
@@ -134,9 +135,14 @@ def ScrubCommand(self):
 def ShellCommand(self):
     'Run the ipython shell'
     import subprocess
-    
-    subprocess.call(["ipython", 
-            '--ext', 'SimpleSeer.ipython', '--pylab'], stderr=subprocess.STDOUT)
+    import os
+
+    if os.getenv('DISPLAY'):
+      cmd = ['ipython','--ext','SimpleSeer.ipython','--pylab']
+    else:
+      cmd = ['ipython','--ext','SimpleSeer.ipython']
+      
+    subprocess.call(cmd, stderr=subprocess.STDOUT)
 
 @Command.simple(use_gevent=True, remote_seer=False)
 def NotebookCommand(self):
@@ -145,6 +151,44 @@ def NotebookCommand(self):
     subprocess.call(["ipython", "notebook",
             '--port', '5050',
             '--ext', 'SimpleSeer.notebook', '--pylab', 'inline'], stderr=subprocess.STDOUT)
+
+#~ @Command.simple(use_gevent=True, remote_seer=False)
+class WorkerCommand(Command):
+    '''
+    This Starts a distributed worker object using the celery library.
+
+    Run from the the command line where you have a project created.
+
+    >>> simpleseer worker
+
+
+    The database the worker pool queue connects to is the same one used
+    in the default configuration file (simpleseer.cfg).  It stores the
+    data in the default collection 'celery'.
+
+    To issue commands to a worker, basically a task master, you run:
+
+    >>> simpleseer shell
+    >>> from SimpleSeer.command.worker import update_frame
+    >>> for frame in M.Frame.objects():
+          update_frame.delay(str(frame.id))
+    >>>
+
+    That will basically iterate through all the frames, if you want
+    to change it then pass the frame id you want to update.
+    
+
+    '''
+
+    def __init__(self, subparser):
+        pass
+
+    def run(self):
+        from SimpleSeer.worker import host
+        import socket
+        worker_name = socket.gethostname() + '-' + str(time.time())
+        cmd = ['celery','worker','--broker',host,'-A','SimpleSeer.worker','-n',worker_name]
+        subprocess.call(cmd)
 
 class ExportMetaCommand(Command):
     
