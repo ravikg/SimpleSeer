@@ -135,9 +135,14 @@ def ScrubCommand(self):
 def ShellCommand(self):
     'Run the ipython shell'
     import subprocess
-    
-    subprocess.call(["ipython", 
-            '--ext', 'SimpleSeer.ipython', '--pylab'], stderr=subprocess.STDOUT)
+    import os
+
+    if os.getenv('DISPLAY'):
+      cmd = ['ipython','--ext','SimpleSeer.ipython','--pylab']
+    else:
+      cmd = ['ipython','--ext','SimpleSeer.ipython']
+      
+    subprocess.call(cmd, stderr=subprocess.STDOUT)
 
 @Command.simple(use_gevent=True, remote_seer=False)
 def NotebookCommand(self):
