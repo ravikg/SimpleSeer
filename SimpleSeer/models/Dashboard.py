@@ -25,7 +25,7 @@ class Dashboard(SimpleDoc, mongoengine.Document):
     def save(self, *args, **kwargs):
         from ..realtime import ChannelManager
         
-        super(OLAP, self).save(*args, **kwargs)
+        super(Dashboard, self).save(*args, **kwargs)
         ChannelManager().publish('meta/', self)
 
 

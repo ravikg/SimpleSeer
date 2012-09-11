@@ -52,7 +52,7 @@ class ChartSchema(fes.Schema):
     olap_xaxis = fev.UnicodeString(if_empty='', if_missing='')
     olap_yaxis = fev.Set(if_empty = [], if_missing=[])
 
-    chartid = fev.UnicodeString(if_empty='', if_missing='')
+    chartid = fev.UnicodeString(if_empty=None, if_missing=None)
     color = fev.UnicodeString(if_empty='', if_missing='')                  
     colormap = V.JSON(if_empty=None, if_missing=None)
     labelmap = V.JSON(if_empty=None, if_missing=None)
@@ -233,7 +233,6 @@ class Chart(SimpleDoc, mongoengine.Document):
 
     def save(self, *args, **kwargs):
         from ..realtime import ChannelManager
-        
         super(Chart, self).save(*args, **kwargs)
         ChannelManager().publish('meta/', self)
         
