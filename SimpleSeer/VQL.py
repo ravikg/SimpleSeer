@@ -70,10 +70,10 @@ class VQL:
         name = Word(alphanums + ".") 
         
         keyOrKV = Group(name + Optional(Suppress(":") + name)) 
-        inspectionHash = Group(keyOrKV + ZeroOrMore(Suppress(",") + keyOrKV))
+        inspectionHash = Group(keyOrKV + ZeroOrMore(Optional(Suppress(",")) + keyOrKV))
         inspection = name + Suppress("(") + Optional(inspectionHash) + Suppress(")")
         
-        multiMeasurement = Suppress("[") + name + ZeroOrMore(Suppress(",") + name) + Suppress("]")
+        multiMeasurement = Suppress("[") + name + ZeroOrMore(Optional(Suppress(",")) + name) + Suppress("]")
         singleMeasurement = name
         measurement = Suppress(".") + (singleMeasurement | multiMeasurement)
         
