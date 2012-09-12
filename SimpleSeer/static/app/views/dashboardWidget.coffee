@@ -4,7 +4,6 @@ template = require './templates/dashboardWidget'
 
 module.exports = class DashboardWidget extends SubView
   name:''
-  cols:1
   template:template
   tagName:'li'
   className:'widget_container'
@@ -16,7 +15,6 @@ module.exports = class DashboardWidget extends SubView
       
   render: =>
     cw = 100/@options.parent.cols
-    #@htmltags["cols"] = @widget.cols
     @htmltags["style"] = "width: "+(cw*@widget.cols)+"%"
     super()
     if @widget.view

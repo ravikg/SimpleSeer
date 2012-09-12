@@ -43,7 +43,58 @@
           <div class="toggle"></div>
         </div>
         
-        <div class="content">         
+        <div class="content">
+
+          <table>
+            <tr>
+              <td>Name:</td>
+              <td><input type="text" name="name" value="{{chartSettings.attrib.name}}" id="#chartinput"></td>
+            </tr>
+            <tr>
+              <td>Style:</td>
+              <td>
+                {{#each chartSettings.styles}}
+                <input type="radio" name="style" value="{{stylename}}"{{#if isstyle}} checked="checked"{{/if}} id="#chartinput"><label>{{stylename}}</label><br />
+                {{/each}}
+              </td>
+            </tr>
+            <tr>
+              <td>X&nbsp;Axis:</td>
+              <td><select name="olap_xaxis" id="#chartinput">
+                  {{#chartSettings.vars}}
+                    <option value="{{fieldname}}" {{#if isx}}selected="selected"{{/if}}>{{varname}}</option>
+                  {{/chartSettings.vars}}
+                  </select>
+              </td>
+            </tr>
+            <tr>
+              <td>X Title:</td>
+              <td><input type="text" name="xTitle" value="{{chartSettings.attrib.xTitle}}" id="#chartinput"></td> 
+            </tr>
+            <tr>
+              <td>Y Axis:</td>
+              <td><select multiple="multiple" name="olap_yaxis" id="#chartinput">
+                  {{#chartSettings.vars}}
+                    <option value="{{fieldname}}" {{#if isy}}selected="selected"{{/if}}>{{varname}}</option>
+                  {{/chartSettings.vars}}
+                  </select>
+                  <select name="color"  id="#chartinput">
+                  {{#chartSettings.colors}}
+                    <option value="{{colorname}}" {{#if isycolor}}selected="selected"{{/if}}>{{colorname}}</option>
+                  {{/chartSettings.colors}}
+                  </select>
+              </td>
+            </tr>
+            <tr>
+              <td>Y Title:</td>
+              <td><input type="text" name="yTitle" value="{{chartSettings.attrib.yTitle}}" id="#chartinput"></td> 
+            </tr>
+            <tr>
+              <td></td>
+              <td class="right"><input type="submit" name="chartSubmit" value="Submit">
+            </tr>
+          </table> 
+
         </div>
       </div>
       
