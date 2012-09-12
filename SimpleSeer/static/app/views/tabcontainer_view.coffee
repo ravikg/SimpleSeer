@@ -100,22 +100,15 @@ module.exports = class TabContainer extends View
     super()
     for i,o of @tabLib
       _id = i+'_tab'
-      @_tabs[_id] = @addSubview _id, o, '#tabs', {append:_id}
-    #if @empty==true and @filtercollection.at(0)
-    #  @newest = @filtercollection.at(0).get('capturetime_epoch')
-    #_(@_frameViews).each (fv) =>
-    #  @$el.find('#frame_holder').append(fv.render().el)
-    #@$el.find('#loading_message').hide()
-    #@empty=false
-    #@lastLoadTime = new Date()
-    $('#tabs',@$el).tabs select: (event, ui) =>
-      sid = $('#tabs',@$el).tabs('option', 'selected')
+      @_tabs[_id] = @addSubview _id, o, '.tabPage', {append:_id}
+    $('.tabPage',@$el).tabs select: (event, ui) =>
+      sid = $('.tabPage',@$el).tabs('option', 'selected')
       tabs = $('.ui-tabs-panel',@$el)
       @_tabs[tabs[sid].id].unselect()
       @_tabs[ui.panel.id].select()
     for i,o of @_tabs
       if o.selected
         o.select()
-        $('#tabs',@$el).tabs("select", o.options.append)
+        $('.tabPage',@$el).tabs("select", o.options.append)
 
     return this

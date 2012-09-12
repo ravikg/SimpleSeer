@@ -2,6 +2,7 @@ scipy
 numpy
 pil
 pygame
+pyparsing
 ipython==0.13
 matplotlib
 mongoengine

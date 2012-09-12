@@ -15,18 +15,4 @@ module.exports = class Dashboard extends Model
     for widget in response.widgets
       vi = @view.addSubview "widget_"+widget.id, dashboardWidget, '#widget_grid', {append:"widget_"+widget.id,widget:widget}
       vi.render()
-      """
-      if widget.view
-        view = require "/views"+widget.view
-      if widget.model
-        model = require "/models"+widget.model
-        model = new model {id:widget.id}
-        model.fetch success:=>
-          vi = @view.addSubView widget.id, dashboardWidget, '.dashboardGrid', {append:widget.id,id:widget.id,model:model}
-          #vi = @view.addSubview widget.id, view, '.dashboardGrid', {append:widget.id,id:widget.id,model:model}
-          vi.render()
-      if !model && view
-        #vi = @view.addSubview widget.id, view, '.dashboardGrid', {append:widget.id,id:widget.id}
-        vi.render()
-      """
       @
