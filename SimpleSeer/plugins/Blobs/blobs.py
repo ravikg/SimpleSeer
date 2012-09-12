@@ -18,6 +18,10 @@ class Blobs(base.InspectionPlugin):
     def reverseParams(cls):
         return {'Color.' + col: 'color' for col in dir(Color)}
 
+    
+    def printFields(cls):
+        return ['x', 'y', 'height', 'width', 'area']
+    
     def __call__(self, image):
         params = util.utf8convert(self.inspection.parameters)
         #params = self.inspection.parameters
