@@ -53,6 +53,18 @@ class VQL:
         return str(inspMethod) + "___" + str(inspParams), 200
     
     @classmethod
+    def reverse(self):
+        
+        query = []
+        for insp in M.Inspection.objects:
+            measNames = []
+            for meas in M.Measurement.objects(inspection=insp.id):
+                measNames.append(meas.method)
+            query.append("%s(%s).[%s]" % (insp.method, str(insp.parameters).replace('{', '').replace('}', ''), ",".join(measNames)))
+        
+        return " ".join(query)
+    
+    @classmethod
     def grammar(self):
         
         name = Word(alphanums + ".") 
