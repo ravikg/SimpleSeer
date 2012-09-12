@@ -1,8 +1,11 @@
 <div id="dash_content" class="clearfix">
   <div class="graphBuilderControls">
+    <!-- Top level breadcrumb nav -->
     <div class="breadcrumb">
       <span>Dashboard</span> &raquo; Chart Editor
     </div>
+    
+    <!-- Chart builder accordion -->
     <div class="accordion">
       <div class="group expanded">
         <div class="head">
@@ -13,26 +16,26 @@
         <div class="content">
           <div class="chartStyleType">
             <label>Column:</label>
-            <button>Style 1</button>
-            <button>Style 2</button>
+            <button><img width="32" height="32" src="http://icons.iconarchive.com/icons/oxygen-icons.org/oxygen/128/Actions-office-chart-line-percentage-icon.png"></button>
+            <button><img width="32" height="32" src="http://icons.iconarchive.com/icons/oxygen-icons.org/oxygen/128/Actions-office-chart-ring-icon.png"></button>
           </div>
           
           <div class="chartStyleType">
             <label>Bar:</label>
-            <button>Style 1</button>
-            <button>Style 2</button>
+            <button><img width="32" height="32" src="http://icons.iconarchive.com/icons/oxygen-icons.org/oxygen/128/Actions-office-chart-bar-stacked-icon.png"></button>
+            <button><img width="32" height="32" src="http://icons.iconarchive.com/icons/oxygen-icons.org/oxygen/128/Actions-office-chart-bar-icon.png"></button>
           </div>
           
           <div class="chartStyleType">
             <label>Scatter &amp; Area:</label>
-            <button>Style 1</button>
-            <button>Style 2</button>
+            <button><img width="32" height="32" src="http://icons.iconarchive.com/icons/oxygen-icons.org/oxygen/128/Actions-office-chart-scatter-icon.png"></button>
+            <button><img width="32" height="32" src="http://icons.iconarchive.com/icons/oxygen-icons.org/oxygen/128/Actions-office-chart-polar-stacked-icon.png"></button>
           </div>
           
           <div class="chartStyleType">
             <label>Line:</label>
-            <button>Style 1</button>
-            <button>Style 2</button>
+            <button><img width="32" height="32" src="http://icons.iconarchive.com/icons/oxygen-icons.org/oxygen/128/Actions-office-chart-line-icon.png"></button>
+            <button><img width="32" height="32" src="http://icons.iconarchive.com/icons/oxygen-icons.org/oxygen/128/Actions-office-chart-area-icon.png"></button>
           </div>
         </div> 
       </div>
@@ -43,7 +46,58 @@
           <div class="toggle"></div>
         </div>
         
-        <div class="content">         
+        <div id="chartbuilder" class="content">
+
+          <table>
+            <tr>
+              <td>Name:</td>
+              <td><input type="text" name="name" value="{{chartSettings.attrib.name}}" id="#chartinput"></td>
+            </tr>
+            <tr>
+              <td>Style:</td>
+              <td>
+                {{#each chartSettings.styles}}
+                <input type="radio" name="style" value="{{stylename}}"{{#if isstyle}} checked="checked"{{/if}} id="#chartinput"><label>{{stylename}}</label><br />
+                {{/each}}
+              </td>
+            </tr>
+            <tr>
+              <td>X&nbsp;Axis:</td>
+              <td><select name="olap_xaxis" id="#chartinput">
+                  {{#chartSettings.vars}}
+                    <option value="{{fieldname}}" {{#if isx}}selected="selected"{{/if}}>{{varname}}</option>
+                  {{/chartSettings.vars}}
+                  </select>
+              </td>
+            </tr>
+            <tr>
+              <td>X Title:</td>
+              <td><input type="text" name="xTitle" value="{{chartSettings.attrib.xTitle}}" id="#chartinput"></td> 
+            </tr>
+            <tr>
+              <td>Y Axis:</td>
+              <td><select multiple="multiple" name="olap_yaxis" id="#chartinput">
+                  {{#chartSettings.vars}}
+                    <option value="{{fieldname}}" {{#if isy}}selected="selected"{{/if}}>{{varname}}</option>
+                  {{/chartSettings.vars}}
+                  </select>
+                  <select name="color"  id="#chartinput">
+                  {{#chartSettings.colors}}
+                    <option value="{{colorname}}" {{#if isycolor}}selected="selected"{{/if}}>{{colorname}}</option>
+                  {{/chartSettings.colors}}
+                  </select>
+              </td>
+            </tr>
+            <tr>
+              <td>Y Title:</td>
+              <td><input type="text" name="yTitle" value="{{chartSettings.attrib.yTitle}}" id="#chartinput"></td> 
+            </tr>
+            <tr>
+              <td></td>
+              <td class="right"><input type="submit" name="chartSubmit" value="Submit">
+            </tr>
+          </table> 
+
         </div>
       </div>
       
@@ -94,12 +148,13 @@
     </div>
   </div>
   
+  <!-- Big chart for preview -->
   <div class="graphBuilderPreview">
     <img src="/img/chart.png">
   </div>
   
+  <!-- Widgets added here -->
   <div class="dashboardGrid">
-    <ul id="widget_grid" class="clearfix">
-    </ul>    
+    <ul id="widget_grid" class="clearfix"></ul>    
   </div>
 </div>
