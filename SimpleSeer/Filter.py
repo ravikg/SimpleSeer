@@ -19,9 +19,6 @@ class Filter():
         measurements = []
         features = []
         
-        # Need to initially construct/modify a few fields for future filters
-        pipeline += self.initialFields()
-        
         # Filter the data based on the filter parameters
         # Frame features are easy to filter, but measurements and features are embedded in the frame
         # so they need their own syntax to filter
@@ -32,7 +29,10 @@ class Filter():
                 frames.append(f)
             elif f['type'] == 'framefeature':
                 features.append(f)
-                
+        
+        # Need to initially construct/modify a few fields for future filters
+        pipeline += self.initialFields(projResult = (len(measurements) > 0), projFeat = (len(features) > 0))
+        
         if frames:
             pipeline += self.filterFrames(frames)
         
@@ -62,8 +62,36 @@ class Filter():
             return 0, []
                 
         return len(cmd['result']), results    
+    
+    def negativeFilter(self, originalFilter = []):
+        # used to convert filter commands that assume provide all fields except those banned
+        # to a filter that returns only those fields specified
+        # which is the format assumed by filters here
         
-    def initialFields(self):
+        newFilters = []
+        featureNames, resultNames = self.keyNamesHash()
+        
+        for insp in featureNames.keys():
+            for field in featureNames[insp]:
+                for orig in originalFilter:
+                    filtname = '%s.%s' % (insp, field)
+                    if orig['type'] == 'framefeature' and orig['name'] == filtname:
+                        newFilters.append(orig)
+                    else:
+                        newFilters.append({'type':'framefeature', 'exists': True, 'name': filtname})
+        
+        for meas in resultNames.keys():
+            for field in resultNames[meas]:
+                for orig in originalFilter:
+                    filtname = '%s.%s' % (meas, field)
+                    if orig['type'] == 'measurement' and orig['name'] == filtname:
+                        newFilters.append(orig)
+                    else:
+                        newFilters.append({'type':'measurement', 'exists': True, 'name':filtname})
+        
+        return newFilters
+        
+    def initialFields(self, projResult = False, projFeat = False):
         # This is a pre-filter of the relevant fields
         # It constructs a set of fields helpful when grouping by time
         # IT also constructs a set of custom renamed fields for use by other filters
@@ -75,12 +103,14 @@ class Filter():
             fields[p] = 1
         
         # And we always need the features and results
-        fields['features'] = 1
-        fields['results'] = 1
+        
+        if projFeat:
+            fields['features'] = 1
+        if projResult:
+            fields['results'] = 1
         
         # Always want the 'id' field, which sometimes comes through as _id
         fields['id'] = '$_id'
-        
         return [{'$project': fields}]
     
     
@@ -130,7 +160,6 @@ class Filter():
         parts = []
         
         proj, group = self.rewindFields('results')
-        del proj['results']
         
         # If measurements query, check those fields
         if measQuery:
@@ -152,7 +181,6 @@ class Filter():
         
         parts = []
         proj, group = self.rewindFields('features')
-        del proj['features']
         
         if featQuery:
             proj['featok'] = self.condFeat(featQuery)
@@ -205,18 +233,16 @@ class Filter():
             for f in useKeys[key]:
                 proj[field + '.' + f] = 1
         
-        
         for key in Frame.filterFieldNames():
             # Have to rename the id field since $group statements assume existence of _id as the group_by parameter
             if key == 'id':
                 key = '_id'
             proj[key] = 1
             
-            #if (key == 'results') or (key == 'features'):
-            if key == field:
-                group[key] = {'$addToSet': '$' + key}
-            else:
-                group[key] = {'$first': '$' + key}
+            group[key] = {'$first': '$' + key}
+        
+        # re-groupt the (results | features)
+        group[field] = {'$addToSet': '$' + field}
             
         group['_id'] = '$_id'
         # But a lot of stuff also wants an id instead of _id
@@ -391,7 +417,7 @@ class Filter():
                 featureKeys[i.name].append('featuretype')
                 featureKeys[i.name].append('inspection')
             else:
-                featureKeys[i.name] = ['featuretype', 'inspection', 'featuredata']
+                featureKeys[i.name] = ['featuretype', 'inspection']
                 
         # Becuase of manual measurements, need to look at frame results to figure out if numeric or string fields in place
         for m in Measurement.objects:
@@ -422,7 +448,7 @@ class Filter():
                 fieldNames.append(key + '.' + val)
             
         for key in resultKeys.keys():
-            for val in featureKeys[key]:
+            for val in resultKeys[key]:
                 fieldNames.append(key + '.' + val)
             
         return fieldNames
@@ -477,7 +503,7 @@ class Filter():
                 tmpFrame[key] = self.getField(frame, keyParts)
                 
             # Fields from the features
-            for feature in frame['features']:
+            for feature in frame.get('features', []):
                 # If this feature has items that need to be saved
                 inspection_name = self.inspectionIdToName(feature['inspection']) 
                 if  inspection_name in featureKeys.keys():
@@ -487,7 +513,7 @@ class Filter():
                         tmpFrame[feature['featuretype'] + '.' + field] = self.getField(feature, keyParts)
              
             # Fields from the results
-            for result in frame['results']:
+            for result in frame.get('results', []):
                 # If this result has items that need to be saved
                 if result['measurement_name'] in resultKeys.keys():
                     for field in resultKeys[result['measurement_name']]:
