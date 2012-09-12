@@ -4,6 +4,19 @@ module.exports = class Palette
   currentScheme: "candy"
   
   schemes:
+    fab:
+      title: "Anthony"
+      colors:
+        black: {default: 0, shades: ["#1F0318"]}
+        red: {default: 0, shades: ["#A31180"]}
+        orange: {default: 0, shades: ["#C42795"]}
+        yellow: {default: 0, shades: ["#DE52B4"]}
+        green: {default: 0, shades: ["#EA88CE"]}
+        cyan: {default: 0, shades: ["#FFBFE5"]}
+        blue: {default: 0, shades: ["#FFEBE5"]}
+        purple: {default: 0, shades: ["#FFF6E5"]}
+        white: {default: 0, shades: ["#ffffff"]}
+          
     basic:
       title: "Primary Colors"
       colors:
@@ -15,10 +28,10 @@ module.exports = class Palette
         cyan: {default: 0, shades: ["#00ffff"]}
         blue: {default: 0, shades: ["#0000ff"]}
         purple: {default: 0, shades: ["#9000ff"]}
-        white: {default: 0, shades: ["#ffffff"]}
+        white: {default: 0, shades: ["#ffffff"]}       
       
     candy:
-      title: "Candy Colors"
+      title: "Pantone Colors"
       colors:
         black: {default: 0, shades: ["#111111"]}
         red: {default: 2, shades: ["#C53B3B", "#F80000", "#BA0000", "#F84A4A", "#780000"]}
@@ -29,6 +42,19 @@ module.exports = class Palette
         blue: {default: 2, shades: ["","","#426EA8","",""]}
         purple: {default: 2, shades: ["#423842", "#753F72", "#291628", "#756274", "#C268BD"]}
         white: {default: 0, shades: ["#ffffff"]}
+          
+    grey:
+      title: "Grey-scale Colors"
+      colors:
+        black: {default: 0, shades: ["#111111"]}
+        red: {default: 0, shades: ["#333333"]}
+        orange: {default: 0, shades: ["#555555"]}
+        yellow: {default: 0, shades: ["#777777"]}
+        green: {default: 0, shades: ["#999999"]}
+        cyan: {default: 0, shades: ["#bbbbbb"]}
+        blue: {default: 0, shades: ["#dddddd"]}
+        purple: {default: 0, shades: ["#eeeeee"]}
+        white: {default: 0, shades: ["#ffffff"]}             
 
   getPalette:(scheme = @currentScheme) =>
     colors = []

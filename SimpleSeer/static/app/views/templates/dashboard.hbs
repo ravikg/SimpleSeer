@@ -1,8 +1,11 @@
 <div id="dash_content" class="clearfix">
   <div class="graphBuilderControls">
+    <!-- Top level breadcrumb nav -->
     <div class="breadcrumb">
       <span>Dashboard</span> &raquo; Chart Editor
     </div>
+    
+    <!-- Chart builder accordion -->
     <div class="accordion">
       <div class="group expanded">
         <div class="head">
@@ -13,26 +16,26 @@
         <div class="content">
           <div class="chartStyleType">
             <label>Column:</label>
-            <button>Style 1</button>
-            <button>Style 2</button>
+            <button><img width="32" height="32" src="http://icons.iconarchive.com/icons/oxygen-icons.org/oxygen/128/Actions-office-chart-line-percentage-icon.png"></button>
+            <button><img width="32" height="32" src="http://icons.iconarchive.com/icons/oxygen-icons.org/oxygen/128/Actions-office-chart-ring-icon.png"></button>
           </div>
           
           <div class="chartStyleType">
             <label>Bar:</label>
-            <button>Style 1</button>
-            <button>Style 2</button>
+            <button><img width="32" height="32" src="http://icons.iconarchive.com/icons/oxygen-icons.org/oxygen/128/Actions-office-chart-bar-stacked-icon.png"></button>
+            <button><img width="32" height="32" src="http://icons.iconarchive.com/icons/oxygen-icons.org/oxygen/128/Actions-office-chart-bar-icon.png"></button>
           </div>
           
           <div class="chartStyleType">
             <label>Scatter &amp; Area:</label>
-            <button>Style 1</button>
-            <button>Style 2</button>
+            <button><img width="32" height="32" src="http://icons.iconarchive.com/icons/oxygen-icons.org/oxygen/128/Actions-office-chart-scatter-icon.png"></button>
+            <button><img width="32" height="32" src="http://icons.iconarchive.com/icons/oxygen-icons.org/oxygen/128/Actions-office-chart-polar-stacked-icon.png"></button>
           </div>
           
           <div class="chartStyleType">
             <label>Line:</label>
-            <button>Style 1</button>
-            <button>Style 2</button>
+            <button><img width="32" height="32" src="http://icons.iconarchive.com/icons/oxygen-icons.org/oxygen/128/Actions-office-chart-line-icon.png"></button>
+            <button><img width="32" height="32" src="http://icons.iconarchive.com/icons/oxygen-icons.org/oxygen/128/Actions-office-chart-area-icon.png"></button>
           </div>
         </div> 
       </div>
@@ -43,7 +46,7 @@
           <div class="toggle"></div>
         </div>
         
-        <div class="content">
+        <div id="chartbuilder" class="content">
 
           <table>
             <tr>
@@ -145,12 +148,13 @@
     </div>
   </div>
   
+  <!-- Big chart for preview -->
   <div class="graphBuilderPreview">
     <img src="/img/chart.png">
   </div>
   
+  <!-- Widgets added here -->
   <div class="dashboardGrid">
-    <ul id="widget_grid" class="clearfix">
-    </ul>    
+    <ul id="widget_grid" class="clearfix"></ul>    
   </div>
 </div>

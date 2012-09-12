@@ -130,6 +130,7 @@ class Filter():
         parts = []
         
         proj, group = self.rewindFields('results')
+        del proj['results']
         
         # If measurements query, check those fields
         if measQuery:
@@ -151,6 +152,7 @@ class Filter():
         
         parts = []
         proj, group = self.rewindFields('features')
+        del proj['features']
         
         if featQuery:
             proj['featok'] = self.condFeat(featQuery)
