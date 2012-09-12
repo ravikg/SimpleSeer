@@ -28,18 +28,18 @@ class VQL:
             return "Unknown method: %s" % inspMethod, 500
         insp.method = inspMethod
         
-        inspParams = {}
-        for p in inspection[1]:
-            if len(p) > 1:
-                inspParams[p[0]] = p[1]
-            else:
-                plugin = insp.get_plugin(insp.method)
-                reverse = plugin.reverseParams()
-                if p[0] not in reverse:
-                    return "Unrecognized shortcut parameter: %s" % p[0], 500
-                inspParams[reverse[p[0]]] = p[0]
-        insp.parameters = inspParams
-        print insp
+        if len(inspection) > 1:
+            inspParams = {}
+            for p in inspection[1]:
+                if len(p) > 1:
+                    inspParams[p[0]] = p[1]
+                else:
+                    plugin = insp.get_plugin(insp.method)
+                    reverse = plugin.reverseParams()
+                    if p[0] not in reverse:
+                        return "Unrecognized shortcut parameter: %s" % p[0], 500
+                    inspParams[reverse[p[0]]] = p[0]
+            insp.parameters = inspParams
         insp.save()
         
         for m in measurements:
@@ -47,10 +47,9 @@ class VQL:
             meas.name = m
             meas.method = m
             meas.inspection = insp.id
-            print meas
             meas.save()
         
-        return str(inspMethod) + "___" + str(inspParams), 200
+        return "YAY", 200
     
     @classmethod
     def reverse(self):
@@ -71,7 +70,7 @@ class VQL:
         
         keyOrKV = Group(name + Optional(Suppress(":") + name)) 
         inspectionHash = Group(keyOrKV + ZeroOrMore(Suppress(",") + keyOrKV))
-        inspection = name + Suppress("(") + inspectionHash + Suppress(")")
+        inspection = name + Suppress("(") + Optional(inspectionHash) + Suppress(")")
         
         multiMeasurement = Suppress("[") + name + ZeroOrMore(Suppress(",") + name) + Suppress("]")
         singleMeasurement = name
