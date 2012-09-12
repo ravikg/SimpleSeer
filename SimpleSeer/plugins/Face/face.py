@@ -9,6 +9,9 @@ class FaceFeature(SimpleCV.HaarFeature):
 
 class Face(base.InspectionPlugin):
   
+    def printFields(cls):
+        return ['x', 'y', 'height', 'width', 'area']
+          
     def __call__(self, image):
         #params = util.utf8convert(self.parameters)
         
