@@ -43,8 +43,8 @@ class Filter():
         # Sort the results
         pipeline += self.sort(sortinfo)
         
-        #for p in pipeline:
-        #    print 'LINE: %s' % str(p)
+        for p in pipeline:
+            print 'LINE: %s' % str(p)
         
         # This is all done through mongo aggregation framework
         db = Frame._get_db()
@@ -130,6 +130,7 @@ class Filter():
         parts = []
         
         proj, group = self.rewindFields('results')
+        del proj['results']
         
         # If measurements query, check those fields
         if measQuery:
@@ -151,6 +152,7 @@ class Filter():
         
         parts = []
         proj, group = self.rewindFields('features')
+        del proj['features']
         
         if featQuery:
             proj['featok'] = self.condFeat(featQuery)
