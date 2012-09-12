@@ -43,8 +43,8 @@ class Filter():
         # Sort the results
         pipeline += self.sort(sortinfo)
         
-        for p in pipeline:
-            print 'LINE: %s' % str(p)
+        #for p in pipeline:
+        #    print 'LINE: %s' % str(p)
         
         # This is all done through mongo aggregation framework
         db = Frame._get_db()
