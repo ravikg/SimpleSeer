@@ -12,7 +12,24 @@ module.exports = class DashboardWidget extends SubView
     super(attr)
     #style="width: {{width}}%;{{#if boxHeight}} height:{{boxHeight}}px;{{/if}}"
     @widget = attr.widget
-      
+
+  events:
+    'click .close' : 'remove'
+    'click .config' : 'config'
+    
+  remove: =>
+    for i,o of @subviews
+      for n,w of @options.parent.model.attributes.widgets
+        if w.id == o.id
+          @options.parent.model.attributes.widgets.splice(n,1)
+    @options.parent.model.save()
+    super()
+
+  config: =>
+    if @subviews[@options.widget.id] && @subviews[@options.widget.id].model
+      @options.parent.chart = @subviews[@options.widget.id].model
+      @options.parent.toggleBuilder()
+
   render: =>
     cw = 100/@options.parent.cols
     @htmltags["style"] = "width: "+(cw*@widget.cols)+"%"

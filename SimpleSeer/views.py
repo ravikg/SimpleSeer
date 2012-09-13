@@ -37,6 +37,17 @@ class route(object):
         for func, path, kwargs in cls.routes:
             app.route(path, **kwargs)(func)
 
+def fromJson(string):
+    from .base import jsondecode
+    from HTMLParser import HTMLParser
+    
+    # filter_params should be in the form of a json encoded dicts
+    # that probably was also html encoded 
+    p = HTMLParser()
+    string = str(p.unescape(string))
+    string = jsondecode(string)
+    return string
+
 @route('/socket.io/<path:path>')
 def sio(path):
     socketio_manage(
@@ -505,21 +516,24 @@ def dashboard(dashboard_id):
     c = M.Dashboard.objects.get(id = dashboard_id)
     return c
 
-@route('/chart/<chart_name>', methods=['GET'])
+@route('/chart/<chart_id>', methods=['GET'])
 @util.jsonify
-def chart(chart_name):
-    c = M.Chart.objects.get(name = chart_name)
-    
+def chart(chart_id):
+    c = M.Chart.objects.get(id = chart_id)
     return c.createChart()
 
-@route('/chart/data/<chart_name>/<filter_params>', methods=['GET'])
-def chart_data(chart_name, filter_params):
-    c = M.Chart.objects.get(name=chart_name)
-    return c.chartData(filter_params)
+@route('/chart/data/<chart_id>/<filter_params>', methods=['GET'])
+@util.jsonify
+def chart_data(chart_id, filter_params):
+    filter_params = fromJson(filter_params)
+    c = M.Chart.objects.get(id=chart_id)
+    retVal = c.chartData(filter_params)
+    return retVal
 
-@route('/chart/meta/<chart_name>/', methods=['GET'])
-def chart_meta(chart_name):
-    c = M.Chart.objects.get(name=chart_name)
+@route('/chart/meta/<chart_id>/', methods=['GET'])
+@util.jsonify
+def chart_meta(chart_id):
+    c = M.Chart.objects.get(name=chart_id)
     return c.chartMeta()
         
 @route('/chart/<chart_name>/since/<timestamp>', methods=['GET'])

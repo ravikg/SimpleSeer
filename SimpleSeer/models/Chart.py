@@ -203,9 +203,8 @@ class Chart(SimpleDoc, mongoengine.Document):
 
         return meta
 
-    def chartData(self, allParams = []):
+    def chartData(self, allParams = {}):
         from SimpleSeer.OLAPUtils import OLAPFactory
-        
         # Get the OLAP and its data
         if self.realtime and 'query' in allParams:
             of = OLAPFactory()
@@ -213,7 +212,7 @@ class Chart(SimpleDoc, mongoengine.Document):
         else:
             o = OLAP.objects(name=self.olap)[0]
             cname = self.name
-            
+        
         if 'limit' in allParams:
             o.limit = allParams['limit']
         if 'skip' in allParams:

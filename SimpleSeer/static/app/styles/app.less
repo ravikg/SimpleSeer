@@ -518,12 +518,18 @@ a { font-size: 13px; color: #08C; font-family: "Helvetica Neue", Helvetica, Aria
   padding: 20px;
 }
 
-button.save {
-  width: 150px;
-  height: 35px;
+button.save, button.cancel {
+  display: inline-block;
+  width: 120px;
+  height: 30px;
   margin-top: 3px;
   margin-right: 12px;
   margin-bottom: 12px;
+}
+
+button.cancel {
+  width: 81px;
+  height: 30px;
 }
 
 button.save {
@@ -532,15 +538,11 @@ button.save {
   cursor: pointer;
   text-align: center;
   text-decoration: none;
-  font: 14px/100% Arial, Helvetica, sans-serif;
   padding: .5em 2em .55em;
   text-shadow: 0 1px 1px rgba(0,0,0,.3);
   -webkit-border-radius: 3px; 
   -moz-border-radius: 3px;
   border-radius: 3px;
-  -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.2);
-  -moz-box-shadow: 0 1px 2px rgba(0,0,0,.2);
-  box-shadow: 0 1px 2px rgba(0,0,0,.2);
   color: #fef4e9;
   border: solid 1px #da7c0c;
   background: #f78d1d;
@@ -564,29 +566,31 @@ button.save:active {
   background: -webkit-gradient(linear, left top, left bottom, from(#f47a20), to(#faa51a));
   background: -moz-linear-gradient(top,  #f47a20,  #faa51a);
   filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#f47a20', endColorstr='#faa51a');    
-}  
-
-.chartStyleType {
-  height: 28px;
-  margin-bottom: 10px;
-  clear: both;
 }
 
-.chartStyleType:last-child {
-  margin-bottom: 0px;
+.trim {
+  padding-bottom: 0px !important;
+}
+
+.chartStyleType {
+  width: 122px;
+  display: inline-block;
+  margin-bottom: 10px;
 }
 
 .chartStyleType label {
+  text-align: center;
+  display: block;
   line-height: 28px;
   font-weight: bold;
   font-size: 13px;
 }
 
 .chartStyleType button {
-  width: 70px;
-  height: 28px;
-  float: right;
-  margin-left: 5px;
+  margin: 0 auto;
+  display: block;
+  width: 80px;
+  height: 42px;
 }
 
 .breadcrumb {
