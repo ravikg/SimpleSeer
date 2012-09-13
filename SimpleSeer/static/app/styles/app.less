@@ -8,7 +8,7 @@ body {
 p { margin: 0; padding: 0px; }
 ul { list-style-type: none; }
 
-input[type=text], textarea {
+input[type=text], input[type=number], textarea {
   padding: 5px;
   
   background: #fff;
@@ -465,7 +465,7 @@ a { font-size: 13px; color: #08C; font-family: "Helvetica Neue", Helvetica, Aria
 }
 
 .accordion {
-  height: 435px;
+  min-height: 435px;
   margin-top: 20px;
   margin-left: 10px;
   border: 1px solid #ccc;
@@ -618,7 +618,7 @@ a { font-size: 13px; color: #08C; font-family: "Helvetica Neue", Helvetica, Aria
   a { display: block; }
 }
 
-.graphBuilderControls .ui-combobox input {
+.graphBuilderControls .ui-combobox input, .graphBuilderControls input {
   width: 150px;
   height: 15px;
 }

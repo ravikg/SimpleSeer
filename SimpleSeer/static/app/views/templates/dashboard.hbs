@@ -59,6 +59,11 @@
           </div>
           
           <div class="oneLine">
+            <label>Columns:</label>
+            <input type="number" id="colSpin" maxlength="2" value="1" min="1" max="" step="1">
+          </div>          
+          
+          <div class="oneLine">
             <label>X&nbsp;Axis:</label>
             <select name="olap_xaxis" class="chartinput">
             {{#chartSettings.vars}}
@@ -69,7 +74,7 @@
           
           <div class="oneLine">
             <label>X Title:</label>
-            <input type="text" name="xTitle" value="{{chartSettings.attrib.xTitle}}" class="chartinput">
+            <input type="text" name="xTitle" class="chartinput">
           </div>
           
           <div class="oneLine">
@@ -83,7 +88,7 @@
           
           <div class="oneLine">
             <label>Y Title:</label>
-            <input type="text" name="yTitle" value="{{chartSettings.attrib.yTitle}}" class="chartinput">
+            <input type="text" name="yTitle" class="chartinput">
           </div>
         </div>
       </div>
