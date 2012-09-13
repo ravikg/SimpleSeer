@@ -85,9 +85,8 @@ class OLAPFactory:
         
         from .models.Chart import Chart
         originalOLAP = OLAP.objects(name = originalChart.olap)[0]
-            
         # Check for previous similar OLAPs
-        existing = OLAP.objects(olapFilter = filters, skip=originalOLAP.skip, limit=originalOLAP.limit)
+        existing = OLAP.objects(olapFilter = filters, skip=originalOLAP.skip or 0, limit=originalOLAP.limit or 20)
         if len(existing) > 0:
             o = existing[0]
             o.confirmed = True
