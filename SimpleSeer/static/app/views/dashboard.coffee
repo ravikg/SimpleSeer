@@ -16,7 +16,6 @@ module.exports = class Dashboard extends Tab
     @colors = ['red', 'green', 'blue']
     @styles = ['bar', 'line', 'spline', 'pie', 'scatter']
     @chart = new Chart()
-    console.log 'built'
     super()
   
   createGraph: =>
@@ -29,51 +28,8 @@ module.exports = class Dashboard extends Tab
     #add div to grid
     #draw graph to div
     #if graph.id not in collection, collection.add and save
-    
-  toggleBuilder: =>
-    @building =  !@building
-    controls = @$el.find('#graphBuilderControls')
-    preview =  @$el.find('#graphBuilderPreview')
-    if @building
-      #reset builder controls
 
-      #slide in builders
-      controls.show("slide", { direction: "right" })
-      preview.show("slide", { direction: "left" })
-    else
-      #slide out builders
-      controls.hide("slide", { direction: "left" }, -300)
-      preview.hide("slide", { direction: "right" }, 10000)
-    
-    
-  events:
-    'change input[id="#chartinput"]': 'fieldUpdate'
-    'change select[id="#chartinput"]': 'fieldUpdate'
-    'click input[name="chartSubmit"]': 'saveform'    
-    'click .accordion .head': 'toggleAccordion'
-    'click .save': 'toggleBuilder'
-    'click .button.config': 'toggleBuilder'
-
-    
-  fieldUpdate: (evt)=>
-    elem = evt.currentTarget
-    newElem = {}
-    
-    if elem.name == 'olap_yaxis'
-      ys = []
-      for e in elem
-        if e.selected
-          ys.push(e.value)
-      newElem[elem.name] = ys
-    else
-      newElem[elem.name] = elem.value
-    @chart.set(newElem)
-    #@saveform()
-    
-  saveform: =>
-    @chart.save()
-    @chart.fetch()
-    
+        
   getRenderData: =>
     vars: @getVariables()
     attrib: @chart.attributes
@@ -97,7 +53,6 @@ module.exports = class Dashboard extends Tab
           isy = true
         
       vars.push({'fieldname': k.type + '.' + k.field_name, 'varname': k.label, 'isx': isx, 'isy': isy})
-    console.log vars
     vars
     
   getColors: =>

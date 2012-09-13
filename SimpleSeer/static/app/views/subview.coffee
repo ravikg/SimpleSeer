@@ -21,3 +21,9 @@ module.exports = class SubView extends View
       @setElement @options.parent.$ @options.selector
     super
     @
+
+  remove: =>
+    if @options.parent.subviews[@id]
+      delete @options.parent.subviews[@id]
+    super
+    
