@@ -13,9 +13,9 @@ module.exports = class DashboardWidget extends SubView
     #style="width: {{width}}%;{{#if boxHeight}} height:{{boxHeight}}px;{{/if}}"
     @widget = attr.widget
 
-  events:
-    'click .close' : 'remove'
-    'click .config' : 'config'
+  #events:
+   # 'click .close' : 'remove'
+   # 'click .config' : 'config'
     
   remove: =>
     for i,o of @subviews
@@ -42,6 +42,8 @@ module.exports = class DashboardWidget extends SubView
       model.fetch success:=>
         vi = @addSubview @widget.id, view, "#"+@widget.id, {id:@widget.id,model:model}
         vi.render()
+    @$el.find(".close").die().live("click", (e, ui)=> @remove())
+    @$el.find(".config").die().live("click", (e, ui)=> @config())    
 #    if !model && view
 #      #vi = @view.addSubview widget.id, view, '.dashboardGrid', {append:widget.id,id:widget.id}
 #      vi.render()
