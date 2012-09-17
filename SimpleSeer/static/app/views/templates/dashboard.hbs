@@ -53,24 +53,43 @@
         </div>
         
         <div id="chartbuilder" class="content">
-          <p>Name:</p>
-          <input type="text" name="name" value="{{chartSettings.attrib.name}}" class="chartinput">
-          <p>X&nbsp;Axis:</p>
-          <select name="olap_xaxis" class="chartinput">
-          {{#chartSettings.vars}}
-            <option value="{{fieldname}}" {{#if isx}}selected="selected"{{/if}}>{{varname}}</option>
-          {{/chartSettings.vars}}
-          </select>
-          <p>X Title:</p>
-          <input type="text" name="xTitle" value="{{chartSettings.attrib.xTitle}}" class="chartinput">
-          <p>Y Axis:</p>
-          <select name="olap_yaxis" class="chartinput">
+          <div class="oneLine">
+            <label>Name:</label>
+            <input type="text" name="name" value="{{chartSettings.attrib.name}}" class="chartinput">
+          </div>
+          
+          <div class="oneLine">
+            <label>Columns:</label>
+            <input type="number" id="colSpin" maxlength="2" value="1" min="1" max="" step="1">
+          </div>          
+          
+          <div class="oneLine">
+            <label>X&nbsp;Axis:</label>
+            <select name="olap_xaxis" class="chartinput">
             {{#chartSettings.vars}}
-            <option value="{{fieldname}}" {{#if isy}}selected="selected"{{/if}}>{{varname}}</option>
+              <option value="{{fieldname}}" {{#if isx}}selected="selected"{{/if}}>{{varname}}</option>
             {{/chartSettings.vars}}
-          </select>
-          <p>Y Title:</p>
-          <input type="text" name="yTitle" value="{{chartSettings.attrib.yTitle}}" class="chartinput">
+            </select>
+          </div>
+          
+          <div class="oneLine">
+            <label>X Title:</label>
+            <input type="text" name="xTitle" class="chartinput">
+          </div>
+          
+          <div class="oneLine">
+            <label>Y Axis:</label>
+            <select name="olap_yaxis" class="chartinput">
+              {{#chartSettings.vars}}
+              <option value="{{fieldname}}" {{#if isy}}selected="selected"{{/if}}>{{varname}}</option>
+              {{/chartSettings.vars}}
+            </select>
+          </div>
+          
+          <div class="oneLine">
+            <label>Y Title:</label>
+            <input type="text" name="yTitle" class="chartinput">
+          </div>
         </div>
       </div>
       
