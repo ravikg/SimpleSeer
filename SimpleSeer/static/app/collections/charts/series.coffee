@@ -52,6 +52,9 @@ module.exports = class Series extends FilterCollection
 
   onSuccess: (obj, rawJson) =>
     @_drawData()
+    @view.hideMessage()
+    if !@view.hasData
+      @view.showMessage('error','No data to display')
     $('.alert_error').remove()
   
   onError: =>
@@ -68,7 +71,9 @@ module.exports = class Series extends FilterCollection
     points = []
     for p in @models
       points.push p.attributes
-    @view.setData points, @id    
+    @view.setData points, @id
+    if points.length
+      @view.hasData = true
     return
   
     dd = []

@@ -57,6 +57,7 @@ module.exports = class HighchartsLib extends ChartView
           min:@model.attributes.minval
           max:@model.attributes.maxval
       chart.id = @id
+      chart.showLoading()
       if @model.attributes.useLabels
         chart.xAxis[0].setCategories @model.attributes.labelmap
       super chart
@@ -80,6 +81,14 @@ module.exports = class HighchartsLib extends ChartView
     series = @._c.get sid
     series.setData(d,redraw)
     
+  showMessage: (type, message) =>
+    @_c.showLoading(message)
+    super()
+  
+  hideMessage:=>
+    @_c.hideLoading()
+    super()
+  
   showTooltip: (id) =>
     point = @._c.get id
     if point

@@ -13,6 +13,8 @@ module.exports = class ChartView extends SubView
   type: ''
   olap: ''
   maxPointSize:0
+  isLoading: false
+  hasData: false
   
   initialize: =>
     super()
@@ -96,7 +98,15 @@ module.exports = class ChartView extends SubView
   _update: (data) =>
     @_drawData @_clean data.data.m.data
 
+  showMessage: (type, message)=>
+    if type == 'loading'
+      @isLoading = true
+    return
     
+  hideMessage: =>
+    @isLoading = true
+    return
+  
   render: =>
     super()
     @buildChart()
