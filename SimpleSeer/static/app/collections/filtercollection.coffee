@@ -22,9 +22,9 @@ module.exports = class FilterCollection extends Collection
       application.settings.ui_filters_framemetadata = []
     if params.view
       @view = params.view
-    #todo: map filter sets to view type
-    for o in application.settings.ui_filters_framemetadata
-      @filters.push @view.addSubview o.field_name, @getFilter(o.format), '#filter_form', {params:o,collection:@}
+      #todo: map filter sets to view type
+      for o in application.settings.ui_filters_framemetadata
+        @filters.push @view.addSubview o.field_name, @getFilter(o.format), '#filter_form', {params:o,collection:@}
     @
 
   #comparator: (chapter) =>

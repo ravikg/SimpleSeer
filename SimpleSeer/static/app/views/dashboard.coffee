@@ -10,13 +10,44 @@ module.exports = class Dashboard extends Tab
   
   initialize: =>
     @model = new model {id:"5047bc49fb920a538c000000",view:@}
-    @model.fetch()
     #load or create collection from server
     #cycle through, and @addGraph(new graph)
     @colors = ['red', 'green', 'blue']
     @styles = ['bar', 'line', 'spline', 'pie', 'scatter']
     @chart = new Chart()
     super()
+  
+  render: =>
+    @model.fetch()
+    super()
+  
+  afterRender: =>
+    @$el.find("#widget_grid").disableSelection() 
+    @$el.find("#widget_grid").sortable
+      handle: ".header"
+      start: @preDragDrop
+      stop: @afterDragDrop
+    super()
+
+  preDragDrop: (a,b) =>
+    # clear floats
+      
+  afterDragDrop: (a,b) =>
+    if a
+      # recalculate floats
+      @cleanList()
+      @saveWidgets()
+    #always return true.  Returning false cancels the move
+    return true
+
+  saveWidgets: =>
+    children = @$el.find("#widget_grid").children()
+    widgets = []
+    for current in children
+      widgets.push @subviews[$(current).attr('id')].toJson()
+    @model.attributes.widgets = widgets
+    @model.save({success:=>})
+  
   
   createGraph: =>
     #create graph from settings

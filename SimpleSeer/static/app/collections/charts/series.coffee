@@ -17,6 +17,8 @@ module.exports = class Series extends FilterCollection
     out:->
   
   initialize: (args={}) =>
+    @sortParams.sortkey = 'capturetime_epoch'
+    @sortParams.sortorder = 1
     @name = args.name || ''
     @id = args.id
     @url = "/chart/data/"+@id
