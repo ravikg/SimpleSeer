@@ -24,6 +24,7 @@ module.exports = class HighchartsLib extends ChartView
         chart:
           renderTo: _target[0]
           backgroundColor: '#F8F8F8'
+          plotBackgroundColor: '#FCFCFC'
           type: @model.attributes.style.toLowerCase()
           height: @model.attributes.height || '188'
         title:
