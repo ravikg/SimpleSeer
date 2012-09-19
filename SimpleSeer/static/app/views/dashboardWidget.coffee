@@ -13,12 +13,33 @@ module.exports = class DashboardWidget extends SubView
     #style="width: {{width}}%;{{#if boxHeight}} height:{{boxHeight}}px;{{/if}}"
     @widget = attr.widget
 
-  events:
-    'click .close' : 'remove'
-    'click .config' : 'config'
-
   toJson: =>
-    @widget
+    return @widget
+    
+  reflowChart: =>
+    gc = @$el.find(".graph-container")
+    @subviews[@options.widget.id]._c.setSize(gc.innerWidth(), gc.innerHeight())
+    
+  checkSpinnerControl: =>
+    $(".upsize, .downsize").show()
+    if @widget.cols is 1 then @$el.find(".downsize").hide()
+    if @widget.cols is @options.parent.cols then @$el.find(".upsize").hide()  
+    
+  setCols: =>
+    cw = 100/@options.parent.cols
+    @$el.css("width", (cw*@widget.cols)+"%")
+    @reflowChart()
+    @checkSpinnerControl()
+    
+  upsize: =>
+    @widget.cols = Math.min(@widget.cols + 1, @options.parent.cols)
+    @options.parent.saveWidgets()
+    @setCols()
+    
+  downsize: =>
+    @widget.cols = Math.max(1, @widget.cols - 1)
+    @options.parent.saveWidgets()
+    @setCols()
     
   remove: =>
     for i,o of @subviews
@@ -33,7 +54,7 @@ module.exports = class DashboardWidget extends SubView
       @options.parent.chart = @subviews[@options.widget.id].model
       @options.parent.toggleBuilder()
 
-  render: =>
+  render: =>    
     cw = 100/@options.parent.cols
     @htmltags["style"] = "width: "+(cw*@widget.cols)+"%"
     super()
@@ -48,6 +69,13 @@ module.exports = class DashboardWidget extends SubView
 #    if !model && view
 #      #vi = @view.addSubview widget.id, view, '.dashboardGrid', {append:widget.id,id:widget.id}
 #      vi.render()
+
+  afterRender: =>
+    @$el.find(".close").die("click").live("click", => @remove())
+    @$el.find(".config").die("click").live("click", => @config())
+    @$el.find(".upsize").die("click").live("click", => @upsize())
+    @$el.find(".downsize").die("click").live("click", => @downsize())
+    @checkSpinnerControl()
 
   getRenderData: =>
     widgets = []
