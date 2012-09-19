@@ -137,6 +137,9 @@ module.exports = class Series extends FilterCollection
       @shiftStack()
       @view.addPoint p, @id
       @add @_formatChartPoint o
+      @view.hasData = true
+    if @view.hasData && @view.hasMessage
+      @view.hideMessage()
     return
     
     ###
