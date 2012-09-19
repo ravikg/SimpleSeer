@@ -1,10 +1,8 @@
 Collection = require "./collection"
 application = require '../application'
-Frame = require "../models/frame"
 #FramelistFrameView = require './framelistframe_view'
 
 module.exports = class FilterCollection extends Collection
-  model: Frame
   url:"/getFrames"
   _defaults:
     skip:0
@@ -18,14 +16,15 @@ module.exports = class FilterCollection extends Collection
   
   initialize: (params) =>
     super()
+    @baseUrl = @url
     @filters = []
     if !application.settings.ui_filters_framemetadata?
       application.settings.ui_filters_framemetadata = []
     if params.view
       @view = params.view
-    #todo: map filter sets to view type
-    for o in application.settings.ui_filters_framemetadata
-      @filters.push @view.addSubview o.field_name, @getFilter(o.format), '#filter_form', {params:o,collection:@}
+      #todo: map filter sets to view type
+      for o in application.settings.ui_filters_framemetadata
+        @filters.push @view.addSubview o.field_name, @getFilter(o.format), '#filter_form', {params:o,collection:@}
     @
 
   #comparator: (chapter) =>
@@ -75,8 +74,11 @@ module.exports = class FilterCollection extends Collection
 
   fetch: (params={}) =>
     #console.dir _json
+    @url = @baseUrl+@getUrl()
     if params.before
       params.before()
+    super(params)
+    ###
     $.getJSON(@url+@getUrl(), (data) =>
       @.totalavail = data.total_frames
       if @skip == 0
@@ -89,7 +91,7 @@ module.exports = class FilterCollection extends Collection
     ).error =>
       #todo: make callback error
       SimpleSeer.alert('request error','error')
-
+    ###
 
   #filterCallback: (data) =>
     #@reset data.frames

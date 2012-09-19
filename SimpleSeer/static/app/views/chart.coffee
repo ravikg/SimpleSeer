@@ -13,6 +13,9 @@ module.exports = class ChartView extends SubView
   type: ''
   olap: ''
   maxPointSize:0
+  isLoading: false
+  hasData: false
+  hasMessage: false
   
   initialize: =>
     super()
@@ -51,13 +54,13 @@ module.exports = class ChartView extends SubView
     if c
       @_c = c
     return
-  
+  ###
   afterRender: =>
     if @model.attributes.realtime && application.socket
       application.socket.on "message:Chart/#{@.name}/", @_update
       if !application.subscriptions['Chart/'+@model.attributes.name+'/']
         application.subscriptions['Chart/'+@model.attributes.name+'/'] = application.socket.emit 'subscribe', 'Chart/'+@model.attributes.name+'/'
-
+  ###
   getRenderData: =>
     retVal = @model
     if retVal
@@ -92,11 +95,21 @@ module.exports = class ChartView extends SubView
             p.update({ marker: { color: '#BF0B23', radius: 5}},true)
     return false
 
-
+  ###
   _update: (data) =>
     @_drawData @_clean data.data.m.data
-
+  ###
+  showMessage: (type, message)=>
+    if type == 'loading'
+      @isLoading = true
+    @hasMessage = true
+    return
     
+  hideMessage: =>
+    @isLoading = true
+    @hasMessage = false
+    return
+  
   render: =>
     super()
     @buildChart()

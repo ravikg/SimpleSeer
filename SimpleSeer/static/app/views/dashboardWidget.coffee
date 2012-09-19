@@ -16,6 +16,9 @@ module.exports = class DashboardWidget extends SubView
   events:
     'click .close' : 'remove'
     'click .config' : 'config'
+
+  toJson: =>
+    @widget
     
   remove: =>
     for i,o of @subviews

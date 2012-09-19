@@ -1,7 +1,8 @@
-Collection = require "../collection"
+#Collection = require "../collection"
+FilterCollection = require "../../collections/filtercollection"
 application = require '../../application'
 
-module.exports = class Series extends Collection
+module.exports = class Series extends FilterCollection
   url: ""
   redraw: false
   xAxis:{}
@@ -16,8 +17,11 @@ module.exports = class Series extends Collection
     out:->
   
   initialize: (args={}) =>
+    @sortParams.sortkey = 'capturetime_epoch'
+    @sortParams.sortorder = 1
     @name = args.name || ''
     @id = args.id
+    @url = "/chart/data/"+@id
     @color = args.color || 'blue'
     # Bind view to collection so we know where our widgets live
     if args.view?
@@ -38,20 +42,6 @@ module.exports = class Series extends Collection
     return clean
 
   fetch: (args={}) =>
-    # Create default success action if none supplied to fetch
-    m = @view.options.model
-
-    name = m.attributes.name
-    frm = new moment().utc().subtract('s',application.charts.timeframe).valueOf()
-    to = false
-    if frm and to
-      @url = "/chart/"+name+"/since/"+frm+"/before/" + to
-    else if frm
-      @url = "/chart/"+name+"/since/" + frm
-    else
-      console.error 'frm and or to required'
-      return false
-
     if !args.success?
       _.extend args,
         success: @onSuccess
@@ -62,6 +52,9 @@ module.exports = class Series extends Collection
 
   onSuccess: (obj, rawJson) =>
     @_drawData()
+    @view.hideMessage()
+    if !@view.hasData
+      @view.showMessage('error','No data to display')
     $('.alert_error').remove()
   
   onError: =>
@@ -78,7 +71,9 @@ module.exports = class Series extends Collection
     points = []
     for p in @models
       points.push p.attributes
-    @view.setData points, @id    
+    @view.setData points, @id
+    if points.length
+      @view.hasData = true
     return
   
     dd = []
@@ -142,6 +137,9 @@ module.exports = class Series extends Collection
       @shiftStack()
       @view.addPoint p, @id
       @add @_formatChartPoint o
+      @view.hasData = true
+    if @view.hasData && @view.hasMessage
+      @view.hideMessage()
     return
     
     ###
