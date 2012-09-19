@@ -21,9 +21,13 @@ module.exports = class DashboardWidget extends SubView
     @subviews[@options.widget.id]._c.setSize(gc.innerWidth(), gc.innerHeight())
     
   checkSpinnerControl: =>
-    $(".upsize, .downsize").show()
-    if @widget.cols is 1 then @$el.find(".downsize").hide()
-    if @widget.cols is @options.parent.cols then @$el.find(".upsize").hide()  
+    @$el.find(".downsize, .upsize").show();
+    
+    if @widget.cols is 1
+      @$el.find(".downsize").hide()
+      
+    if @widget.cols is @options.parent.cols
+      @$el.find(".upsize").hide() 
     
   setCols: =>
     cw = 100/@options.parent.cols
