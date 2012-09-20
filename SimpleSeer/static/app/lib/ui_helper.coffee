@@ -1,24 +1,24 @@
 #application = require '../application'
 
 module.exports = class Palette
-  currentScheme: "candy"
+  currentScheme: "prime"
   
   schemes:
-    fab:
-      title: "Anthony"
+    prime:
+      title: "Primary Colors"
       colors:
-        black: {default: 0, shades: ["#1F0318"]}
-        red: {default: 0, shades: ["#A31180"]}
-        orange: {default: 0, shades: ["#C42795"]}
-        yellow: {default: 0, shades: ["#DE52B4"]}
-        green: {default: 0, shades: ["#EA88CE"]}
-        cyan: {default: 0, shades: ["#FFBFE5"]}
-        blue: {default: 0, shades: ["#FFEBE5"]}
-        purple: {default: 0, shades: ["#FFF6E5"]}
-        white: {default: 0, shades: ["#ffffff"]}
+        black: {default: 0, shades: ["#404547"]}
+        red: {default: 0, shades: ["#D81313"]}
+        orange: {default: 0, shades: ["#F97C15"]}
+        yellow: {default: 0, shades: ["#FFC200"]}
+        green: {default: 0, shades: ["#D3D800"]}
+        cyan: {default: 0, shades: ["#02AA46"]}
+        blue: {default: 0, shades: ["#0074B5"]}
+        purple: {default: 0, shades: ["#6B0052"]}
+        white: {default: 0, shades: ["#968477"]}
           
     basic:
-      title: "Primary Colors"
+      title: "Basic Colors"
       colors:
         black: {default: 0, shades: ["#111111"]}
         red: {default: 0, shades: ["#ff0000"]}
@@ -30,8 +30,8 @@ module.exports = class Palette
         purple: {default: 0, shades: ["#9000ff"]}
         white: {default: 0, shades: ["#ffffff"]}       
       
-    candy:
-      title: "Pantone Colors"
+    dark:
+      title: "Dark Colors"
       colors:
         black: {default: 0, shades: ["#111111"]}
         red: {default: 2, shades: ["#C53B3B", "#F80000", "#BA0000", "#F84A4A", "#780000"]}
@@ -44,7 +44,7 @@ module.exports = class Palette
         white: {default: 0, shades: ["#ffffff"]}
           
     grey:
-      title: "Grey-scale Colors"
+      title: "Grey Scale"
       colors:
         black: {default: 0, shades: ["#111111"]}
         red: {default: 0, shades: ["#333333"]}
