@@ -23,6 +23,7 @@ module.exports = class HighchartsLib extends ChartView
       chart = new Highcharts.Chart
         chart:
           renderTo: _target[0]
+          animation: false
           backgroundColor: '#F8F8F8'
           plotBackgroundColor: '#FCFCFC'
           type: @model.attributes.style.toLowerCase()

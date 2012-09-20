@@ -27,6 +27,14 @@ module.exports = class Dashboard extends Tab
       handle: ".header"
       start: @preDragDrop
       stop: @afterDragDrop
+    @$el.find('.chartinput').combobox
+      selected: (event, ui) =>
+        if ui.item
+          ele = $(ui.item)
+          parent = ele.parent()
+          console.log ele.label()
+          console.log ele.attr('value')
+          #console.log ui.item.innerHTML
     super()
 
   preDragDrop: (a,b) =>
