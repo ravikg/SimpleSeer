@@ -29,15 +29,31 @@ module.exports = class Dashboard extends Tab
       start: @preDragDrop
       stop: @afterDragDrop
       cancel: ".button"
-    @$el.find('.chartinput').combobox
-      selected: (event, ui) =>
-        if ui.item
-          ele = $(ui.item)
-          parent = ele.parent()
-          console.log ele.label()
-          console.log ele.attr('value')
-          #console.log ui.item.innerHTML
+    @$el.find('select.chartinput').combobox {selected: @changeDrop}
+    #@$el.find('select.chartinput').each (i,item) =>
+    #  @changeDrop i,{item:$(item).children()[0]}
+    @$el.find('#chartbuilder :selected').each (i,item) =>
+      @changeDrop i,{item:item}
     super()
+
+  changeDrop: (event, ui) =>
+    if ui.item
+      ele = $(ui.item)
+      parent = ele.parent()
+      names = []
+      for obj in parent.children()
+        names.push $(obj).text()
+      name = parent.attr('name')
+      if name == "olap_xaxis"
+        target = 'input[name="xTitle"]'
+      else if name == "olap_yaxis"
+        target = 'input[name="yTitle"]'
+      tarEl = @$el.find(target)
+      if tarEl.attr("value") == "" || tarEl.attr("value") in names
+        tarEl.attr("value",ele.text())
+      #console.log ele.val()
+      #console.log ele.text()
+    return
 
   preDragDrop: (a,b) =>
     # clear floats
@@ -82,18 +98,20 @@ module.exports = class Dashboard extends Tab
     dataFields = @chart.get "dataMap"
     if not dataFields
       dataFields = [{}]
-    
+    isset ={x:false,y:false}
     for k in application.settings.ui_filters_framemetadata
       isx = false
-      if k.field_name ==  dataFields[0]
+      if k.field_name == dataFields[0]
         isx = true
-      
       isy = false
       for f in dataFields[1..]
         if k.field_name == f
           isy = true
-        
       vars.push({'fieldname': k.type + '.' + k.field_name, 'varname': k.label, 'isx': isx, 'isy': isy})
+    if !isset["x"]
+      vars[0]["isx"] = true
+    if !isset["y"]
+      vars[1]["isy"] = true
     vars
     
   getColors: =>

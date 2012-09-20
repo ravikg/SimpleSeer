@@ -60,7 +60,7 @@
           
           <div class="oneLine">
             <label>X&nbsp;Axis:</label>
-            <select name="olap_xaxis" class="chartinput">
+            <select name="olap_xaxis" class="chartinput drop">
             {{#chartSettings.vars}}
               <option value="{{fieldname}}" {{#if isx}}selected="selected"{{/if}}>{{varname}}</option>
             {{/chartSettings.vars}}
@@ -74,7 +74,7 @@
           
           <div class="oneLine">
             <label>Y Axis:</label>
-            <select name="olap_yaxis" class="chartinput">
+            <select name="olap_yaxis" class="chartinput drop">
               {{#chartSettings.vars}}
               <option value="{{fieldname}}" {{#if isy}}selected="selected"{{/if}}>{{varname}}</option>
               {{/chartSettings.vars}}
