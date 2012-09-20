@@ -22,11 +22,13 @@ module.exports = class Dashboard extends Tab
     super()
   
   afterRender: =>
-    @$el.find("#widget_grid").disableSelection() 
-    @$el.find("#widget_grid").sortable
+    wg = @$el.find("#widget_grid")
+    wg.disableSelection() 
+    wg.sortable
       handle: ".header"
       start: @preDragDrop
       stop: @afterDragDrop
+      cancel: ".button"
     @$el.find('.chartinput').combobox
       selected: (event, ui) =>
         if ui.item

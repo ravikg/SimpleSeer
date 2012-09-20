@@ -63,6 +63,16 @@ module.exports = class Palette
       colors.push color.shades[color.default]
     return colors
   
+  getPalettes: =>
+    palettes = []
+    for scheme of @schemes
+      colors = []
+      for i of @schemes[scheme].colors
+        color = @schemes[scheme].colors[i]
+        colors.push color.shades[color.default]
+      palettes.push colors
+    return palettes
+  
   getColor:(name) =>
     return @.schemes[@currentScheme].colors[name].shades[@.schemes[@currentScheme].colors[name].default]
   
