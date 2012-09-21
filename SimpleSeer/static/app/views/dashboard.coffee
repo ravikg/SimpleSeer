@@ -65,8 +65,8 @@ module.exports = class Dashboard extends Tab
       #console.log ele.text()
     return
 
-  preDragDrop: (a,b) =>
-    # stub
+  preDragDrop: (a,b) ->
+    $(b.item[0]).css "z-index":1500
       
   afterDragDrop: (a,b) =>
     if a
