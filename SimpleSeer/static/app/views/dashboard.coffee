@@ -7,13 +7,13 @@ Chart = require '../models/chart'
 module.exports = class Dashboard extends Tab
   building:false
   template: template
+  chartTypes: {"area":"Area","bar":"Bar","line":"Line","spline":"Spline","column":"Column","scatter":"Scatter"}
   
   initialize: =>
     @model = new model {id:"5047bc49fb920a538c000000",view:@}
     #load or create collection from server
     #cycle through, and @addGraph(new graph)
     @colors = ['red', 'green', 'blue']
-    @styles = ['bar', 'line', 'spline', 'pie', 'scatter']
     @chart = new Chart()
     super()
   
@@ -89,12 +89,11 @@ module.exports = class Dashboard extends Tab
     #draw graph to div
     #if graph.id not in collection, collection.add and save
 
-        
   getRenderData: =>
     vars: @getVariables()
     attrib: @chart.attributes
     colors: @getColors()
-    styles: @getStyles()
+    styles: @chartTypes
     
   getVariables: =>
     vars = []
@@ -128,16 +127,4 @@ module.exports = class Dashboard extends Tab
     
       cols.push({'colorname': c, 'isycolor': isycolor})
     cols
-
-  getStyles: =>
-    sty = []
-    modelstyle = @chart.get "style"
-    
-    for s in @styles
-      isstyle = false
-      if  modelstyle == s
-        isstyle = true
-    
-      sty.push({'stylename': s, 'isstyle': isstyle})
-    sty
     

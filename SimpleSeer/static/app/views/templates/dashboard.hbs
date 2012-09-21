@@ -14,35 +14,12 @@
         </div>
         
         <div class="content trim">
+          {{#key_value chartSettings.styles}}
           <div class="chartStyleType">
-            <input type="radio" name="chartType" value="area">
-            <label>Area</label>
+            <input type="radio" name="chartType" value="{{key}}">
+            <label>{{value}}</label>
           </div>
-          
-          <div class="chartStyleType">
-            <input type="radio" name="chartType" value="bar">
-            <label>Bar</label>
-          </div>
-          
-          <div class="chartStyleType">
-            <input type="radio" name="chartType" value="line">
-            <label>Line</label>
-          </div>
-          
-          <div class="chartStyleType">
-            <input type="radio" name="chartType" value="spline" checked="checked">
-            <label>Spline</label>
-          </div>          
-
-          <div class="chartStyleType">
-            <input type="radio" name="chartType" value="pane">
-            <label>Pie</label>
-          </div>
-          
-          <div class="chartStyleType">
-            <input type="radio" name="chartType" value="scatter">
-            <label>Scatter</label>
-          </div>
+          {{/key_value}}
         </div> 
       </div>
       
