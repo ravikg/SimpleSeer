@@ -35,7 +35,7 @@ module.exports = SeerApplication =
     @subscriptions = {}
     @timeOffset = (new Date()).getTimezoneOffset() * 60 * 1000
     @filters = require 'views/filters/init'
-		
+    @filterData = {}
     if !@.isMobile
       @.socket = io.connect '/rt'
       @.socket.on 'timeout', ->

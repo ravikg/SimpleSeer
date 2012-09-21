@@ -14,35 +14,12 @@
         </div>
         
         <div class="content trim">
+          {{#key_value chartSettings.styles}}
           <div class="chartStyleType">
-            <button></button>
-            <label>Pane</label>
+            <input type="radio" name="chartType" value="{{key}}">
+            <label>{{value}}</label>
           </div>
-          
-          <div class="chartStyleType">
-            <button></button>
-            <label>Bar</label>
-          </div>
-          
-          <div class="chartStyleType">
-            <button></button>
-            <label>Line</label>
-          </div>
-          
-          <div class="chartStyleType">
-            <button></button>
-            <label>Spline</label>
-          </div>          
-
-          <div class="chartStyleType">
-            <button></button>
-            <label>Pie</label>
-          </div>
-          
-          <div class="chartStyleType">
-            <button></button>
-            <label>Scatter</label>
-          </div>
+          {{/key_value}}
         </div> 
       </div>
       
@@ -59,13 +36,8 @@
           </div>
           
           <div class="oneLine">
-            <label>Columns:</label>
-            <input type="number" id="colSpin" maxlength="2" value="1" min="1" max="" step="1">
-          </div>          
-          
-          <div class="oneLine">
             <label>X&nbsp;Axis:</label>
-            <select name="olap_xaxis" class="chartinput">
+            <select name="olap_xaxis" class="chartinput drop">
             {{#chartSettings.vars}}
               <option value="{{fieldname}}" {{#if isx}}selected="selected"{{/if}}>{{varname}}</option>
             {{/chartSettings.vars}}
@@ -79,7 +51,7 @@
           
           <div class="oneLine">
             <label>Y Axis:</label>
-            <select name="olap_yaxis" class="chartinput">
+            <select name="olap_yaxis" class="chartinput drop">
               {{#chartSettings.vars}}
               <option value="{{fieldname}}" {{#if isy}}selected="selected"{{/if}}>{{varname}}</option>
               {{/chartSettings.vars}}
@@ -100,6 +72,7 @@
         </div>
         
         <div class="content">
+          <!--
           <div class="oneLine">
             <label>Palette:</label>
             <select id="palette_select">
@@ -109,25 +82,21 @@
             </select>
             <div id="palette_preview"></div>
           </div>
-          
-          <div class="oneLine">
-            <label>Categories:</label>
-              <div class="categories">
-              <div class="category">
-                <span class="title">Chart Color</span>
-                <div id="numEvalColor" class="color-block live"></div>
-              </div>
-            </div>
-          </div>
+          -->
           
           <div class="oneLine floated clearfix">
+            <label>Chart Color:</label>
+            <input type="color" name="chartColor" class="chartColor"/>
+          </div>
+                    
+          <div class="oneLine floated clearfix">
             <label>Chart Title:</label>
-            <div id="chartTitleColor" class="color-block live"></div>
+            <input type="color" name='chartTitleColor' class="chartColor"/>
           </div>
           
           <div class="oneLine floated clearfix">
             <label>Labels:</label>
-            <div id="chartLabelColor" class="color-block live"></div>
+            <input type="color" name='chartLabelColor' class="chartColor"/>
           </div>          
         </div>
       </div>

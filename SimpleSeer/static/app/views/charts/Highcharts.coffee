@@ -23,11 +23,15 @@ module.exports = class HighchartsLib extends ChartView
       chart = new Highcharts.Chart
         chart:
           renderTo: _target[0]
+          animation: false
           backgroundColor: '#F8F8F8'
+          plotBackgroundColor: '#FCFCFC'
           type: @model.attributes.style.toLowerCase()
           height: @model.attributes.height || '188'
+          plotBorderColor: '#333'
+          plotBorderWidth: 1
         title:
-          text: @model.attributes.name
+          text: " " #@model.attributes.name
         series: [ @createSeries() ]
         credits:
           enabled: false
@@ -51,11 +55,18 @@ module.exports = class HighchartsLib extends ChartView
                 else
                   return this.value
         yAxis:
+          alternateGridColor: 'rgba(0, 0, 0, .1)'
+          tickPixelInterval: 30
           id:''
           title:
             text: @model.attributes.yTitle
           min:@model.attributes.minval
           max:@model.attributes.maxval
+        plotOptions:
+            series:
+                states:
+                    hover:
+                        enabled: false
       chart.id = @id
       chart.showLoading()
       if @model.attributes.useLabels
