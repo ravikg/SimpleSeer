@@ -7,14 +7,11 @@ Chart = require '../models/chart'
 module.exports = class Dashboard extends Tab
   building:false
   template: template
-  chartTypes: {"area":"Area","bar":"Bar","line":"Line","spline":"Spline","column":"Column","scatter":"Scatter"}
+  chartTypes: {"area":"Area","line":"Line","column":"Column","scatter":"Scatter"}
   
   initialize: =>
     @model = new model {id:"5047bc49fb920a538c000000",view:@}
-    #load or create collection from server
-    #cycle through, and @addGraph(new graph)
     @colors = ['red', 'green', 'blue']
-    @chart = new Chart()
     super()
   
   render: =>
@@ -37,7 +34,17 @@ module.exports = class Dashboard extends Tab
     @$el.find('.chartStyleType').each (i,item) =>
       $(item).on "click", (event) =>
         @chart.set "style", event.target.value
+    @setChart new Chart()
+    @$el.find('.chartColor[type="color"]').each (i,item) =>
+      $(item).on "change", (event) =>
+        @setChartColor event
     super()
+
+  setChartColor: (event) =>
+    #@updateChartBuild()
+    if event.target.name == "chartColor"
+      @chart.set("color",event.target.value)
+    return true
 
   changeDrop: (event, ui) =>
     if ui.item
@@ -59,7 +66,7 @@ module.exports = class Dashboard extends Tab
     return
 
   preDragDrop: (a,b) =>
-    # clear floats
+    # stub
       
   afterDragDrop: (a,b) =>
     if a
@@ -77,27 +84,13 @@ module.exports = class Dashboard extends Tab
     @model.attributes.widgets = widgets
     @model.save({success:=>})
   
-  
-  createGraph: =>
-    #create graph from settings
-    #graph = new GraphView
-    #graph.save()
-    @addGraph(graph)
-        
-  addGraph: (graph) =>
-    #add div to grid
-    #draw graph to div
-    #if graph.id not in collection, collection.add and save
-
   getRenderData: =>
     vars: @getVariables()
-    attrib: @chart.attributes
-    colors: @getColors()
     styles: @chartTypes
     
   getVariables: =>
     vars = []
-    dataFields = @chart.get "dataMap"
+    #dataFields = @chart.get "dataMap"
     if not dataFields
       dataFields = [{}]
     isset ={x:false,y:false}
@@ -115,16 +108,4 @@ module.exports = class Dashboard extends Tab
     if !isset["y"]
       vars[1]["isy"] = true
     vars
-    
-  getColors: =>
-    cols = []
-    modelcolor = @chart.get "color"
-        
-    for c in @colors
-      isycolor = false
-      if  modelcolor == c
-        isycolor = true
-    
-      cols.push({'colorname': c, 'isycolor': isycolor})
-    cols
-    
+

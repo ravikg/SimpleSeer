@@ -28,8 +28,10 @@ module.exports = class HighchartsLib extends ChartView
           plotBackgroundColor: '#FCFCFC'
           type: @model.attributes.style.toLowerCase()
           height: @model.attributes.height || '188'
+          plotBorderColor: '#333'
+          plotBorderWidth: 1
         title:
-          text: @model.attributes.name
+          text: " " #@model.attributes.name
         series: [ @createSeries() ]
         credits:
           enabled: false
@@ -53,6 +55,7 @@ module.exports = class HighchartsLib extends ChartView
                 else
                   return this.value
         yAxis:
+          tickPixelInterval: 30
           id:''
           title:
             text: @model.attributes.yTitle

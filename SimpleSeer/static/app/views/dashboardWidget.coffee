@@ -10,7 +10,6 @@ module.exports = class DashboardWidget extends SubView
   
   initialize: (attr) =>
     super(attr)
-    #style="width: {{width}}%;{{#if boxHeight}} height:{{boxHeight}}px;{{/if}}"
     @widget = attr.widget
 
   toJson: =>
@@ -55,7 +54,7 @@ module.exports = class DashboardWidget extends SubView
 
   config: =>
     if @subviews[@options.widget.id] && @subviews[@options.widget.id].model
-      @options.parent.chart = @subviews[@options.widget.id].model
+      @options.parent.setChart @subviews[@options.widget.id].model
       @options.parent.toggleBuilder()
 
   render: =>    

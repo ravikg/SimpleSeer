@@ -19,3 +19,6 @@ module.exports = class Tab extends SubView
   unselect: =>
     @selected = false
     #@$el.remove()
+    
+  reflow: =>
+    #stub
