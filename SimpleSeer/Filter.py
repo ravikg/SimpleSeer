@@ -46,7 +46,7 @@ class Filter():
         pipeline += self.sort(sortinfo)
         
         #for p in pipeline:
-        #    print 'LINE: %s' % str(p)
+        #    print '%s' % str(p)
         
         # This is all done through mongo aggregation framework
         db = Frame._get_db()
@@ -107,10 +107,12 @@ class Filter():
         # And we always need the features and results
         
         if projFeat:
-            fields['features'] = 1
+            p, g = self.rewindFields('features')
+            fields.update(p)
         if projResult:
-            fields['results'] = 1
-        
+            p, g = self.rewindFields('results')
+            fields.update(p)
+            
         # Always want the 'id' field, which sometimes comes through as _id
         fields['id'] = '$_id'
         return [{'$project': fields}]
@@ -165,12 +167,16 @@ class Filter():
         
         # If measurements query, check those fields
         if measQuery:
-            proj['ok'] = self.condMeas(measQuery)
-            group['allok'] = {'$max': '$ok'}
-        
+            
+            # Before unwinding, make sure only those fields from results that are needed have been included
             parts.append({'$unwind': '$results'})
+            
+            # Now add the conditional field, (and keep all the other important fields)
+            proj['ok'] = self.condMeas(measQuery)
             parts.append({'$project': proj})
             
+            group['allok'] = {'$max': '$ok'}
+        
             parts.append({'$group': group})
             parts.append({'$match': {'allok': 1}})
     
@@ -185,12 +191,11 @@ class Filter():
         proj, group = self.rewindFields('features')
         
         if featQuery:
-            proj['ok'] = self.condFeat(featQuery)
-            group['allok'] = {'$max': '$ok'}
             
             parts.append({'$unwind': '$features'})
             parts.append({'$project': proj})
             
+            group['allok'] = {'$max': '$ok'}
             parts.append({'$group': group})
             parts.append({'$match': {'allok': 1}})
         
@@ -320,12 +325,13 @@ class Filter():
             collection = 'frame'    
             field = filterName
         elif filterType == 'measurement':
-            collection = 'result'
-            field = filterFormat
+            collection = 'results'
+            measName, c, field = filterName.partition('.')
             if (field == 'autofill'):
                 field = 'string'
             
-            pipeline.append({'$match': {'measurement_name': filterName}})
+            pipeline.append({'$unwind': '$results'})
+            pipeline.append({'$match': {'results.measurement_name': measName}})
             
         elif filterType == 'framefeature':
             feat, c, field = filterName.partition('.')
@@ -336,7 +342,7 @@ class Filter():
             pipeline.append({'$match': {'features.featuretype': feat}})
             
         if (filterFormat == 'numeric') or (filterFormat == 'datetime'):
-            pipeline.append({'$group': {'_id': 1, 'min': {'$min': '$' + field}, 'max': {'$max': '$' + field}}})
+            pipeline.append({'$group': {'_id': 1, 'min': {'$min': '$' + collection + '.' + field}, 'max': {'$max': '$' + collection + '.' + field}}})
         
         if (filterFormat == 'autofill'):
             pipeline.append({'$group': {'_id': 1, 'enum': {'$addToSet': '$' + field}}})    
@@ -344,8 +350,10 @@ class Filter():
         if (filterFormat == 'string'):
             pipeline.append({'$group': {'_id': 1, 'found': {'$sum': 1}}})
         
-        cmd = db.command('aggregate', collection, pipeline = pipeline)
+        print pipeline
         
+        cmd = db.command('aggregate', 'frame', pipeline = pipeline)
+        print cmd
         ret = {}
         if len(cmd['result']) > 0:
             for key in cmd['result'][0]:
