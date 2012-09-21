@@ -30,9 +30,6 @@ module.exports = class HighchartsLib extends ChartView
           height: @model.attributes.height || '188'
           plotBorderColor: '#333'
           plotBorderWidth: 1
-          plotBackgroundColor:
-            linearGradient: [0, 0, 250, 500]
-            stops: [[0, 'rgba(255, 255, 255, 1)'], [1, 'rgba(255, 255, 255, 0)']]
         title:
           text: " " #@model.attributes.name
         series: [ @createSeries() ]
@@ -58,12 +55,18 @@ module.exports = class HighchartsLib extends ChartView
                 else
                   return this.value
         yAxis:
+          alternateGridColor: 'rgba(0, 0, 0, .1)'
           tickPixelInterval: 30
           id:''
           title:
             text: @model.attributes.yTitle
           min:@model.attributes.minval
           max:@model.attributes.maxval
+        plotOptions:
+            series:
+                states:
+                    hover:
+                        enabled: false
       chart.id = @id
       chart.showLoading()
       if @model.attributes.useLabels
