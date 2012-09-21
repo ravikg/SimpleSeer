@@ -36,9 +36,11 @@ class Filter():
         if frames:
             pipeline += self.filterFrames(frames)
         
-            
-        pipeline += self.filterMeasurements(measurements)            
-        pipeline += self.filterFeatures(features)
+        if measurements:    
+            pipeline += self.filterMeasurements(measurements)            
+        
+        if features:
+            pipeline += self.filterFeatures(features)
         
         # Sort the results
         pipeline += self.sort(sortinfo)
@@ -163,14 +165,14 @@ class Filter():
         
         # If measurements query, check those fields
         if measQuery:
-            proj['measok'] = self.condMeas(measQuery)
-            group['allmeasok'] = {'$sum': '$measok'}
+            proj['ok'] = self.condMeas(measQuery)
+            group['allok'] = {'$max': '$ok'}
         
             parts.append({'$unwind': '$results'})
             parts.append({'$project': proj})
             
             parts.append({'$group': group})
-            parts.append({'$match': {'allmeasok': len(measQuery)}})
+            parts.append({'$match': {'allok': 1}})
     
         
         return parts
@@ -183,14 +185,14 @@ class Filter():
         proj, group = self.rewindFields('features')
         
         if featQuery:
-            proj['featok'] = self.condFeat(featQuery)
-            group['allfeatok'] = {'$sum': '$featok'}
+            proj['ok'] = self.condFeat(featQuery)
+            group['allok'] = {'$max': '$ok'}
             
             parts.append({'$unwind': '$features'})
             parts.append({'$project': proj})
             
             parts.append({'$group': group})
-            parts.append({'$match': {'allfeatok': len(featQuery)}})
+            parts.append({'$match': {'allok': 1}})
         
         return parts
     
@@ -289,7 +291,7 @@ class Filter():
             if 'exists' in f:
                 comp.append('$features.' + field)
                     
-            comp.append({'$eq': ['$features.featuretype', str(feat)]})
+            comp.append({'$eq': ['$features.featuretype', feat]})
             combined = {'$and': comp}
             allfilts.append(combined)
             
