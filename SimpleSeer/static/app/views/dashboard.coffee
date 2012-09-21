@@ -34,6 +34,9 @@ module.exports = class Dashboard extends Tab
     #  @changeDrop i,{item:$(item).children()[0]}
     @$el.find('#chartbuilder :selected').each (i,item) =>
       @changeDrop i,{item:item}
+    @$el.find('.chartStyleType').each (i,item) =>
+      $(item).on "click", (event) =>
+        @chart.set "style", event.target.value
     super()
 
   changeDrop: (event, ui) =>
