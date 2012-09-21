@@ -30,6 +30,9 @@ module.exports = class HighchartsLib extends ChartView
           height: @model.attributes.height || '188'
           plotBorderColor: '#333'
           plotBorderWidth: 1
+          plotBackgroundColor:
+            linearGradient: [0, 0, 250, 500]
+            stops: [[0, 'rgba(255, 255, 255, 1)'], [1, 'rgba(255, 255, 255, 0)']]
         title:
           text: " " #@model.attributes.name
         series: [ @createSeries() ]

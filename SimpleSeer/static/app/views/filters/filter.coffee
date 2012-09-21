@@ -9,7 +9,9 @@ module.exports = class _filter extends SubView
     @options.params.name = (@options.params.field_name+'-'+@options.params.format).replace(/[^a-z0-9_\-]/gi,'_')
     super()
     @collection = @options.collection || null
-    _ret = $.ajax '/getFilter/'+@options.params.type+'/'+@options.params.field_name+'/'+@options.params.format, {dataType:'json', async:false}
+    if !application.filterData[@options.params.name]?
+      application.filterData[@options.params.name] = $.ajax '/getFilter/'+@options.params.type+'/'+@options.params.field_name+'/'+@options.params.format, {dataType:'json', async:false}
+    _ret = application.filterData[@options.params.name]
     @options.params.constraints = $.parseJSON _ret.responseText
     @options.subselector = ''
     @
