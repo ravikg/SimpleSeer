@@ -113,11 +113,13 @@ module.exports = class HighchartsLib extends ChartView
     return
     
   showMessage: (type, message) =>
-    @_c.showLoading(message)
+    if @_c
+      @_c.showLoading(message)
     super()
     
   hideMessage:=>
-    @_c.hideLoading()
+    if @_c
+      @_c.hideLoading()
     super()
   
   showTooltip: (id) =>
