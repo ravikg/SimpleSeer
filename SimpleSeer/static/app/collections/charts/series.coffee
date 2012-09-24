@@ -42,6 +42,7 @@ module.exports = class Series extends FilterCollection
     return clean
 
   fetch: (args={}) =>
+    @view.showMessage('loading','Loading...')
     if !args.success?
       _.extend args,
         success: @onSuccess
@@ -52,6 +53,7 @@ module.exports = class Series extends FilterCollection
     super(args)
 
   onSuccess: (obj, rawJson) =>
+    @view.hasData = false
     @_drawData()
     @view.hideMessage()
     if !@view.hasData
