@@ -20,6 +20,11 @@ module.exports = class ChartView extends SubView
   initialize: =>
     super()
     # TODO: each chart should have mutliple series
+    if @options.parent.dashboard
+      @options.parent.dashboard.options.parent.filtercollection.on "add", @linkUpdate
+      @options.parent.dashboard.options.parent.filtercollection.on "reset", @linkUpdate
+      #@filtercollection.on 'add', @setCounts
+      #@filtercollection.on 'reset', @setCounts
     @type = @model.attributes.name.toLowerCase()
     if @model.attributes.maxPointSize?
       @maxPointSize = @model.attributes.maxPointSize
@@ -37,6 +42,10 @@ module.exports = class ChartView extends SubView
     #  _m = @model
     #  @stack = _m.pointStack()
     return @
+
+  linkUpdate: (a,b,c)=>
+    console.log a,b,c
+    #series.onSuccess
 
   #TODO: put these in the _.collection 
   setData: (d, sid) =>

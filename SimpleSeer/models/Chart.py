@@ -53,7 +53,9 @@ class ChartSchema(fes.Schema):
     olap_yaxis = fev.Set(if_empty = [], if_missing=[])
 
     chartid = fev.UnicodeString(if_empty=None, if_missing=None)
-    color = fev.UnicodeString(if_empty='', if_missing='')                  
+    color = fev.UnicodeString(if_empty='', if_missing='')
+    titleColor = fev.UnicodeString(if_empty='', if_missing='')
+    labelColor = fev.UnicodeString(if_empty='', if_missing='')
     colormap = V.JSON(if_empty=None, if_missing=None)
     labelmap = V.JSON(if_empty=None, if_missing=None)
     #stupid hack because i cant get labelmap to default to None
@@ -74,6 +76,8 @@ class Chart(SimpleDoc, mongoengine.Document):
     style = mongoengine.StringField()
     chartid = mongoengine.ObjectIdField()
     color = mongoengine.StringField()
+    titleColor = mongoengine.StringField()
+    labelmap = mongoengine.StringField()
     colormap = mongoengine.DictField()
     labelmap = mongoengine.DictField()
     xTitle = mongoengine.StringField()

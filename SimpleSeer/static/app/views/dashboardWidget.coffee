@@ -7,9 +7,11 @@ module.exports = class DashboardWidget extends SubView
   template:template
   tagName:'li'
   className:'widget_container'
+  dashboard: false
   
   initialize: (attr) =>
     super(attr)
+    @dashboard = @options.parent
     @widget = attr.widget
 
   toJson: =>
