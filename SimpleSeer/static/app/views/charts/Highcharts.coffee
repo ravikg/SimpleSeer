@@ -109,7 +109,7 @@ module.exports = class HighchartsLib extends ChartView
       @_c.options.yAxis.title.style.color = value
     if title == "chartTitleColor"
       @_c.options.title.style.color = value
-    @buildChart()
+    #@buildChart()
     return
     
   showMessage: (type, message) =>

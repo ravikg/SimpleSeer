@@ -588,15 +588,14 @@ a { font-size: 13px; color: #08C; font-family: "Helvetica Neue", Helvetica, Aria
 }
 
 .chartStyleType input[type=radio] {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-color: #eeeeee;
-  background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #eeeeee), color-stop(100%, #cccccc));
-  background-image: -webkit-linear-gradient(top, #eeeeee, #cccccc);
-  background-image: -moz-linear-gradient(top, #eeeeee, #cccccc);
-  background-image: -ms-linear-gradient(top, #eeeeee, #cccccc);
-  background-image: -o-linear-gradient(top, #eeeeee, #cccccc);
-  background-image: linear-gradient(top, #eeeeee, #cccccc);
+  -moz-appearance: none !important;
+  -webkit-appearance: none !important;
+  -ms-appearance: none !important;
+  -o-appearance: none !important;
+  appearance: none !important;
+  background-color: #f8f8f8;
+  background-repeat: no-repeat;
+  background-position: center center;
   border: 1px solid #ccc;
   border-bottom: 1px solid #bbb;
   border-radius: 3px;
@@ -611,11 +610,13 @@ a { font-size: 13px; color: #08C; font-family: "Helvetica Neue", Helvetica, Aria
   height: 42px;
 }
 
-.chartStyleType input[type=radio]:checked {
-  border: 1px solid #aaa;
-  border-bottom: 1px solid #888;
-  -webkit-box-shadow: inset 0 0 5px 2px #aaaaaa, 0 1px 0 0 #eeeeee;
-  box-shadow: inset 0 0 5px 2px #aaaaaa, 0 1px 0 0 #eeeeee;
+.chartStyleType input[type="radio"]:checked {
+  background-color: #eeeeee;
+  border: 1px solid #99A;
+  border-bottom: 1px solid #88A;
+  -webkit-box-shadow: inset 0 0 12px 3px #aaaabb, 0px 0px 12px -3px #88a;
+  -moz-box-shadow: inset 0 0 12px 3px #aaaabb, 0px 0px 12px -3px #88a;
+  box-shadow: inset 0 0 12px 3px #aaaabb, 0px 0px 12px -3px #88a;
 }
 
 .breadcrumb {
