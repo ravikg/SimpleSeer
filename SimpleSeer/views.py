@@ -151,7 +151,8 @@ def getFrames(filter_params):
     query = allparams['query']
     
     f = Filter()
-    total_frames, frames = f.getFrames(f.negativeFilter(query), limit=limit, skip=skip, sortinfo=sortinfo)
+    #total_frames, frames = f.getFrames(f.negativeFilter(query), limit=limit, skip=skip, sortinfo=sortinfo)
+    total_frames, frames = f.getFrames(query, limit=limit, skip=skip, sortinfo=sortinfo)
     
     retVal = dict(frames=frames, total_frames=total_frames)
     
