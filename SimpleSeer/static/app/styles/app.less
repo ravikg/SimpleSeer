@@ -299,6 +299,11 @@ a { font-size: 13px; color: #08C; font-family: "Helvetica Neue", Helvetica, Aria
   margin-bottom:10px;
   padding-bottom: 14px;
   h4 { margin: 4px; font-weight: bold; }
+  input[type=checkbox] {
+    float: none !important;
+    vertical-align: middle;
+    margin-right: 3px;
+  }
 }
 
 .filter_widget:last-child {
@@ -344,6 +349,7 @@ a { font-size: 13px; color: #08C; font-family: "Helvetica Neue", Helvetica, Aria
 
 #filter_form .oneLine input[type=text], label {
   display: inline-block;
+  vertical-align: middle;
 }
 
 .ui-slider .ui-slider-handle {
@@ -587,7 +593,9 @@ a { font-size: 13px; color: #08C; font-family: "Helvetica Neue", Helvetica, Aria
   font-size: 13px;
 }
 
-.chartStyleType input[type=radio] {
+.chartStyleType input[type=radio] { display: none; }
+
+.chartStyleType input[type=radio] + label {
   -moz-appearance: none !important;
   -webkit-appearance: none !important;
   -ms-appearance: none !important;
@@ -601,16 +609,15 @@ a { font-size: 13px; color: #08C; font-family: "Helvetica Neue", Helvetica, Aria
   border-radius: 3px;
   color: #333;
   font: bold 11px/1 "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Geneva, Verdana, sans-serif;
-  padding: 8px 0;
   text-align: center;
   text-shadow: 0 1px 0 #eee;
   margin: 0 auto;
   display: block;
-  width: 80px;
-  height: 42px;
+  width: 85px;
+  height: 47px;
 }
 
-.chartStyleType input[type="radio"]:checked {
+.chartStyleType input[type="radio"]:checked + label {
   background-color: #eeeeee;
   border: 1px solid #99A;
   border-bottom: 1px solid #88A;
