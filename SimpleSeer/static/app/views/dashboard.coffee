@@ -42,8 +42,7 @@ module.exports = class Dashboard extends Tab
 
   setChartColor: (event) =>
     #@updateChartBuild()
-    if event.target.name == "chartColor"
-      @chart.set("color",event.target.value)
+    @chart.setColor(event.target.name, event.target.value)
     return true
 
   changeDrop: (event, ui) =>

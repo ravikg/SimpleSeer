@@ -92,10 +92,21 @@ module.exports = class HighchartsLib extends ChartView
     series = @._c.get sid
     series.setData(d,redraw)
     
+  setColor:(title, value) =>
+    console.log "ahha"
+    super()
+    if title == "chartColor"
+      @_c.chart.style.color = value
+    if title == "chartLabelColor"
+      @_c.labels.style.color = value
+    if title == "chartTitleColor"
+      @_c.title.style.color = value
+    return
+    
   showMessage: (type, message) =>
     @_c.showLoading(message)
     super()
-  
+    
   hideMessage:=>
     @_c.hideLoading()
     super()

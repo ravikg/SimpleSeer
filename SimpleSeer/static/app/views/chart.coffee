@@ -81,6 +81,9 @@ module.exports = class ChartView extends SubView
       o.fetch()
     return
 
+  setColor:(title, value) =>
+    return
+
   overPoint: (e) =>
     if application.charts._imageLoader
       clearInterval application.charts._imageLoader
