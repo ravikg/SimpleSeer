@@ -70,6 +70,7 @@ module.exports = class DashboardWidget extends SubView
       model = new model {id:@widget.id}
       model.fetch success:=>
         vi = @addSubview @widget.id, view, "#"+@widget.id, {id:@widget.id,model:model}
+        model.view = vi
         vi.render()
 #    if !model && view
 #      #vi = @view.addSubview widget.id, view, '.dashboardGrid', {append:widget.id,id:widget.id}
