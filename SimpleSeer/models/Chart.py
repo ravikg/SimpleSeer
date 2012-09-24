@@ -77,7 +77,7 @@ class Chart(SimpleDoc, mongoengine.Document):
     chartid = mongoengine.ObjectIdField()
     color = mongoengine.StringField()
     titleColor = mongoengine.StringField()
-    labelmap = mongoengine.StringField()
+    labelColor = mongoengine.StringField()
     colormap = mongoengine.DictField()
     labelmap = mongoengine.DictField()
     xTitle = mongoengine.StringField()
