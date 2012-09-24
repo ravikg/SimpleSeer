@@ -21,6 +21,7 @@ module.exports = class HighchartsLib extends ChartView
     else
       _target = @$el.find '.graph-container'
       chart = new Highcharts.Chart
+        colors: [@model.attributes.color]
         chart:
           renderTo: _target[0]
           animation: false
@@ -32,6 +33,8 @@ module.exports = class HighchartsLib extends ChartView
           plotBorderWidth: 1
         title:
           text: " " #@model.attributes.name
+          style:
+            color: @model.attributes.titleColor
         series: [ @createSeries() ]
         credits:
           enabled: false
@@ -44,6 +47,8 @@ module.exports = class HighchartsLib extends ChartView
             @model.attributes.xtype || 'linear'
           title:
             text: @model.attributes.xTitle
+            style:
+              color: @model.attributes.labelColor
           labels:
             formatter: -> 
               if this.axis.options.type == 'datetime'
@@ -62,6 +67,9 @@ module.exports = class HighchartsLib extends ChartView
             text: @model.attributes.yTitle
           min:@model.attributes.minval
           max:@model.attributes.maxval
+          title:
+            style:
+              color: @model.attributes.labelColor     
         plotOptions:
             series:
                 states:
@@ -92,11 +100,23 @@ module.exports = class HighchartsLib extends ChartView
     series = @._c.get sid
     series.setData(d,redraw)
     
+  setColor:(title, value) =>
+    super()
+    if title == "chartColor"
+      @_c.options.chart.style.color = value
+    if title == "chartLabelColor"
+      @_c.options.xAxis.title.style.color = value
+      @_c.options.yAxis.title.style.color = value
+    if title == "chartTitleColor"
+      @_c.options.title.style.color = value
+    @buildChart()
+    return
+    
   showMessage: (type, message) =>
     if @_c
       @_c.showLoading(message)
     super()
-  
+    
   hideMessage:=>
     if @_c
       @_c.hideLoading()
