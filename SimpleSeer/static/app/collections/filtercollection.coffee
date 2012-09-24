@@ -88,7 +88,7 @@ module.exports = class FilterCollection extends Collection
   fetch: (params={}) =>
     #console.dir _json
     total = params.total || false
-    @url = @baseUrl+@getUrl(total)
+    @url = @baseUrl+@getUrl(total,params['params']||false)
     if params.before
       params.before()
     super(params)
