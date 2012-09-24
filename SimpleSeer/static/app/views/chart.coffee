@@ -29,7 +29,7 @@ module.exports = class ChartView extends SubView
     if @model.attributes.maxPointSize?
       @maxPointSize = @model.attributes.maxPointSize
     else
-      @maxPointSize = 20
+      @maxPointSize = 100
     @points = {}
     @points[@id] = new series
       view: @
@@ -47,7 +47,7 @@ module.exports = class ChartView extends SubView
 
   linkUpdate: (a,b,c)=>
     for i,o of @points
-      o.fetch()
+      o.fetch({total:true})
     #series.onSuccess
 
   #TODO: put these in the _.collection 

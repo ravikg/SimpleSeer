@@ -48,6 +48,7 @@ module.exports = class Series extends FilterCollection
     if !args.error?
       _.extend args,
         error: @onError
+    args['total'] = true
     super(args)
 
   onSuccess: (obj, rawJson) =>
@@ -98,6 +99,7 @@ module.exports = class Series extends FilterCollection
       d.d[0] = @_counter++
     else if @xAxis.type == 'datetime'
       d.d[0] = new moment d.d[0]
+      d.d[0].subtract('ms', application.timeOffset)
     if @accumulate
       _id = d.d[1]
     else
