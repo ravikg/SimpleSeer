@@ -29,7 +29,7 @@ module.exports = class ChartView extends SubView
     if @model.attributes.maxPointSize?
       @maxPointSize = @model.attributes.maxPointSize
     else
-      @maxPointSize = 100
+      @maxPointSize = 30
     @points = {}
     @points[@id] = new series
       view: @

@@ -50,6 +50,7 @@ module.exports = class Series extends FilterCollection
       _.extend args,
         error: @onError
     args['total'] = true
+    args['params'] = {skip:~@limit,limit:@limit}
     super(args)
 
   onSuccess: (obj, rawJson) =>
