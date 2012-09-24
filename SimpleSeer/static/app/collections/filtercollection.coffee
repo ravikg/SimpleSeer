@@ -16,6 +16,10 @@ module.exports = class FilterCollection extends Collection
   
   initialize: (params) =>
     super()
+    if params.bindFilter
+      @bindFilter = params.bindFilter
+    else
+      @bindFilter = false
     @baseUrl = @url
     @filters = []
     if !application.settings.ui_filters_framemetadata?
@@ -46,9 +50,8 @@ module.exports = class FilterCollection extends Collection
         @sortParams.sortorder = sortorder
         @sortParams.sorttype = sorttype
     return
-    
-  getUrl: (total=false, addParams)=>
-    #todo: map .error to params.error
+  
+  getSettings: (total=false, addParams) =>
     _json = []
     for o in @filters
       val = o.toJson()
@@ -72,7 +75,15 @@ module.exports = class FilterCollection extends Collection
         order: @sortParams.sortorder || -1
     if addParams
       _json = _.extend _json, addParams
-    "/"+JSON.stringify _json
+    return _json
+    
+  getUrl: (total=false, addParams, dataSet=false)=>
+    #todo: map .error to params.error
+    if @bindFilter
+      dataSet = @bindFilter.getSettings(total, addParams)
+    if !dataSet
+      dataSet = @getSettings(total, addParams)
+    "/"+JSON.stringify dataSet
 
   fetch: (params={}) =>
     #console.dir _json
