@@ -56,7 +56,10 @@ class Filter():
         
         # Perform the skip/limit 
         # Note doing this in python instead of mongo since need original query to give total count of relevant results
-        if skip < len(results):
+        if skip < 0:
+            if abs(skip) - 1 > len(results):
+                results = results[skip:skip+limit]
+        elif skip < len(results):
             if (skip + limit) > len(results):
                 results = results[skip:]
             else:
@@ -248,11 +251,11 @@ class Filter():
         field = ''
         
         if filterType == 'frame':
-            collection = 'frame'    
+            collection = ''    
             field = filterName
             pipeline.append({'$project': {field: 1}})
         elif filterType == 'measurement':
-            collection = 'results'
+            collection = 'results.'
             meas, c, field = filterName.partition('.')
             
             pipeline.append({'$project': {'results.measurement_name': 1, 'results.' + field: 1}})
@@ -260,7 +263,7 @@ class Filter():
             pipeline.append({'$match': {'results.measurement_name': meas}})
             
         elif filterType == 'framefeature':
-            collection = 'frame'
+            collection = 'features.'
             feat, c, field = filterName.partition('.')
             
             pipeline.append({'$project': {'features.featuretype': 1, 'features.' + field: 1}})
@@ -268,18 +271,16 @@ class Filter():
             pipeline.append({'$match': {'features.featuretype': feat}})
             
         if (filterFormat == 'numeric') or (filterFormat == 'datetime'):
-            pipeline.append({'$group': {'_id': 1, 'min': {'$min': '$' + collection + '.' + field}, 'max': {'$max': '$' + collection + '.' + field}}})
+            pipeline.append({'$group': {'_id': 1, 'min': {'$min': '$' + collection + field}, 'max': {'$max': '$' + collection + field}}})
         
         if (filterFormat == 'autofill'):
-            pipeline.append({'$group': {'_id': 1, 'enum': {'$addToSet': '$' + field}}})    
+            pipeline.append({'$group': {'_id': 1, 'enum': {'$addToSet': '$' + collection + field}}})    
             
         if (filterFormat == 'string'):
             pipeline.append({'$group': {'_id': 1, 'found': {'$sum': 1}}})
         
-        print pipeline
         
         cmd = db.command('aggregate', 'frame', pipeline = pipeline)
-        print cmd
         ret = {}
         if len(cmd['result']) > 0:
             for key in cmd['result'][0]:
@@ -293,7 +294,7 @@ class Filter():
                     ret[key] = cmd['result'][0][key]
         else:
             return {"error":"no matches found"}
-                
+        
         return ret
         
     
