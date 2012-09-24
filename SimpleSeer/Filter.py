@@ -250,20 +250,20 @@ class Filter():
         if filterType == 'frame':
             collection = 'frame'    
             field = filterName
+            pipeline.append({'$project': {field: 1}})
         elif filterType == 'measurement':
             collection = 'results'
-            measName, c, field = filterName.partition('.')
-            if (field == 'autofill'):
-                field = 'string'
+            meas, c, field = filterName.partition('.')
             
+            pipeline.append({'$project': {'results.measurement_name': 1, 'results.' + field: 1}})
             pipeline.append({'$unwind': '$results'})
-            pipeline.append({'$match': {'results.measurement_name': measName}})
+            pipeline.append({'$match': {'results.measurement_name': meas}})
             
         elif filterType == 'framefeature':
-            feat, c, field = filterName.partition('.')
-            field = 'features.' + field
             collection = 'frame'
-        
+            feat, c, field = filterName.partition('.')
+            
+            pipeline.append({'$project': {'features.featuretype': 1, 'features.' + field: 1}})
             pipeline.append({'$unwind': '$features'})
             pipeline.append({'$match': {'features.featuretype': feat}})
             
