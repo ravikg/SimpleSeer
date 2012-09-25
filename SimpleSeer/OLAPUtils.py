@@ -224,11 +224,12 @@ class RealtimeOLAP():
         for chart in charts:
             # If no statistics, send result on its way
             # If there are stats, it will be handled later by stats scheduler
+            
+            
             olap = OLAP.objects(name=chart.olap)[0]
             if not olap.statsInfo:
                 filters = olap.olapFilter
                 olapOK = True
-                
                 i = 0
                 while olapOK and i < len(filters):
                     f = filters[i]
@@ -251,6 +252,7 @@ class RealtimeOLAP():
                     else:
                         olapOK = self.checkFilter(f, frame)
                 
+            
                 if olapOK:
                     data = frame.copy()
                     f = Filter()
@@ -273,9 +275,9 @@ class RealtimeOLAP():
         elif 'gt' in filt or 'lt' in filt:
             part = True
             if 'gt' in filt:
-                part = part and filt['gt'] == value
+                part = part and filt['gt'] < value
             if 'lt' in filt:
-                part = part and filt['lt'] == value
+                part = part and filt['lt'] > value
             return part
         else:
             log.info('Unknown realtime filter parameter')
