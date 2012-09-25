@@ -17,6 +17,7 @@ module.exports = class Series extends FilterCollection
     out:->
   
   initialize: (args={}) =>
+    @filterRoot = "Chart"
     @sortParams.sortkey = 'capturetime_epoch'
     @sortParams.sortorder = 1
     @name = args.name || ''
@@ -38,6 +39,7 @@ module.exports = class Series extends FilterCollection
     
   parse: (response) =>
     super(response)
+    @subscribe(response.chart)
     clean = @_clean response.data
     return clean
 
@@ -120,7 +122,11 @@ module.exports = class Series extends FilterCollection
     #    _point.marker.fillColor = @model.colormap[d.m[i]]
     return _point
 
-  subscribe: =>
+  subscribe: (channel=false) =>
+    if channel
+      application.socket.removeListener "message:Chart/#{@.name}/", @receive
+      @name = channel
+      console.log "subscription switching to message:Chart/#{@.name}/"
     if application.socket
       application.socket.on "message:Chart/#{@.name}/", @receive
       if !application.subscriptions["Chart/#{@.name}/"]
