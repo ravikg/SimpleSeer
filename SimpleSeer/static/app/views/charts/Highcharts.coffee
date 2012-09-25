@@ -65,11 +65,10 @@ module.exports = class HighchartsLib extends ChartView
           id:''
           title:
             text: @model.attributes.yTitle
+            style:
+              color: @model.attributes.labelColor             
           min:@model.attributes.minval
           max:@model.attributes.maxval
-          title:
-            style:
-              color: @model.attributes.labelColor     
         plotOptions:
             series:
                 states:
