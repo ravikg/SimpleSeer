@@ -91,14 +91,16 @@ def WebCommand(self):
     Inspection.register_plugins('seer.plugins.inspection')
     Measurement.register_plugins('seer.plugins.measurement')
 
-    # Ensure indexes created for filterable fields
     dbName = self.session.database
     if not dbName:
         dbName = 'default'
     db = Connection()[dbName]
-    for f in self.session.ui_filters:
-        db.frame.ensure_index([(f['filter_name'], ASCENDING), (f['filter_name'], DESCENDING)])
-    
+    # Ensure indexes created for filterable fields
+    # TODO: should make this based on actual plugin params or filter data
+    db.frame.ensure_index([('results', 1)])
+    db.frame.ensure_index([('results.measurement_name', 1)])
+    db.frame.ensure_index([('results.numeric', 1)])
+    db.frame.ensure_index([('results.string', 1)])
     
     web = WebServer(make_app())
     web.run_gevent_server()
