@@ -9,7 +9,7 @@ module.exports = class ChartView extends SubView
   template: ''
   lastframe: ''
   _counter:0
-  #points:{}
+  points:{}
   type: ''
   olap: ''
   maxPointSize:0
@@ -20,20 +20,18 @@ module.exports = class ChartView extends SubView
   initialize: =>
     super()
     # TODO: each chart should have mutliple series
-    bindFilter = false
     if @options.parent.dashboard
-      bindFilter = @options.parent.dashboard.options.parent.filtercollection
-      bindFilter.on "add", @linkUpdate
-      bindFilter.on "reset", @linkUpdate
+      @options.parent.dashboard.options.parent.filtercollection.on "add", @linkUpdate
+      @options.parent.dashboard.options.parent.filtercollection.on "reset", @linkUpdate
+      #@filtercollection.on 'add', @setCounts
+      #@filtercollection.on 'reset', @setCounts
     @type = @model.attributes.name.toLowerCase()
     if @model.attributes.maxPointSize?
       @maxPointSize = @model.attributes.maxPointSize
     else
-      @maxPointSize = 30
-    @points = {}
+      @maxPointSize = 20
     @points[@id] = new series
       view: @
-      bindFilter:bindFilter
       id: @id
       accumlate: @model.attributes.accumulate
       xtype: @model.attributes.xtype
@@ -46,8 +44,7 @@ module.exports = class ChartView extends SubView
     return @
 
   linkUpdate: (a,b,c)=>
-    for i,o of @points
-      o.fetch({total:true})
+    console.log a,b,c
     #series.onSuccess
 
   #TODO: put these in the _.collection 
