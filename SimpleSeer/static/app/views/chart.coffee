@@ -9,7 +9,6 @@ module.exports = class ChartView extends SubView
   template: ''
   lastframe: ''
   _counter:0
-  points:{}
   type: ''
   olap: ''
   maxPointSize:0
@@ -18,11 +17,13 @@ module.exports = class ChartView extends SubView
   hasMessage: false
   
   initialize: =>
+    @points = {}
     super()
     # TODO: each chart should have mutliple series
     if @options.parent.dashboard
-      @options.parent.dashboard.options.parent.filtercollection.on "add", @linkUpdate
-      @options.parent.dashboard.options.parent.filtercollection.on "reset", @linkUpdate
+      bindFilter = @options.parent.dashboard.options.parent.filtercollection
+      bindFilter.on "add", @linkUpdate
+      bindFilter.on "reset", @linkUpdate
       #@filtercollection.on 'add', @setCounts
       #@filtercollection.on 'reset', @setCounts
     @type = @model.attributes.name.toLowerCase()
@@ -37,6 +38,7 @@ module.exports = class ChartView extends SubView
       xtype: @model.attributes.xtype
       name: @model.attributes.name
       color: @model.attributes.color
+      bindFilter:bindFilter
     #todo: make pointstack an underscore collection in view
     #if @model.attributes.accumulate
     #  _m = @model
@@ -44,8 +46,9 @@ module.exports = class ChartView extends SubView
     return @
 
   linkUpdate: (a,b,c)=>
-    console.log a,b,c
-    #series.onSuccess
+    for i,o of @points
+      o.fetch()
+    return
 
   #TODO: put these in the _.collection 
   setData: (d, sid) =>

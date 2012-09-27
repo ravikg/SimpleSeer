@@ -26,21 +26,13 @@ module.exports = class FilterCollection extends Collection
       application.settings.ui_filters_framemetadata = []
     if params.view
       @view = params.view
-      #todo: map filter sets to view type
       i = 0
       for o in application.settings.ui_filters_framemetadata
         @filters.push @view.addSubview o.field_name, @getFilter(o.format), '#filter_form', {params:o,collection:@,append:"filter_" + i}
         i+=1
     @
 
-  #comparator: (chapter) =>
-  #  return -chapter.get("capturetime_epoch")
-  #  return chapter.get("capturetime_epoch")
-
   getFilter: (name) ->
-    #if !@filters?
-    #  @filters = require '../views/filters/init'
-    #return @filters[name]
     application.filters[name]
   
   sortList: (sorttype, sortkey, sortorder) =>
@@ -92,22 +84,3 @@ module.exports = class FilterCollection extends Collection
     if params.before
       params.before()
     super(params)
-    ###
-    $.getJSON(@url+@getUrl(), (data) =>
-      @.totalavail = data.total_frames
-      if @skip == 0
-        @reset data.frames
-      else
-        @add data.frames
-      if params.success
-        params.success(data)
-      return
-    ).error =>
-      #todo: make callback error
-      SimpleSeer.alert('request error','error')
-    ###
-
-  #filterCallback: (data) =>
-    #@reset data.frames
-    #for att in data.frames
-    #  @add att

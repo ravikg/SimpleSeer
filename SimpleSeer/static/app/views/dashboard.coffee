@@ -2,12 +2,17 @@ template = require './templates/dashboard'
 application = require '../application'
 Tab = require './tab_view'
 model = require '../models/dashboard'
-Chart = require '../models/chart'
+Chart = require '../models/OLAP'
 
 module.exports = class Dashboard extends Tab
   building:false
   template: template
-  chartTypes: {"area":"Area","line":"Line","column":"Column","scatter":"Scatter"}
+  chartTypes: {area:"Area",line:"Line",column:"Column",scatter:"Scatter"}
+  
+  events:
+    'click .accordion .head': 'toggleAccordion'
+    'click .save': 'saveChart'
+    'click .cancel': 'hideBuilder'  
   
   initialize: =>
     @model = new model {id:"5047bc49fb920a538c000000",view:@}
@@ -38,6 +43,22 @@ module.exports = class Dashboard extends Tab
     @$el.find('.chartColor[type="color"]').each (i,item) =>
       $(item).on "change", (event) =>
         @setChartColor event
+    palette = application.palette
+    @$el.find("input[type=color]").spectrum({
+      showPalette: true
+      showSelectionPalette: false
+      palette: [palette.getPalette()]
+      color: "#f00"
+      change: =>
+        @$el.find("#palette_select + .ui-combobox input").val("Custom")
+    });
+      
+    #$(@el).ready @cleanList
+    #$(@el).bind "focus", @cleanList
+
+    @$el.load ->
+      return
+    #@buildPalettePreview()
     super()
 
   setChartColor: (event) =>
@@ -84,7 +105,7 @@ module.exports = class Dashboard extends Tab
     @model.attributes.widgets = widgets
     @model.save({success:=>})
   
-  getRenderData: =>
+  getChartSettings: =>
     vars: @getVariables()
     styles: @chartTypes
     
@@ -108,4 +129,189 @@ module.exports = class Dashboard extends Tab
     if !isset["y"]
       vars[1]["isy"] = true
     vars
+
+  reflow: =>
+    for i,o of @subviews
+      o.reflowChart()
+    return
+  
+  saveChart: =>
+    $('.chartinput',@$el).each (i, o) =>
+      @fieldUpdate o.name, o.value
+    @saveform()
+
+  saveform: =>
+    @chart.save {},
+      success: (item) =>
+        widget =
+          cols:1
+          id:item.id
+          model:"/OLAP"
+          name:item.get("name")
+          view:"/charts/highcharts/HCSpline"
+        found = false
+        for o,i in @model.attributes.widgets
+          if o.id == item.id
+            found = true
+            widget.cols = @model.attributes.widgets[i].cols
+            @model.attributes.widgets[i] = widget
+        if not found
+          @model.attributes.widgets.push widget
+        @model.loaded = false
+        @model.save()
+        @hideBuilder()
+        @clearSubviews()
+
+  fieldUpdate: (name, value)=>
+    newElem = {}
+    newElem[name] = value
+    @chart.set(newElem)
+
+  showBuilder: =>
+    grid = @$el.find("#widget_grid")
+    controls = @$el.find('.graphBuilderControls')
+    preview =  @$el.find('.graphBuilderPreview')
+    controls.show("slide", { direction: "left" }, 300)
+    preview.show("slide", { direction: "right" }, 300)
+    grid.animate({opacity: 0}, 500)
+    @building = true
+
+  hideBuilder: =>
+    grid = @$el.find("#widget_grid")
+    controls = @$el.find('.graphBuilderControls')
+    preview =  @$el.find('.graphBuilderPreview')
+    controls.hide("slide", { direction: "left" }, 0)
+    preview.hide("slide", { direction: "right" }, 0)
+    grid.animate({opacity: 1}, 0)
+    @building = false
+      
+  toggleBuilder: =>
+    grid = @$el.find("#widget_grid")
+    controls = @$el.find('.graphBuilderControls')
+    preview =  @$el.find('.graphBuilderPreview')
+    
+    if @building
+      controls.hide("slide", { direction: "left" }, 300)
+      preview.hide("slide", { direction: "right" }, 300)
+      grid.animate({opacity: 1}, 500)
+    else
+      @updateChartBuild()
+      preview.width @$el.width() - controls.width() - 42 + "px"
+      grid.animate({opacity: 0}, 300)
+      controls.show("slide", { direction: "left" }, 500)
+      preview.show("slide", { direction: "right" }, 500)
+      
+    @building = !@building 
+    return false
+    
+  toggleAccordion:(e) =>
+    if $(e.currentTarget).parents(".group").hasClass("expanded")
+      @$el.find(".expanded").removeClass("expanded").find(".content").slideUp()
+    else 
+      @$el.find(".expanded").removeClass("expanded").find(".content").slideUp()
+      current = $(e.currentTarget).parents(".group")
+      current.addClass("expanded").find(".content").slideDown()
+        
+  select: =>
+    super()
+    @draw()
+    return true
+  
+  draw: =>    
+    $("#addGraph").die("click").live("click", (e, ui)=>
+      @setChart new Chart()
+      e.preventDefault()
+      @showBuilder()
+      return false
+    )
+    @$el.find("#colSpin").attr("max", @cols)
+    #@$el.find(".graphBuilderPreview").css("width", 0)
+    @$el.find(".accordion .group.expanded .content").slideDown()
+    @$el.find("select").combobox()
+    @$el.find("#palette_select").combobox
+      selected: => @buildPalettePreview()
+    
+    #controls = @$el.find('.graphBuilderControls')
+    #preview =  @$el.find('.graphBuilderPreview')
+    #controls.hide("slide", { direction: "left" }, 0)
+    #preview.hide("slide", { direction: "right" }, 0)
+    @hideBuilder()
+    @building = false
+    return true
+
+  setChart: (model) =>
+    @chart = model
+    @updateChartBuild()
+        
+  updateChartBuild: =>
+    style = @chart.get("style") || "line"
+    @$el.find('input[value="'+style+'"]')[0].checked = true
+    @$el.find("input[name=chartColor]").spectrum("set", @chart.get("color") || "#0074b5");
+    #@$el.find("input[name=chartTitleColor]").spectrum("set", @chart.get("titleColor") || "#555");
+    #@$el.find("input[name=chartLabelColor]").spectrum("set", @chart.get("labelColor") || "#555");
+    @$el.find('input[name="name"]').attr "value", @chart.get("name") || ""
+    @$el.find('input[name="xTitle"]').attr "value", @chart.get("xTitle") || @$el.find('[name="olap_xaxis"] option:selected').text()
+    @$el.find('input[name="yTitle"]').attr "value", @chart.get("yTitle") || @$el.find('[name="olap_yaxis"] option:selected').text()
+
+  buildPalettePreview: =>
+    # Get the palette
+    palette = application.palette
+    palette.setScheme @$el.find("#palette_select").val()
+    scheme = palette.getPalette()
+    
+    # Update spectrum
+    @$el.find("input[type=color]").spectrum("destroy").spectrum({
+      showPalette: true
+      showSelectionPalette: false
+      palette: [palette.getPalette()]
+      color: "#f00"
+      change: =>
+        @$el.find("#palette_select + .ui-combobox input").val("Custom")
+    });
+
+    # Update the property colors
+    @$el.find("input[name=chartColor]").spectrum("set", scheme[1]);
+    #@$el.find("input[name=chartTitleColor], input[name=chartLabelColor]").spectrum("set", scheme[0]);
+    @setCPalette()
+
+  cleanList: =>
+    #console.log @$el.is ":visible"
+    #reset the margin-top of all grid items
+    children = @$el.find("#widget_grid").children()
+    children.css('margin-top',0)
+    i=0
+    totalCols=0
+    tops = []
+    for current in children
+      current = $(current)
+      x = (totalCols%@cols)+1
+      y = (totalCols%@cols)+parseInt current.attr('cols')
+      #if tops[x]
+      #if tops[y]
+      #console.log current.offset().top
+      before = current.prev("li")
+      #console.log [x,y]
+      totalCols += parseInt current.attr('cols')
+      if before.length > 0 && before.height() < current.height() && !(i%@cols)
+        diff = before.height() - current.height()
+        current.next("li").css('margin-top',diff)
+      i++
+ 
+  getRenderData: =>
+    palettes = application.palette.getSchemes()
+    for i of palettes
+      if palettes[i].id is application.palette.getScheme() then palettes[i].default = true
+    widgets = []
+    cw = 100/@cols
+    for i,o of @testData
+      _w = {}
+      _w["cols"] = o.cols
+      _w["title"] = i
+      _w["width"] = cw*o.cols
+      if o.height
+        _w["boxHeight"] = o.height + 10
+        _w["height"] = o.height
+      widgets.push _w
+    return {palettes: palettes, widgets:widgets, chartSettings:@getChartSettings()}
+
 

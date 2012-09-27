@@ -30,6 +30,7 @@ module.exports = SeerApplication =
     FrameSets = require 'collections/framesets'
     Palette = require 'lib/ui_helper'
     Frame = require "../models/frame"
+    @dashboard = require "views/dashboard"
     
     @palette = new Palette()
     @subscriptions = {}
