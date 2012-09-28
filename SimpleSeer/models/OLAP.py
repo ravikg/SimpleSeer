@@ -60,7 +60,7 @@ class OLAP(SimpleDoc, mongoengine.Document):
     statsInfo = mongoengine.ListField()
     sortInfo = mongoengine.DictField()
     transient = mongoengine.BooleanField()
-    confirmed = mongoengine.BooleanField()
+    createtime = mongoengine.DateTimeField()
     
     meta = {
         'indexes': ['name']

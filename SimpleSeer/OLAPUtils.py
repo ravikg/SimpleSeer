@@ -72,13 +72,6 @@ class ChartFactory:
         
 class OLAPFactory:
     
-    @classmethod
-    def confirmTransient(self, chartName):
-        chart = Chart.objects(name=chartName)[0]
-        olap = OLAP.objects(name=chart.olap)[0]
-        olap.confirmed = True
-        olap.save()
-    
     def createTransient(self, filters, originalChart):
         # A transient OLAP is one that should be delted when no subscriptions are listening
         # This is needed for OLAPs that publish realtime but are the result of filters
@@ -89,14 +82,14 @@ class OLAPFactory:
         existing = OLAP.objects(olapFilter = filters, skip=originalOLAP.skip or 0, limit=originalOLAP.limit or 20)
         if len(existing) > 0:
             o = existing[0]
-            o.confirmed = True
+            o.createtime = datetetime.utcnow()
             c = Chart.objects(olap = o.name)[0]
             return c.name, o 
             
         # First, create the core OLAP
         o = self.fromFilter(filters, originalOLAP)
         o.transient = True
-        o.confirmed = True
+        o.createtime = datetime.utcnow()
         o.save()
         
         # Create the chart to point to it
@@ -345,31 +338,32 @@ class ScheduledOLAP():
             g.join()
     
     def checkTransient(self):
+        # Requestlist of active channels
+        cm = ChannelManager()
+        sock = cm.subscribe('subscriptions')
+
         while True:
-            # First delete transients that are inactive
-            olds = OLAP.objects(transient = True, confirmed = False)
-            for o in olds:
-                c = Chart.objects(olap=o.name)[0]
-                c.delete()
+            sock.recv() # first msg is the channel name.  dump it.
+            subs = sock.recv()
+            self.cleanTransient(subs)
+            
+    def cleanTransient(self, subscriptions = {}):
+        trans = OLAP.objects(transient = True)
+        for o in trans:
+            inUse = False
+            olapCharts = Chart.objects(olap=o.name)
+            for c in olapCharts:
+                if c.name in subscriptions or (datetime.utcnow() - o.createtime) <  timedelta(0, 300):
+                    inUse = True
+        
+            if not inUse:
+                for c in olapCharts:
+                    c.delete()
+                    log.info('Deleted associated chart: %s' % c.name)
+    
                 o.delete()
                 log.info('Deleted transient OLAP: %s' % o.name)
-                log.info('Deleted associated chart: %s' % c.name)
         
-                
-            # Request updates on status of active olaps
-            active = OLAP.objects(transient = True)
-            for a in active:
-                # Set status to inactive until a client responds that it is in use
-                a.confirmed = False
-                a.save()
-                
-                # Publish a request that any listening clients confirm they are listening
-                chart = Chart.objects(olap=a.name)[0]
-                chartName = 'Chart/%s/' % utf8convert(chart.name) 
-                ChannelManager().publish(chartName, dict(u='data', m='ping'))
-            
-            sleep(3600)
-            
     def skedLoop(self, interval):
         
         from datetime import datetime
