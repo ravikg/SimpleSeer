@@ -16,13 +16,16 @@ module.exports = class SliderFilterView extends _filter
 
   toggleEnabled: ()=>
     sl = @$el.find("#"+@options.params.name+"_sl")
+    dt = @$el.find(".disable_text")
     if @enabled
       @enabled = false
-      sl.slider("disable")
+      sl.slider("disable").hide()
+      dt.show()
       @setValue('',true)
     else
       @enabled = true
-      sl.slider("enable")      
+      sl.slider("enable").show()
+      dt.hide()
       @setValue(sl.slider("values"),true)
 
   afterRender: () =>
@@ -40,7 +43,7 @@ module.exports = class SliderFilterView extends _filter
       change: (event, ui) =>
         @setValue(ui.values, true)
     #@setValue [@options.params.constraints.min, @options.params.constraints.max]
-    
+    @$el.find("#"+@options.params.name+"_sl").hide().css("margin-top", "3px")
     $("#amount").val  $("#"+@name+"_sl").slider("values", 0) + " - " + $("#"+@name+"_sl").slider("values", 1)
     super()
       
