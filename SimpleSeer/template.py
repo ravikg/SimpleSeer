@@ -48,7 +48,7 @@ class SimpleSeerProjectTemplate(Template):
             'SimpleSeer', 'static/public'))
         tgt_brunch = (path(output_dir) / vars['package'] / 'brunch_src').abspath()
         tgt_public = (path(output_dir) / vars['package'] / 'static').abspath()
-
+        
         # Ensure that brunch build has been run in the source
         with src_brunch:
             print subprocess.check_output(['brunch', 'build'])
@@ -70,6 +70,24 @@ class SimpleSeerProjectTemplate(Template):
         overwrite(
             src_public / 'stylesheets/seer.css',
             tgt_brunch / 'vendor/stylesheets/seer.css')
+
+
+        # Build and copy cloud.js if applicable
+
+        #TODO:
+        # check to see if cloud exists
+        # remove hardcoded path
+        if True:
+            cloud_brunch = path(pkg_resources.resource_filename('SimpleSeer', 'static')+"/../../../SeerCloud/SimpleSeer/static")
+            with cloud_brunch:
+                print subprocess.check_output(['brunch', 'build'])
+            #subprocess.call(['git','rm','--cached',tgt_brunch / 'vendor/javascripts/seer.js'],stderr=dn)
+            overwrite(
+                src_public / 'javascripts/cloud.js',
+                tgt_brunch / 'vendor/javascripts/cloud.js')
+            overwrite(
+                src_public / 'stylesheets/cloud.css',
+                tgt_brunch / 'vendor/stylesheets/cloud.css')
 
         # Link the app
         #with tgt_brunch:

@@ -66,6 +66,12 @@ def WatchCommand(ManageCommand):
         'SimpleSeer', 'static'))
     tgt_brunch = path(cwd) / package / 'brunch_src'
     
+    #TODO:
+    # check to see if cloud exists
+    # remove hardcoded path
+    if True:
+        cloud_brunch = path(pkg_resources.resource_filename('SimpleSeer', 'static')+"/../../../SeerCloud/SimpleSeer/static")
+    
     BuildCommand("").run()
     #run a build first, to make sure stuff's up to date
     
@@ -74,6 +80,7 @@ def WatchCommand(ManageCommand):
     from watchdog.observers import Observer
     from watchdog.events import FileSystemEventHandler
     
+    #Event watcher for SimpleSeer
     seer_event_handler = FileSystemEventHandler()
     seer_event_handler.eventqueue = []
     def rebuild(event):
@@ -84,6 +91,19 @@ def WatchCommand(ManageCommand):
     seer_observer = Observer()
     seer_observer.schedule(seer_event_handler, path=src_brunch, recursive=True)
     
+    #Event watcher for SeerCloud
+    if cloud_brunch:
+        cloud_event_handler = FileSystemEventHandler()
+        cloud_event_handler.eventqueue = []
+        def build_cloud(event):
+            cloud_event_handler.eventqueue.append(event)
+    
+        cloud_event_handler.on_any_event = build_cloud
+    
+        cloud_observer = Observer()
+        cloud_observer.schedule(cloud_event_handler, path=cloud_brunch, recursive=True)
+    
+    #Event watcher for seer application
     local_event_handler = FileSystemEventHandler()
     local_event_handler.eventqueue = []
     
