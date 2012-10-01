@@ -7,6 +7,8 @@ import pkg_resources
 from path import path
 from paste.script.templates import Template, var
 here = os.getcwd()
+from .Session import Session
+
 
 class SimpleSeerProjectTemplate(Template):
     _template_dir = 'paster_templates/seer_project'
@@ -77,8 +79,10 @@ class SimpleSeerProjectTemplate(Template):
         #TODO:
         # check to see if cloud exists
         # remove hardcoded path
-        if True:
-            cloud_brunch = path(pkg_resources.resource_filename('SimpleSeer', 'static')+"/../../../SeerCloud/SimpleSeer/static")
+        settings = Session('simpleseer.cfg')
+        if settings.in_cloud:
+            #cloud_brunch = path(pkg_resources.resource_filename('SimpleSeer', 'static')+"/../../../SeerCloud/SeerCloud/static")
+            cloud_brunch = path(pkg_resources.resource_filename('SeerCloud', 'static'))
             with cloud_brunch:
                 print subprocess.check_output(['brunch', 'build'])
             #subprocess.call(['git','rm','--cached',tgt_brunch / 'vendor/javascripts/seer.js'],stderr=dn)
