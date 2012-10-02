@@ -3,6 +3,15 @@ Model = require "./model"
 module.exports = class OLAP extends Model
   urlRoot: -> "/api/chart"
   shift = false
+  
+  setColor:(title, value) =>
+    if title == "chartColor"
+      @set("color", value)
+    if title == "chartLabelColor"
+      @set("labelColor", value)
+    if title == "chartTitleColor"
+      @set("titleColor", value)
+    return  
 
   pointStack: () ->
     stack : []

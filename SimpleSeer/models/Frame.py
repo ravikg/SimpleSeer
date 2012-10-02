@@ -134,10 +134,15 @@ class Frame(SimpleDoc, mongoengine.Document):
             self.width, self.height, self.camera, capturetime)
         
     def save(self, *args, **kwargs):
-        from SimpleSeer.OLAPUtils import RealtimeOLAP
-        
         #TODO: sometimes we want a frame with no image data, basically at this
         #point we're trusting that if that were the case we won't call .image
+
+        #This is used to strip invalid keys for OPC tags
+        for key in self.metadata.keys():
+            newkey = key.replace('.','^')
+            newval = self.metadata.pop(key)
+            self.metadata[newkey] = newval
+
         if self._imgcache != '' and self._imgcache_dirty:
             s = StringIO()
             img = self._imgcache

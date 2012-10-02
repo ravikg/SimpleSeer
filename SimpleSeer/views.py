@@ -10,7 +10,8 @@ import bson.json_util
 import gevent
 import coffeescript
 from socketio import socketio_manage
-from flask import request, make_response, Response, redirect
+from flask import request, make_response, Response, redirect, render_template_string
+import flask
 
 from . import models as M
 from . import util
@@ -62,8 +63,8 @@ def vql(query):
     
 @route('/')
 def index():
-    #return redirect('/index.html')
-    return open(Session().web['static']['/'] + '/index.html').read()
+    template = open(Session().web['static']['/'] + '/../templates/index.html').read()
+    return render_template_string(template,foo='bar')
 
 @route('/plugins.js')
 def plugins():
@@ -151,7 +152,8 @@ def getFrames(filter_params):
     query = allparams['query']
     
     f = Filter()
-    total_frames, frames = f.getFrames(f.negativeFilter(query), limit=limit, skip=skip, sortinfo=sortinfo)
+    #total_frames, frames = f.getFrames(f.negativeFilter(query), limit=limit, skip=skip, sortinfo=sortinfo)
+    total_frames, frames = f.getFrames(query, limit=limit, skip=skip, sortinfo=sortinfo)
     
     retVal = dict(frames=frames, total_frames=total_frames)
     
@@ -502,54 +504,6 @@ def ping():
 def settings():
     text = Session().get_config()
     return {"settings": text }
-
-@route('/confirmTransient/<channel_name>', methods=['GET'])
-def confirmTransient(channel_name):
-    from .OLAPUtils import OLAPFactory
-    of = OLAPFactory()
-    of.confirmTransient(channel_name)
-    return ""
-
-@route('/dashboard/<dashboard_id>', methods=['GET'])
-@util.jsonify
-def dashboard(dashboard_id):
-    c = M.Dashboard.objects.get(id = dashboard_id)
-    return c
-
-@route('/chart/<chart_id>', methods=['GET'])
-@util.jsonify
-def chart(chart_id):
-    c = M.Chart.objects.get(id = chart_id)
-    return c.createChart()
-
-@route('/chart/data/<chart_id>/<filter_params>', methods=['GET'])
-@util.jsonify
-def chart_data(chart_id, filter_params):
-    filter_params = fromJson(filter_params)
-    c = M.Chart.objects.get(id=chart_id)
-    retVal = c.chartData(filter_params)
-    return retVal
-
-@route('/chart/meta/<chart_id>/', methods=['GET'])
-@util.jsonify
-def chart_meta(chart_id):
-    c = M.Chart.objects.get(name=chart_id)
-    return c.chartMeta()
-        
-@route('/chart/<chart_name>/since/<timestamp>', methods=['GET'])
-@util.jsonify
-def chart_since(chart_name, timestamp):
-    c = M.Chart.objects.get(name = chart_name)
-
-    return c.createChart(sincetime = int(float(timestamp)))
-
-@route('/chart/<chart_name>/since/<sincetimestamp>/before/<beforetimestamp>', methods=['GET'])
-@util.jsonify
-def chart_since_before(chart_name, sincetimestamp, beforetimestamp):
-    c = M.Chart.objects.get(name = chart_name)
-
-    return c.createChart(sincetime = int(float(sincetimestamp)), beforetime = int(float(beforetimestamp)))
-
 
 @route('/start', methods=['GET', 'POST'])
 def start():

@@ -111,6 +111,8 @@ Handlebars.registerHelper 'featuredetail', (features) ->
   new Handlebars.SafeString(ret)
 
 Handlebars.registerHelper 'featurelist', (features = []) ->
+  if !features
+  	features = []
   unless features.length > 0
     return new Handlebars.SafeString("")
   ret = ""
