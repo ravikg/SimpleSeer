@@ -6,6 +6,7 @@ import pkg_resources
 import subprocess
 import time
 from path import path
+from SimpleSeer.Session import Session
 
 class ManageCommand(Command):
     "Simple management tasks that don't require SimpleSeer context"
@@ -59,12 +60,16 @@ class DeployCommand(ManageCommand):
 
 @ManageCommand.simple()
 def WatchCommand(ManageCommand):
+    settings = Session(ManageCommand.options.config)
     cwd = os.path.realpath(os.getcwd())
     package = cwd.split("/")[-1]
 
     src_brunch = path(pkg_resources.resource_filename(
         'SimpleSeer', 'static'))
     tgt_brunch = path(cwd) / package / 'brunch_src'
+    
+    if settings.in_cloud:
+        cloud_brunch = path(pkg_resources.resource_filename('SeerCloud', 'static'))
     
     BuildCommand("").run()
     #run a build first, to make sure stuff's up to date
@@ -74,6 +79,7 @@ def WatchCommand(ManageCommand):
     from watchdog.observers import Observer
     from watchdog.events import FileSystemEventHandler
     
+    #Event watcher for SimpleSeer
     seer_event_handler = FileSystemEventHandler()
     seer_event_handler.eventqueue = []
     def rebuild(event):
@@ -84,6 +90,19 @@ def WatchCommand(ManageCommand):
     seer_observer = Observer()
     seer_observer.schedule(seer_event_handler, path=src_brunch, recursive=True)
     
+    #Event watcher for SeerCloud
+    if settings.in_cloud:
+        cloud_event_handler = FileSystemEventHandler()
+        cloud_event_handler.eventqueue = []
+        def build_cloud(event):
+            cloud_event_handler.eventqueue.append(event)
+    
+        cloud_event_handler.on_any_event = build_cloud
+    
+        cloud_observer = Observer()
+        cloud_observer.schedule(cloud_event_handler, path=cloud_brunch, recursive=True)
+    
+    #Event watcher for seer application
     local_event_handler = FileSystemEventHandler()
     local_event_handler.eventqueue = []
     
@@ -96,16 +115,26 @@ def WatchCommand(ManageCommand):
     local_observer.schedule(local_event_handler, path=tgt_brunch, recursive=True)
     
     seer_observer.start()
+    if settings.in_cloud:
+        cloud_observer.start()
     local_observer.start()
-    
-    
+        
+    ss_builds = 0
     while True:
-        if len(seer_event_handler.eventqueue):
+        ss_builds += len(seer_event_handler.eventqueue)
+        try:
+            ss_builds += len(cloud_event_handler.eventqueue)
+        except UnboundLocalError:
+            pass
+
+        if ss_builds:
             time.sleep(0.2)
             BuildCommand("").run()
             time.sleep(0.1)
             seer_event_handler.eventqueue = []
+            cloud_event_handler.eventqueue = []
             local_event_handler.eventqueue = []
+            ss_builds = 0
         
         if len(local_event_handler.eventqueue):
             time.sleep(0.2)
