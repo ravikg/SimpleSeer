@@ -77,13 +77,14 @@ class SimpleSeerProjectTemplate(Template):
         overwrite(
             src_templates / 'index.html',
             tgt_templates / 'seer_index.html')
+        print tgt_templates / 'seer_index.html'
 
         # Build and copy cloud.js if applicable
 
         #TODO:
         # check to see if cloud exists
         # remove hardcoded path
-        settings = Session('simpleseer.cfg')
+        settings = Session(path(output_dir) / "simpleseer.cfg")
         if settings.in_cloud:
             #cloud_brunch = path(pkg_resources.resource_filename('SimpleSeer', 'static')+"/../../../SeerCloud/SeerCloud/static")
             cloud_brunch = path(pkg_resources.resource_filename('SeerCloud', 'static'))
