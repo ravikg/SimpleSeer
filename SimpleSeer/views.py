@@ -504,32 +504,6 @@ def settings():
     text = Session().get_config()
     return {"settings": text }
 
-@route('/dashboard/<dashboard_id>', methods=['GET'])
-@util.jsonify
-def dashboard(dashboard_id):
-    c = M.Dashboard.objects.get(id = dashboard_id)
-    return c
-
-@route('/chart/<chart_id>', methods=['GET'])
-@util.jsonify
-def chart(chart_id):
-    c = M.Chart.objects.get(id = chart_id)
-    return c.createChart()
-
-@route('/chart/data/<chart_id>/<filter_params>', methods=['GET'])
-@util.jsonify
-def chart_data(chart_id, filter_params):
-    filter_params = fromJson(filter_params)
-    c = M.Chart.objects.get(id=chart_id)
-    retVal = c.chartData(filter_params)
-    return retVal
-
-@route('/chart/meta/<chart_id>/', methods=['GET'])
-@util.jsonify
-def chart_meta(chart_id):
-    c = M.Chart.objects.get(name=chart_id)
-    return c.chartMeta()        
-
 @route('/start', methods=['GET', 'POST'])
 def start():
     try:
