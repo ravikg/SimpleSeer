@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 
 def make_app():
     settings = Session()
-    template_folder=path("{0}/{1}".format(os.getcwd(), settings.get_config()['web']['static']['/']))
+    template_folder=path("{0}/{1}/{2}".format(os.getcwd(), settings.get_config()['web']['static']['/'], '../templates'))
     app = Flask(__name__,template_folder=template_folder)
 
     @app.teardown_request

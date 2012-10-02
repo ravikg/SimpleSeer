@@ -46,11 +46,13 @@ class SimpleSeerProjectTemplate(Template):
     def post(self, command, output_dir, vars):
         src_brunch = path(pkg_resources.resource_filename(
             'SimpleSeer', 'static'))
+        src_templates = path(pkg_resources.resource_filename(
+            'SimpleSeer', 'templates'))
         src_public = path(pkg_resources.resource_filename(
             'SimpleSeer', 'static/public'))
         tgt_brunch = (path(output_dir) / vars['package'] / 'brunch_src').abspath()
+        tgt_templates = (path(output_dir) / vars['package'] / 'templates').abspath()
         tgt_public = (path(output_dir) / vars['package'] / 'static').abspath()
-        
         # Ensure that brunch build has been run in the source
         with src_brunch:
             print subprocess.check_output(['brunch', 'build'])
@@ -73,9 +75,8 @@ class SimpleSeerProjectTemplate(Template):
             src_public / 'stylesheets/seer.css',
             tgt_brunch / 'vendor/stylesheets/seer.css')
         overwrite(
-            src_public / 'index.html',
-            tgt_brunch / 'app/assets/seer_index.html')
-
+            src_templates / 'index.html',
+            tgt_templates / 'seer_index.html')
 
         # Build and copy cloud.js if applicable
 

@@ -63,7 +63,7 @@ def vql(query):
     
 @route('/')
 def index():
-    template = open(Session().web['static']['/'] + '/index.html').read()
+    template = open(Session().web['static']['/'] + '/../templates/index.html').read()
     return render_template_string(template,foo='bar')
 
 @route('/plugins.js')
