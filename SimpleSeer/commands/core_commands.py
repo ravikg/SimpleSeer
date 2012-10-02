@@ -150,27 +150,17 @@ def OPCCommand(self):
 
       if tagcounter != counter:
         print 'Trigger Received'
-        #~ import pdb;pdb.set_trace()
         data = dict()
         for tag in opc_settings.get('tags'):
           tagdata = opc_client.read(tag)
           if tagdata:
             print 'Read tag[%s] with value: %s' % (tag, tagdata[0])
             data[tag] = tagdata[0]
-            #~ tag = OPCFeature(tagdata[0])
-            #~ tagfeature = M.FrameFeature()
-            #~ tagfeature.setFeature(tag)
-            #~ feats.append(tagfeature)
 
         print 'Publishing data to PUB/SUB OPC channel'    
         ChannelManager().publish('opc/', data)
         counter = tagcounter
-        #~ core.tick()
-        #~ gc.collect()
-        #~ frames = core.capture()
-        #~ for frame in frames:
-            #~ core.process(frame)
-            #~ frame.save()
+
 
 @Command.simple(use_gevent=True, remote_seer=True)
 def BrokerCommand(self):

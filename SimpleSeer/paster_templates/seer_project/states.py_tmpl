@@ -28,6 +28,15 @@ def run(state):
             core.process(frame)
             if config.record_all:
                 frame.save()
+                
+@core.on('run','opc/')
+def opc(state, name, data):
+    frames = core.capture()
+    for frame in frames:
+        frame.metadata = data
+        if config.record_all:
+            frame.save()
+    state.transition('run')
 
 
 @core.on('run', 'rate/')
