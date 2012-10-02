@@ -1,4 +1,13 @@
 SeerRouter = require 'lib/seer_router'
+application = require '../application'
 
 module.exports = class Router extends SeerRouter
   name: '${package}'
+
+  routes:
+  	'':'main'
+  	
+  main: =>
+  	application.throbber.clear()
+  	
+  

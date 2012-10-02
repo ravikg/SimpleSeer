@@ -77,7 +77,6 @@ class SimpleSeerProjectTemplate(Template):
         overwrite(
             src_templates / 'index.html',
             tgt_templates / 'seer_index.html')
-        print tgt_templates / 'seer_index.html'
 
         # Build and copy cloud.js if applicable
 

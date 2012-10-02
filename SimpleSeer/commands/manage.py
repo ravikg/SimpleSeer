@@ -132,7 +132,10 @@ def WatchCommand(ManageCommand):
             BuildCommand("").run()
             time.sleep(0.1)
             seer_event_handler.eventqueue = []
-            cloud_event_handler.eventqueue = []
+            try:
+                cloud_event_handler.eventqueue = []
+            except UnboundLocalError:
+                pass
             local_event_handler.eventqueue = []
             ss_builds = 0
         
