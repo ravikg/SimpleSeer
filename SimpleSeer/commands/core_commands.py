@@ -67,7 +67,12 @@ def PerfTestCommand(self):
 
 @Command.simple(use_gevent=True, remote_seer=False)
 def OlapCommand(self):
-    from SimpleSeer.OLAPUtils import ScheduledOLAP, RealtimeOLAP
+    try:
+        from SeerCloud.OLAPUtils import ScheduledOLAP, RealtimeOLAP
+    except:
+        print 'Error starting OLAP schedules.  This requires Seer Cloud'
+        return 0
+    
     from SimpleSeer.models.Inspection import Inspection, Measurement
 
     Inspection.register_plugins('seer.plugins.inspection')
