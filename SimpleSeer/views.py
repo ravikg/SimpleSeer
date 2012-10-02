@@ -504,13 +504,6 @@ def settings():
     text = Session().get_config()
     return {"settings": text }
 
-@route('/confirmTransient/<channel_name>', methods=['GET'])
-def confirmTransient(channel_name):
-    from .OLAPUtils import OLAPFactory
-    of = OLAPFactory()
-    of.confirmTransient(channel_name)
-    return ""
-
 @route('/dashboard/<dashboard_id>', methods=['GET'])
 @util.jsonify
 def dashboard(dashboard_id):
@@ -535,22 +528,7 @@ def chart_data(chart_id, filter_params):
 @util.jsonify
 def chart_meta(chart_id):
     c = M.Chart.objects.get(name=chart_id)
-    return c.chartMeta()
-        
-@route('/chart/<chart_name>/since/<timestamp>', methods=['GET'])
-@util.jsonify
-def chart_since(chart_name, timestamp):
-    c = M.Chart.objects.get(name = chart_name)
-
-    return c.createChart(sincetime = int(float(timestamp)))
-
-@route('/chart/<chart_name>/since/<sincetimestamp>/before/<beforetimestamp>', methods=['GET'])
-@util.jsonify
-def chart_since_before(chart_name, sincetimestamp, beforetimestamp):
-    c = M.Chart.objects.get(name = chart_name)
-
-    return c.createChart(sincetime = int(float(sincetimestamp)), beforetime = int(float(beforetimestamp)))
-
+    return c.chartMeta()        
 
 @route('/start', methods=['GET', 'POST'])
 def start():
