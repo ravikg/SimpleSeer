@@ -1,16 +1,20 @@
+import pkg_resources
+import sys
+
 from Frame import Frame, FrameSchema
 from FrameFeature import FrameFeature
 from Inspection import Inspection, InspectionSchema
 from Measurement import Measurement, MeasurementSchema
 from FrameSet import FrameSet, FrameSetSchema
-from OLAP import OLAP, OLAPSchema
-from Chart import Chart, ChartSchema
 from Result import Result, ResultEmbed
 from Watcher import Watcher
 from Alert import Alert
 from Clip import Clip
-from Dashboard import Dashboard, DashboardSchema
-# from Statistic import Statistic
 
-models = ("Frame", "FrameFeature", "Inspection", "Measurement", "OLAP", "Chart", "Result", "Watcher", "Clip", "Dashboard")
+for ep in pkg_resources.iter_entry_points('seercloud.models'):
+    mod = sys.modules['SimpleSeer.models.%s' % ep.name] = __import__(ep.module_name, globals(), locals(), [ep.name  ])
+    vars()[ep.name] = mod.__getattribute__(ep.name)
+
+models = ("Frame", "FrameFeature", "Inspection", "Measurement", "Result", "Watcher", "Clip")
+
 
