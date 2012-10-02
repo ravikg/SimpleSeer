@@ -31,14 +31,19 @@ def register(app):
     handlers = [
         ModelHandler(M.Inspection, M.InspectionSchema,
                      'inspection', '/inspection'),
-        ModelHandler(M.OLAP, M.OLAPSchema, 'olap', '/olap'),
         ModelHandler(M.Measurement, M.MeasurementSchema, 'measurement', '/measurement'),
         ModelHandler(M.Frame, M.FrameSchema, 'frame', "/frame"),
-        ModelHandler(M.FrameSet, M.FrameSetSchema, 'frameset', '/frameset'),
-        ModelHandler(M.Dashboard, M.DashboardSchema, 'dashboard', '/dashboard'),
-        ModelHandler(M.Chart, M.ChartSchema, 'chart', '/chart')
-       ]
-
+        ModelHandler(M.FrameSet, M.FrameSetSchema, 'frameset', '/frameset')
+        ]
+    
+    # Handlers for SeerCloud objects, if loaded
+    if 'OLAP' in dir(M):
+        handlers.append(ModelHandler(M.OLAP, M.OLAPSchema, 'olap', '/olap'))
+    if 'Dashboard' in dir(M):
+        handlers.append(ModelHandler(M.Dashboard, M.DashboardSchema, 'dashboard', '/dashboard'))
+    if 'Chart' in dir(M):
+        handlers.append(ModelHandler(M.Chart, M.ChartSchema, 'chart', '/chart'))
+        
     for h in handlers:
         flask_rest.RESTResource(
             app=bp, name=h.name, route=h.route,
