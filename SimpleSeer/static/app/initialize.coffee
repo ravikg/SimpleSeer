@@ -9,6 +9,10 @@ $ ->
     #TODO: bind initalize events
     application._init(data.settings)
     application.initialize()
+    try
+      require './cloud'
+    catch error
+      #cloud not available
     
     # Instantiate the router.
     application.router = new Router()

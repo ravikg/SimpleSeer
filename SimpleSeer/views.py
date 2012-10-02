@@ -10,7 +10,7 @@ import bson.json_util
 import gevent
 import coffeescript
 from socketio import socketio_manage
-from flask import request, make_response, Response, redirect, render_template_string
+from flask import request, make_response, Response, redirect, render_template
 import flask
 
 from . import models as M
@@ -63,8 +63,7 @@ def vql(query):
     
 @route('/')
 def index():
-    template = open(Session().web['static']['/'] + '/../templates/index.html').read()
-    return render_template_string(template,foo='bar')
+    return render_template("index.html",foo='bar')
 
 @route('/plugins.js')
 def plugins():
