@@ -17,6 +17,7 @@ module.exports = class Series extends FilterCollection
     out:->
   
   initialize: (args={}) =>
+    @filterRoot = "Chart"
     @sortParams.sortkey = 'capturetime_epoch'
     @sortParams.sortorder = 1
     @name = args.name || ''
@@ -38,19 +39,24 @@ module.exports = class Series extends FilterCollection
     
   parse: (response) =>
     super(response)
+    @subscribe(response.chart)
     clean = @_clean response.data
     return clean
 
   fetch: (args={}) =>
+    @view.showMessage('loading','Loading...')
     if !args.success?
       _.extend args,
         success: @onSuccess
     if !args.error?
       _.extend args,
         error: @onError
+    args['total'] = true
+    args['params'] = {skip:~@limit,limit:@limit}
     super(args)
 
   onSuccess: (obj, rawJson) =>
+    @view.hasData = false
     @_drawData()
     @view.hideMessage()
     if !@view.hasData
@@ -98,6 +104,7 @@ module.exports = class Series extends FilterCollection
       d.d[0] = @_counter++
     else if @xAxis.type == 'datetime'
       d.d[0] = new moment d.d[0]
+      d.d[0].subtract('ms', application.timeOffset)
     if @accumulate
       _id = d.d[1]
     else
@@ -115,7 +122,10 @@ module.exports = class Series extends FilterCollection
     #    _point.marker.fillColor = @model.colormap[d.m[i]]
     return _point
 
-  subscribe: =>
+  subscribe: (channel=false) =>
+    if channel
+      application.socket.removeListener "message:Chart/#{@.name}/", @receive
+      @name = channel
     if application.socket
       application.socket.on "message:Chart/#{@.name}/", @receive
       if !application.subscriptions["Chart/#{@.name}/"]

@@ -52,6 +52,10 @@ class ChannelManager(object):
         log.info('Subscribe to %s: %s', name, id(sub_sock))
         channel = self._channels.setdefault(name, {})
         channel[id(sub_sock)] = sub_sock
+        
+        # Send out list of all subscriptions
+        self.publish('subscriptions', self._channels)
+        
         return sub_sock
 
     def unsubscribe(self, name, sub_sock):
@@ -61,8 +65,11 @@ class ChannelManager(object):
         channel.pop(id(sub_sock), None)
         if not channel:
             self._channels.pop(name, None)
+        
+        # Send out list of all subscriptions
+        self.publish('subscriptions', self._channels)
             
-
+            
 class RealtimeNamespace(BaseNamespace):
 
     def initialize(self):

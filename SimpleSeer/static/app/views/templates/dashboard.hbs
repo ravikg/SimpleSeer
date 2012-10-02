@@ -16,7 +16,8 @@
         <div class="content trim">
           {{#key_value chartSettings.styles}}
           <div class="chartStyleType">
-            <input type="radio" name="chartType" value="{{key}}">
+            <input id="cs-type-{{key}}" type="radio" name="chartType" value="{{key}}">
+            <label for="cs-type-{{key}}" style="background-image: url('/img/graph_{{key}}.png');"></label>
             <label>{{value}}</label>
           </div>
           {{/key_value}}
@@ -88,7 +89,7 @@
             <label>Chart Color:</label>
             <input type="color" name="chartColor" class="chartColor"/>
           </div>
-                    
+          <!--          
           <div class="oneLine floated clearfix">
             <label>Chart Title:</label>
             <input type="color" name='chartTitleColor' class="chartColor"/>
@@ -97,7 +98,8 @@
           <div class="oneLine floated clearfix">
             <label>Labels:</label>
             <input type="color" name='chartLabelColor' class="chartColor"/>
-          </div>          
+          </div>
+          -->          
         </div>
       </div>
       
@@ -110,7 +112,7 @@
   
   <!-- Big chart for preview -->
   <div class="graphBuilderPreview">
-    <img src="/img/chart.png">
+    <!--<img src="/img/chart.png">-->
   </div>
   
   <!-- Widgets added here -->

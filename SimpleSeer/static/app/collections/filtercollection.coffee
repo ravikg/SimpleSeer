@@ -16,27 +16,23 @@ module.exports = class FilterCollection extends Collection
   
   initialize: (params) =>
     super()
+    if params.bindFilter
+      @bindFilter = params.bindFilter
+    else
+      @bindFilter = false
     @baseUrl = @url
     @filters = []
     if !application.settings.ui_filters_framemetadata?
       application.settings.ui_filters_framemetadata = []
     if params.view
       @view = params.view
-      #todo: map filter sets to view type
       i = 0
       for o in application.settings.ui_filters_framemetadata
         @filters.push @view.addSubview o.field_name, @getFilter(o.format), '#filter_form', {params:o,collection:@,append:"filter_" + i}
         i+=1
     @
 
-  #comparator: (chapter) =>
-  #  return -chapter.get("capturetime_epoch")
-  #  return chapter.get("capturetime_epoch")
-
   getFilter: (name) ->
-    #if !@filters?
-    #  @filters = require '../views/filters/init'
-    #return @filters[name]
     application.filters[name]
   
   sortList: (sorttype, sortkey, sortorder) =>
@@ -46,9 +42,8 @@ module.exports = class FilterCollection extends Collection
         @sortParams.sortorder = sortorder
         @sortParams.sorttype = sorttype
     return
-    
-  getUrl: (total=false, addParams)=>
-    #todo: map .error to params.error
+  
+  getSettings: (total=false, addParams) =>
     _json = []
     for o in @filters
       val = o.toJson()
@@ -72,30 +67,20 @@ module.exports = class FilterCollection extends Collection
         order: @sortParams.sortorder || -1
     if addParams
       _json = _.extend _json, addParams
-    "/"+JSON.stringify _json
+    return _json
+    
+  getUrl: (total=false, addParams, dataSet=false)=>
+    #todo: map .error to params.error
+    if @bindFilter
+      dataSet = @bindFilter.getSettings(total, addParams)
+    if !dataSet
+      dataSet = @getSettings(total, addParams)
+    "/"+JSON.stringify dataSet
 
   fetch: (params={}) =>
     #console.dir _json
-    @url = @baseUrl+@getUrl()
+    total = params.total || false
+    @url = @baseUrl+@getUrl(total,params['params']||false)
     if params.before
       params.before()
     super(params)
-    ###
-    $.getJSON(@url+@getUrl(), (data) =>
-      @.totalavail = data.total_frames
-      if @skip == 0
-        @reset data.frames
-      else
-        @add data.frames
-      if params.success
-        params.success(data)
-      return
-    ).error =>
-      #todo: make callback error
-      SimpleSeer.alert('request error','error')
-    ###
-
-  #filterCallback: (data) =>
-    #@reset data.frames
-    #for att in data.frames
-    #  @add att
