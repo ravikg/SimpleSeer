@@ -72,6 +72,9 @@ class SimpleSeerProjectTemplate(Template):
         overwrite(
             src_public / 'stylesheets/seer.css',
             tgt_brunch / 'vendor/stylesheets/seer.css')
+        overwrite(
+            src_public / 'index.html',
+            tgt_brunch / 'app/assets/seer_index.html')
 
 
         # Build and copy cloud.js if applicable

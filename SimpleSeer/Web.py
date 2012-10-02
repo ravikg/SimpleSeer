@@ -9,13 +9,17 @@ from . import views
 from . import crud
 from . import util
 from .Session import Session
+from path import path
+
 
 DEBUG = True
 
 log = logging.getLogger(__name__)
 
 def make_app():
-    app = Flask(__name__)
+    settings = Session()
+    template_folder=path("{0}/{1}".format(os.getcwd(), settings.get_config()['web']['static']['/']))
+    app = Flask(__name__,template_folder=template_folder)
 
     @app.teardown_request
     def teardown_request(exception):
