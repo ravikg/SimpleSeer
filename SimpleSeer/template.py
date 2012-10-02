@@ -85,16 +85,15 @@ class SimpleSeerProjectTemplate(Template):
         # remove hardcoded path
         settings = Session(path(output_dir) / "simpleseer.cfg")
         if settings.in_cloud:
-            #cloud_brunch = path(pkg_resources.resource_filename('SimpleSeer', 'static')+"/../../../SeerCloud/SeerCloud/static")
             cloud_brunch = path(pkg_resources.resource_filename('SeerCloud', 'static'))
             with cloud_brunch:
                 print subprocess.check_output(['brunch', 'build'])
             #subprocess.call(['git','rm','--cached',tgt_brunch / 'vendor/javascripts/seer.js'],stderr=dn)
             overwrite(
-                src_public / 'javascripts/cloud.js',
+                cloud_brunch / 'public/javascripts/cloud.js',
                 tgt_brunch / 'vendor/javascripts/cloud.js')
             overwrite(
-                src_public / 'stylesheets/cloud.css',
+                cloud_brunch / 'public/stylesheets/cloud.css',
                 tgt_brunch / 'vendor/stylesheets/cloud.css')
 
         # Link the app

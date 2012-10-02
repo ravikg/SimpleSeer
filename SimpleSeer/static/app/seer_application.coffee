@@ -33,7 +33,7 @@ module.exports = SeerApplication =
     
     @subscriptions = {}
     @timeOffset = (new Date()).getTimezoneOffset() * 60 * 1000
-    if @settings.is_cloud
+    if @settings.in_cloud
       @filters = require 'views/filters/init'
       @filterData = {}
     if !@isMobile
