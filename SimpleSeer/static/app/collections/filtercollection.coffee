@@ -28,15 +28,20 @@ module.exports = class FilterCollection extends Collection
       @view = params.view
       i = 0
       for o in application.settings.ui_filters_framemetadata
-        @filters.push @view.addSubview o.field_name, @getFilter(o.format), '#filter_form', {params:o,collection:@,append:"filter_" + i}
+        @filters.push @view.addSubview o.field_name, @loadFilter(o.format), '#filter_form', {params:o,collection:@,append:"filter_" + i}
         i+=1
     @
 
-  getFilter: (name) ->
+  loadFilter: (name) ->
     application.filters[name]
+    
+  getFilters: () =>
+  	if @filters.length == 0 and @bindFilter
+  	  return @bindFilter.getFilters()
+  	return @filters
   
   sortList: (sorttype, sortkey, sortorder) =>
-    for o in @filters
+    for o in @getFilters()
       if o.options.params.field_name == sortkey
         @sortParams.sortkey = sortkey
         @sortParams.sortorder = sortorder
