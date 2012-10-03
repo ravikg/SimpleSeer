@@ -84,3 +84,6 @@ module.exports = class FilterCollection extends Collection
     if params.before
       params.before()
     super(params)
+    
+  parse: (response) =>
+  	return response.frames
