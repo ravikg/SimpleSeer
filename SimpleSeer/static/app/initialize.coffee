@@ -6,13 +6,17 @@ $ ->
     _.templateSettings = {interpolate : /\{\{(.+?)\}\}/g}
 
     window.SimpleSeer = application
-    #TODO: bind initalize events
     application._init(data.settings)
-    application.initialize()
+   
+    # Load cloud libs if applicable & available
+    application.cloud = false
     try
-      require './cloud'
+      if data.settings.in_cloud
+        application.cloud = require './cloud'
+        application.cloud.initialize()
     catch error
       #cloud not available
+    application.initialize()
     
     # Instantiate the router.
     application.router = new Router()
