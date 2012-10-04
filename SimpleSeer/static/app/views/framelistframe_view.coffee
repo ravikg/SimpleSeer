@@ -107,8 +107,6 @@ module.exports = class FramelistFrameView extends View
     retVal =
       capturetime_epoch: new moment(parseInt(@frame.get("capturetime_epoch"))).format("M/D/YYYY h:mm a")
       camera: @frame.get("camera")
-      imgfile: @frame.get("imgfile")
-      thumbnail_file: @frame.get("thumbnail_file")
       id: @frame.get("id")
       features: @frame.get("features")
       metadata: metadata
