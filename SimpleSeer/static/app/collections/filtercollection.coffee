@@ -67,9 +67,10 @@ module.exports = class FilterCollection extends Collection
     application.filters[name]
     
   getFilters: () =>
-  	if @filters.length == 0 and @bindFilter
-  	  return @bindFilter.getFilters()
-  	return @filters
+  	_filters = @filters
+  	if @bindFilter
+  	  _filters.concat @bindFilter.getFilters()
+  	return _filters
   
   sortList: (sorttype, sortkey, sortorder) =>
     for o in @getFilters()
