@@ -14,7 +14,7 @@ module.exports = class TabContainer extends View
     super()
     if !@model?
       @model = Frame
-    @filtercollection = new Filters({model:@model,view:@})
+    @filtercollection = new Filters([],{model:@model,view:@,mute:true})
     
     if options.tabs
       @tabLib = require './'+options.tabs+'/init'
@@ -34,16 +34,7 @@ module.exports = class TabContainer extends View
   tabClick: (e,ui) =>
     console.log e,ui
     return false
-  
-  preFetch:()=>
-    application.throbber.load()
-  
-  postFetch:()=>
-    application.throbber.clear()
-    #url = @filtercollection.getUrl(true)
-    #$('#csvlink').attr('href','/downloadFrames/csv'+url)
-    #$('#excellink').attr('href','/downloadFrames/excel'+url)  
-  
+    
   showMenu: (callback) =>
     @sideBarOpen = false if @sideBarOpen is undefined
     if !callback then callback = =>
