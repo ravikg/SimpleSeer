@@ -91,4 +91,5 @@ module.exports = class FilterCollection extends Collection
     super(params)
     
   parse: (response) =>
+  	@totalavail = response.total_frames
   	return response.frames
