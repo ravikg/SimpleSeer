@@ -69,7 +69,7 @@ module.exports = class FilterCollection extends Collection
   getFilters: () =>
   	_filters = @filters
   	if @bindFilter
-  	  _filters.concat @bindFilter.getFilters()
+  	  _filters = _filters.concat @bindFilter.getFilters()
   	return _filters
   
   sortList: (sorttype, sortkey, sortorder) =>
