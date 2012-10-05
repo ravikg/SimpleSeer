@@ -9,13 +9,16 @@ module.exports = class FilterCollection extends Collection
     sorttype:false
     skip:0
     limit:20
-    query:''
+    query:[]
   url:"/getFrames"
   mute:false
   clearOnFetch:true
   
   
   initialize: (models,params) =>
+  	@callbackStack = {}
+  	@callbackStack['post'] = []
+  	@callbackStack['pre'] = []
   	if params.mute?
   	  @mute = params.mute
     if params.clearOnFetch?
@@ -118,21 +121,24 @@ module.exports = class FilterCollection extends Collection
       dataSet = @getSettings(total, addParams)
     "/"+JSON.stringify dataSet
 
-  preFetch:(callback)=>
+  preFetch:()=>
     application.throbber.load()
     if !@clearOnFetch
       @_all = @models
-    if typeof callback == 'function'
-      return callback()
+    for o in @callbackStack['pre']
+      if typeof o == 'function'
+        o()
+    @callbackStack['pre'] = []
     return
   
-  postFetch:(callback)=>
+  postFetch:()=>
     application.throbber.clear()
     if !@clearOnFetch
       @add @_all, {silent: true}
       @_all = []
-    if typeof callback == 'function'
-      return callback()
+    for o in @callbackStack['post']
+      if typeof o == 'function'
+        o()
     return
 
   fetch: (params={}) =>
@@ -142,8 +148,10 @@ module.exports = class FilterCollection extends Collection
       o.fetch()
     if !@mute
       @_all = @models
-      @preFetch(params.before)
-      params.success = (callback=params.success)=> @postFetch(callback)
+      @callbackStack['pre'].push params.before
+      @preFetch()
+      @callbackStack['post'].push params.success
+      params.success = @postFetch
       if @url != _url or params.force
         @url = _url
         super(params)
