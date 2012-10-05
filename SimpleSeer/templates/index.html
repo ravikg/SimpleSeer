@@ -1,0 +1,43 @@
+<!doctype html>
+  <!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+  <!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+  <!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width">
+    <script type="text/javascript">(function(){function x(x){document.write("<li"+'nk rel="stylesheet" href="'+x+'?v='+a+'">')}function b(b){document.write("<scr"+'ipt type="text/javascript" src="'+b+"?v="+a+'"></scr'+"ipt>")}var a=(new Date).valueOf();x("/stylesheets/app.css");b("javascripts/vendor.js");b("javascripts/app.js");b("/plugins.js")})()</script>
+    <script type="text/javascript">require('initialize');</script>
+    <title>{% block title %}Sight Machine{% endblock %}</title>
+  </head>
+    
+  <body> 
+      <header>
+        <section class="container">
+          <nav>
+            <a class="brand" href="#"><img src="img/logo_small.png" alt="Sight Machine" height="18"/></a>
+            <div class="text"><div id="client-name"/></div>
+          </nav>
+        </section>
+      </header>
+      
+      <div class="row"><div id="messages" class="span10 offset1"></div></div>
+      <section id="main" class="container"></section>
+      <div id="lost_connection" title="Error"></div>
+  
+      <div id="browser_fail" style="display: none;">
+        <h2>Please Stand By...</h2>
+        <div class="text"><script type="text/javascript">var ie=function(){var a,b=3,c=document.createElement("div"),d=c.getElementsByTagName("i");while(c.innerHTML="<!--[if gt IE "+ ++b+"]><i></i><![endif]-->",d[0]);return b>4?b:a}();if(ie!=undefined&&ie<8){document.write('It appears you are using an unsupported version of Internet Explorer. Please upgrade to Internet Explorer 9 or another modern browser.<div class="break"> </div><a class="btn" href="https://www.google.com/intl/en/chrome/browser/">Google Chrome</a> <span class=\'spacer\'>or</span> <a class="btn" href="http://www.mozilla.org/en-US/firefox/new/">Mozilla Firefox</a>')}else{document.write("There was a problem with SimpleSeer that prevented the application from running. Refresh the page, and contact your system administrator if problem persists.")}</script></div>
+      </div>
+      {% block throbber %}
+      <div id="throbber">
+        <div id="throbberBody">
+          <p style="text-align: center; margin-top: 5px;"><img src="/img/loading.gif"></p>
+          <p class="message"></p>
+        </div>
+      </div>
+      {% endblock %}
+      <script type="text/javascript">setTimeout(function(){if(typeof SimpleSeer==="undefined"){$("#browser_fail").show()}else{$("#app_load").hide()}if($("#browser_fail").is(":visible")==true){$("#lost_connection, #app_load").hide()}},1e4)</script>
+  </body>
+</html>

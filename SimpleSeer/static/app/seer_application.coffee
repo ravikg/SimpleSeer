@@ -10,8 +10,6 @@ module.exports = SeerApplication =
   # necessary modules. Configures the page
   # and 
   _init: (settings) ->
-    #if Highcharts
-    #  Highcharts.credits.enabled = false
     @settings = _.extend @settings, settings
     
     if @settings.mongo.is_slave
@@ -20,40 +18,19 @@ module.exports = SeerApplication =
     if !@settings.template_paths?
       @settings.template_paths = {}
       
-    ViewHelper = require 'lib/view_helper'
-    HomeView = require 'views/home_view'
-    FrameDetailView = require 'views/framedetail_view'
-    Inspections = require 'collections/inspections'
-    Measurements = require 'collections/measurements'
-    Frames = require 'collections/frames'
-    #OLAPs = require 'collections/OLAPs'
-    FrameSets = require 'collections/framesets'
-    Palette = require 'lib/ui_helper'
-    Frame = require "../models/frame"
-    
-    @palette = new Palette()
     @subscriptions = {}
     @timeOffset = (new Date()).getTimezoneOffset() * 60 * 1000
-    @filters = require 'views/filters/init'
-    @filterData = {}
-    if !@.isMobile
-      @.socket = io.connect '/rt'
-      @.socket.on 'timeout', ->
-      @.socket.on 'connect', ->
-      @.socket.on 'error', ->
-      @.socket.on 'disconnect', ->
-      @.socket.on 'message', (msg) ->
-      @.socket.on "message:alert/", window.SimpleSeer._serveralert
-      @.socket.emit 'subscribe', 'alert/'
-      
-    @inspections = new Inspections()
-    @inspections.fetch()
-    #@charts = new OLAPs()
-    @measurements = new Measurements()
-    @measurements.fetch()
-    @frames = new Frames()
-    @framesets = new FrameSets()
 
+    if !@isMobile
+      @socket = io.connect '/rt'
+      #@.socket.on 'timeout', ->
+      #@.socket.on 'connect', ->
+      #@.socket.on 'error', ->
+      #@.socket.on 'disconnect', ->
+      #@.socket.on 'message', (msg) ->
+      @socket.on "message:alert/", window.SimpleSeer._serveralert
+      @socket.emit 'subscribe', 'alert/'
+      
     # Set up the client name.
     $('#client-name').html(window.SimpleSeer.settings.ui_pagename || "")
 
