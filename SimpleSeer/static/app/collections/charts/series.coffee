@@ -16,10 +16,8 @@ module.exports = class Series extends FilterCollection
     click:->
     out:->
   
-  initialize: (args={}) =>
+  initialize: (models, args={}) =>
     @filterRoot = "Chart"
-    @sortParams.sortkey = 'capturetime_epoch'
-    @sortParams.sortorder = 1
     @name = args.name || ''
     @id = args.id
     @url = "/chart/data/"+@id
@@ -29,7 +27,9 @@ module.exports = class Series extends FilterCollection
       @view = args.view
     @accumulate = args.accumlate || false
     @xAxis.type = args.xtype
-    super(args)
+    super(models, args)
+    @setParam 'sortkey', 'capturetime_epoch'
+    @setParam 'sortorder', 1
     args.realtime = true
     if args.realtime
       @subscribe()
@@ -46,11 +46,9 @@ module.exports = class Series extends FilterCollection
   fetch: (args={}) =>
     @view.showMessage('loading','Loading...')
     if !args.success?
-      _.extend args,
-        success: @onSuccess
+      args.success = @onSuccess
     if !args.error?
-      _.extend args,
-        error: @onError
+      args.error = @onError
     args['total'] = true
     args['params'] = {skip:~@limit,limit:@limit}
     super(args)
