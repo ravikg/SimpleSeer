@@ -34,6 +34,9 @@ module.exports = SeerApplication =
     # Set up the client name.
     $('#client-name').html(window.SimpleSeer.settings.ui_pagename || "")
 
+    t = require './views/modal'
+    @modal = new t()
+
     # Set up the timeout message dialog.
     $('#lost_connection').dialog
       autoOpen: false
@@ -51,26 +54,6 @@ module.exports = SeerApplication =
   # Returns the loading status of the application.
   isLoading: =>
     !$('#throbber :hidden').length
-    
-  # Throbber controls for displaying the loading
-  # status of the application.
-  throbber:
-    _callbacks: []
-    load:(message='Loading...', callbacks=[]) ->
-      $('#throbber').show().find(".message").html(message)
-      for callback in callbacks
-        @callback(callback)
-      return
-    clear: ->
-      $('#throbber').hide()
-      for callback in @_callbacks
-        callback()
-      @_callbacks = []
-      return
-    callback:(callback) ->
-      if Application.isLoading() then callback()
-      else @_callbacks.push callback
-      return
 
   alert:(message, alert_type) ->
     _anchor = (@settings.ui_alert_anchor || '#messages')

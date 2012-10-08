@@ -122,7 +122,7 @@ module.exports = class FilterCollection extends Collection
     "/"+JSON.stringify dataSet
 
   preFetch:()=>
-    application.throbber.load()
+    application.modal.show()
     if !@clearOnFetch
       @_all = @models
     for o in @callbackStack['pre']
@@ -132,7 +132,7 @@ module.exports = class FilterCollection extends Collection
     return
   
   postFetch:()=>
-    application.throbber.clear()
+    application.modal.onSuccess()
     if !@clearOnFetch
       @add @_all, {silent: true}
       @_all = []
