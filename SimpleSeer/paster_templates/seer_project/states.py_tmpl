@@ -29,16 +29,6 @@ def run(state):
             if config.record_all:
                 frame.save()
                 
-@core.on('run','opc/')
-def opc(state, name, data):
-    frames = core.capture()
-    for frame in frames:
-        frame.metadata = data
-        if config.record_all:
-            frame.save()
-    state.transition('run')
-
-
 @core.on('run', 'rate/')
 def set_rate(state, name, data):
     state.core.set_rate(data['rate'])

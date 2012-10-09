@@ -135,36 +135,37 @@ def OPCCommand(self):
 
     from SimpleSeer.realtime import ChannelManager
     opc_settings = self.session.opc
+
     if opc_settings.has_key('name') and opc_settings.has_key('server'):
-      print 'Trying to connect to OPC Server[%s]...' % opc_settings['server']
+      self.log.info('Trying to connect to OPC Server[%s]...' % opc_settings['server'])
       try:
         opc_client = OpenOPC.open_client(opc_settings['server'])
       except:
         ex = 'Cannot connect to server %s, please verify it is up and running' % opc_settings['server']
         raise Exception(ex)
-      print '...Connected to server %s' % opc_settings['server']
-      print 'Mapping OPC connection to server name: %s' % opc_settings['name']
+      self.log.info('...Connected to server %s' % opc_settings['server'])
+      self.log.info('Mapping OPC connection to server name: %s' % opc_settings['name'])
       opc_client.connect(opc_settings['name'])
-      print 'Server [%s] mapped' % opc_settings['name']
+      self.log.info('Server [%s] mapped' % opc_settings['name'])
       
     if opc_settings.has_key('tagcounter'):
       tagcounter = int(opc_client.read(opc_settings['tagcounter'])[0])
 
     counter = tagcounter
-    print 'Polling OPC Server for triggers'
+    self.log.info('Polling OPC Server for triggers')
     while True:
       tagcounter = int(opc_client.read(opc_settings['tagcounter'])[0])
 
       if tagcounter != counter:
-        print 'Trigger Received'
+        self.log.info('Trigger Received')
         data = dict()
         for tag in opc_settings.get('tags'):
           tagdata = opc_client.read(tag)
           if tagdata:
-            print 'Read tag[%s] with value: %s' % (tag, tagdata[0])
+            self.log.info('Read tag[%s] with value: %s' % (tag, tagdata[0]))
             data[tag] = tagdata[0]
 
-        print 'Publishing data to PUB/SUB OPC channel'    
+        self.log.info('Publishing data to PUB/SUB OPC channel')
         ChannelManager().publish('opc/', data)
         counter = tagcounter
 
