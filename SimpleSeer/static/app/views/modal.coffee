@@ -82,7 +82,7 @@ module.exports = class modal extends View
     #inputMessage
     ele = @$el.find('input')
     if options.inputMessage?
-      ele.attr('value',options.inputMessage)
+      ele.attr('placeholder',options.inputMessage)
       ele.show()
     else
       ele.hide()
