@@ -53,7 +53,7 @@ module.exports = SeerApplication =
 
   # Returns the loading status of the application.
   isLoading: =>
-    !$('#throbber :hidden').length
+    !$('#modal :hidden').length
 
   alert:(message, alert_type) ->
     _anchor = (@settings.ui_alert_anchor || '#messages')

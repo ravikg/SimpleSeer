@@ -8,13 +8,14 @@ SimpleSeer.modal.show({message:'I demand user interaction!',
                        cancelMessage:'Cancel',
                        inputMessage:"edit me!",
                        throbber:false,
-                       success:function(){alert('success!');},
+                       success:function(options){console.log(options.userInput);},
                        cancel:function(){alert('canceled');}
                        });
 ###
 module.exports = class modal extends View
   id: "simpleseer-modal"
   tagName: "div"
+  className: "modal-body"
   template: template
   _callbacks:
     cancel: []
@@ -98,7 +99,11 @@ module.exports = class modal extends View
   # values:
   #   userInput:     (string)   Value entered by user
   #   action:        (string)   Action taken ['DEFAULT','OK']
-  onSuccess:(values={action:'DEFAULT',userInput:@$el.find(".message").html}) =>
+  onSuccess:(values={}) =>
+  	if !values.action?
+      values.action = 'DEFAULT'
+  	if !values.userInput?
+      values.userInput = @$el.find('input').val()
     for f in @_callbacks['success']
       f(values)
     @_reset()
