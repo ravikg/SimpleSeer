@@ -111,6 +111,66 @@ def WebCommand(self):
     web.run_gevent_server()
 
 @Command.simple(use_gevent=True, remote_seer=True)
+def OPCCommand(self):
+    '''
+    You will also need to add the following to your config file:
+    opc:
+      server: 10.0.1.107
+      name: OPC SERVER NAME
+      tags: ["OPC-SERVER.Brightness_1.Brightness", "OPC-SERVER.TAGNAME"]
+      tagcounter: OPC-SERVER.tag_which_is_int_that_tells_frame_has_changed
+
+
+    This also requires the server you are connecting to be running the OpenOPC
+    gateway service.  It comes bundled with OpenOPC.  To get it to route over
+    the network you also have to set the windows environment variable OPC_GATE_HOST
+    to the actual of the IP address of the server it's running on instead of 'localhost'
+    otherwise the interface doesn't bind and you won't be able to connect via
+    linux.
+    '''
+    try:
+        import OpenOPC
+    except:
+        raise Exception('Requires OpenOPC plugin')
+
+    from SimpleSeer.realtime import ChannelManager
+    opc_settings = self.session.opc
+
+    if opc_settings.has_key('name') and opc_settings.has_key('server'):
+      self.log.info('Trying to connect to OPC Server[%s]...' % opc_settings['server'])
+      try:
+        opc_client = OpenOPC.open_client(opc_settings['server'])
+      except:
+        ex = 'Cannot connect to server %s, please verify it is up and running' % opc_settings['server']
+        raise Exception(ex)
+      self.log.info('...Connected to server %s' % opc_settings['server'])
+      self.log.info('Mapping OPC connection to server name: %s' % opc_settings['name'])
+      opc_client.connect(opc_settings['name'])
+      self.log.info('Server [%s] mapped' % opc_settings['name'])
+      
+    if opc_settings.has_key('tagcounter'):
+      tagcounter = int(opc_client.read(opc_settings['tagcounter'])[0])
+
+    counter = tagcounter
+    self.log.info('Polling OPC Server for triggers')
+    while True:
+      tagcounter = int(opc_client.read(opc_settings['tagcounter'])[0])
+
+      if tagcounter != counter:
+        self.log.info('Trigger Received')
+        data = dict()
+        for tag in opc_settings.get('tags'):
+          tagdata = opc_client.read(tag)
+          if tagdata:
+            self.log.info('Read tag[%s] with value: %s' % (tag, tagdata[0]))
+            data[tag] = tagdata[0]
+
+        self.log.info('Publishing data to PUB/SUB OPC channel')
+        ChannelManager().publish('opc/', data)
+        counter = tagcounter
+
+
+@Command.simple(use_gevent=True, remote_seer=True)
 def BrokerCommand(self):
     'Run the message broker'
     from SimpleSeer.broker import PubSubBroker
@@ -291,5 +351,3 @@ class ExportImagesQueryCommand(Command):
             file_name = self.options.dir + "/" + str(frame.id) + '.png'
             print 'Saving:',file_name
             frame.image.save(file_name)
-
-        

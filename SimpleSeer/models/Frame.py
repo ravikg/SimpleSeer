@@ -136,6 +136,7 @@ class Frame(SimpleDoc, mongoengine.Document):
     def save(self, *args, **kwargs):
         #TODO: sometimes we want a frame with no image data, basically at this
         #point we're trusting that if that were the case we won't call .image
+
         if self._imgcache != '' and self._imgcache_dirty:
             s = StringIO()
             img = self._imgcache
