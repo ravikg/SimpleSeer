@@ -13,9 +13,11 @@ from SimpleSeer import validators as V
 class MeasurementSchema(fes.Schema):
     name = fev.UnicodeString(not_empty=True) #TODO, validate on unique name
     label = fev.UnicodeString(if_missing=None)
+    labelKey = fev.UnicodeString(if_missing=None)
     method = fev.UnicodeString(not_empty=True)
     parameters = V.JSON(if_empty=dict, if_missing=None)
     units = fev.UnicodeString(if_missing="px")
+    fixdig = fev.UnicodeString(if_missing=2)
     inspection = V.ObjectId(not_empty=True)
     featurecriteria = V.JSON(if_empty=dict, if_missing=None)
 
@@ -42,9 +44,11 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
     name = mongoengine.StringField()
     #VALIDATION NEEDED: this should be a unique name
     label = mongoengine.StringField()
+    labelKey = mongoengine.StringField()
     method = mongoengine.StringField()
     parameters = mongoengine.DictField()
     units = mongoengine.StringField()
+    fixdig = mongoengine.IntField()
     inspection = mongoengine.ObjectIdField()
     featurecriteria = mongoengine.DictField()
 
