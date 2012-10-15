@@ -1,7 +1,8 @@
-Collection = require "../collection"
+#Collection = require "../collection"
+FilterCollection = require "../../collections/filtercollection"
 application = require '../../application'
 
-module.exports = class Series extends Collection
+module.exports = class Series extends FilterCollection
   url: ""
   redraw: false
   xAxis:{}
@@ -15,16 +16,20 @@ module.exports = class Series extends Collection
     click:->
     out:->
   
-  initialize: (args={}) =>
+  initialize: (models, args={}) =>
+    @filterRoot = "Chart"
     @name = args.name || ''
     @id = args.id
+    @url = "/chart/data/"+@id
     @color = args.color || 'blue'
     # Bind view to collection so we know where our widgets live
     if args.view?
       @view = args.view
     @accumulate = args.accumlate || false
     @xAxis.type = args.xtype
-    super(args)
+    super(models, args)
+    @setParam 'sortkey', 'capturetime_epoch'
+    @setParam 'sortorder', 1
     args.realtime = true
     if args.realtime
       @subscribe()
@@ -34,34 +39,26 @@ module.exports = class Series extends Collection
     
   parse: (response) =>
     super(response)
+    @subscribe(response.chart)
     clean = @_clean response.data
     return clean
 
   fetch: (args={}) =>
-    # Create default success action if none supplied to fetch
-    m = @view.options.model
-
-    name = m.attributes.name
-    frm = new moment().utc().subtract('s',application.charts.timeframe).valueOf()
-    to = false
-    if frm and to
-      @url = "/chart/"+name+"/since/"+frm+"/before/" + to
-    else if frm
-      @url = "/chart/"+name+"/since/" + frm
-    else
-      console.error 'frm and or to required'
-      return false
-
+    @view.showMessage('loading','Loading...')
     if !args.success?
-      _.extend args,
-        success: @onSuccess
+      args.success = @onSuccess
     if !args.error?
-      _.extend args,
-        error: @onError
+      args.error = @onError
+    args['total'] = true
+    args['params'] = {skip:~@limit,limit:@limit}
     super(args)
 
   onSuccess: (obj, rawJson) =>
+    @view.hasData = false
     @_drawData()
+    @view.hideMessage()
+    if !@view.hasData
+      @view.showMessage('error','No data to display')
     $('.alert_error').remove()
   
   onError: =>
@@ -78,7 +75,9 @@ module.exports = class Series extends Collection
     points = []
     for p in @models
       points.push p.attributes
-    @view.setData points, @id    
+    @view.setData points, @id
+    if points.length
+      @view.hasData = true
     return
   
     dd = []
@@ -103,6 +102,7 @@ module.exports = class Series extends Collection
       d.d[0] = @_counter++
     else if @xAxis.type == 'datetime'
       d.d[0] = new moment d.d[0]
+      d.d[0].subtract('ms', application.timeOffset)
     if @accumulate
       _id = d.d[1]
     else
@@ -120,7 +120,10 @@ module.exports = class Series extends Collection
     #    _point.marker.fillColor = @model.colormap[d.m[i]]
     return _point
 
-  subscribe: =>
+  subscribe: (channel=false) =>
+    if channel
+      application.socket.removeListener "message:Chart/#{@.name}/", @receive
+      @name = channel
     if application.socket
       application.socket.on "message:Chart/#{@.name}/", @receive
       if !application.subscriptions["Chart/#{@.name}/"]
@@ -142,6 +145,9 @@ module.exports = class Series extends Collection
       @shiftStack()
       @view.addPoint p, @id
       @add @_formatChartPoint o
+      @view.hasData = true
+    if @view.hasData && @view.hasMessage
+      @view.hideMessage()
     return
     
     ###

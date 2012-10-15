@@ -8,7 +8,7 @@ body {
 p { margin: 0; padding: 0px; }
 ul { list-style-type: none; }
 
-input[type=text], textarea {
+input[type=text], input[type=number], textarea {
   padding: 5px;
   
   background: #fff;
@@ -258,13 +258,14 @@ select{
 
 a { font-size: 13px; color: #08C; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
 
-#throbber{
+.modal-body{
     height: 100%;
     left: 0;
     position: fixed;
     top: 0;
     width: 100%;
     background: rgba(0,0,0,0.5);
+    z-index:10000;
 }
 
 #throbberBody{
@@ -281,7 +282,11 @@ a { font-size: 13px; color: #08C; font-family: "Helvetica Neue", Helvetica, Aria
     width: 500px;
     padding: 15px;
     
-    .message { font-size: 20px; text-align: center; margin-top: 20px; }
+    .message { margin-top: 20px; }
+    .large { font-size: 20px; }
+    .center { text-align: center;}
+    input { width:488px; margin-top:5px; }
+    button { margin-top:5px; float:right; }
 }
 
 #config{
@@ -298,6 +303,11 @@ a { font-size: 13px; color: #08C; font-family: "Helvetica Neue", Helvetica, Aria
   margin-bottom:10px;
   padding-bottom: 14px;
   h4 { margin: 4px; font-weight: bold; }
+  input[type=checkbox] {
+    float: none !important;
+    vertical-align: middle;
+    margin-right: 3px;
+  }
 }
 
 .filter_widget:last-child {
@@ -343,6 +353,7 @@ a { font-size: 13px; color: #08C; font-family: "Helvetica Neue", Helvetica, Aria
 
 #filter_form .oneLine input[type=text], label {
   display: inline-block;
+  vertical-align: middle;
 }
 
 .ui-slider .ui-slider-handle {
@@ -453,7 +464,7 @@ a { font-size: 13px; color: #08C; font-family: "Helvetica Neue", Helvetica, Aria
 
 
 .graphBuilderControls {
-  z-index: 1002;
+  z-index: 1003;
   background: white;
   box-sizing: border-box;
   -moz-box-sizing: border-box;
@@ -465,7 +476,7 @@ a { font-size: 13px; color: #08C; font-family: "Helvetica Neue", Helvetica, Aria
 }
 
 .accordion {
-  height: 435px;
+  min-height: 435px;
   margin-top: 20px;
   margin-left: 10px;
   border: 1px solid #ccc;
@@ -518,29 +529,31 @@ a { font-size: 13px; color: #08C; font-family: "Helvetica Neue", Helvetica, Aria
   padding: 20px;
 }
 
-button.save {
-  width: 150px;
-  height: 35px;
+.graphBuilderControls button.save, .graphBuilderControls button.cancel {
+  display: inline-block;
+  width: 120px;
+  height: 30px;
   margin-top: 3px;
   margin-right: 12px;
   margin-bottom: 12px;
 }
 
-button.save {
+.graphBuilderControls button.cancel {
+  width: 81px;
+  height: 30px;
+}
+
+.graphBuilderControls button.save {
   display: inline-block;
   outline: none;
   cursor: pointer;
   text-align: center;
   text-decoration: none;
-  font: 14px/100% Arial, Helvetica, sans-serif;
   padding: .5em 2em .55em;
   text-shadow: 0 1px 1px rgba(0,0,0,.3);
   -webkit-border-radius: 3px; 
   -moz-border-radius: 3px;
   border-radius: 3px;
-  -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.2);
-  -moz-box-shadow: 0 1px 2px rgba(0,0,0,.2);
-  box-shadow: 0 1px 2px rgba(0,0,0,.2);
   color: #fef4e9;
   border: solid 1px #da7c0c;
   background: #f78d1d;
@@ -549,7 +562,7 @@ button.save {
   filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#faa51a', endColorstr='#f47a20');    
 }
 
-button.save:hover {
+.graphBuilderControls button.save:hover {
   text-decoration: none;
   background: #f47c20;
   background: -webkit-gradient(linear, left top, left bottom, from(#f88e11), to(#f06015));
@@ -557,36 +570,64 @@ button.save:hover {
   filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#f88e11', endColorstr='#f06015');    
 }
 
-button.save:active {
+.graphBuilderControls button.save:active {
   position: relative;
   top: 1px;
   color: #fcd3a5;
   background: -webkit-gradient(linear, left top, left bottom, from(#f47a20), to(#faa51a));
   background: -moz-linear-gradient(top,  #f47a20,  #faa51a);
   filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#f47a20', endColorstr='#faa51a');    
-}  
-
-.chartStyleType {
-  height: 40px;
-  margin-bottom: 20px;
-  clear: both;
 }
 
-.chartStyleType:last-child {
-  margin-bottom: 0px;
+.trim {
+  padding-bottom: 0px !important;
+}
+
+.chartStyleType {
+  width: 122px;
+  display: inline-block;
+  margin-bottom: 10px;
 }
 
 .chartStyleType label {
-  line-height: 40px;
+  text-align: center;
+  display: block;
+  line-height: 28px;
   font-weight: bold;
   font-size: 13px;
 }
 
-.chartStyleType button {
-  width: 70px;
-  height: 40px;
-  float: right;
-  margin-left: 5px;
+.chartStyleType input[type=radio] { display: none; }
+
+.chartStyleType input[type=radio] + label {
+  -moz-appearance: none !important;
+  -webkit-appearance: none !important;
+  -ms-appearance: none !important;
+  -o-appearance: none !important;
+  appearance: none !important;
+  background-color: #f8f8f8;
+  background-repeat: no-repeat;
+  background-position: center center;
+  border: 1px solid #ccc;
+  border-bottom: 1px solid #bbb;
+  border-radius: 3px;
+  color: #333;
+  font: bold 11px/1 "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Geneva, Verdana, sans-serif;
+  text-align: center;
+  text-shadow: 0 1px 0 #eee;
+  margin: 0 auto;
+  display: block;
+  width: 85px;
+  height: 47px;
+}
+
+.chartStyleType input[type="radio"]:checked + label {
+  background-color: #eeeeee;
+  border: 1px solid #99A;
+  border-bottom: 1px solid #88A;
+  -webkit-box-shadow: inset 0 0 12px 3px #aaaabb, 0px 0px 12px -3px #88a;
+  -moz-box-shadow: inset 0 0 12px 3px #aaaabb, 0px 0px 12px -3px #88a;
+  box-shadow: inset 0 0 12px 3px #aaaabb, 0px 0px 12px -3px #88a;
 }
 
 .breadcrumb {
@@ -599,7 +640,7 @@ button.save:active {
 }
 
 .graphBuilderPreview {
-  z-index: 1002;
+  z-index: 1001;
   background: white;
   position: absolute;
   left: 346px;
@@ -614,7 +655,7 @@ button.save:active {
   a { display: block; }
 }
 
-.graphBuilderControls .ui-combobox input {
+.graphBuilderControls .ui-combobox input, .graphBuilderControls input {
   width: 150px;
   height: 15px;
 }
@@ -648,7 +689,7 @@ button.save:active {
     font-size: 13px;
     margin-bottom: 4px;
     
-    span {
+    .title {
       float: left;
       width: 220px;
       text-align: right;
@@ -728,14 +769,14 @@ html[xmlns] .clearfix {
 
 #widget_grid .widget .header {
   z-index: 1029;
-  display: none;
+  //display: none;
   position: absolute;
   top: 0;
   left: 0;
 
   box-sizing: border-box;
   -moz-box-sizing: border-box;
-  background: #f8f8f8;
+  background: #f3f3f3;
   border-top: 1px solid #fefefe;
   border-bottom: 1px solid #ccc;
   height: 30px;
@@ -751,7 +792,7 @@ html[xmlns] .clearfix {
   margin-left: 7px;
   line-height: 27px;
   float: left;
-  color: #333;
+  color: #000;
 }
 
 #widget_grid .widget .header .button {
@@ -771,4 +812,6 @@ html[xmlns] .clearfix {
 } 
 
 .button.config { background-image: url("/img/Tools.png"); }
-.button.close { background-image: url("/img/Trash.png"); }  
+.button.close { background-image: url("/img/Trash.png"); }
+.button.upsize { background-image: url("/img/arrow-right.png"); }
+.button.downsize { background-image: url("/img/arrow-left.png"); }

@@ -28,8 +28,7 @@ def run(state):
             core.process(frame)
             if config.record_all:
                 frame.save()
-
-
+                
 @core.on('run', 'rate/')
 def set_rate(state, name, data):
     state.core.set_rate(data['rate'])

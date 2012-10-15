@@ -36,3 +36,10 @@ module.exports = class View extends Backbone.View
       parent:@
       selector:selector
     @subviews[name] = new viewClass(options)
+    
+  clearSubviews: =>
+    for name, subview of @subviews
+      if subview.clearSubviews
+        subview.clearSubviews()
+      subview.remove()
+    @subviews = {}

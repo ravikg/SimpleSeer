@@ -5,17 +5,25 @@ import mongoengine
 from flask import Flask
 from socketio.server import SocketIOServer
 
+from . import models as M
+
 from . import views
 from . import crud
 from . import util
 from .Session import Session
+from path import path
+
 
 DEBUG = True
 
 log = logging.getLogger(__name__)
 
 def make_app():
-    app = Flask(__name__)
+    settings = Session()
+    tpath = path("{0}/{1}".format(settings.get_config()['web']['static']['/'], '../templates')).abspath()
+    print "Setting template path to {0}".format(tpath)
+    template_folder=tpath
+    app = Flask(__name__,template_folder=template_folder)
 
     @app.teardown_request
     def teardown_request(exception):
@@ -24,6 +32,12 @@ def make_app():
 
     views.route.register_routes(app)
     crud.register(app)
+    
+    if 'Chart' in dir(M):
+        M.Chart.register_web(app)
+    if 'Dashboard' in dir(M):
+        M.Dashboard.register_web(app)
+
     return app
 
 class WebServer(object):

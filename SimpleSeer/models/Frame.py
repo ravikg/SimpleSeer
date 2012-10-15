@@ -70,7 +70,7 @@ class Frame(SimpleDoc, mongoengine.Document):
     @classmethod
     #which fields we care about for Filter.py
     def filterFieldNames(cls):
-        return ['_id', 'camera', 'capturetime', 'capturetime_epoch', 'metadata', 'notes', 'height', 'width', 'imgfile']
+        return ['_id', 'camera', 'capturetime', 'capturetime_epoch', 'metadata', 'notes', 'height', 'width', 'imgfile', 'features']
 
 
     @LazyProperty
@@ -134,10 +134,9 @@ class Frame(SimpleDoc, mongoengine.Document):
             self.width, self.height, self.camera, capturetime)
         
     def save(self, *args, **kwargs):
-        from SimpleSeer.OLAPUtils import RealtimeOLAP
-        
         #TODO: sometimes we want a frame with no image data, basically at this
         #point we're trusting that if that were the case we won't call .image
+
         if self._imgcache != '' and self._imgcache_dirty:
             s = StringIO()
             img = self._imgcache
