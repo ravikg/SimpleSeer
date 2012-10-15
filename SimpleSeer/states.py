@@ -116,7 +116,7 @@ class Core(object):
         currentframes = [
             cam.getFrame() for cam in self.cameras ]
 
-        while len(self.lastframes) >= self._config.max_frames:
+        while len(self.lastframes) >= (self._config.max_frames or 30):
             self.lastframes.popleft()
 
         self.lastframes.append(currentframes)

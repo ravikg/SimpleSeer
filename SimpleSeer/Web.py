@@ -20,7 +20,9 @@ log = logging.getLogger(__name__)
 
 def make_app():
     settings = Session()
-    template_folder=path("{0}/{1}".format(settings.get_config()['web']['static']['/'], '../templates')).abspath()
+    tpath = path("{0}/{1}".format(settings.get_config()['web']['static']['/'], '../templates')).abspath()
+    print "Setting template path to {0}".format(tpath)
+    template_folder=tpath
     app = Flask(__name__,template_folder=template_folder)
 
     @app.teardown_request

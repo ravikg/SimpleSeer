@@ -8,6 +8,6 @@ module.exports = class Router extends SeerRouter
   	'':'main'
   	
   main: =>
-  	application.throbber.clear()
+  	application.modal.onSuccess()
   	
   
