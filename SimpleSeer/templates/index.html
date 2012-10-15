@@ -13,6 +13,7 @@
   </head>
     
   <body> 
+      {% block header %}
       <header>
         <section class="container">
           <nav>
@@ -21,6 +22,7 @@
           </nav>
         </section>
       </header>
+      {% endblock %}
       
       <div class="row"><div id="messages" class="span10 offset1"></div></div>
       <section id="main" class="container"></section>

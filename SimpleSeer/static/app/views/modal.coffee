@@ -47,7 +47,7 @@ module.exports = class modal extends View
   #   cancelMessage: (string)   Enables Cancel button and uses val as button text
   #   inputMessage:  (string)   Enables user input box and applies default value
   #   throbber:      (bool)     Use throbber graphic
-  show:(options={message:'Loading...',throbber:true}) =>
+  show:(options={message:'<p class="large center">Loading...<p>',throbber:true}) =>
 
   	#throbber
     if options.throbber
