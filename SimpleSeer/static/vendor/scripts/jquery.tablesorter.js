@@ -384,7 +384,7 @@
                 
                 var header_index = computeTableHeaderCellIndexes(table);
 
-                $tableHeaders = $(table.config.selectorHeaders, table).each(function (index) {
+                tableHeaders = $(table.config.selectorHeaders, table).each(function (index) {
 
                     this.column = header_index[this.parentNode.rowIndex + "-" + this.cellIndex];
                     // this.column = index;
@@ -407,10 +407,10 @@
 
                 if (table.config.debug) {
                     benchmark("Built headers:", time);
-                    log($tableHeaders);
+                    log(tableHeaders);
                 }
 
-                return $tableHeaders;
+                return tableHeaders;
 
             };
 

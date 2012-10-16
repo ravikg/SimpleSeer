@@ -22,6 +22,7 @@ def load_ipython_extension(ipython):
             Measurement = M.Measurement,
             Image = Image,
             ImageSet = ImageSet,
+            Dashboard = M.Dashboard,
             Color = Color,
             display=Display(displaytype="notebook"), 
             M=M,

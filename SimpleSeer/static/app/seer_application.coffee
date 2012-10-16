@@ -18,43 +18,24 @@ module.exports = SeerApplication =
     if !@settings.template_paths?
       @settings.template_paths = {}
       
-    ViewHelper = require 'lib/view_helper'
-    HomeView = require 'views/home_view'
-    FrameDetailView = require 'views/framedetail_view'
-    Router = require 'lib/router'
-    Inspections = require 'collections/inspections'
-    Measurements = require 'collections/measurements'
-    Frames = require 'collections/frames'
-    #OLAPs = require 'collections/OLAPs'
-    FrameSets = require 'collections/framesets'
-    Pallette = require 'lib/ui_helper'
-    Frame = require "../models/frame"
-    
-    @pallette = new Pallette()
     @subscriptions = {}
     @timeOffset = (new Date()).getTimezoneOffset() * 60 * 1000
-    @filters = require 'views/filters/init'
-		
-    if !@.isMobile
-      @.socket = io.connect '/rt'
-      @.socket.on 'timeout', ->
-      @.socket.on 'connect', ->
-      @.socket.on 'error', ->
-      @.socket.on 'disconnect', ->
-      @.socket.on 'message', (msg) ->
-      @.socket.on "message:alert/", window.SimpleSeer._serveralert
-      @.socket.emit 'subscribe', 'alert/'
-      
-    @inspections = new Inspections()
-    @inspections.fetch()
-    #@charts = new OLAPs()
-    @measurements = new Measurements()
-    @measurements.fetch()
-    @frames = new Frames()
-    @framesets = new FrameSets()
 
+    if !@isMobile
+      @socket = io.connect '/rt'
+      #@.socket.on 'timeout', ->
+      #@.socket.on 'connect', ->
+      #@.socket.on 'error', ->
+      #@.socket.on 'disconnect', ->
+      #@.socket.on 'message', (msg) ->
+      @socket.on "message:alert/", window.SimpleSeer._serveralert
+      @socket.emit 'subscribe', 'alert/'
+      
     # Set up the client name.
     $('#client-name').html(window.SimpleSeer.settings.ui_pagename || "")
+
+    t = require './views/modal'
+    @modal = new t()
 
     # Set up the timeout message dialog.
     $('#lost_connection').dialog
@@ -64,8 +45,6 @@ module.exports = SeerApplication =
         Ok: ->
           $( this ).dialog( "close" )
 
-    # Instantiate the router.
-    @router = new Router()
 
   # Sends an alert window to the client
   # with the specified message and severity.
@@ -74,27 +53,7 @@ module.exports = SeerApplication =
 
   # Returns the loading status of the application.
   isLoading: =>
-    !$('#throbber :hidden').length
-    
-  # Throbber controls for displaying the loading
-  # status of the application.
-  throbber:
-    _callbacks: []
-    load:(message='Loading...', callbacks=[]) ->
-      $('#throbber').show().find(".message").html(message)
-      for callback in callbacks
-        @callback(callback)
-      return
-    clear: ->
-      $('#throbber').hide()
-      for callback in @_callbacks
-        callback()
-      @_callbacks = []
-      return
-    callback:(callback) ->
-      if Application.isLoading() then callback()
-      else @_callbacks.push callback
-      return
+    !$('#modal :hidden').length
 
   alert:(message, alert_type) ->
     _anchor = (@settings.ui_alert_anchor || '#messages')

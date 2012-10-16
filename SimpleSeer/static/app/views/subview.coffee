@@ -5,15 +5,25 @@ module.exports = class SubView extends View
   options:
     parent: null
     selector: null
+  htmltags: {}
 
   render: () =>
     if @options.append
       if !@options.parent.$('#'+@options.append).length
         tagName = @tagName || 'div'
         className = @className || ''
-        @options.parent.$(@options.selector).append('<'+tagName+' class="'+className+'" id="'+@options.append+'" />')
+        tags = ''
+        for i,o of @htmltags
+          tags+= i+'="'+o+'" '
+        @options.parent.$(@options.selector).append('<'+tagName+' class="'+className+'" id="'+@options.append+'" '+tags+'/>')
       @setElement @options.parent.$ '#'+@options.append
     else
       @setElement @options.parent.$ @options.selector
     super
     @
+
+  remove: =>
+    if @options.parent.subviews[@id]
+      delete @options.parent.subviews[@id]
+    super
+    
