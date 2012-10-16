@@ -20,6 +20,7 @@ class MeasurementSchema(fes.Schema):
     fixdig = fev.UnicodeString(if_missing=2)
     inspection = V.ObjectId(not_empty=True)
     featurecriteria = V.JSON(if_empty=dict, if_missing=None)
+    tolerances = fev.Set(if_empty=[])
 
 
 class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
@@ -51,6 +52,7 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
     fixdig = mongoengine.IntField()
     inspection = mongoengine.ObjectIdField()
     featurecriteria = mongoengine.DictField()
+    tolerances = mongoengine.ListField()
 
     def execute(self, frame, features):
         featureset = self.findFeatureset(features)
@@ -82,15 +84,38 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
                 return []
             
             values = function_ref(frame, featureset)
-        return self.toResults(frame, values)
+        
+        results = self.toResults(frame, values)
+        results = self.tolerance(frame, results)
+        
+        return results
+        
+    def tolerance(self, frame, results):
+        
+        for result in results:
+            testField = None
+            if result.numeric:
+                testField = result.numeric
+            else:
+                testField = result.string
             
+            result.state = 0
+            messages = []
+            for rule in self.tolerances:
+                if frame.metadata[rule['criteria'].keys()[0]] == rule['criteria'].values()[0]:
+                    criteriaFunc = "testField %s %s" % (rule['rule']['operator'], rule['rule']['value'])
+                    print 'Rule is ' + criteriaFunc
+                    match = eval(criteriaFunc, {}, {'testField': testField})
+                    print match
+                    
+                    if not match:
+                        result.state = 1
+                        messages.append(criteriaFunc)
+            
+            result.message = ",".join(messages)
         
-        values = []
-        
-        
-        
-        return self.toResults(frame, values)
-        
+        return results
+    
     def findFeatureset(self, features):
         
         fs = []
