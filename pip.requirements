@@ -1,3 +1,10 @@
+scipy
+numpy
+pil
+pygame
+pyparsing
+ipython==0.13
+matplotlib
 mongoengine
 #https://github.com/ingenuitas/pyfirmata/zipball/master
 decorator
@@ -6,7 +13,6 @@ Flask-REST
 jsonpickle
 ujson
 anyjson
-guppy
 FormEncode
 pyzmq
 gevent

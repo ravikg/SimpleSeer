@@ -1,5 +1,5 @@
 from cStringIO import StringIO
-
+from calendar import timegm
 import mongoengine
 
 from SimpleSeer.base import Image, pil, pygame
@@ -25,7 +25,7 @@ class FrameSchema(fes.Schema):
     filter_extra_fields=True
     camera = fev.UnicodeString(not_empty=True)
     metadata = V.JSON(if_empty={}, if_missing={})
-    notes = fev.UnicodeString(not_empty=True, if_empty="", if_missing="")
+    notes = fev.UnicodeString(if_empty="", if_missing="")
 	#TODO, make this feasible as a formencode schema for upload
 
 
@@ -44,6 +44,7 @@ class Frame(SimpleDoc, mongoengine.Document):
         >>> 
     """
     capturetime = mongoengine.DateTimeField()
+    capturetime_epoch = mongoengine.IntField(default = 0)
     camera = mongoengine.StringField()
     features = mongoengine.ListField(mongoengine.EmbeddedDocumentField(FrameFeature))
     results = mongoengine.ListField(mongoengine.EmbeddedDocumentField(ResultEmbed))
@@ -59,15 +60,17 @@ class Frame(SimpleDoc, mongoengine.Document):
     metadata = mongoengine.DictField()
     notes = mongoengine.StringField()
     _imgcache = ''
+    _imgcache_dirty = False
+    
 
     meta = {
-        'indexes': ["capturetime", "-capturetime", ('camera', '-capturetime')]
+        'indexes': ["capturetime", "-capturetime", ('camera', '-capturetime'), "-capturetime_epoch", "capturetime_epoch"]
     }
     
     @classmethod
     #which fields we care about for Filter.py
     def filterFieldNames(cls):
-        return ['_id', 'camera', 'capturetime', 'results', 'features', 'metadata', 'notes', 'height', 'width', 'imgfile']
+        return ['_id', 'camera', 'capturetime', 'capturetime_epoch', 'metadata', 'notes', 'height', 'width', 'imgfile', 'features']
 
 
     @LazyProperty
@@ -114,6 +117,7 @@ class Frame(SimpleDoc, mongoengine.Document):
 
     @image.setter
     def image(self, value):
+        self._imgcache_dirty = True
         self.width, self.height = value.size()
         self._imgcache = value
 
@@ -130,10 +134,10 @@ class Frame(SimpleDoc, mongoengine.Document):
             self.width, self.height, self.camera, capturetime)
         
     def save(self, *args, **kwargs):
-        from SimpleSeer.OLAPUtils import RealtimeOLAP
-        
+        #TODO: sometimes we want a frame with no image data, basically at this
+        #point we're trusting that if that were the case we won't call .image
 
-        if self._imgcache != '':
+        if self._imgcache != '' and self._imgcache_dirty:
             s = StringIO()
             img = self._imgcache
             if self.clip_id is None:
@@ -150,9 +154,15 @@ class Frame(SimpleDoc, mongoengine.Document):
                 self.layerfile.replace(pygame.image.tostring(mergedlayer._mSurface, "RGBA"))
                 #TODO, make layerfile a compressed object
             #self._imgcache = ''
+            self._imgcache_dirty = False
+        
+        
+        epoch_ms = timegm(self.capturetime.timetuple()) * 1000 + self.capturetime.microsecond / 1000
+        if self.capturetime_epoch != epoch_ms:
+            self.capturetime_epoch = epoch_ms 
         
         super(Frame, self).save(*args, **kwargs)
-        
+
         #TODO, this is sloppy -- we should handle this with cascading saves
         #or some other mechanism
         for r in self.results:
@@ -161,14 +171,10 @@ class Frame(SimpleDoc, mongoengine.Document):
             result.frame_id = self.id
             result.save(*args, **kwargs)
         
-        # Make sure this is something to update
-        if self.results or self.features:    
-            ro = RealtimeOLAP()
-            ro.realtime(self)
-        #TODO: sometimes we want a frame with no image data, basically at this
-        #point we're trusting that if that were the case we won't call .image
+        # Once everything else is saved, publish result
+        # Do not place any other save actions after this line or realtime objects will miss data
         realtime.ChannelManager().publish('frame/', self)
-
+        
         
     def serialize(self):
         s = StringIO()

@@ -1,5 +1,6 @@
 import time
 import gevent
+import os, subprocess
 from .base import Command
 
 class CoreStatesCommand(Command):
@@ -12,7 +13,6 @@ class CoreStatesCommand(Command):
         subparser.add_argument('--disable-pyro', action='store_true')
 
     def run(self):
-        from SimpleSeer.OLAPUtils import ScheduledOLAP
         from SimpleSeer.states import Core
         import Pyro4
 
@@ -25,8 +25,6 @@ class CoreStatesCommand(Command):
         if not found_statemachine:
             raise Exception("State machine " + self.options.program + " not found!")
             
-        so = ScheduledOLAP()
-        gevent.spawn_link_exception(so.runSked)
 
         core.start_socket_communication()
 
@@ -67,24 +65,110 @@ def PerfTestCommand(self):
     seer = SimpleSeer()
     seer.run()
 
+@Command.simple(use_gevent=True, remote_seer=False)
+def OlapCommand(self):
+    try:
+        from SeerCloud.OLAPUtils import ScheduledOLAP, RealtimeOLAP
+    except:
+        print 'Error starting OLAP schedules.  This requires Seer Cloud'
+        return 0
+    
+    from SimpleSeer.models.Inspection import Inspection, Measurement
+
+    Inspection.register_plugins('seer.plugins.inspection')
+    Measurement.register_plugins('seer.plugins.measurement')
+
+    so = ScheduledOLAP()
+    gevent.spawn_link_exception(so.runSked)
+    
+    ro = RealtimeOLAP()
+    ro.monitorRealtime()
+
 @Command.simple(use_gevent=True, remote_seer=True)
 def WebCommand(self):
     'Run the web server'
     from SimpleSeer.Web import WebServer, make_app
     from SimpleSeer import models as M
     from pymongo import Connection, DESCENDING, ASCENDING
+    from SimpleSeer.models.Inspection import Inspection, Measurement
 
-    # Ensure indexes created for filterable fields
+    # Plugins must be registered for queries
+    Inspection.register_plugins('seer.plugins.inspection')
+    Measurement.register_plugins('seer.plugins.measurement')
+
     dbName = self.session.database
     if not dbName:
         dbName = 'default'
     db = Connection()[dbName]
-    for f in self.session.ui_filters:
-        db.frame.ensure_index([(f['filter_name'], ASCENDING), (f['filter_name'], DESCENDING)])
-    
+    # Ensure indexes created for filterable fields
+    # TODO: should make this based on actual plugin params or filter data
+    db.frame.ensure_index([('results', 1)])
+    db.frame.ensure_index([('results.measurement_name', 1)])
+    db.frame.ensure_index([('results.numeric', 1)])
+    db.frame.ensure_index([('results.string', 1)])
     
     web = WebServer(make_app())
     web.run_gevent_server()
+
+@Command.simple(use_gevent=True, remote_seer=True)
+def OPCCommand(self):
+    '''
+    You will also need to add the following to your config file:
+    opc:
+      server: 10.0.1.107
+      name: OPC SERVER NAME
+      tags: ["OPC-SERVER.Brightness_1.Brightness", "OPC-SERVER.TAGNAME"]
+      tagcounter: OPC-SERVER.tag_which_is_int_that_tells_frame_has_changed
+
+
+    This also requires the server you are connecting to be running the OpenOPC
+    gateway service.  It comes bundled with OpenOPC.  To get it to route over
+    the network you also have to set the windows environment variable OPC_GATE_HOST
+    to the actual of the IP address of the server it's running on instead of 'localhost'
+    otherwise the interface doesn't bind and you won't be able to connect via
+    linux.
+    '''
+    try:
+        import OpenOPC
+    except:
+        raise Exception('Requires OpenOPC plugin')
+
+    from SimpleSeer.realtime import ChannelManager
+    opc_settings = self.session.opc
+
+    if opc_settings.has_key('name') and opc_settings.has_key('server'):
+      self.log.info('Trying to connect to OPC Server[%s]...' % opc_settings['server'])
+      try:
+        opc_client = OpenOPC.open_client(opc_settings['server'])
+      except:
+        ex = 'Cannot connect to server %s, please verify it is up and running' % opc_settings['server']
+        raise Exception(ex)
+      self.log.info('...Connected to server %s' % opc_settings['server'])
+      self.log.info('Mapping OPC connection to server name: %s' % opc_settings['name'])
+      opc_client.connect(opc_settings['name'])
+      self.log.info('Server [%s] mapped' % opc_settings['name'])
+      
+    if opc_settings.has_key('tagcounter'):
+      tagcounter = int(opc_client.read(opc_settings['tagcounter'])[0])
+
+    counter = tagcounter
+    self.log.info('Polling OPC Server for triggers')
+    while True:
+      tagcounter = int(opc_client.read(opc_settings['tagcounter'])[0])
+
+      if tagcounter != counter:
+        self.log.info('Trigger Received')
+        data = dict()
+        for tag in opc_settings.get('tags'):
+          tagdata = opc_client.read(tag)
+          if tagdata:
+            self.log.info('Read tag[%s] with value: %s' % (tag, tagdata[0]))
+            data[tag] = tagdata[0]
+
+        self.log.info('Publishing data to PUB/SUB OPC channel')
+        ChannelManager().publish('opc/', data)
+        counter = tagcounter
+
 
 @Command.simple(use_gevent=True, remote_seer=True)
 def BrokerCommand(self):
@@ -117,30 +201,153 @@ def ScrubCommand(self):
 @Command.simple(use_gevent=False, remote_seer=True)
 def ShellCommand(self):
     'Run the ipython shell'
-    from IPython.config.loader import Config
-    from IPython.frontend.terminal.embed import InteractiveShellEmbed
-    from SimpleSeer.service import SeerProxy2
-    from SimpleSeer import models as M
+    import subprocess
+    import os
 
-    banner = '''\nRunning the SimpleSeer interactive shell.\n'''
-    exit_msg = '\n... [Exiting the SimpleSeer interactive shell] ...\n'
-    shell= InteractiveShellEmbed(
-        banner1=banner, exit_msg=exit_msg, user_ns={})
-    shell.extension_manager.load_extension('SimpleSeer.ipython_extension')
-    shell()
+    if os.getenv('DISPLAY'):
+      cmd = ['ipython','--ext','SimpleSeer.ipython','--pylab']
+    else:
+      cmd = ['ipython','--ext','SimpleSeer.ipython']
+      
+    subprocess.call(cmd, stderr=subprocess.STDOUT)
 
-@Command.simple(use_gevent=False, remote_seer=True)
+@Command.simple(use_gevent=True, remote_seer=False)
 def NotebookCommand(self):
     'Run the ipython notebook server'
-    from IPython.frontend.html.notebook import notebookapp
-    from IPython.frontend.html.notebook import kernelmanager
-    from SimpleSeer import models as M
-
-    kernelmanager.MappingKernelManager.first_beat=30.0
-    app = notebookapp.NotebookApp.instance()
-    app.initialize([
-            '--no-browser',
+    import subprocess
+    subprocess.call(["ipython", "notebook",
             '--port', '5050',
-            '--ext', 'SimpleSeer.ipython_extension'])
-    app.start()
+            '--ext', 'SimpleSeer.notebook', '--pylab', 'inline'], stderr=subprocess.STDOUT)
 
+#~ @Command.simple(use_gevent=True, remote_seer=False)
+class WorkerCommand(Command):
+    '''
+    This Starts a distributed worker object using the celery library.
+
+    Run from the the command line where you have a project created.
+
+    >>> simpleseer worker
+
+
+    The database the worker pool queue connects to is the same one used
+    in the default configuration file (simpleseer.cfg).  It stores the
+    data in the default collection 'celery'.
+
+    To issue commands to a worker, basically a task master, you run:
+
+    >>> simpleseer shell
+    >>> from SimpleSeer.command.worker import update_frame
+    >>> for frame in M.Frame.objects():
+          update_frame.delay(str(frame.id))
+    >>>
+
+    That will basically iterate through all the frames, if you want
+    to change it then pass the frame id you want to update.
+    
+
+    '''
+
+    def __init__(self, subparser):
+        pass
+
+    def run(self):
+        from SimpleSeer.worker import host
+        import socket
+        worker_name = socket.gethostname() + '-' + str(time.time())
+        cmd = ['celery','worker','--broker',host,'-A','SimpleSeer.worker','-n',worker_name]
+        subprocess.call(cmd)
+
+class ExportMetaCommand(Command):
+    
+    def __init__(self, subparser):
+        subparser.add_argument("--listen", help="Set to true to run as daemon listing for changes and exporting when changes found.", default="false")
+        
+    def run(self):
+        from SimpleSeer.Backup import Backup
+        
+        listen = self.options.listen
+        
+        Backup.exportAll()
+        
+        if listen.upper() == 'TRUE': 
+            gevent.spawn_link_exception(Backup.listen())
+    
+
+class ImportMetaCommand(Command):
+    
+    def __init__(self, subparser):
+        subparser.add_argument("--file", help="The file name to import.  If blank, defaults to seer_export.yaml", default="seer_export.yaml")
+        
+    def run(self):
+        from SimpleSeer.Backup import Backup
+        
+        filename = self.options.file
+        Backup.importAll(filename)
+    
+
+
+
+class ExportImagesCommand(Command):
+
+    def __init__(self, subparser):
+        subparser.add_argument("--number", help="This is the number of lastframes you want, use 'all' if you want all the images ever", default='all', nargs='?')
+        subparser.add_argument("--dir", default=".", nargs="?")
+
+
+    def run(self):
+        "Dump the images stored in the database to a local directory in standard image format"
+        from SimpleSeer.SimpleSeer import SimpleSeer
+        from SimpleSeer import models as M
+
+
+        number_of_images = self.options.number
+
+        if number_of_images != 'all':
+            number_of_images = int(number_of_images)
+            frames = M.Frame.objects().order_by("-capturetime").limit(number_of_images)
+        else:
+            frames = M.Frame.objects()
+
+        num_of_frames = len(frames)
+        counter = 1
+
+        for frame in frames:
+            file_name = self.options.dir + "/" + str(frame.id) + '.png'
+            print 'Saving file (',counter,'of',len(frames),'):',file_name
+            frame.image.save(file_name)
+            counter += 1
+
+class ExportImagesQueryCommand(Command):
+
+    def __init__(self, subparser):
+        from argparse import RawTextHelpFormatter, RawDescriptionHelpFormatter
+        subparser.formatter_class=RawDescriptionHelpFormatter
+        help_text = '''
+        This will export images with the mongo query specified 'i.e. Frame.objects(query_here)'
+        To use, you would normally run the query as:
+        Frame.objects(id='502bfa6856a8bf1e755c702d', width__gte = 50)
+
+        You need to structure the query as a dictionary like:
+        "{'id':'502bfa6856a8bf1e755c702d', 'width__gte': '50'}"
+
+        So you would run the command as:
+        simpleseer export-images-query "{'id':'502bfa6856a8bf1e755c702d', 'width__gte': '50'}"
+        '''
+        subparser.add_argument("--query", help=help_text)
+        subparser.add_argument("--dir", default=".", nargs="?")
+
+    def run(self):
+        "Dump the images stored in the database to a local directory in standard image format with a specific query"
+        from SimpleSeer.SimpleSeer import SimpleSeer
+        from SimpleSeer import models as M
+        import ast
+
+        print "Saving images to local directory"
+        query = self.options.query
+        query = ast.literal_eval(query)
+        frames = M.Frame.objects(**query).order_by("-capturetime")
+
+        for frame in frames:
+            file_name = self.options.dir + "/" + str(frame.id) + '.png'
+            print 'Saving:',file_name
+            frame.image.save(file_name)

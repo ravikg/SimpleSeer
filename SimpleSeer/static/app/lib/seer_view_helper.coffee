@@ -110,7 +110,9 @@ Handlebars.registerHelper 'featuredetail', (features) ->
   ret += "</tbody></table>"
   new Handlebars.SafeString(ret)
 
-Handlebars.registerHelper 'featurelist', (features) ->
+Handlebars.registerHelper 'featurelist', (features = []) ->
+  if !features
+  	features = []
   unless features.length > 0
     return new Handlebars.SafeString("")
   ret = ""
@@ -128,15 +130,6 @@ Handlebars.registerHelper 'featurelist', (features) ->
       ret += "<p class='item-detail'><span class=\"featureLabel\">"+_lk+"</span>" + o.title + ":</p>"
       ret += "<p class='item-detail-value'>"+o.value+"<span>"+o.units+"</span></p>"
       ret += "</div>"
-    """
-    i = 0
-    while i < keys.length
-      ret += "<div style=\"clear:both;\">"
-      ret += "<p class='item-detail'><span class=\"featureLabel\"></span>" + keys[i] + ":</p>"
-      ret += "<p class='item-detail-value'>" + values[i] + "</p>"
-      ret += "</div>"
-      i++
-    """
   return new Handlebars.SafeString(ret)
 
 # Usage: {{#key_value obj}} Key: {{key}} // Value: {{value}} {{/key_value}}

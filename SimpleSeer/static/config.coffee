@@ -44,6 +44,7 @@ exports.config =
           'vendor/scripts/jquery.ui.zoomify.js',
           'vendor/scripts/jquery.autogrow-textarea.js',
           'vendor/scripts/jquery.tinyscrollbar.js',
+          'vendor/scripts/jquery.gridster.js',
           'vendor/scripts/sm.datetimerange.js']
 
     stylesheets:
@@ -51,8 +52,12 @@ exports.config =
       joinTo:
         'stylesheets/seer.css': (path) -> true
       order:
-        before: ['vendor/styles/bootstrap.css']
-        after: [ 'vendor/styles/bootstrap-responsive.css',
+        before: [
+          'vendor/styles/gridsystem.css',
+          'vendor/styles/bootstrap.css'
+        ]
+        after: [
+          #'vendor/styles/bootstrap-responsive.css',
           'vendor/styles/jquery.jqplot.min.css',
           'vendor/styles/themes/base/jquery.ui.core.css',
           'vendor/styles/tablesorter-blue.css',

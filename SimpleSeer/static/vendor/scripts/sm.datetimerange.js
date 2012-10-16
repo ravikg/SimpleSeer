@@ -15,18 +15,67 @@ SimpleSeerDateHelper = {
     },
     
     prettyDate: function(date) {
-        return date.toLocaleDateString().match(/\w+\s\d+\,\s\d+/)[0];
+        var str = [this.monthNames[date.getMonth()], " ", date.getDate(), ", ", date.getFullYear()];
+	return str.join("");
     },
     
-    prettyTime: function(date) {
-        return date.toTimeString().split(" ")[0]
+    prettyTime: function(d) {
+      var hh = d.getHours();
+      var m = d.getMinutes();
+      var s = d.getSeconds();
+      var dd = "am";
+      var h = hh;
+      
+      if (h >= 12) { h = hh-12; dd = "pm" }
+      if (h == 0) { h = 12 }
+      m = m < 10 ? ("0" + m) : m;
+      s = s < 10 ? ("0" + s) : s;
+      h = h < 10 ? ("0" + h) : h;
+  
+      return [h, m, s].join(":") + " " + dd;
     },
     
     flushtime: function(timeString) {
+        timeString = timeString.toLowerCase();
+        
+        var amPm = this.isAmPm(timeString);
+        var extension = "";
+      
+        if( amPm == true ) {
+            extension  = this.isAmPm(timeString, true);
+            timeString = timeString.replace(/\s*am/g, "");
+            timeString = timeString.replace(/\s*pm/g, "");
+        }
+      
         timeString = timeString.split(":");
         if( timeString.length == 2 ) { timeString.push("00"); }
-        else if( timeString.length == 1 ) { timeString = ["12", "00", "00"]; }
-        return timeString.join(":");
+        else if( timeString.length == 1 ) { timeString.push("00", "00"); }
+        return timeString.join(":") + extension;
+    },
+    
+    isAmPm: function(str, flag) {
+      var isAm = str.toLowerCase().indexOf("am") > 0;
+      var isPm = str.toLowerCase().indexOf("pm") > 0;
+      
+      if( flag ) { return (isAm ? " am" : "") || (isPm ? " pm" : "") }
+      else { return isAm || isPm }
+    },
+    
+      universalizeTime: function(str) {
+        if( this.isAmPm(str) === false ) return str;
+        
+        var extension = this.isAmPm(str, true);
+        str = str.replace(extension, "");
+        
+        if( extension === " pm" ) {
+            var temp = str.split(":");
+            temp[0] = Number(temp[0]);
+            temp[0] = (temp[0] == 12 ? temp[0] : temp[0] + 12);
+            temp = temp.join(":");
+            str = temp;
+        }
+        
+        return str;
     }
 }
 
@@ -47,18 +96,25 @@ $.widget("ui.datetimerange", {
     rightSide: "",
     calendarModels: [],
     calendarViews: [],
+    prevStartDate: "",
+    prevEndDate: "",
     
-    _create: function() {
+    _setVisibleMonth: function() {
         var self = this;
         var options = this.options;
         
-        // Set the beginning month.
         if( options.endDate - options.startDate < 2592000000 ) {
             self._theMonth = new Date(options.endDate);
         } else {
             self._theMonth = SimpleSeerDateHelper.offsetMonth(options.startDate, 1);
-        }
+        }      
+    },
+    
+    _create: function() {
+        var self = this;
+        self._setVisibleMonth();
         
+        var options = this.options;        
         var element = this.element;
         element.bind("focus", function(e, ui) { self.appear(e, ui); });
         
@@ -66,8 +122,8 @@ $.widget("ui.datetimerange", {
                         .hide()
                         .addClass("ui-datetimerange")
                         .css({
-                            "top": element.offset().top + element.height(),
-                            "left": element.offset().left
+                            "top": element.offset().top + element.height() - $(window).scrollTop(),
+                            "left": element.position().left
                         })
                         .appendTo("body");
                         
@@ -78,18 +134,19 @@ $.widget("ui.datetimerange", {
         this.rightSide = $(
             '<div>'+
                 '<div class="block">'+
-                    '<label>Date:</label>'+            
+                    '<label>From:</label>'+            
                     '<input class="ss-date-from" type="text">'+
                     ' - '+
-                    '<input class="ss-date-to" type="text">'+
+                    '<input class="ss-time-from" type="text" value="'+SimpleSeerDateHelper.prettyTime(options.startDate)+'">'+
                 '</div>'+
                 '<div class="block">'+                
-                    '<label>Time:</label>'+            
-                    '<input class="ss-time-from" type="text" value="'+SimpleSeerDateHelper.prettyTime(options.startDate)+'">'+
+                    '<label>To:</label>'+            
+                     '<input class="ss-date-to" type="text">'+
                     ' - '+
                     '<input class="ss-time-to" type="text" value="'+SimpleSeerDateHelper.prettyTime(options.endDate)+'">'+
                 '</div>'+
-                '<div class="bottom">'+                
+                '<div class="bottom">'+
+                    '<button class="cancel">Cancel</button>'+  
                     '<button class="apply">Apply</button>'+            
                 '</div>'+                
             '</div>'
@@ -99,7 +156,7 @@ $.widget("ui.datetimerange", {
         
         var goBackMonth = $("<button>&laquo;</button>").addClass("switch").appendTo(this.leftSide);
         
-        for(var e=0; e<3; e++) {
+        for(var e=0; e<2; e++) {
             self.calendarViews[e] = $("<div></div>")
                                         .addClass("ss-calendar")
                                         .appendTo(this.leftSide);
@@ -123,6 +180,9 @@ $.widget("ui.datetimerange", {
             
             if( self._inChange == false ) {
                 self._inChange = true;
+                applyButton.attr("disabled", "disabled");
+                cancelButton.attr("disabled", "disabled");
+                
                 options.startDate = eleDate;
                 options.endDate = eleDate;
                 
@@ -130,6 +190,8 @@ $.widget("ui.datetimerange", {
                 $(".ss-date-to").addClass("alter");
             } else if( eleDate >= options.startDate ) {
                 self._inChange = false;
+                applyButton.removeAttr("disabled");
+                cancelButton.removeAttr("disabled");
                 options.endDate = eleDate;
                 
                 $(".ss-date-from").addClass("alter");
@@ -157,13 +219,25 @@ $.widget("ui.datetimerange", {
            }
         });
         
+        var cancelButton = self.rightSide.find(".cancel");
+        cancelButton.click(function() {
+            
+            self.disappear();
+            options.startDate = self.prevStartDate;
+            options.endDate = self.prevEndDate;
+            self.updateCalendars();
+            
+        });
+        
         var applyButton = self.rightSide.find(".apply");
         applyButton.click(function() {
+            if( self._inChange === true ) { return; }
+            
             _sd = self.options.startDate;
             _ed = self.options.endDate;
             
-            _st = self.window.find(".ss-time-from").attr("value").split(":");
-            _et = self.window.find(".ss-time-to").attr("value").split(":");
+            _st = SimpleSeerDateHelper.universalizeTime(self.window.find(".ss-time-from").attr("value")).split(":");
+            _et = SimpleSeerDateHelper.universalizeTime(self.window.find(".ss-time-to").attr("value")).split(":");
             
             self._trigger("onUpdate", null, {
                 startDate: new Date(_sd.getYear() + 1900, _sd.getMonth(), _sd.getDate(), _st[0], _st[1], _st[2]),
@@ -171,8 +245,10 @@ $.widget("ui.datetimerange", {
             });
             
             self.disappear();
+            self.setPreviousDates();
         });
         
+        this.setPreviousDates();
         this.updateCalendars();
         this._onUpdate();
     },
@@ -220,12 +296,29 @@ $.widget("ui.datetimerange", {
         this.updateCalendars();
     },
     
+    setPreviousDates: function() {
+        var options = this.options;
+        this.prevStartDate = options.startDate;
+        this.prevEndDate = options.endDate;
+    },
+    
     /**
      * Widget specific code
      */
     
     appear: function(e, ui) {
-        this.window.show();        
+        var self = this;
+        var element = this.element;
+        
+        self._setVisibleMonth();
+        for(var e=0; e<self.calendarModels.length; e++) {
+            self.calendarModels[e].setMonth(SimpleSeerDateHelper.offsetMonth(self._theMonth, -1 + e))
+        }
+        
+        self.window.css({
+            "top": element.offset().top + element.height() - $(window).scrollTop(),
+            "left": element.offset().left
+        }).show();        
     },
     
     disappear: function(e, ui) {

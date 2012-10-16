@@ -54,7 +54,7 @@ seer_auto_install () {
 
 install_requirements() {
   echo "installing required system libraries"
-  sudo apt-get install python-dev python-setuptools python-pip libzmq-dev nodejs npm build-essential python-gevent libevent-dev supervisor ipython-notebook swig libvpx-dev subversion
+  sudo apt-get install -y --yes python-dev python-setuptools python-pip libzmq-dev nodejs npm build-essential python-gevent libevent-dev supervisor ipython-notebook swig libvpx-dev subversion python-pastescript ipython python-opencv python-scipy python-numpy python-pygame libsdl1.2-dev libsmpeg-dev libv4l-dev
   echo "installing brunch"
   sudo npm install -g brunch
 }
@@ -101,14 +101,14 @@ mongo_install () {
   echo ""
   echo "setting up directories"
   mkdir -p /tmp/mongo
-  if [ ! -f /tmp/mongodb-linux-x86_64-2.2.0-rc0.tgz ];
+  if [ ! -f /tmp/mongodb-linux-x86_64-2.2.0.tgz ];
   then
     echo "downloading..."
-    wget http://fastdl.mongodb.org/linux/mongodb-linux-x86_64-2.2.0-rc0.tgz -O /tmp/mongodb-linux-x86_64-2.2.0-rc0.tgz
+    wget http://fastdl.mongodb.org/linux/mongodb-linux-x86_64-2.2.0.tgz -O /tmp/mongodb-linux-x86_64-2.2.0.tgz
   fi  
-  sudo tar zxvf /tmp/mongodb-linux-x86_64-2.2.0-rc0.tgz -C /tmp/mongo
+  sudo tar zxvf /tmp/mongodb-linux-x86_64-2.2.0.tgz -C /tmp/mongo
   echo "copying files...."
-  sudo cp /tmp/mongo/mongodb-linux-x86_64-2.2.0-rc0/bin/* /usr/local/bin/
+  sudo cp /tmp/mongo/mongodb-linux-x86_64-2.2.0/bin/* /usr/local/bin/
   sudo mkdir -p /var/lib/mongodb
   sudo mkdir -p /var/log/mongodb
   sudo cp `pwd`/etc/mongodb.conf /etc/

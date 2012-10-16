@@ -37,7 +37,7 @@
               <select id="sortCombo">
               {{#each sortComboVals}}
                 <option value="{{this.type}},{{this.name}},1">{{this.label}} ascending</option>
-                <option value="{{this.type}},{{this.name}},-1" {{#if_eq "capturetime" compare=this.name}}selected="selected"{{/if_eq}}>{{this.label}} descending</option>
+                <option value="{{this.type}},{{this.name}},-1" {{#if_eq "capturetime_epoch" compare=this.name}}selected="selected"{{/if_eq}}>{{this.label}} descending</option>
               {{/each}}
               </select>
             </div>

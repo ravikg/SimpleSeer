@@ -13,6 +13,19 @@ class BlobsFeature(SimpleCV.Blob):
     pass
 
 class Blobs(base.InspectionPlugin):
+
+    @classmethod
+    def reverseParams(cls):
+        retVal = {}
+        retVal.update({'Color.' + col: 'color' for col in dir(Color)})
+        retVal.update({'square': 'shape', 'circle': 'shape', 'rectangle': 'shape'})
+        
+        return retVal
+
+    
+    def printFields(cls):
+        return ['x', 'y', 'height', 'width', 'area']
+    
     def __call__(self, image):
         params = util.utf8convert(self.inspection.parameters)
         #params = self.inspection.parameters
@@ -169,6 +182,15 @@ class Blobs(base.InspectionPlugin):
         blobs = image.findBlobsFromMask(mask,minsize=minsize,maxsize=maxsize)
         if not blobs:
             return []
+
+        if params.has_key('shape'):
+            if param['shape'] == 'circle':
+                tf = [b.isCircle() for b in blobs]
+            elif param['shape'] == 'rectangle':
+                tf = [b.isRectangle() for b in blobs]
+            else: #Use square as the default
+                tf = [b.isSquare() for b in blobs]
+            blobs = blobs.filter(tf)
 
         if params.has_key("top"):
             top = params["top"]
