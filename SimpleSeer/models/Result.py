@@ -68,6 +68,9 @@ class Result(SimpleDoc, mongoengine.Document):
     """
     
     def save(self, *args, **kwargs):
+        log.warn ("Results depricated.  Not saved")
+        return
+
         # Push notification to OLAP to decide whether to publish this update
         #from SimpleSeer.OLAPUtils import RealtimeOLAP
         #ro = RealtimeOLAP()
