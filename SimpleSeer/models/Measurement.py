@@ -93,28 +93,35 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
     def tolerance(self, frame, results):
         
         for result in results:
-            testField = None
-            if result.numeric:
-                testField = result.numeric
-            else:
-                testField = result.string
-            
-            result.state = 0
-            messages = []
-            for rule in self.tolerances:
-                if frame.metadata[rule['criteria'].keys()[0]] == rule['criteria'].values()[0]:
-                    criteriaFunc = "testField %s %s" % (rule['rule']['operator'], rule['rule']['value'])
-                    print 'Rule is ' + criteriaFunc
-                    match = eval(criteriaFunc, {}, {'testField': testField})
-                    print match
-                    
-                    if not match:
-                        result.state = 1
-                        messages.append(criteriaFunc)
-            
-            result.message = ",".join(messages)
+            if result.measurement_id == self.id:
+                testField = None
+                if result.numeric:
+                    testField = result.numeric
+                else:
+                    testField = result.string
+                
+                result.state = 0
+                messages = []
+                for rule in self.tolerances:
+                    if frame.metadata[rule['criteria'].keys()[0]] == rule['criteria'].values()[0]:
+                        criteriaFunc = "testField %s %s" % (rule['rule']['operator'], rule['rule']['value'])
+                        match = eval(criteriaFunc, {}, {'testField': testField})
+                        
+                        if not match:
+                            result.state = 1
+                            messages.append(criteriaFunc)
+                
+                result.message = ",".join(messages)
         
         return results
+    
+    def backfillTolerances(self):
+        from .Frame import Frame
+        
+        for frame in Frame.objects:
+            if frame.results:
+                self.tolerance(frame, frame.results)
+                frame.save()
     
     def findFeatureset(self, features):
         
@@ -160,6 +167,7 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
         from ..realtime import ChannelManager
         
         super(Measurement, self).save(*args, **kwargs)
+        self.backfillTolerances()
         ChannelManager().publish('meta/', self)
 
     def __repr__(self):
