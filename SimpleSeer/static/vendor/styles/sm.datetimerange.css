@@ -1,5 +1,6 @@
 .ui-datetimerange {
   position: fixed;
+  z-index: 1030;
   background: #fafafa;
   margin-top: 14px;
   padding: 10px;

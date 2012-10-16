@@ -7,8 +7,12 @@ class InspectionPlugin(object):
 
     @classmethod
     def printFields(cls):
-        return ["x", "y", "width", "height","area"]
+        return []
 	
+    @classmethod
+    def reverseParams(cls):
+        return {}
+    
     @classmethod
     def coffeescript(cls):
         ext = ".coffee"

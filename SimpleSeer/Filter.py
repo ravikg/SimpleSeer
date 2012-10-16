@@ -19,9 +19,6 @@ class Filter():
         measurements = []
         features = []
         
-        # Need to initially construct/modify a few fields for future filters
-        pipeline += self.initialFields()
-        
         # Filter the data based on the filter parameters
         # Frame features are easy to filter, but measurements and features are embedded in the frame
         # so they need their own syntax to filter
@@ -32,19 +29,25 @@ class Filter():
                 frames.append(f)
             elif f['type'] == 'framefeature':
                 features.append(f)
-                
+        
+        # Need to initially construct/modify a few fields for future filters
+        pipeline += self.initialFields(projResult = (len(measurements) > 0), projFeat = (len(features) > 0))
+        
         if frames:
             pipeline += self.filterFrames(frames)
         
-            
-        pipeline += self.filterMeasurements(measurements)            
-        pipeline += self.filterFeatures(features)
+        if measurements:    
+            pipeline += self.conditional(measurements, 'results', 'measurement_name')           
+        
+        if features:
+            pipeline += self.conditional(measurements, 'features', 'featuretype')     
         
         # Sort the results
         pipeline += self.sort(sortinfo)
         
+        #pipeline.append({'$match': {'capturetime_epoch': 0}})
         #for p in pipeline:
-        #    print 'LINE: %s' % str(p)
+        #    print '%s' % str(p)
         
         # This is all done through mongo aggregation framework
         db = Frame._get_db()
@@ -53,7 +56,10 @@ class Filter():
         
         # Perform the skip/limit 
         # Note doing this in python instead of mongo since need original query to give total count of relevant results
-        if skip < len(results):
+        if skip < 0:
+            if abs(skip) - 1 > len(results):
+                results = results[skip:skip+limit]
+        elif skip < len(results):
             if (skip + limit) > len(results):
                 results = results[skip:]
             else:
@@ -62,8 +68,36 @@ class Filter():
             return 0, []
                 
         return len(cmd['result']), results    
+    
+    def negativeFilter(self, originalFilter = []):
+        # used to convert filter commands that assume provide all fields except those banned
+        # to a filter that returns only those fields specified
+        # which is the format assumed by filters here
         
-    def initialFields(self):
+        newFilters = []
+        featureNames, resultNames = self.keyNamesHash()
+        
+        for insp in featureNames.keys():
+            for field in featureNames[insp]:
+                for orig in originalFilter:
+                    filtname = '%s.%s' % (insp, field)
+                    if orig['type'] == 'framefeature' and orig['name'] == filtname:
+                        newFilters.append(orig)
+                    else:
+                        newFilters.append({'type':'framefeature', 'exists': True, 'name': filtname})
+        
+        for meas in resultNames.keys():
+            for field in resultNames[meas]:
+                for orig in originalFilter:
+                    filtname = '%s.%s' % (meas, field)
+                    if orig['type'] == 'measurement' and orig['name'] == filtname:
+                        newFilters.append(orig)
+                    else:
+                        newFilters.append({'type':'measurement', 'exists': True, 'name':filtname})
+        
+        return newFilters
+        
+    def initialFields(self, projResult = False, projFeat = False):
         # This is a pre-filter of the relevant fields
         # It constructs a set of fields helpful when grouping by time
         # IT also constructs a set of custom renamed fields for use by other filters
@@ -75,22 +109,19 @@ class Filter():
             fields[p] = 1
         
         # And we always need the features and results
-        fields['features'] = 1
-        fields['results'] = 1
         
+        if projFeat:
+            p, g = self.rewindFields('features')
+            fields.update(p)
+        if projResult:
+            p, g = self.rewindFields('results')
+            fields.update(p)
+            
+        # Always want the 'id' field, which sometimes comes through as _id
+        fields['id'] = '$_id'
         return [{'$project': fields}]
     
     
-    def recurseMap(self, fieldName, defaultVal, remainTerms):
-        # This function is used by the initialFields function
-        # It constructs a nested conditional statement for remapping field values
-        
-        if len(remainTerms) > 0:
-            key, val = remainTerms.popitem()            
-            return {'$cond': [{'$eq': [fieldName, key]}, val, self.recurseMap(fieldName, defaultVal, remainTerms)]}
-        else:
-            return defaultVal
-
     def filterFrames(self, frameQuery):
         # Construct the filter based on fields in the Frame object
         # Note that all timestamps are passed in as epoch milliseconds, but
@@ -118,57 +149,6 @@ class Filter():
             filters[f['name']] = comp
         
         return [{'$match': filters}]
-    
-    def filterMeasurements(self, measQuery):
-        # Do the basic pipeline construction for filtering on Measurements
-        # (which appear in Frames under $results)
-        # Always unwind to filter out unneded fields from results
-        
-        parts = []
-        
-        proj, group = self.rewindFields('results')
-        
-        # If measurements query, check those fields
-        if measQuery:
-            proj['measok'] = self.condMeas(measQuery)
-            group['allmeasok'] = {'$sum': '$measok'}
-        
-        parts.append({'$unwind': '$results'})
-        parts.append({'$project': proj})
-            
-        ## If the unit of analysis is not 'results', re-group the result objects and filter at the group level
-        #if unit != 'result':
-        parts.append({'$group': group})
-        if measQuery:
-            parts.append({'$match': {'allmeasok': len(measQuery)}})
-    
-        #elif measQuery:
-        #    parts.append({'$match': {'measok': 1}})
-        
-        return parts
-    
-    
-    def filterFeatures(self, featQuery):
-        # Do the basic pipeline construction for filtering on features
-        
-        parts = []
-        proj, group = self.rewindFields('features')
-        
-        if featQuery:
-            proj['featok'] = self.condFeat(featQuery)
-            group['allfeatok'] = {'$sum': '$featok'}
-            
-        parts.append({'$unwind': '$features'})
-        parts.append({'$project': proj})
-        
-        #if unit != 'feature':
-        parts.append({'$group': group})
-        if featQuery:
-            parts.append({'$match': {'allfeatok': len(featQuery)}})
-        #elif featQuery:
-        #    parts.append({'$match': {'featok': 1}})
-        
-        return parts
     
     def sort(self, sortinfo):
         # Sort based on specified parameters
@@ -209,18 +189,16 @@ class Filter():
             for f in useKeys[key]:
                 proj[field + '.' + f] = 1
         
-        
         for key in Frame.filterFieldNames():
             # Have to rename the id field since $group statements assume existence of _id as the group_by parameter
             if key == 'id':
                 key = '_id'
             proj[key] = 1
             
-            #if (key == 'results') or (key == 'features'):
-            if key == field:
-                group[key] = {'$addToSet': '$' + key}
-            else:
-                group[key] = {'$first': '$' + key}
+            group[key] = {'$first': '$' + key}
+        
+        # re-groupt the (results | features)
+        group[field] = {'$addToSet': '$' + field}
             
         group['_id'] = '$_id'
         # But a lot of stuff also wants an id instead of _id
@@ -228,50 +206,30 @@ class Filter():
 
         return proj, group
     
-    def condMeas(self, measurements):
+    def conditional(self, filters, embedField, nameField):
         
         allfilts = []
-        for m in measurements:    
-            meas, c, field = m['name'].partition('.')
+        for f in filters:    
+            name, c, field = f['name'].partition('.')
             
-            comp = []
-            if 'eq' in m:
-                comp.append({'$eq': ['$results.' + field, str(m['eq'])]})
-            if 'gt' in m:
-                comp.append({'$gte': ['$results.' + field, m['gt']]})
-            if 'lt' in m:
-                comp.append({'$lte': ['$results.' + field, m['lt']]})
-            if 'exists' in m:
-                comp.append('$results.' + field)
-                
-            comp.append({'$eq': ['$results.measurement_name', meas]})
-            combined = {'$and': comp}
-            allfilts.append(combined)
-                
-        return {'$cond': [{'$or': allfilts}, 1, 0]}
-        
-        
-    def condFeat(self, features):
-        
-        allfilts = []
-        for f in features:
-            feat, c, field = f['name'].partition('.')
-            
-            comp = []
+            comp = {}
             if 'eq' in f:
-                comp.append({'$eq': ['$features.' + field, str(f['eq'])]})
-            if 'gt' in f:
-                comp.append({'$gte': ['$features.' + field, f['gt']]})
-            if 'lt' in f:
-                comp.append({'$lte': ['$features.' + field, f['lt']]})
+                comp[field] = str(f['eq'])
+            if 'gt' in f or 'lt' in f:
+                parts = {}
+                if 'gt' in f:
+                    parts['$gte'] = f['gt']
+                if 'lt' in f:
+                    parts['$lte'] = f['lt']
+                comp[field] = parts
             if 'exists' in f:
-                comp.append('$features.' + field)
-                    
-            comp.append({'$eq': ['$features.featuretype', str(feat)]})
-            combined = {'$and': comp}
-            allfilts.append(combined)
+                comp[field] = {'$exists': True}
+                
+            comp[nameField] = name
             
-        return {'$cond': [{'$or': allfilts}, 1, 0]}
+            allfilts.append({'$match': {embedField: {'$elemMatch': comp}}})
+                
+        return allfilts
         
         
     def checkFilter(self, filterType, filterName, filterFormat):
@@ -293,35 +251,36 @@ class Filter():
         field = ''
         
         if filterType == 'frame':
-            collection = 'frame'    
+            collection = ''    
             field = filterName
+            pipeline.append({'$project': {field: 1}})
         elif filterType == 'measurement':
-            collection = 'result'
-            field = filterFormat
-            if (field == 'autofill'):
-                field = 'string'
+            collection = 'results.'
+            meas, c, field = filterName.partition('.')
             
-            pipeline.append({'$match': {'measurement_name': filterName}})
+            pipeline.append({'$project': {'results.measurement_name': 1, 'results.' + field: 1}})
+            pipeline.append({'$unwind': '$results'})
+            pipeline.append({'$match': {'results.measurement_name': meas}})
             
         elif filterType == 'framefeature':
+            collection = 'features.'
             feat, c, field = filterName.partition('.')
-            field = 'features.' + field
-            collection = 'frame'
-        
+            
+            pipeline.append({'$project': {'features.featuretype': 1, 'features.' + field: 1}})
             pipeline.append({'$unwind': '$features'})
             pipeline.append({'$match': {'features.featuretype': feat}})
             
         if (filterFormat == 'numeric') or (filterFormat == 'datetime'):
-            pipeline.append({'$group': {'_id': 1, 'min': {'$min': '$' + field}, 'max': {'$max': '$' + field}}})
+            pipeline.append({'$group': {'_id': 1, 'min': {'$min': '$' + collection + field}, 'max': {'$max': '$' + collection + field}}})
         
         if (filterFormat == 'autofill'):
-            pipeline.append({'$group': {'_id': 1, 'enum': {'$addToSet': '$' + field}}})    
+            pipeline.append({'$group': {'_id': 1, 'enum': {'$addToSet': '$' + collection + field}}})    
             
         if (filterFormat == 'string'):
             pipeline.append({'$group': {'_id': 1, 'found': {'$sum': 1}}})
         
-        cmd = db.command('aggregate', collection, pipeline = pipeline)
         
+        cmd = db.command('aggregate', 'frame', pipeline = pipeline)
         ret = {}
         if len(cmd['result']) > 0:
             for key in cmd['result'][0]:
@@ -329,12 +288,13 @@ class Filter():
                     cmd['result'][0][key].sort()
                 
                 if type(cmd['result'][0][key]) == datetime:
-                    cmd['result'][0][key] = int(float(cmd['result'][0][key].strftime('%s.%f')) * 1000)
+                    ms = cmd['result'][0][key].microsecond / 1000
+                    cmd['result'][0][key] = timegm(cmd['result'][0][key].timetuple()) * 1000 + ms 
                 if not key == '_id':
                     ret[key] = cmd['result'][0][key]
         else:
             return {"error":"no matches found"}
-                
+        
         return ret
         
     
@@ -395,7 +355,7 @@ class Filter():
                 featureKeys[i.name].append('featuretype')
                 featureKeys[i.name].append('inspection')
             else:
-                featureKeys[i.name] = ['featuretype', 'inspection', 'featuredata']
+                featureKeys[i.name] = ['featuretype', 'inspection']
                 
         # Becuase of manual measurements, need to look at frame results to figure out if numeric or string fields in place
         for m in Measurement.objects:
@@ -426,7 +386,7 @@ class Filter():
                 fieldNames.append(key + '.' + val)
             
         for key in resultKeys.keys():
-            for val in featureKeys[key]:
+            for val in resultKeys[key]:
                 fieldNames.append(key + '.' + val)
             
         return fieldNames
@@ -481,7 +441,7 @@ class Filter():
                 tmpFrame[key] = self.getField(frame, keyParts)
                 
             # Fields from the features
-            for feature in frame['features']:
+            for feature in frame.get('features', []):
                 # If this feature has items that need to be saved
                 inspection_name = self.inspectionIdToName(feature['inspection']) 
                 if  inspection_name in featureKeys.keys():
@@ -491,7 +451,7 @@ class Filter():
                         tmpFrame[feature['featuretype'] + '.' + field] = self.getField(feature, keyParts)
              
             # Fields from the results
-            for result in frame['results']:
+            for result in frame.get('results', []):
                 # If this result has items that need to be saved
                 if result['measurement_name'] in resultKeys.keys():
                     for field in resultKeys[result['measurement_name']]:

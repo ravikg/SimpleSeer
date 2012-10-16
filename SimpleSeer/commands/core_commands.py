@@ -1,5 +1,6 @@
 import time
 import gevent
+import os, subprocess
 from .base import Command
 
 class CoreStatesCommand(Command):
@@ -66,7 +67,12 @@ def PerfTestCommand(self):
 
 @Command.simple(use_gevent=True, remote_seer=False)
 def OlapCommand(self):
-    from SimpleSeer.OLAPUtils import ScheduledOLAP, RealtimeOLAP
+    try:
+        from SeerCloud.OLAPUtils import ScheduledOLAP, RealtimeOLAP
+    except:
+        print 'Error starting OLAP schedules.  This requires Seer Cloud'
+        return 0
+    
     from SimpleSeer.models.Inspection import Inspection, Measurement
 
     Inspection.register_plugins('seer.plugins.inspection')
@@ -78,20 +84,6 @@ def OlapCommand(self):
     ro = RealtimeOLAP()
     ro.monitorRealtime()
 
-@Command.simple(use_gevent=False, remote_seer=False)    
-def ExportMeta(self):
-    from SimpleSeer.Backup import Backup
-    
-    Backup.exportAll()    
-    Backup.listen()
-    
-@Command.simple(use_gevent=False, remote_seer=False)    
-def ImportMeta(self):
-    from SimpleSeer.Backup import Backup
-    
-    #TODO: all to pass file names?
-    Backup.importAll()
-    
 @Command.simple(use_gevent=True, remote_seer=True)
 def WebCommand(self):
     'Run the web server'
@@ -104,17 +96,79 @@ def WebCommand(self):
     Inspection.register_plugins('seer.plugins.inspection')
     Measurement.register_plugins('seer.plugins.measurement')
 
-    # Ensure indexes created for filterable fields
     dbName = self.session.database
     if not dbName:
         dbName = 'default'
     db = Connection()[dbName]
-    for f in self.session.ui_filters:
-        db.frame.ensure_index([(f['filter_name'], ASCENDING), (f['filter_name'], DESCENDING)])
-    
+    # Ensure indexes created for filterable fields
+    # TODO: should make this based on actual plugin params or filter data
+    db.frame.ensure_index([('results', 1)])
+    db.frame.ensure_index([('results.measurement_name', 1)])
+    db.frame.ensure_index([('results.numeric', 1)])
+    db.frame.ensure_index([('results.string', 1)])
     
     web = WebServer(make_app())
     web.run_gevent_server()
+
+@Command.simple(use_gevent=True, remote_seer=True)
+def OPCCommand(self):
+    '''
+    You will also need to add the following to your config file:
+    opc:
+      server: 10.0.1.107
+      name: OPC SERVER NAME
+      tags: ["OPC-SERVER.Brightness_1.Brightness", "OPC-SERVER.TAGNAME"]
+      tagcounter: OPC-SERVER.tag_which_is_int_that_tells_frame_has_changed
+
+
+    This also requires the server you are connecting to be running the OpenOPC
+    gateway service.  It comes bundled with OpenOPC.  To get it to route over
+    the network you also have to set the windows environment variable OPC_GATE_HOST
+    to the actual of the IP address of the server it's running on instead of 'localhost'
+    otherwise the interface doesn't bind and you won't be able to connect via
+    linux.
+    '''
+    try:
+        import OpenOPC
+    except:
+        raise Exception('Requires OpenOPC plugin')
+
+    from SimpleSeer.realtime import ChannelManager
+    opc_settings = self.session.opc
+
+    if opc_settings.has_key('name') and opc_settings.has_key('server'):
+      self.log.info('Trying to connect to OPC Server[%s]...' % opc_settings['server'])
+      try:
+        opc_client = OpenOPC.open_client(opc_settings['server'])
+      except:
+        ex = 'Cannot connect to server %s, please verify it is up and running' % opc_settings['server']
+        raise Exception(ex)
+      self.log.info('...Connected to server %s' % opc_settings['server'])
+      self.log.info('Mapping OPC connection to server name: %s' % opc_settings['name'])
+      opc_client.connect(opc_settings['name'])
+      self.log.info('Server [%s] mapped' % opc_settings['name'])
+      
+    if opc_settings.has_key('tagcounter'):
+      tagcounter = int(opc_client.read(opc_settings['tagcounter'])[0])
+
+    counter = tagcounter
+    self.log.info('Polling OPC Server for triggers')
+    while True:
+      tagcounter = int(opc_client.read(opc_settings['tagcounter'])[0])
+
+      if tagcounter != counter:
+        self.log.info('Trigger Received')
+        data = dict()
+        for tag in opc_settings.get('tags'):
+          tagdata = opc_client.read(tag)
+          if tagdata:
+            self.log.info('Read tag[%s] with value: %s' % (tag, tagdata[0]))
+            data[tag] = tagdata[0]
+
+        self.log.info('Publishing data to PUB/SUB OPC channel')
+        ChannelManager().publish('opc/', data)
+        counter = tagcounter
+
 
 @Command.simple(use_gevent=True, remote_seer=True)
 def BrokerCommand(self):
@@ -148,9 +202,14 @@ def ScrubCommand(self):
 def ShellCommand(self):
     'Run the ipython shell'
     import subprocess
-    
-    subprocess.call(["ipython", 
-            '--ext', 'SimpleSeer.ipython', '--pylab'], stderr=subprocess.STDOUT)
+    import os
+
+    if os.getenv('DISPLAY'):
+      cmd = ['ipython','--ext','SimpleSeer.ipython','--pylab']
+    else:
+      cmd = ['ipython','--ext','SimpleSeer.ipython']
+      
+    subprocess.call(cmd, stderr=subprocess.STDOUT)
 
 @Command.simple(use_gevent=True, remote_seer=False)
 def NotebookCommand(self):
@@ -159,6 +218,73 @@ def NotebookCommand(self):
     subprocess.call(["ipython", "notebook",
             '--port', '5050',
             '--ext', 'SimpleSeer.notebook', '--pylab', 'inline'], stderr=subprocess.STDOUT)
+
+#~ @Command.simple(use_gevent=True, remote_seer=False)
+class WorkerCommand(Command):
+    '''
+    This Starts a distributed worker object using the celery library.
+
+    Run from the the command line where you have a project created.
+
+    >>> simpleseer worker
+
+
+    The database the worker pool queue connects to is the same one used
+    in the default configuration file (simpleseer.cfg).  It stores the
+    data in the default collection 'celery'.
+
+    To issue commands to a worker, basically a task master, you run:
+
+    >>> simpleseer shell
+    >>> from SimpleSeer.command.worker import update_frame
+    >>> for frame in M.Frame.objects():
+          update_frame.delay(str(frame.id))
+    >>>
+
+    That will basically iterate through all the frames, if you want
+    to change it then pass the frame id you want to update.
+    
+
+    '''
+
+    def __init__(self, subparser):
+        pass
+
+    def run(self):
+        from SimpleSeer.worker import host
+        import socket
+        worker_name = socket.gethostname() + '-' + str(time.time())
+        cmd = ['celery','worker','--broker',host,'-A','SimpleSeer.worker','-n',worker_name]
+        subprocess.call(cmd)
+
+class ExportMetaCommand(Command):
+    
+    def __init__(self, subparser):
+        subparser.add_argument("--listen", help="Set to true to run as daemon listing for changes and exporting when changes found.", default="false")
+        
+    def run(self):
+        from SimpleSeer.Backup import Backup
+        
+        listen = self.options.listen
+        
+        Backup.exportAll()
+        
+        if listen.upper() == 'TRUE': 
+            gevent.spawn_link_exception(Backup.listen())
+    
+
+class ImportMetaCommand(Command):
+    
+    def __init__(self, subparser):
+        subparser.add_argument("--file", help="The file name to import.  If blank, defaults to seer_export.yaml", default="seer_export.yaml")
+        
+    def run(self):
+        from SimpleSeer.Backup import Backup
+        
+        filename = self.options.file
+        Backup.importAll(filename)
+    
+
 
 
 class ExportImagesCommand(Command):
@@ -225,5 +351,3 @@ class ExportImagesQueryCommand(Command):
             file_name = self.options.dir + "/" + str(frame.id) + '.png'
             print 'Saving:',file_name
             frame.image.save(file_name)
-
-        

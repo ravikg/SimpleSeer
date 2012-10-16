@@ -1,16 +1,122 @@
-<div class="graphBuilderControls">
-this div will have te controls
-it will be float left and take up a fixed 300(ish)px
-</div>
-<div class="graphBuilderPreview">
-this div will have the graph preview
-it will be float right, and take up the rest of the screen
-</div>
-When toggling between builder mode and view mode:
-the controls will slide in/out from the left
-the preview will slide in/out from the right
-
-
-<div class="dashboard">
-the rest of the content (grid system) will go here
+<div id="dash_content" class="clearfix">
+  <div class="graphBuilderControls">
+    <!-- Top level breadcrumb nav -->
+    <div class="breadcrumb">
+      <span>Dashboard</span> &raquo; Chart Editor
+    </div>
+    
+    <!-- Chart builder accordion -->
+    <div class="accordion">
+      <div class="group expanded">
+        <div class="head">
+          <h2>Chart Style</h2>
+          <div class="toggle"></div>
+        </div>
+        
+        <div class="content trim">
+          {{#key_value chartSettings.styles}}
+          <div class="chartStyleType">
+            <input id="cs-type-{{key}}" type="radio" name="chartType" value="{{key}}">
+            <label for="cs-type-{{key}}" style="background-image: url('/img/graph_{{key}}.png');"></label>
+            <label>{{value}}</label>
+          </div>
+          {{/key_value}}
+        </div> 
+      </div>
+      
+      <div class="group">
+        <div class="head">
+          <h2>Data &amp; Labels</h2>
+          <div class="toggle"></div>
+        </div>
+        
+        <div id="chartbuilder" class="content">
+          <div class="oneLine">
+            <label>Name:</label>
+            <input type="text" name="name" value="{{chartSettings.attrib.name}}" class="chartinput">
+          </div>
+          
+          <div class="oneLine">
+            <label>X&nbsp;Axis:</label>
+            <select name="olap_xaxis" class="chartinput drop">
+            {{#chartSettings.vars}}
+              <option value="{{fieldname}}" {{#if isx}}selected="selected"{{/if}}>{{varname}}</option>
+            {{/chartSettings.vars}}
+            </select>
+          </div>
+          
+          <div class="oneLine">
+            <label>X Title:</label>
+            <input type="text" name="xTitle" class="chartinput">
+          </div>
+          
+          <div class="oneLine">
+            <label>Y Axis:</label>
+            <select name="olap_yaxis" class="chartinput drop">
+              {{#chartSettings.vars}}
+              <option value="{{fieldname}}" {{#if isy}}selected="selected"{{/if}}>{{varname}}</option>
+              {{/chartSettings.vars}}
+            </select>
+          </div>
+          
+          <div class="oneLine">
+            <label>Y Title:</label>
+            <input type="text" name="yTitle" class="chartinput">
+          </div>
+        </div>
+      </div>
+      
+      <div class="group">
+        <div class="head">
+          <h2>Colors</h2>
+          <div class="toggle"></div>
+        </div>
+        
+        <div class="content">
+          <!--
+          <div class="oneLine">
+            <label>Palette:</label>
+            <select id="palette_select">
+            {{#each palettes}}
+              <option {{#if this.default}}selected="selected" {{/if}}value="{{this.id}}">{{this.title}}</option>
+            {{/each}}
+            </select>
+            <div id="palette_preview"></div>
+          </div>
+          -->
+          
+          <div class="oneLine floated clearfix">
+            <label>Chart Color:</label>
+            <input type="color" name="chartColor" class="chartColor"/>
+          </div>
+          <!--          
+          <div class="oneLine floated clearfix">
+            <label>Chart Title:</label>
+            <input type="color" name='chartTitleColor' class="chartColor"/>
+          </div>
+          
+          <div class="oneLine floated clearfix">
+            <label>Labels:</label>
+            <input type="color" name='chartLabelColor' class="chartColor"/>
+          </div>
+          -->          
+        </div>
+      </div>
+      
+      <div style="text-align: right">
+        <button class="cancel">Cancel</button>
+        <button class="save">Save</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Big chart for preview -->
+  <div class="graphBuilderPreview">
+    <!--<img src="/img/chart.png">-->
+  </div>
+  
+  <!-- Widgets added here -->
+  <div class="dashboardGrid">
+    <ul id="widget_grid" class="clearfix"></ul>    
+  </div>
 </div>

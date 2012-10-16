@@ -22,7 +22,8 @@ module.exports = class tableView extends SubView
   initialize: =>
     @emptyCell = @options.emptyCell if @options.emptyCell
     @columnOrder = @options.columnOrder if @options.columnOrder
-    super()
+    @downloadLinks = @options.downloadLinks
+    super
 
   # Clears the table.
   empty: =>
@@ -59,7 +60,10 @@ module.exports = class tableView extends SubView
   # header with the current timezone.
   afterRender: =>
     super()
-    
+    if @options.downloadLinks
+      @$el.find('.download-links').show()
+    else
+      @$el.find('.download-links').hide()   
     l = @$el.find('thead :visible th')
     for dn in l
       if dn.innerHTML == "Capture Time"

@@ -14,7 +14,7 @@ module.exports = class TabContainer extends View
     super()
     if !@model?
       @model = Frame
-    @filtercollection = new Filters({model:@model,view:@})
+    @filtercollection = new Filters([],{model:@model,view:@,mute:true})
     
     if options.tabs
       @tabLib = require './'+options.tabs+'/init'
@@ -34,16 +34,7 @@ module.exports = class TabContainer extends View
   tabClick: (e,ui) =>
     console.log e,ui
     return false
-  
-  preFetch:()=>
-    application.throbber.load()
-  
-  postFetch:()=>
-    application.throbber.clear()
-    #url = @filtercollection.getUrl(true)
-    #$('#csvlink').attr('href','/downloadFrames/csv'+url)
-    #$('#excellink').attr('href','/downloadFrames/excel'+url)  
-  
+    
   showMenu: (callback) =>
     @sideBarOpen = false if @sideBarOpen is undefined
     if !callback then callback = =>
@@ -51,9 +42,16 @@ module.exports = class TabContainer extends View
     if @sideBarOpen is false
       @sideBarOpen = true
       $('#second-tier-menu').show("slide", { direction: "left" }, 100)
-      $("#stage").animate({'margin-left':'343px'}, 100, 'linear', callback)
+      $("#stage").animate {'margin-left':'343px'},
+        100,
+        'linear',
+        (callback) =>
+          @reflow()
+          if callback
+            callback()
     else
       callback()
+    return
   
   hideMenu: (callback) =>
     @sideBarOpen = true if @sideBarOpen is undefined
@@ -62,9 +60,21 @@ module.exports = class TabContainer extends View
     if @sideBarOpen is true
       @sideBarOpen = false
       $('#second-tier-menu').hide("slide", { direction: "left" }, 100)
-      $("#stage").animate({'margin-left':'90px'}, 100, 'linear', callback)
+      $("#stage").animate {'margin-left':'90px'},
+        100,
+        'linear',
+        (callback) =>
+          @reflow()
+          if callback
+            callback()
     else
       callback()
+    return
+  
+  reflow: =>
+    console.log "reflowing"
+    for i,o of @_tabs
+      o.reflow()
   
   toggleMenu: (callback) =>
     @sideBarOpen = true if @sideBarOpen is undefined
@@ -100,22 +110,15 @@ module.exports = class TabContainer extends View
     super()
     for i,o of @tabLib
       _id = i+'_tab'
-      @_tabs[_id] = @addSubview _id, o, '#tabs', {append:_id}
-    #if @empty==true and @filtercollection.at(0)
-    #  @newest = @filtercollection.at(0).get('capturetime_epoch')
-    #_(@_frameViews).each (fv) =>
-    #  @$el.find('#frame_holder').append(fv.render().el)
-    #@$el.find('#loading_message').hide()
-    #@empty=false
-    #@lastLoadTime = new Date()
-    $('#tabs',@$el).tabs select: (event, ui) =>
-      sid = $('#tabs',@$el).tabs('option', 'selected')
+      @_tabs[_id] = @addSubview _id, o, '.tabPage', {append:_id}
+    $('.tabPage',@$el).tabs select: (event, ui) =>
+      sid = $('.tabPage',@$el).tabs('option', 'selected')
       tabs = $('.ui-tabs-panel',@$el)
       @_tabs[tabs[sid].id].unselect()
       @_tabs[ui.panel.id].select()
     for i,o of @_tabs
       if o.selected
         o.select()
-        $('#tabs',@$el).tabs("select", o.options.append)
+        $('.tabPage',@$el).tabs("select", o.options.append)
 
     return this
