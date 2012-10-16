@@ -166,8 +166,10 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
     def save(self, *args, **kwargs):
         from ..realtime import ChannelManager
         
+        if 'tolerances' in self._changed_fields:
+            self.backfillTolerances()
+        
         super(Measurement, self).save(*args, **kwargs)
-        self.backfillTolerances()
         ChannelManager().publish('meta/', self)
 
     def __repr__(self):
