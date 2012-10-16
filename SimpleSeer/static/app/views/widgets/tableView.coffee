@@ -12,6 +12,8 @@ module.exports = class tableView extends SubView
   columnOrder: []
   emptyCell: ""
   template:template
+  widgets:[]
+  doNotSort:[]
 
   # Event handlers for the export buttons.
   events:
@@ -20,6 +22,14 @@ module.exports = class tableView extends SubView
 
   # Localizes the scope of the widget settings.
   initialize: =>
+    if @options.doNotSort
+      @doNotSort = @options.doNotSort
+    if @options.widgetData
+      @widgetData = @options.widgetData
+    @initPlugins()
+    
+    @widgets = @options.widgets || []
+    @widgets.push "zebra"
     @emptyCell = @options.emptyCell if @options.emptyCell
     @columnOrder = @options.columnOrder if @options.columnOrder
     @downloadLinks = @options.downloadLinks
@@ -72,7 +82,20 @@ module.exports = class tableView extends SubView
     js = @rows
     js.unshift @header
     $("input[name=rawdata]").attr('value',(JSON.stringify js).replace RegExp(@emptyCell,'g'), '' )
-    @$el.find('.tablesorter').tablesorter({widgets: ['zebra']})
+    @$el.find('.tablesorter').tablesorter
+      widgets: @widgets,
+      headers:@_headerSettings()
+  _headerSettings:=>
+    if @widgetData.editable
+      for i,n in @widgetData.editable
+        if i not in @doNotSort
+          @doNotSort.push i
+    headers = {}
+    for i,n in @header
+      if i in @doNotSort
+        headers[n] = {sorter:false}
+    return headers
+    
 
   # Builds a two dimensional array for the
   # template to render out. Will fill in
@@ -108,4 +131,30 @@ module.exports = class tableView extends SubView
     @header = retHeader
     @rows = retRow
     return {header:retHeader,row:retRow}
+
+  changeCell:(item)=>
+    obj = $(item.target)
+    console.log obj.attr('editFieldIndex')
+    console.log obj.val()
+    
+  initPlugins: =>  	
+    $.tablesorter.addWidget
+      id: "editable"
+      format:(table) =>
+        if @widgetData.editable
+          cols = {}
+          for i,n in $("thead th",table)
+            cols[i.innerHTML] = n
+          for i in @widgetData.editable
+            ind = (cols[i])+1
+      	    $('tr td:nth-child('+ind+')',table).each (index) ->
+      	      if $(@).find('input').length <=0
+       	        arr = @innerHTML.split(',')
+       	        str = ""
+       	        for o, _i in arr
+       	          str += '<input editFieldIndex="'+i+"."+index+"."+_i+'" type="text" value="'+o.trim()+'">'
+       	        @innerHTML = str
+      	        return
+        @$el.find('input').on("change",@changeCell)
+    return
     

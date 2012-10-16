@@ -21,6 +21,9 @@ module.exports = SeerApplication =
     @subscriptions = {}
     @timeOffset = (new Date()).getTimezoneOffset() * 60 * 1000
 
+    # Set up the client name.
+    $('#client-name').html(window.SimpleSeer.settings.ui_pagename || "")
+
     if !@isMobile
       @socket = io.connect '/rt'
       #@.socket.on 'timeout', ->
@@ -31,8 +34,9 @@ module.exports = SeerApplication =
       @socket.on "message:alert/", window.SimpleSeer._serveralert
       @socket.emit 'subscribe', 'alert/'
       
-    # Set up the client name.
-    $('#client-name').html(window.SimpleSeer.settings.ui_pagename || "")
+    m = require './collections/measurements'
+    @measurements = new m()
+    @measurements.fetch()
 
     t = require './views/modal'
     @modal = new t()
