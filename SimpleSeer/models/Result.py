@@ -12,6 +12,8 @@ class ResultEmbed(SimpleEmbeddedDoc, mongoengine.EmbeddedDocument):
     inspection_name = mongoengine.StringField()
     measurement_id = mongoengine.ObjectIdField()
     measurement_name = mongoengine.StringField()
+    state = mongoengine.IntField()
+    message = mongoengine.StringField()
 
     def __repr__(self):
         return '<ResultEmbed %s:%s = (%s,%s)>' % (
@@ -46,7 +48,9 @@ class Result(SimpleDoc, mongoengine.Document):
     inspection_name = mongoengine.StringField()
     measurement_id = mongoengine.ObjectIdField()
     measurement_name = mongoengine.StringField()
-    
+    state = mongoengine.IntField()
+    message = mongoengine.StringField()
+
     meta = {
         'indexes': ["capturetime", ('camera', '-capturetime'),
                     "frame_id", "inspection_id", "measurement_id"]
