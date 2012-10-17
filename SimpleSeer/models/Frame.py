@@ -70,7 +70,7 @@ class Frame(SimpleDoc, mongoengine.Document):
     @classmethod
     #which fields we care about for Filter.py
     def filterFieldNames(cls):
-        return ['_id', 'camera', 'capturetime', 'capturetime_epoch', 'metadata', 'notes', 'height', 'width', 'imgfile', 'features']
+        return ['_id', 'camera', 'capturetime', 'capturetime_epoch', 'metadata', 'notes', 'height', 'width', 'imgfile', 'features', 'results']
 
 
     @LazyProperty
@@ -165,11 +165,11 @@ class Frame(SimpleDoc, mongoengine.Document):
 
         #TODO, this is sloppy -- we should handle this with cascading saves
         #or some other mechanism
-        for r in self.results:
-            result, created = r.get_or_create_result()
-            result.capturetime = self.capturetime
-            result.frame_id = self.id
-            result.save(*args, **kwargs)
+        #for r in self.results:
+        #    result, created = r.get_or_create_result()
+        #    result.capturetime = self.capturetime
+        #    result.frame_id = self.id
+        #    result.save(*args, **kwargs)
         
         # Once everything else is saved, publish result
         # Do not place any other save actions after this line or realtime objects will miss data

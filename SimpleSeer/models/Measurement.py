@@ -10,6 +10,10 @@ import formencode as fe
 
 from SimpleSeer import validators as V
 
+import logging
+log = logging.getLogger()
+
+
 class MeasurementSchema(fes.Schema):
     name = fev.UnicodeString(not_empty=True) #TODO, validate on unique name
     label = fev.UnicodeString(if_missing=None)
@@ -20,6 +24,7 @@ class MeasurementSchema(fes.Schema):
     fixdig = fev.UnicodeString(if_missing=2)
     inspection = V.ObjectId(not_empty=True)
     featurecriteria = V.JSON(if_empty=dict, if_missing=None)
+    tolerances = fev.Set(if_empty=[])
 
 
 class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
@@ -51,6 +56,7 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
     fixdig = mongoengine.IntField()
     inspection = mongoengine.ObjectIdField()
     featurecriteria = mongoengine.DictField()
+    tolerances = mongoengine.ListField()
 
     def execute(self, frame, features):
         featureset = self.findFeatureset(features)
@@ -82,15 +88,46 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
                 return []
             
             values = function_ref(frame, featureset)
-        return self.toResults(frame, values)
-            
         
-        values = []
+        results = self.toResults(frame, values)
+        results = self.tolerance(frame, results)
         
+        return results
         
+    def tolerance(self, frame, results):
         
-        return self.toResults(frame, values)
+        for result in results:
+            if result.measurement_name == self.name:
+                testField = None
+                if result.numeric:
+                    testField = result.numeric
+                else:
+                    testField = result.string
+                
+                result.state = 0
+                messages = []
+                for rule in self.tolerances:
+                    if rule['criteria'].keys()[0] in frame.metadata and frame.metadata[rule['criteria'].keys()[0]] == rule['criteria'].values()[0]:
+                        criteriaFunc = "testField %s %s" % (rule['rule']['operator'], rule['rule']['value'])
+                        match = eval(criteriaFunc, {}, {'testField': testField})
+                        
+                        if not match:
+                            result.state = 1
+                            messages.append("%s %s %s" % (self.label, rule['rule']['operator'], rule['rule']['value']))
+                        
+                result.message = ",".join(messages)
+                
+        return results
+    
+    def backfillTolerances(self):
+        from .Frame import Frame
         
+        for frame in Frame.objects:
+            log.info('Backfilling measurement on frame %s' % frame.id)
+            if frame.results:
+                self.tolerance(frame, frame.results)
+                frame.save()
+    
     def findFeatureset(self, features):
         
         fs = []
@@ -133,6 +170,9 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
     
     def save(self, *args, **kwargs):
         from ..realtime import ChannelManager
+        
+        if '_changed_fields' not in dir(self) or 'tolerances' in self._changed_fields:
+            self.backfillTolerances()
         
         super(Measurement, self).save(*args, **kwargs)
         ChannelManager().publish('meta/', self)
