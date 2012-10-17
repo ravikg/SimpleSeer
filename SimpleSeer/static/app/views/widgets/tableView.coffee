@@ -85,6 +85,7 @@ module.exports = class tableView extends SubView
     @$el.find('.tablesorter').tablesorter
       widgets: @widgets,
       headers:@_headerSettings()
+
   _headerSettings:=>
     if @widgetData.editable
       for i,n in @widgetData.editable
@@ -132,10 +133,11 @@ module.exports = class tableView extends SubView
     @rows = retRow
     return {header:retHeader,row:retRow}
 
+  # override for chage events
   changeCell:(item)=>
     obj = $(item.target)
-    console.log obj.attr('editFieldIndex')
-    console.log obj.val()
+    #console.log obj.attr('editFieldIndex')
+    #console.log obj.val()
     
   initPlugins: =>  	
     $.tablesorter.addWidget
@@ -154,7 +156,7 @@ module.exports = class tableView extends SubView
        	        for o, _i in arr
        	          str += '<input editFieldIndex="'+i+"."+index+"."+_i+'" type="text" value="'+o.trim()+'">'
        	        @innerHTML = str
-      	        return
-        @$el.find('input').on("change",@changeCell)
-    return
+                return
+        $('[editFieldIndex]',table).on("change", @changeCell)
+        return
     
