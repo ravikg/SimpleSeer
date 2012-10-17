@@ -8,12 +8,16 @@ template = require './templates/tableView'
 
 module.exports = class tableView extends SubView
   # Define some working variables.
-  tableData: []
-  columnOrder: []
-  emptyCell: ""
   template:template
-  widgets:[]
-  doNotSort:[]
+
+  _init: =>
+    @tableData = []
+    @columnOrder = []
+    @emptyCell = ""
+    @widgets = []
+    @doNotSort = []
+    @widgetData = []
+    return
 
   # Event handlers for the export buttons.
   events:
@@ -22,11 +26,12 @@ module.exports = class tableView extends SubView
 
   # Localizes the scope of the widget settings.
   initialize: =>
-    if @options.doNotSort
+    @_init()
+    if @options.doNotSort?
       @doNotSort = @options.doNotSort
-    if @options.widgetData
+    if @options.widgetData?
       @widgetData = @options.widgetData
-    @initPlugins()
+    #@initPlugins()
     
     @widgets = @options.widgets || []
     @widgets.push "zebra"
@@ -85,9 +90,11 @@ module.exports = class tableView extends SubView
     @$el.find('.tablesorter').tablesorter
       widgets: @widgets,
       headers:@_headerSettings()
+    @showEditFields()
+    return
 
   _headerSettings:=>
-    if @widgetData.editable
+    if @widgetData.editable?
       for i,n in @widgetData.editable
         if i not in @doNotSort
           @doNotSort.push i
@@ -138,25 +145,23 @@ module.exports = class tableView extends SubView
     obj = $(item.target)
     #console.log obj.attr('editFieldIndex')
     #console.log obj.val()
-    
-  initPlugins: =>  	
-    $.tablesorter.addWidget
-      id: "editable"
-      format:(table) =>
-        if @widgetData.editable
-          cols = {}
-          for i,n in $("thead th",table)
-            cols[i.innerHTML] = n
-          for i in @widgetData.editable
-            ind = (cols[i])+1
-      	    $('tr td:nth-child('+ind+')',table).each (index) ->
-      	      if $(@).find('input').length <=0
-       	        arr = @innerHTML.split(',')
-       	        str = ""
-       	        for o, _i in arr
-       	          str += '<input editFieldIndex="'+i+"."+index+"."+_i+'" type="text" value="'+o.trim()+'">'
-       	        @innerHTML = str
-                return
-        $('[editFieldIndex]',table).on("change", @changeCell)
-        return
-    
+
+  showEditFields: =>
+    table = @$el.find('.tablesorter')
+    if @widgetData.editable
+      cols = {}
+      for i,n in $("thead th",table)
+        cols[i.innerHTML] = n
+      for i in @widgetData.editable
+        ind = (cols[i])+1
+        $('tr td:nth-child('+ind+')',table).each (index) ->
+          if $(@).find('input').length <=0
+            arr = @innerHTML.split(',')
+            str = ""
+            for o, _i in arr
+              str += '<input editFieldIndex="'+i+"."+index+"."+_i+'" type="text" value="'+o.trim()+'">'
+            @innerHTML = str
+            return
+    $('[editFieldIndex]',table).on("change", @changeCell)
+    return
+  
