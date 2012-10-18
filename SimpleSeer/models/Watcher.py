@@ -4,6 +4,8 @@ from .base import SimpleDoc, SimpleEmbeddedDoc, WithPlugins
 from .Measurement import Measurement
 from .Alert import Alert
 
+from datetime import datetime
+
 class Handler(SimpleEmbeddedDoc, mongoengine.EmbeddedDocument):
     name = mongoengine.StringField()
     args = mongoengine.DictField()
@@ -62,6 +64,8 @@ class Watcher(SimpleDoc, WithPlugins, mongoengine.Document):
 
     def save(self, *args, **kwargs):
         from ..realtime import ChannelManager
+        
+        self.updatetime = datetime.utcnow()
         
         super(Watcher, self).save(*args, **kwargs)
         ChannelManager().publish('meta/', self)

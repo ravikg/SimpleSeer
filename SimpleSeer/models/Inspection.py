@@ -8,6 +8,7 @@ import formencode as fe
 from SimpleSeer import validators as V
 from SimpleSeer import util
 
+from datetime import datetime
 
 from .base import SimpleDoc, WithPlugins
 from .Measurement import Measurement
@@ -71,6 +72,7 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
     morphs = mongoengine.ListField()
     #list of dicts for morph operations
     #TODO validate agains morph operations
+    updatetime = mongoengine.DateTimeField()
 
     meta = {
         'indexes': ['name']
@@ -132,6 +134,8 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
 
     def save(self, *args, **kwargs):
         from ..realtime import ChannelManager
+        
+        self.updatetime = datetime.utcnow()
         
         super(Inspection, self).save(*args, **kwargs)
         ChannelManager().publish('meta/', self)
