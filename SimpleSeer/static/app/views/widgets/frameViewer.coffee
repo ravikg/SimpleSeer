@@ -17,10 +17,20 @@ module.exports = class frameViewer extends SubView
     img.src = frame.data.imgfile
     $(img).load =>
       @url = frame.data.imgfile
-      @$el.find('img').attr('src',@url)
+      li = @imgs[@imgcurr]
+      @imgcurr=(@imgcurr+1)%@imglen
+      ci = @imgs[@imgcurr]
+      ci.attr('src',@url)
+      ci.show()
+      li.hide()
+      #@$el.find('img').attr('src',@url)
     
   render:=>
     super()
+    @imgs = @$el.find('img')
+    @imglen = @imgs.length
+    @imgcurr = 0
+    return @
   
   getRenderData: =>
     url:@url

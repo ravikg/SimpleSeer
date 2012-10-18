@@ -11,6 +11,7 @@ from formencode import schema as fes
 from SimpleSeer import validators as V
 import formencode as fe
 
+from datetime import datetime
 
 from .base import SimpleDoc, SONScrub
 from .FrameFeature import FrameFeature
@@ -45,10 +46,10 @@ class Frame(SimpleDoc, mongoengine.Document):
     """
     capturetime = mongoengine.DateTimeField()
     capturetime_epoch = mongoengine.IntField(default = 0)
+    updatetime = mongoengine.DateTimeField()
     camera = mongoengine.StringField()
     features = mongoengine.ListField(mongoengine.EmbeddedDocumentField(FrameFeature))
     results = mongoengine.ListField(mongoengine.EmbeddedDocumentField(ResultEmbed))
-    #features     
     
     height = mongoengine.IntField(default = 0)
     width = mongoengine.IntField(default = 0)
@@ -161,6 +162,7 @@ class Frame(SimpleDoc, mongoengine.Document):
         if self.capturetime_epoch != epoch_ms:
             self.capturetime_epoch = epoch_ms 
         
+        self.updatetime = datetime.utcnow()
         super(Frame, self).save(*args, **kwargs)
 
         #TODO, this is sloppy -- we should handle this with cascading saves

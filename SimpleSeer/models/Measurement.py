@@ -8,6 +8,8 @@ from formencode import validators as fev
 from formencode import schema as fes
 import formencode as fe
 
+from datetime import datetime
+
 from SimpleSeer import validators as V
 
 import logging
@@ -57,6 +59,7 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
     inspection = mongoengine.ObjectIdField()
     featurecriteria = mongoengine.DictField()
     tolerances = mongoengine.ListField()
+    updatetime = mongoengine.DateTimeField()
 
     def execute(self, frame, features):
         featureset = self.findFeatureset(features)
@@ -174,6 +177,7 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
         if '_changed_fields' not in dir(self) or 'tolerances' in self._changed_fields:
             self.backfillTolerances()
         
+        self.updatetime = datetime.utcnow()
         super(Measurement, self).save(*args, **kwargs)
         ChannelManager().publish('meta/', self)
 
