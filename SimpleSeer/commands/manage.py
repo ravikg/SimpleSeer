@@ -7,6 +7,7 @@ import subprocess
 import time
 from path import path
 from SimpleSeer.Session import Session
+from socket import gethostname
 
 class ManageCommand(Command):
     "Simple management tasks that don't require SimpleSeer context"
@@ -51,10 +52,31 @@ class DeployCommand(ManageCommand):
         if os.path.exists(link):
             os.remove(link)
             
+        supervisor_link = "/etc/supervisor/conf.d/simpleseer.conf"
+        if os.path.exists(supervisor_link):
+            os.remove(supervisor_link)
+            
         print "Linking %s to %s" % (self.options.directory, link)
         os.symlink(self.options.directory, link)
-        print "Restarting jobs in supervisord"
-        subprocess.check_output(['supervisorctl', 'restart all'])
+        
+        
+
+        hostname = gethostname()
+        hostname_supervisor_filename = hostname + "_supervisor.conf"
+        src_host_specific_supervisor = path(self.options.directory) / 'etc' / hostname_supervisor_filename
+        
+        regular_supervisor = "supervisor.conf"
+        src_supervisor = path(self.options.directory) / 'etc' / regular_supervisor
+        
+        
+        if os.path.exists(src_host_specific_supervisor):
+            src_supervisor = src_host_specific_supervisor
+            
+        print "Linking %s to %s" % (src_supervisor, supervisor_link)
+        os.symlink(src_supervisor, supervisor_link)
+        
+        print "Reloading supervisord"
+        subprocess.check_output(['supervisorctl', 'reload'])
 
 
 

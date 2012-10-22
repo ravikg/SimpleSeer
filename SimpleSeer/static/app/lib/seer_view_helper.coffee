@@ -126,9 +126,9 @@ Handlebars.registerHelper 'featurelist', (features = []) ->
       f = {}
     for i,o of f
       _lk = "["+o.labelkey+"] " || ""
-      ret += "<div style=\"clear:both;\">"
-      ret += "<p class='item-detail'><span class=\"featureLabel\">"+_lk+"</span>" + o.title + ":</p>"
-      ret += "<p class='item-detail-value'>"+o.value+"<span>"+o.units+"</span></p>"
+      ret += '<div style="clear:both;">'
+      ret += '<p class="item-detail"><span class="featureLabel">'+_lk+'</span>' + o.title + ':</p>'
+      ret += '<p class="item-detail-value" style="'+(o.style || "")+'">'+o.value+'<span>'+o.units+'</span></p>'
       ret += "</div>"
   return new Handlebars.SafeString(ret)
 

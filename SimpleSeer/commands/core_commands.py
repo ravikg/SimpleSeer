@@ -102,11 +102,14 @@ def WebCommand(self):
     db = Connection()[dbName]
     # Ensure indexes created for filterable fields
     # TODO: should make this based on actual plugin params or filter data
-    db.frame.ensure_index([('results', 1)])
-    db.frame.ensure_index([('results.measurement_name', 1)])
-    db.frame.ensure_index([('results.numeric', 1)])
-    db.frame.ensure_index([('results.string', 1)])
-    
+    try:
+        db.frame.ensure_index([('results', 1)])
+        db.frame.ensure_index([('results.measurement_name', 1)])
+        db.frame.ensure_index([('results.numeric', 1)])
+        db.frame.ensure_index([('results.string', 1)])
+    except:
+        self.log.info('Could not create indexes')
+        
     web = WebServer(make_app())
     web.run_gevent_server()
 

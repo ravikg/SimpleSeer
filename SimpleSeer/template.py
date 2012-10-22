@@ -83,7 +83,7 @@ class SimpleSeerProjectTemplate(Template):
         #TODO:
         # check to see if cloud exists
         # remove hardcoded path
-        settings = Session(path(output_dir) / "simpleseer.cfg")
+        settings = Session(path(output_dir))
         if settings.in_cloud:
             cloud_brunch = path(pkg_resources.resource_filename('SeerCloud', 'static'))
             with cloud_brunch:

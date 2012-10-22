@@ -13,7 +13,7 @@ def load_ipython_extension(ipython):
     load_plugins()
     
     
-    s = Session("simpleseer.cfg")
+    s = Session(".")
     ipython.push(
         dict(
             Frame = M.Frame,
