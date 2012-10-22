@@ -37,7 +37,7 @@ class Session():
 
         yaml_config = path(yaml_config_dir) / "simpleseer.cfg"
 
-        if not os.path.isfile(yaml_config):
+        if yaml_config_dir == "." and not os.path.isfile(yaml_config):
             yaml_config_dir = "/etc/simpleseer"
             yaml_config = path(yaml_config_dir) / "simpleseer.cfg"
 
