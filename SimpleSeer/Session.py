@@ -1,6 +1,10 @@
 import yaml
 import logging
 import mongoengine
+import os
+
+import logging
+log = logging.getLogger()
 
 class Session():
     """
@@ -28,6 +32,13 @@ class Session():
             return  #return the existing shared context
 
         config_dict = yaml.load(open(yaml_config))
+        
+        # Look for alternate config files with name hostname_simpleseer.cfg
+        for alt_config in [ f for f in os.listdir('.') if f[-15:] == '_simpleseer.cfg' ]:
+            log.info('Overriding configuration with %s' % alt_config)
+            alt_config_dict = yaml.load(open(alt_config))
+            config_dict.update(alt_config_dict)
+        
         self.configure(config_dict)
 
     def configure(self, d):

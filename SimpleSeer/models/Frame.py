@@ -11,6 +11,7 @@ from formencode import schema as fes
 from SimpleSeer import validators as V
 import formencode as fe
 
+from datetime import datetime
 
 from .base import SimpleDoc, SONScrub
 from .FrameFeature import FrameFeature
@@ -45,10 +46,10 @@ class Frame(SimpleDoc, mongoengine.Document):
     """
     capturetime = mongoengine.DateTimeField()
     capturetime_epoch = mongoengine.IntField(default = 0)
+    updatetime = mongoengine.DateTimeField()
     camera = mongoengine.StringField()
     features = mongoengine.ListField(mongoengine.EmbeddedDocumentField(FrameFeature))
     results = mongoengine.ListField(mongoengine.EmbeddedDocumentField(ResultEmbed))
-    #features     
     
     height = mongoengine.IntField(default = 0)
     width = mongoengine.IntField(default = 0)
@@ -70,7 +71,7 @@ class Frame(SimpleDoc, mongoengine.Document):
     @classmethod
     #which fields we care about for Filter.py
     def filterFieldNames(cls):
-        return ['_id', 'camera', 'capturetime', 'capturetime_epoch', 'metadata', 'notes', 'height', 'width', 'imgfile', 'features']
+        return ['_id', 'camera', 'capturetime', 'capturetime_epoch', 'metadata', 'notes', 'height', 'width', 'imgfile', 'features', 'results']
 
 
     @LazyProperty
@@ -161,15 +162,16 @@ class Frame(SimpleDoc, mongoengine.Document):
         if self.capturetime_epoch != epoch_ms:
             self.capturetime_epoch = epoch_ms 
         
+        self.updatetime = datetime.utcnow()
         super(Frame, self).save(*args, **kwargs)
 
         #TODO, this is sloppy -- we should handle this with cascading saves
         #or some other mechanism
-        for r in self.results:
-            result, created = r.get_or_create_result()
-            result.capturetime = self.capturetime
-            result.frame_id = self.id
-            result.save(*args, **kwargs)
+        #for r in self.results:
+        #    result, created = r.get_or_create_result()
+        #    result.capturetime = self.capturetime
+        #    result.frame_id = self.id
+        #    result.save(*args, **kwargs)
         
         # Once everything else is saved, publish result
         # Do not place any other save actions after this line or realtime objects will miss data
