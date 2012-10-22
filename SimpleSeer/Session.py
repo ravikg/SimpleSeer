@@ -2,9 +2,13 @@ import yaml
 import logging
 import mongoengine
 import os
-
+import os.path
+from path import path
+from socket import gethostname
 import logging
 log = logging.getLogger()
+
+
 
 class Session():
     """
@@ -25,16 +29,25 @@ class Session():
     __shared_state = dict(
         _config = {})
     
-    def __init__(self, yaml_config = ''):
+    def __init__(self, yaml_config_dir = ''):
         self.__dict__ = self.__shared_state
         
-        if not yaml_config:
+        if not yaml_config_dir:
             return  #return the existing shared context
 
+        yaml_config = path(yaml_config_dir) / "simpleseer.cfg"
+
+        if yaml_config_dir == "." and not os.path.isfile(yaml_config):
+            yaml_config_dir = "/etc/simpleseer"
+            yaml_config = path(yaml_config_dir) / "simpleseer.cfg"
+
         config_dict = yaml.load(open(yaml_config))
+        log.info("Loaded configuration from %s" % yaml_config)
         
         # Look for alternate config files with name hostname_simpleseer.cfg
-        for alt_config in [ f for f in os.listdir('.') if f[-15:] == '_simpleseer.cfg' ]:
+        alt_config_filename = gethostname() + '_simpleseer.cfg'
+        alt_config = path(yaml_config_dir) / alt_config_filename
+        if os.path.isfile(alt_config):
             log.info('Overriding configuration with %s' % alt_config)
             alt_config_dict = yaml.load(open(alt_config))
             config_dict.update(alt_config_dict)

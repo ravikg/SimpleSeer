@@ -68,7 +68,7 @@ setup_environment() {
   echo "linking for development"
   sudo python setup.py develop
   echo "setting up environment"
-  sudo ln -s `pwd`/etc/supervisor.conf /etc/supervisor/conf.d/supervisor.conf
+  #sudo ln -s `pwd`/etc/supervisor.conf /etc/supervisor/conf.d/supervisor.conf
   echo "make sure to symlink your project to /etc/simpleseer or run simpleseer deploy!"
 }
 
