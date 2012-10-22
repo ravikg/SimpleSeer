@@ -106,6 +106,7 @@ class Filter():
         
         # First select the fields from the frame to include
         for p in Frame.filterFieldNames():
+            
             fields[p] = 1
         
         # And we always need the features and results
@@ -113,9 +114,11 @@ class Filter():
         if projFeat:
             p, g = self.rewindFields('features')
             fields.update(p)
+            del fields['features']
         if projResult:
             p, g = self.rewindFields('results')
             fields.update(p)
+            del fields['results']
             
         # Always want the 'id' field, which sometimes comes through as _id
         fields['id'] = '$_id'
