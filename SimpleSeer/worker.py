@@ -8,7 +8,7 @@ from celery.exceptions import RetryTaskError
 
 
 load_plugins()
-session = Session("simpleseer.cfg")
+session = Session()
 host = 'mongodb://%s:%s/celery' % (session.mongo['host'], session.mongo['port'])
 celery = Celery(broker=host, backend='mongodb')
 

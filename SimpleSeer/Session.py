@@ -32,6 +32,7 @@ class Session():
     def __init__(self, yaml_config_dir = ''):
         self.__dict__ = self.__shared_state
         
+        import pdb; pdb.set_trace()
         if not yaml_config_dir:
             return  #return the existing shared context
 
