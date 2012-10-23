@@ -19,7 +19,7 @@ log = logging.getLogger()
 class MeasurementSchema(fes.Schema):
     name = fev.UnicodeString(not_empty=True) #TODO, validate on unique name
     label = fev.UnicodeString(if_missing=None)
-    labelKey = fev.UnicodeString(if_missing=None)
+    labelkey = fev.UnicodeString(if_missing=None)
     method = fev.UnicodeString(not_empty=True)
     parameters = V.JSON(if_empty=dict, if_missing=None)
     units = fev.UnicodeString(if_missing="px")
@@ -52,7 +52,7 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
     name = mongoengine.StringField()
     #VALIDATION NEEDED: this should be a unique name
     label = mongoengine.StringField()
-    labelKey = mongoengine.StringField()
+    labelkey = mongoengine.StringField()
     method = mongoengine.StringField()
     parameters = mongoengine.DictField()
     units = mongoengine.StringField()
