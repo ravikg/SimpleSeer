@@ -6,6 +6,8 @@ from .models.Measurement import Measurement
 from datetime import datetime
 from calendar import timegm
 
+import numpy as np
+
 log = logging.getLogger(__name__)
 
 class Filter():
@@ -133,6 +135,9 @@ class Filter():
         filters = {}
         for f in frameQuery:    
             if 'eq' in f:
+                if f['eq'].isdigit():
+                    f['eq'] = float(f['eq'])
+                    
                 if f['name'] == 'capturetime':
                     f['eq'] = datetime.fromtimestamp(f['eq'] / 1000)
                 comp = f['eq']
@@ -217,7 +222,7 @@ class Filter():
             
             comp = {}
             if 'eq' in f:
-                comp[field] = str(f['eq'])
+                comp[field] = f['eq']
             if 'gt' in f or 'lt' in f:
                 parts = {}
                 if 'gt' in f:
@@ -288,6 +293,8 @@ class Filter():
         if len(cmd['result']) > 0:
             for key in cmd['result'][0]:
                 if type(cmd['result'][0][key]) == list:
+                    if type(cmd['result'][0][key][0]) == list:
+                        cmd['result'][0][key] = list(np.unique([item for sub in cmd['result'][0][key] for item in sub]))
                     cmd['result'][0][key].sort()
                 
                 if type(cmd['result'][0][key]) == datetime:
