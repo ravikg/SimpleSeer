@@ -62,7 +62,7 @@ class DeployCommand(ManageCommand):
         
 
         hostname = gethostname()
-        hostname_supervisor_filename = "supervisor-" + hostname + ".conf"
+        hostname_supervisor_filename = hostname + "_supervisor.conf"
         src_host_specific_supervisor = path(self.options.directory) / 'etc' / hostname_supervisor_filename
         
         regular_supervisor = "supervisor.conf"
@@ -72,7 +72,6 @@ class DeployCommand(ManageCommand):
         if os.path.exists(src_host_specific_supervisor):
             src_supervisor = src_host_specific_supervisor
             
-        
         print "Linking %s to %s" % (src_supervisor, supervisor_link)
         os.symlink(src_supervisor, supervisor_link)
         
