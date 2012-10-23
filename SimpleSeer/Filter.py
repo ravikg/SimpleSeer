@@ -135,7 +135,7 @@ class Filter():
         filters = {}
         for f in frameQuery:    
             if 'eq' in f:
-                if f['eq'].isdigit():
+                if type(f['eq']) == str and f['eq'].isdigit():
                     f['eq'] = float(f['eq'])
                     
                 if f['name'] == 'capturetime':
