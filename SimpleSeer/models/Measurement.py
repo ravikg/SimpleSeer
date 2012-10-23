@@ -56,7 +56,7 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
     method = mongoengine.StringField()
     parameters = mongoengine.DictField()
     units = mongoengine.StringField()
-    fixdig = mongoengine.IntField()
+    fixdig = mongoengine.IntField(default=99)
     inspection = mongoengine.ObjectIdField()
     featurecriteria = mongoengine.DictField()
     tolerances = mongoengine.ListField()
