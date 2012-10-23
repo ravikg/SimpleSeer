@@ -27,6 +27,7 @@ class MeasurementSchema(fes.Schema):
     inspection = V.ObjectId(not_empty=True)
     featurecriteria = V.JSON(if_empty=dict, if_missing=None)
     tolerances = fev.Set(if_empty=[])
+    updatetime = fev.UnicodeString()
 
 
 class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
