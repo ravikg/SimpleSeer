@@ -135,12 +135,13 @@ class Filter():
         filters = {}
         for f in frameQuery:    
             if 'eq' in f:
-                if type(f['eq']) == str and f['eq'].isdigit():
+                if (type(f['eq']) == str or type(f['eq']) == unicode) and f['eq'].isdigit():
                     f['eq'] = float(f['eq'])
                     
                 if f['name'] == 'capturetime':
                     f['eq'] = datetime.fromtimestamp(f['eq'] / 1000)
                 comp = f['eq']
+                
             else:
                 comp = {}
                 if 'gt' in f and f['gt']:
@@ -246,62 +247,115 @@ class Filter():
         # parameters, such as lower/upper bounds, or lists of options
         
         from datetime import datetime
+        from bson import Code
         
         if not filterFormat in ['numeric', 'string', 'autofill', 'datetime']:
             return {"error":"unknown format"}
         if not filterType in ['measurement', 'frame', 'framefeature']:
             return {"error":"unknown type"}
-            
-        db = Frame._get_db()
         
-        pipeline = []
-        collection = ''
-        field = ''
         
         if filterType == 'frame':
-            collection = ''    
-            field = filterName
-            pipeline.append({'$project': {field: 1}})
-        elif filterType == 'measurement':
-            collection = 'results.'
-            meas, c, field = filterName.partition('.')
             
-            pipeline.append({'$project': {'results.measurement_name': 1, 'results.' + field: 1}})
-            pipeline.append({'$unwind': '$results'})
-            pipeline.append({'$match': {'results.measurement_name': meas}})
+            # Need to convert mongo dotted notation to hash for javascript
+            fieldpart = filterName.split('.')
+            field = fieldpart[0]
+            if len(fieldpart) > 1 and not field == 'results' and not field == 'features':
+                field += ('["%s"]' % fieldpart[1])
+            elif len(fieldpart) > 1:
+                field += ("[i].%s" % fieldpart[1]) 
             
-        elif filterType == 'framefeature':
-            collection = 'features.'
-            feat, c, field = filterName.partition('.')
             
-            pipeline.append({'$project': {'features.featuretype': 1, 'features.' + field: 1}})
-            pipeline.append({'$unwind': '$features'})
-            pipeline.append({'$match': {'features.featuretype': feat}})
+            if (filterFormat == 'numeric') or (filterFormat == 'datetime'):
+                emit = "  emit(1, {min: val, max: val});"
+            else:
+                emit = ("  arr = {};" 
+                       "  arr[val] = 1;" 
+                       "  emit(1, arr);")
+        
+            loopstart = ""
+            loopend = ""
+            
+            if fieldpart[0] == 'results' or fieldpart[0] == 'features':
+                loopend = "}"
+                loopstart = "for (i = 0; i < this." + fieldpart[0] + ".length; i++) {"
+        
+            field = 'this.%s' % field
+            mapfn = Code("function () {" + loopstart +
+                         "  if (this." + fieldpart[0] + ") {"
+                         "    val = " + field + ";" + emit +
+                         "  }" + loopend +
+                         "}")
+        
+        if not filterType == 'frame':
+            if filterType == 'measurement':
+                meas, c, field = filterName.partition('.')
+                subfield = 'this.results'
+                chkfield = 'this.results[i].measurement_name == "%s"' % meas
+                valfield = 'this.results[i].%s' % field
+            elif filterType == 'framefeature':
+                feat, c, field = filterName.partition('.')
+                subfield = 'this.features'
+                chkfield = 'this.features[i].featuretype == "%s"' % feat
+                valfield = 'this.features[i].%s' % field
+                
+            if (filterFormat == 'numeric') or (filterFormat == 'datetime'):
+                emit = "  emit(1, {min: val, max: val});"
+            else:
+                emit = ("  arr = {};"
+                       "  arr[val] = 1;" 
+                       "  emit(1, arr);")
+        
+
+            mapfn = Code("function () {" +
+                         "  val = -1; " +
+                         "  for (i = 0; i < " + subfield + ".length; i++) {" +
+                         "    if (" + chkfield + ")" +
+                         "      val = " + valfield + ";"+
+                         emit +
+                         "  }" +
+                         "}")
             
         if (filterFormat == 'numeric') or (filterFormat == 'datetime'):
-            pipeline.append({'$group': {'_id': 1, 'min': {'$min': '$' + collection + field}, 'max': {'$max': '$' + collection + field}}})
-        
+        #    pipeline.append({'$group': {'_id': 1, 'min': {'$min': '$' + collection + field}, 'max': {'$max': '$' + collection + field}}})
+            reducefn = Code("function (key, values) {" +
+                            "  ret = values[0]; " +
+                            "  for (var i = 1; i < values.length; i++) { " +
+                            "    if (values[i].min < ret.min) " +
+                            "      ret.min = values[i].min; " +
+                            "    if (values[i].max > ret.max) " +
+                            "      ret.max = values[i].max; " + 
+                            "  } " +
+                            "  return ret;" +
+                            "}")
         if (filterFormat == 'autofill'):
-            pipeline.append({'$group': {'_id': 1, 'enum': {'$addToSet': '$' + collection + field}}})    
-            
-        if (filterFormat == 'string'):
-            pipeline.append({'$group': {'_id': 1, 'found': {'$sum': 1}}})
-        
-        
-        cmd = db.command('aggregate', 'frame', pipeline = pipeline)
-        ret = {}
-        if len(cmd['result']) > 0:
-            for key in cmd['result'][0]:
-                if type(cmd['result'][0][key]) == list:
-                    if type(cmd['result'][0][key][0]) == list:
-                        cmd['result'][0][key] = list(np.unique([item for sub in cmd['result'][0][key] for item in sub]))
-                    cmd['result'][0][key].sort()
+        #    pipeline.append({'$group': {'_id': 1, 'enum': {'$addToSet': '$' + collection + field}}})    
+            reducefn = Code("function (key, values) {" +
+                            "  ret = values[0]; " +
+                            "  for (var i = 1; i < values.length; i++) { " +
+                            "    for (idx in values[i]) {" + 
+                            "      ret[idx] = 1;" + 
+                            "    }"+
+                            "  } " +
+                            "  return ret;" +
+                            "}")   
                 
-                if type(cmd['result'][0][key]) == datetime:
-                    ms = cmd['result'][0][key].microsecond / 1000
-                    cmd['result'][0][key] = timegm(cmd['result'][0][key].timetuple()) * 1000 + ms 
-                if not key == '_id':
-                    ret[key] = cmd['result'][0][key]
+
+        res = Frame.objects.map_reduce(mapfn, reducefn, 'inline')
+        doc = res.next()
+        ret = {}
+        if doc:
+            if (filterFormat == 'autofill'):
+                res = doc.value
+                if '' in res:
+                    del res['']
+                if 'undefined' in res:
+                    del res['undefined']
+                keys = res.keys()
+                keys.sort()
+                ret['enum'] = keys
+            else:
+                ret = doc.value
         else:
             return {"error":"no matches found"}
         
