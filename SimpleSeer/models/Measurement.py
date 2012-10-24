@@ -21,11 +21,11 @@ class MeasurementSchema(fes.Schema):
     label = fev.UnicodeString(if_missing=None)
     labelkey = fev.UnicodeString(if_missing=None)
     method = fev.UnicodeString(not_empty=True)
-    parameters = V.JSON(if_empty=dict, if_missing=None)
+    parameters = V.JSON(if_empty=None, if_missing=None)
     units = fev.UnicodeString(if_missing="px")
     fixdig = fev.UnicodeString(if_missing=2)
     inspection = V.ObjectId(not_empty=True)
-    featurecriteria = V.JSON(if_empty=dict, if_missing=None)
+    featurecriteria = V.JSON(if_empty=None, if_missing=None)
     tolerances = fev.Set(if_empty=[])
     updatetime = fev.UnicodeString()
 
