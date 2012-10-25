@@ -48,9 +48,14 @@ module.exports = class tableView extends SubView
   addRow: (row) =>
     newRow = {}
     for i,o of row
-      if @isEmpty o
-        o = @emptyCell
-      newRow[i] = o
+      if typeof o == 'object'
+        text = o.text
+        style = o.style
+      else
+        text = o
+      if @isEmpty text
+        text = @emptyCell
+      newRow[i] = {text:text,style:style||""}
     @tableData.push newRow
     
   # Pushes the table data into a hidden
@@ -113,7 +118,7 @@ module.exports = class tableView extends SubView
     retRow = []
     rr = []
     
-    # Populate initial coloumn order.
+    # Populate initial column order.
     for col in @columnOrder
       retHeader.push col
       
@@ -162,6 +167,12 @@ module.exports = class tableView extends SubView
               str += '<input editFieldIndex="'+i+"."+index+"."+_i+'" type="text" value="'+o.trim()+'">'
             @innerHTML = str
             return
+      ind = (cols[@widgetData.editableKey])+1
+      _key = @widgetData.editableKey
+      $('tr td:nth-child('+ind+')',table).each (index) ->
+        ele = $(@)
+        ele.attr('editFieldKey', _key+"."+index+".0")
+     
     $('[editFieldIndex]',table).on("change", @changeCell)
     return
   

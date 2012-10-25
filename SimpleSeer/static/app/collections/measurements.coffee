@@ -35,10 +35,11 @@ module.exports = class Measurements extends Collection
       set = @where({ 'label':key })
       for o in set
         isChanged = false
-        console.log o
-        for t in o.attributes.tolerances
-          console.log 'check'
-          isChanged = true
+        for i,t of o.attributes.tolerances
+          console.log t, tolerance
+          if t.rule.operator == tolerance.rule.operator
+            o.attributes.tolerances[i] = tolerance
+            isChanged = true
         if !isChanged
           o.attributes.tolerances.push tolerance
           isChanged = true
