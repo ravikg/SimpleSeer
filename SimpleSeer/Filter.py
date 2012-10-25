@@ -17,24 +17,25 @@ class Filter():
     def getFrames(self, allFilters, skip=0, limit=float("inf"), sortinfo = {}, timeEpoch = True):
         
         pipeline = []
-        frames = []
-        measurements = []
-        features = []
+        #frames = []
+        #measurements = []
+        #features = []
         
         # Filter the data based on the filter parameters
         # Frame features are easy to filter, but measurements and features are embedded in the frame
         # so they need their own syntax to filter
+        resCount = 0
+        featCount = 0
         for f in allFilters:
-            if f['type'] == 'measurement':
-                measurements.append(f)
-            elif f['type'] == 'frame':
-                frames.append(f)
-            elif f['type'] == 'framefeature':
-                features.append(f)
+            if f['name'][:7] == 'results':
+                resCount += 1
+            elif f['name'][:8] == 'features':
+                featCount += 1
+            
+        # Need to initialize the fields for the query.  Do this sparingly, as mongo has major memory limitations
+        pipeline += self.initialFields(projResult = resCount, projFeat = featCount)
         
-        # Need to initially construct/modify a few fields for future filters
-        pipeline += self.initialFields(projResult = (len(measurements) > 0), projFeat = (len(features) > 0))
-        
+        """
         if frames:
             pipeline += self.filterFrames(frames)
         
@@ -43,6 +44,9 @@ class Filter():
         
         if features:
             pipeline += self.conditional(measurements, 'features', 'featuretype')     
+        """
+        
+        pipeline += self.conditional(allFilters)
         
         # Sort the results
         pipeline += self.sort(sortinfo)
@@ -55,6 +59,7 @@ class Filter():
         db = Frame._get_db()
         cmd = db.command('aggregate', 'frame', pipeline = pipeline)
         results = cmd['result']
+        
         
         # Perform the skip/limit 
         # Note doing this in python instead of mongo since need original query to give total count of relevant results
@@ -71,33 +76,6 @@ class Filter():
                 
         return len(cmd['result']), results    
     
-    def negativeFilter(self, originalFilter = []):
-        # used to convert filter commands that assume provide all fields except those banned
-        # to a filter that returns only those fields specified
-        # which is the format assumed by filters here
-        
-        newFilters = []
-        featureNames, resultNames = self.keyNamesHash()
-        
-        for insp in featureNames.keys():
-            for field in featureNames[insp]:
-                for orig in originalFilter:
-                    filtname = '%s.%s' % (insp, field)
-                    if orig['type'] == 'framefeature' and orig['name'] == filtname:
-                        newFilters.append(orig)
-                    else:
-                        newFilters.append({'type':'framefeature', 'exists': True, 'name': filtname})
-        
-        for meas in resultNames.keys():
-            for field in resultNames[meas]:
-                for orig in originalFilter:
-                    filtname = '%s.%s' % (meas, field)
-                    if orig['type'] == 'measurement' and orig['name'] == filtname:
-                        newFilters.append(orig)
-                    else:
-                        newFilters.append({'type':'measurement', 'exists': True, 'name':filtname})
-        
-        return newFilters
         
     def initialFields(self, projResult = False, projFeat = False):
         # This is a pre-filter of the relevant fields
@@ -114,11 +92,11 @@ class Filter():
         # And we always need the features and results
         
         if projFeat:
-            p, g = self.rewindFields('features')
+            p = self.rewindFields('features')
             fields.update(p)
             del fields['features']
         if projResult:
-            p, g = self.rewindFields('results')
+            p = self.rewindFields('results')
             fields.update(p)
             del fields['results']
             
@@ -126,7 +104,7 @@ class Filter():
         fields['id'] = '$_id'
         return [{'$project': fields}]
     
-    
+    """
     def filterFrames(self, frameQuery):
         # Construct the filter based on fields in the Frame object
         # Note that all timestamps are passed in as epoch milliseconds, but
@@ -158,6 +136,7 @@ class Filter():
             filters[f['name']] = comp
         
         return [{'$match': filters}]
+    """
     
     def sort(self, sortinfo):
         # Sort based on specified parameters
@@ -179,12 +158,13 @@ class Filter():
         
         return parts
     
+
     def rewindFields(self, field):
         # Handle the grouping when undoing the unwind operations
         # Also filters out unnecessary fields from embedded docs to keep results smaller
         
         proj = {}
-        group = {}
+        #group = {}
         
         # Only keep those keys requested
         featKeys, resKeys = self.keyNamesHash()
@@ -198,107 +178,122 @@ class Filter():
             for f in useKeys[key]:
                 proj[field + '.' + f] = 1
         
-        for key in Frame.filterFieldNames():
+        #for key in Frame.filterFieldNames():
             # Have to rename the id field since $group statements assume existence of _id as the group_by parameter
-            if key == 'id':
-                key = '_id'
-            proj[key] = 1
+        #    if key == 'id':
+        #        key = '_id'
+        #    proj[key] = 1
             
-            group[key] = {'$first': '$' + key}
+            #group[key] = {'$first': '$' + key}
         
         # re-groupt the (results | features)
-        group[field] = {'$addToSet': '$' + field}
+        #group[field] = {'$addToSet': '$' + field}
             
-        group['_id'] = '$_id'
+        #group['_id'] = '$_id'
         # But a lot of stuff also wants an id instead of _id
-        group['id'] = {'$first': '$_id'}
+        #group['id'] = {'$first': '$_id'}
 
-        return proj, group
+        return proj #, group
     
-    def conditional(self, filters, embedField, nameField):
+    
+    def conditional(self, filters):
+        # This function generates the $match clauses for the aggregation
         
         allfilts = []
         for f in filters:    
-            name, c, field = f['name'].partition('.')
+            nameParts = f['name'].split('.')
             
+            name = f['name']
+            if not f['type'] == 'frame':
+                name = '.'.join(nameParts[1:])
+            
+            # create the basic conditional
             comp = {}
             if 'eq' in f:
-                comp[field] = f['eq']
+                
+                # Need to convert the numbers into digits instead of strings
+                if (type(f['eq']) == str or type(f['eq']) == unicode) and f['eq'].isdigit():
+                    f['eq'] = float(f['eq'])
+                
+                # Convert datetimes into epoch ms
+                if type(f['eq']) == datetime:
+                    f['eq'] = datetime.fromtimestamp(f['eq'] / 1000)
+                
+                comp[name] = f['eq']
             if 'gt' in f or 'lt' in f:
                 parts = {}
                 if 'gt' in f:
                     parts['$gte'] = f['gt']
                 if 'lt' in f:
                     parts['$lte'] = f['lt']
-                comp[field] = parts
+                comp[name] = parts
             if 'exists' in f:
-                comp[field] = {'$exists': True}
-                
-            comp[nameField] = name
+                comp[name] = {'$exists': True}
             
-            allfilts.append({'$match': {embedField: {'$elemMatch': comp}}})
+            # if not a frame-level filter, restrict to appropriate measurement/feature type
+            if not f['type'] == 'frame':
+                if nameParts[0] == 'results':    
+                    comp['measurement_name'] = f['type']
+                if nameParts[0] == 'features':
+                    comp['featuretype'] = f['type']
+                    
+            #allfilts.append({'$match': {embedField: {'$elemMatch': comp}}})
+                allfilts.append({'$match': {nameParts[0]: {'$elemMatch': comp}}})
+            else:
+                allfilts.append({'$match': comp})
                 
         return allfilts
         
         
     def checkFilter(self, filterType, filterName, filterFormat):
-        # Given information about a filter, checks if that field
-        # exists in the database.  If so, provides the fitler
-        # parameters, such as lower/upper bounds, or lists of options
-        
-        from datetime import datetime
-        
-        if not filterFormat in ['numeric', 'string', 'autofill', 'datetime']:
-            return {"error":"unknown format"}
-        if not filterType in ['measurement', 'frame', 'framefeature']:
-            return {"error":"unknown type"}
-            
-        db = Frame._get_db()
         
         pipeline = []
-        collection = ''
-        field = ''
+        fieldParts = filterName.split('.')
         
-        if filterType == 'frame':
-            collection = ''    
-            field = filterName
-            pipeline.append({'$project': {field: 1}})
-        elif filterType == 'measurement':
-            collection = 'results.'
-            meas, c, field = filterName.partition('.')
+        #project only those db fields required.  The field being queried and the "where" type clause
+        project = {filterName: 1}
+        if not filterType == 'frame':
+            if fieldParts[0] == 'results':
+                project['results.measurement_name'] = 1
+            if fieldParts[0] == 'features':
+                project['features.featuretype'] = 1
+        pipeline.append({'$project': project})
+        
+        #if querying from results or features table, need to unwind to get individual records
+        if fieldParts[0] == 'results' or fieldParts[0] == 'features':
+            pipeline.append({'$unwind': '$' + fieldParts[0]})
+        
+        #match only relevant records:
+        if not filterType == 'frame':
+            if fieldParts[0] == 'results':
+                pipeline.append({'$match': {'results.measurement_name': filterType}})
+            if fieldParts[0] == 'features':
+                pipeline.append({'$match': {'features.featuretype': filterType}}) 
             
-            pipeline.append({'$project': {'results.measurement_name': 1, 'results.' + field: 1}})
-            pipeline.append({'$unwind': '$results'})
-            pipeline.append({'$match': {'results.measurement_name': meas}})
-            
-        elif filterType == 'framefeature':
-            collection = 'features.'
-            feat, c, field = filterName.partition('.')
-            
-            pipeline.append({'$project': {'features.featuretype': 1, 'features.' + field: 1}})
-            pipeline.append({'$unwind': '$features'})
-            pipeline.append({'$match': {'features.featuretype': feat}})
-            
+        # numeric and datetime filters need the minimum and maximum values found    
         if (filterFormat == 'numeric') or (filterFormat == 'datetime'):
-            pipeline.append({'$group': {'_id': 1, 'min': {'$min': '$' + collection + field}, 'max': {'$max': '$' + collection + field}}})
+            pipeline.append({'$group': {'_id': 1, 'min': {'$min': '$' + filterName}, 'max': {'$max': '$' + filterName}}})
         
+        # autofill filters create a set of unique values
         if (filterFormat == 'autofill'):
-            pipeline.append({'$group': {'_id': 1, 'enum': {'$addToSet': '$' + collection + field}}})    
+            pipeline.append({'$group': {'_id': 1, 'enum': {'$addToSet': '$' + filterName}}})    
             
-        if (filterFormat == 'string'):
-            pipeline.append({'$group': {'_id': 1, 'found': {'$sum': 1}}})
-        
-        
+        # Run the aggregation query by pulling the db connection from the Frame object
+        db = Frame._get_db()
         cmd = db.command('aggregate', 'frame', pipeline = pipeline)
         ret = {}
+        
         if len(cmd['result']) > 0:
             for key in cmd['result'][0]:
+                # type will be list for autofills.  Sort the list of options
                 if type(cmd['result'][0][key]) == list:
                     cmd['result'][0][key].sort()
                 
+                # If the type is datetime, turn it into epoch milliseconds
                 if type(cmd['result'][0][key]) == datetime:
                     ms = cmd['result'][0][key].microsecond / 1000
                     cmd['result'][0][key] = timegm(cmd['result'][0][key].timetuple()) * 1000 + ms 
+                    
                 if not key == '_id':
                     ret[key] = cmd['result'][0][key]
         else:
