@@ -158,6 +158,7 @@ class SONScrub(SONManipulator):
         return son
 
     def transform_outgoing(self, son, collection):
+        """
         if isinstance(son, (list, tuple)):
             son = [ self.transform_outgoing(v, collection) for v in son ]
         elif isinstance(son, dict):
@@ -168,6 +169,7 @@ class SONScrub(SONManipulator):
             deserializer = self._deserializers.get(son.subtype)
             if deserializer is not None:
                 son = deserializer(son, collection)
+        """
         return son
 
     @classmethod
