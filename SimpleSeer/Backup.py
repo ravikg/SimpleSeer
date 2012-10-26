@@ -86,6 +86,12 @@ class Backup:
                     model.__setattr__(k, v)
             model.id = o['obj']['_id']
             
+            # Delete previous versions, based on overlapping names
+            prev = M.__getattribute__(o['type']).objects()
+            for p in prev:
+                if p.name == model.name:
+                    p.delete()
+            
             model.save()
             
     
