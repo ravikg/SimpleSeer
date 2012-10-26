@@ -17,6 +17,7 @@ module.exports = class Series extends FilterCollection
     out:->
   
   initialize: (models, args={}) =>
+    @_counter = 0
     @filterRoot = "Chart"
     @name = args.name || ''
     @id = args.id
@@ -109,7 +110,7 @@ module.exports = class Series extends FilterCollection
     if !@accumulate
       cp = @view.clickPoint
       mo = @view.overPoint
-    if !@xAxis.type?
+    if !@xAxis.type? or @xAxis.type == ""
       d.d[0] = @_counter++
     else if @xAxis.type == 'datetime'
       d.d[0] = new moment d.d[0]
