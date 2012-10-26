@@ -429,14 +429,37 @@ class Filter():
             self.names[inspId] = name
             return name
     
-    def flattenFrame(self, frames):
+    def flattenFrame(self, frames, filters):
         
-        featureKeys, resultKeys = self.keyNamesHash()
+        
+        
+        #featureKeys, resultKeys = self.keyNamesHash()
         
         flatFrames = []
         for frame in frames:
-            tmpFrame = {}
+            tmpFrame = {'id': frame['id']}
+        
+            for filt in filters:
+                nameParts = filt['name'].split('.')
+                if nameParts[0] == 'results':
+                    rest = '.'.join(nameParts[1:])
+                    key = filt['type'] + '.' + rest
+                    for res in frame.get('results', []):
+                        if res['measurement_name'] == filt['type']:
+                            val = self.getField(res, nameParts[1:]) 
+                            tmpFrame[key] = val
+                elif nameParts[0] == 'features':
+                    rest = '.'.join(nameParts[1:])
+                    key = filt['type'] + '.' + rest
+                    for feat in frame.get('features', []):
+                        if res['featuretype'] == filt['type']:
+                            val = self.getField(feat, nameParts[1:]) 
+                            tmpFrame[key] = val
+                    
+                else:
+                    tmpFrame[filt['name']] = self.getField(frame, nameParts)
             
+            """
             # Grab the fields from the frame itself
             for key in Frame.filterFieldNames():
                 if key == '_id' and 'id' in frame:
@@ -444,7 +467,9 @@ class Filter():
                 
                 keyParts = key.split('.')
                 tmpFrame[key] = self.getField(frame, keyParts)
-                
+        
+        
+            
             # Fields from the features
             for feature in frame.get('features', []):
                 # If this feature has items that need to be saved
@@ -462,7 +487,9 @@ class Filter():
                     for field in resultKeys[result['measurement_name']]:
                         keyParts = field.split('.')
                         tmpFrame[result['measurement_name'] + '.' + field] = self.getField(result, keyParts)
-                            
+        """
+                    
             flatFrames.append(tmpFrame)
             
         return flatFrames
+        
