@@ -160,11 +160,12 @@ module.exports = class tableView extends SubView
       for i in @widgetData.editable
         ind = (cols[i])+1
         $('tr td:nth-child('+ind+')',table).each (index) ->
+          _lab = ['high','low']
           if $(@).find('input').length <=0
             arr = @innerHTML.split(',')
             str = ""
             for o, _i in arr
-              str += '<input editFieldIndex="'+i+"."+index+"."+_i+'" type="text" value="'+o.trim()+'">'
+              str += '<input editFieldIndex="'+i+"."+index+"."+_i+'" placeholder="'+_lab[_i]+'" type="text" value="'+o.trim()+'">'
             @innerHTML = str
             return
       ind = (cols[@widgetData.editableKey])+1
