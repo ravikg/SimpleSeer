@@ -36,15 +36,20 @@ module.exports = class Measurements extends Collection
       for o in set
         isChanged = false
         for i,t of o.attributes.tolerances
-          console.log t, tolerance
           if t.rule.operator == tolerance.rule.operator
-            o.attributes.tolerances[i] = tolerance
-            isChanged = true
+            if tolerance.rule.value != ""
+              o.attributes.tolerances[i] = tolerance
+              isChanged = true
+            else
+              o.attributes.tolerances.splice(i,1)
+              isChanged = true
+              #console.log o.attributes.tolerances
         if !isChanged
           o.attributes.tolerances.push tolerance
           isChanged = true
         if isChanged
           o.save()
+      console.log @where({ 'label':key })
         
     return
     o = @where({ 'label':valKey })
