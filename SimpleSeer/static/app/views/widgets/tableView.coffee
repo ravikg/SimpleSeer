@@ -160,7 +160,7 @@ module.exports = class tableView extends SubView
       for i in @widgetData.editable
         ind = (cols[i])+1
         $('tr td:nth-child('+ind+')',table).each (index) ->
-          _lab = ['high','low']
+          _lab = ['low','high']
           if $(@).find('input').length <=0
             arr = @innerHTML.split(',')
             str = ""
