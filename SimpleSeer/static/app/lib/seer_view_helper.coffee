@@ -111,6 +111,8 @@ Handlebars.registerHelper 'featuredetail', (features) ->
   new Handlebars.SafeString(ret)
 
 Handlebars.registerHelper 'featurelist', (features = []) ->
+  if !@featureStyles?
+    @featureStyles = {}
   if !features
   	features = []
   unless features.length > 0
@@ -128,7 +130,7 @@ Handlebars.registerHelper 'featurelist', (features = []) ->
       _lk = "["+o.labelkey+"] " || ""
       ret += '<div style="clear:both;">'
       ret += '<p class="item-detail"><span class="featureLabel">'+_lk+'</span>' + o.title + ':</p>'
-      ret += '<p class="item-detail-value" style="'+(o.style || "")+'">'+o.value+'<span>'+o.units+'</span></p>'
+      ret += '<p class="item-detail-value" style="'+(o.style || @featureStyles[i] || "")+'">'+o.value+'<span>'+o.units+'</span></p>'
       ret += "</div>"
   return new Handlebars.SafeString(ret)
 
