@@ -35,6 +35,7 @@ class FrameFeature(SimpleEmbeddedDoc, mongoengine.EmbeddedDocument):
 
     featuretype = mongoengine.StringField()
     featuredata = mongoengine.DictField()  #this holds any type-specific feature data
+    featureversion = mongoengine.FloatField(default = 0.0)
     # featurepickle = mongoengine.BinaryField() #a pickle of the feature, for
     # rendering out
     featurepickle_b64 = mongoengine.StringField() #a pickle of the feature, for rendering out
@@ -75,6 +76,9 @@ class FrameFeature(SimpleEmbeddedDoc, mongoengine.EmbeddedDocument):
     #this converts a SimpleCV Feature object into a FrameFeature
     #clean this up a bit
     def setFeature(self, data):
+    
+        if 'VERSION' in dir(data):
+            self.featureversion = data.VERSION
     
         self._featurecache = data
         self.x = int(data.x)
