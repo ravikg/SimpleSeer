@@ -27,40 +27,34 @@ module.exports = class Measurements extends Collection
     return {columns:columns,rows:rows}
   #setTable:(rowKey,valKey,where,operator)=>
   setTable:(data)=>
-  	#if data.criteria.Part Number.value() doesnt exist
+  	#if data.criteria["Part Number"].value() doesnt exist
   	#  create tolerance in o
   	#if i not found, return (error)
-  	
     for key, tolerance of data
       set = @where({ 'label':key })
       for o in set
         isChanged = false
-        for i,t of o.attributes.tolerances
-          if t.rule.operator == tolerance.rule.operator
+        for i,t of o.get("tolerances")
+          if t.rule.operator == tolerance.rule.operator and _.isEqual t.criteria, tolerance.criteria
             if tolerance.rule.value != ""
               o.attributes.tolerances[i] = tolerance
               isChanged = true
             else
               o.attributes.tolerances.splice(i,1)
               isChanged = true
-              #console.log o.attributes.tolerances
         if !isChanged
           o.attributes.tolerances.push tolerance
           isChanged = true
         if isChanged
           o.save()
-      console.log @where({ 'label':key })
         
     return
     o = @where({ 'label':valKey })
     t = o[0].get("tolerances")
-    console.log o
     set = false
     for _t in t
-      console.log _t
       if _t.criteria
         set = true
-        console.log 'hit'
     if !set
       foo
             
