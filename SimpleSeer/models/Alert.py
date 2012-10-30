@@ -41,5 +41,9 @@ class Alert(SimpleDoc, WithPlugins, mongoengine.Document):
         ChannelManager().publish('alert/', dict(severity='redirect', message=url))
         return cls(severity='R', message='')
     
-
+    @classmethod
+    def refresh(cls, message):
+        ChannelManager().publish('alert/', dict(severity='refresh', message=message))
+        return cls(severity='P', message='')
+    
     

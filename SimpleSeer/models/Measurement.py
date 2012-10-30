@@ -125,12 +125,19 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
     
     def backfillTolerances(self):
         from .Frame import Frame
+        from .Alert import Alert
+        
+        #NJO, we shouldn't be doing this, but we need something to trigger
+        #and our REST stuff is a little too static
+        Alert.info("Backfilling Measurements")
         
         for frame in Frame.objects:
             log.info('Backfilling measurement on frame %s' % frame.id)
             if frame.results:
                 self.tolerance(frame, frame.results)
                 frame.save()
+        Alert.clear()
+        Alert.refresh('backfill')
     
     def findFeatureset(self, features):
         
