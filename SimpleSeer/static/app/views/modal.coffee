@@ -51,9 +51,9 @@ module.exports = class modal extends View
 
   	#throbber
     if options.throbber
-      @$el.find('#throbberGraphic').show()
+      @$el.find('#throbberGraphic').show().removeClass("hidden")
     else
-      @$el.find('#throbberGraphic').hide()
+      @$el.find('#throbberGraphic').hide().addClass("hidden")
 
     #message
     @$el.find(".message").html(options.message)
