@@ -141,11 +141,15 @@ module.exports = class FilterCollection extends Collection
         o()
     return
 
+  globalRefresh:=>
+    @fetch({force:true})
+    #application.alert('clear')
+
   fetch: (params={}) =>
     total = params.total || false
     _url = @baseUrl+@getUrl(total,params['params']||false)
     for o in @_boundCollections
-      o.fetch()
+      o.fetch(params)
     if !@mute
       @_all = @models
       @callbackStack['pre'].push params.before

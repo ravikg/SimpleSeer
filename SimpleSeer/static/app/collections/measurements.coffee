@@ -54,7 +54,4 @@ module.exports = class Measurements extends Collection
     set = false
     for _t in t
       if _t.criteria
-        set = true
-    if !set
-      foo
-            
+        set = true            

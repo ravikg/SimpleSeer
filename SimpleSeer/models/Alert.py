@@ -43,7 +43,7 @@ class Alert(SimpleDoc, WithPlugins, mongoengine.Document):
     
     @classmethod
     def refresh(cls, message):
-        ChannelManager().publish('alert/', dict(severity='refresh', message=message))
+        ChannelManager().publish('backfill/complete/', dict(severity='refresh', message=message))
         return cls(severity='P', message='')
     
     
