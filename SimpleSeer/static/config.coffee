@@ -45,7 +45,8 @@ exports.config =
           'vendor/scripts/jquery.autogrow-textarea.js',
           'vendor/scripts/jquery.tinyscrollbar.js',
           'vendor/scripts/jquery.gridster.js',
-          'vendor/scripts/sm.datetimerange.js']
+          'vendor/scripts/sm.datetimerange.js',
+          'vendor/scripts/chosen.jquery.min.js']
 
     stylesheets:
       defaultExtension: 'less'
