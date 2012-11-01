@@ -96,8 +96,6 @@ module.exports = class modal extends View
     else
       ele.hide()
 
-    
-    
     #show modal
     @$el.show()
     if options.inputMessage?
