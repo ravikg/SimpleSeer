@@ -78,7 +78,13 @@ module.exports = SeerApplication =
           style: "display: none",
           class: "alert alert-"+alert_type
         ).html message
+        clear = $("<div class='closeAlerts'></div>")
+        clear.click((e, ui) =>
+          $(e.currentTarget).parent().remove()
+        )
+        div.append clear
         $(_anchor).append div
+        
         div.show('normal')
 
   # Uses a regular expression to determine
