@@ -90,6 +90,7 @@ module.exports = class modal extends View
     #inputMessage
     ele = @$el.find('input')
     if options.inputMessage?
+      ele.attr('value', "");
       ele.attr('placeholder',options.inputMessage)
       ele.show()
       setTimeout((=> ele.get(0).focus()), 400)
