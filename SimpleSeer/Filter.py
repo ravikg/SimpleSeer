@@ -212,7 +212,7 @@ class Filter():
             if 'eq' in f:
                 
                 # Need to convert the numbers into digits instead of strings
-                if (type(f['eq']) == str or type(f['eq']) == unicode) and f['eq'].isdigit() and not nameParts[-1] == 'metadata':
+                if (type(f['eq']) == str or type(f['eq']) == unicode) and f['eq'].isdigit() and not nameParts[0] == 'metadata':
                     f['eq'] = float(f['eq'])
                 
                 # Convert datetimes into epoch ms
