@@ -64,6 +64,7 @@ class Backup:
     @classmethod
     def importAll(self, fname=None):
         
+        
         if not fname:
             fname = 'seer_export.yaml'
             
@@ -78,6 +79,12 @@ class Backup:
             
         objs = load(yaml)
         
+        log.info('cleaning up old results')
+        for frame in M.Frame.objects:
+            frame.results = []
+            frame.save()
+        
+        log.info('adding new metadata')
         for o in objs:
             model = M.__getattribute__(o['type'])()
             
@@ -86,6 +93,18 @@ class Backup:
                     model.__setattr__(k, v)
             model.id = o['obj']['_id']
             
+            # Delete previous versions, based on overlapping names
+            prev = M.__getattribute__(o['type']).objects()
+            for p in prev:
+                if p.name == model.name:
+                    p.delete()
+            
+            if o['type'] == 'Measurement':                                        
+                # Need to put the measurement results on frames
+                for frame in M.Frame.objects:
+                    log.info("Updating results for measurement %s, frame %s" % (model.name, frame.id))
+                    model.execute(frame, frame.features)
+                    frame.save()
+
             model.save()
             
-    

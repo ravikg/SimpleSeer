@@ -42,7 +42,7 @@ module.exports = class TabContainer extends View
     if @sideBarOpen is false
       @sideBarOpen = true
       $('#second-tier-menu').show("slide", { direction: "left" }, 100)
-      $("#stage").animate {'margin-left':'343px'},
+      $("#stage").animate { 'margin-left':'343px' },
         100,
         'linear',
         (callback) =>
@@ -60,7 +60,7 @@ module.exports = class TabContainer extends View
     if @sideBarOpen is true
       @sideBarOpen = false
       $('#second-tier-menu').hide("slide", { direction: "left" }, 100)
-      $("#stage").animate {'margin-left':'90px'},
+      $("#stage").animate { 'margin-left':'90px' },
         100,
         'linear',
         (callback) =>
@@ -72,7 +72,6 @@ module.exports = class TabContainer extends View
     return
   
   reflow: =>
-    console.log "reflowing"
     for i,o of @_tabs
       o.reflow()
   

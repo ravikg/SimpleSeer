@@ -65,7 +65,7 @@ class Frame(SimpleDoc, mongoengine.Document):
     
 
     meta = {
-        'indexes': ["capturetime", "-capturetime", ('camera', '-capturetime'), "-capturetime_epoch", "capturetime_epoch"]
+        'indexes': ["capturetime", "-capturetime", ('camera', '-capturetime'), "-capturetime_epoch", "capturetime_epoch", "results", "results.state", "metadata"]
     }
     
     @classmethod
@@ -160,7 +160,13 @@ class Frame(SimpleDoc, mongoengine.Document):
         
         epoch_ms = timegm(self.capturetime.timetuple()) * 1000 + self.capturetime.microsecond / 1000
         if self.capturetime_epoch != epoch_ms:
-            self.capturetime_epoch = epoch_ms 
+            self.capturetime_epoch = epoch_ms
+        
+        # Aggregate the tolerance states into single measure
+        self.metadata['tolstate'] = 'Pass'
+        for r in self.results:
+            if r.state > 0:
+                self.metadata['tolstate'] = 'Fail'
         
         self.updatetime = datetime.utcnow()
         super(Frame, self).save(*args, **kwargs)

@@ -19,14 +19,15 @@ log = logging.getLogger()
 class MeasurementSchema(fes.Schema):
     name = fev.UnicodeString(not_empty=True) #TODO, validate on unique name
     label = fev.UnicodeString(if_missing=None)
-    labelKey = fev.UnicodeString(if_missing=None)
+    labelkey = fev.UnicodeString(if_missing=None)
     method = fev.UnicodeString(not_empty=True)
-    parameters = V.JSON(if_empty=dict, if_missing=None)
+    parameters = V.JSON(if_empty=None, if_missing=None)
     units = fev.UnicodeString(if_missing="px")
     fixdig = fev.UnicodeString(if_missing=2)
     inspection = V.ObjectId(not_empty=True)
-    featurecriteria = V.JSON(if_empty=dict, if_missing=None)
+    featurecriteria = V.JSON(if_empty=None, if_missing=None)
     tolerances = fev.Set(if_empty=[])
+    updatetime = fev.UnicodeString()
 
 
 class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
@@ -51,11 +52,11 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
     name = mongoengine.StringField()
     #VALIDATION NEEDED: this should be a unique name
     label = mongoengine.StringField()
-    labelKey = mongoengine.StringField()
+    labelkey = mongoengine.StringField()
     method = mongoengine.StringField()
     parameters = mongoengine.DictField()
     units = mongoengine.StringField()
-    fixdig = mongoengine.IntField()
+    fixdig = mongoengine.IntField(default=99)
     inspection = mongoengine.ObjectIdField()
     featurecriteria = mongoengine.DictField()
     tolerances = mongoengine.ListField()
@@ -110,7 +111,7 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
                 result.state = 0
                 messages = []
                 for rule in self.tolerances:
-                    if rule['criteria'].keys()[0] in frame.metadata and frame.metadata[rule['criteria'].keys()[0]] == rule['criteria'].values()[0]:
+                    if rule['criteria'].values()[0] == 'all' or (rule['criteria'].keys()[0] in frame.metadata and frame.metadata[rule['criteria'].keys()[0]] == rule['criteria'].values()[0]):
                         criteriaFunc = "testField %s %s" % (rule['rule']['operator'], rule['rule']['value'])
                         match = eval(criteriaFunc, {}, {'testField': testField})
                         
@@ -124,12 +125,19 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
     
     def backfillTolerances(self):
         from .Frame import Frame
+        from .Alert import Alert
+        
+        #NJO, we shouldn't be doing this, but we need something to trigger
+        #and our REST stuff is a little too static
+        Alert.info("Backfilling Measurements")
         
         for frame in Frame.objects:
             log.info('Backfilling measurement on frame %s' % frame.id)
             if frame.results:
                 self.tolerance(frame, frame.results)
                 frame.save()
+        Alert.clear()
+        Alert.refresh('backfill')
     
     def findFeatureset(self, features):
         

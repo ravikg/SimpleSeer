@@ -17,10 +17,15 @@ module.exports = class Series extends FilterCollection
     out:->
   
   initialize: (models, args={}) =>
+    @_counter = 0
     @filterRoot = "Chart"
     @name = args.name || ''
     @id = args.id
-    @url = "/chart/data/"+@id
+    if args.url
+      _url = args.url
+    else
+      _url = "/chart/data/"
+    @url = _url+@id
     @color = args.color || 'blue'
     # Bind view to collection so we know where our widgets live
     if args.view?
@@ -36,11 +41,15 @@ module.exports = class Series extends FilterCollection
     @on("remove",@shiftChart)
     @fetch()
     return @
-    
+
+  setRaw : (response) =>
+  	@raw = response
+  	
   parse: (response) =>
     super(response)
     @subscribe(response.chart)
     clean = @_clean response.data
+    @setRaw(response)
     return clean
 
   fetch: (args={}) =>
@@ -54,6 +63,9 @@ module.exports = class Series extends FilterCollection
     super(args)
 
   onSuccess: (obj, rawJson) =>
+    #TODO: make a better bubble up callback system than this hackery:
+    if @view.options.parent.rawCallback?
+      @view.options.parent.rawCallback(@raw)
     @view.hasData = false
     @_drawData()
     @view.hideMessage()
@@ -98,7 +110,7 @@ module.exports = class Series extends FilterCollection
     if !@accumulate
       cp = @view.clickPoint
       mo = @view.overPoint
-    if !@xAxis.type?
+    if !@xAxis.type? or @xAxis.type == ""
       d.d[0] = @_counter++
     else if @xAxis.type == 'datetime'
       d.d[0] = new moment d.d[0]

@@ -1,8 +1,8 @@
 Model = require "./model"
 
 module.exports = class OLAP extends Model
-  urlRoot: -> "/api/chart"
-  shift = false
+  urlRoot: "/api/chart"
+  shift: false
   
   setColor:(title, value) =>
     if title == "chartColor"
