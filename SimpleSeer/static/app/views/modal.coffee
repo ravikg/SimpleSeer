@@ -93,7 +93,6 @@ module.exports = class modal extends View
       ele.attr('value', "");
       ele.attr('placeholder',options.inputMessage)
       ele.show()
-      setTimeout((=> ele.get(0).focus()), 400)
     else
       ele.hide()
 
@@ -101,6 +100,8 @@ module.exports = class modal extends View
     
     #show modal
     @$el.show()
+    if options.inputMessage?
+      ele.get(0).focus()
     return
   
   addCallback:(type,func) =>
