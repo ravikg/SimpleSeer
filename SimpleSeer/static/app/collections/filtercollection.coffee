@@ -16,44 +16,73 @@ module.exports = class FilterCollection extends Collection
   
   
   initialize: (models,params) =>
+  	# Create callback stack for functions to be called before and after a fetch
   	@callbackStack = {}
   	@callbackStack['post'] = []
   	@callbackStack['pre'] = []
+
+    # The mute param: use if filter collection is a parent and does not contain data
   	if params.mute?
   	  @mute = params.mute
+  	
+  	# The clearOnFetch param:
+  	# true: (default) clears collection on fetch.
+  	# false: retains data in collection (for pagination)
     if params.clearOnFetch?
       @clearOnFetch = params.clearOnFetch
+
+    # init bound collections in private space
     @_boundCollections = []
+
+    # init sort params in private space
     @_sortParams = _.clone @_defaults
+
     super()
+    
+    # bindFilter:
+    #   an instance of FilterCollection that when changed, bubbles the filter
+    #   up through all bound filters.
+    #   example: Creating a FilterCollection with mute on, then creating
+    #            5 other FilterCollections bound to the initial instance.
+    #            when you change the initial FilterCollection, all others
+    #            refresh with filter settings
     if params.bindFilter
       params.bindFilter.subCollection @
       @bindFilter = params.bindFilter
       @bindFilter
     else
       @bindFilter = false
+    
+    # Set baseUrl off of default url.  url is changed, baseUrl remains root url
     @baseUrl = @url
+    
+    # Load filter widgets
+    # TODO: make these collections
     @filters = []
     if !application.settings.ui_filters_framemetadata?
       application.settings.ui_filters_framemetadata = []
+
+    # Render filter widgets
     if params.view
       @view = params.view
       i = 0
       for o in application.settings.ui_filters_framemetadata
-        @filters.push @view.addSubview o.field_name, @loadFilter(o.format), '#filter_form', {params:o,collection:@,append:"filter_" + i}
+        @filters.push @view.addSubview o.type+"_"+o.field_name, @loadFilter(o.format), '#filter_form', {params:o,collection:@,append:"filter_" + i}
         i+=1
     return @
 
+  # Add sub collection
   subCollection: (collection) =>
     @_boundCollections.push collection
 
-  # Set sory param
-  setParam:(key,val) =>
+  # Set sort param.  Bubble up through bound FiltersCollections
+  setParam: (key,val) =>
     @_sortParams[key] = val
     for o in @_boundCollections
       o.setParam key, val
 
-  resetParam:(key) =>
+  # Reset sort param.  Do not Bubble up through bound FiltersCollections
+  resetParam: (key) =>
     if @_defaults[key]?
       @_sortParams[key] = @_defaults[key]
       return @_sortParams[key]
@@ -66,15 +95,18 @@ module.exports = class FilterCollection extends Collection
   	else
   	  return val
 
+  # Get filter library from application
   loadFilter: (name) ->
     application.filters[name]
-    
+  
+  # Get bound filters and mix-in bound FilterCollection filters
   getFilters: () =>
   	_filters = @filters
   	if @bindFilter
   	  _filters = _filters.concat @bindFilter.getFilters()
   	return _filters
-  
+
+  # Sort collection
   sortList: (sorttype, sortkey, sortorder) =>
     for o in @getFilters()
       if o.options.params.field_name == sortkey
@@ -83,6 +115,7 @@ module.exports = class FilterCollection extends Collection
         @setParam('sorttype', sorttype)
     return
   
+  # Sync filters
   alterFilters:() =>
     _json = []
     for o in @filters
@@ -143,7 +176,6 @@ module.exports = class FilterCollection extends Collection
 
   globalRefresh:=>
     @fetch({force:true})
-    #application.alert('clear')
 
   fetch: (params={}) =>
     total = params.total || false
