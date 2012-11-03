@@ -71,18 +71,19 @@ def plugins():
     result = []
     for ptype, plugins in seer.plugins.items():
         for name, plugin in plugins.items():
-            for requirement, cs in plugin.coffeescript():
-                result.append('(function(plugin){')
-                try:
-                    result.append(coffeescript.compile(cs, True))
-                except Exception, e:
+            if 'coffeescript' in dir(plugin):
+                for requirement, cs in plugin.coffeescript():
+                    result.append('(function(plugin){')
+                    try:
+                        result.append(coffeescript.compile(cs, True))
+                    except Exception, e:
 
-                    print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-                    print "COFFEE SCRIPT ERROR"
-                    print e
-                    print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+                        print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+                        print "COFFEE SCRIPT ERROR"
+                        print e
+                        print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 
-                result.append('}).call(require(%r), require("lib/plugin"));\n' % requirement)
+                    result.append('}).call(require(%r), require("lib/plugin"));\n' % requirement)
     resp = make_response("\n".join(result), 200)
     resp.headers['Content-Type'] = "text/javascript"
     return resp
