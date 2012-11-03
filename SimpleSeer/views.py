@@ -71,7 +71,7 @@ def plugins():
     result = []
     for ptype, plugins in seer.plugins.items():
         for name, plugin in plugins.items():
-            try:
+            if 'coffeescript' in dir(plugin):
                 for requirement, cs in plugin.coffeescript():
                     result.append('(function(plugin){')
                     try:
@@ -83,10 +83,6 @@ def plugins():
                         print e
                         print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
                     result.append('}).call(require(%r), require("lib/plugin"));\n' % requirement)
-            except AttributeError, e:
-                # Detect when plugin.coffeescript is missing.  Print error.
-                print e
-                pass
     resp = make_response("\n".join(result), 200)
     resp.headers['Content-Type'] = "text/javascript"
     return resp
