@@ -27,7 +27,8 @@
         </section>
       </header>
       {% endblock %}
-      
+
+      {% block content %}
       <div class="row"><div id="messages" class="span10 offset1"></div></div>
       <section id="main" class="container"></section>
       <div id="lost_connection" title="Error"></div>
@@ -40,5 +41,6 @@
       <div id="modal"></div>
       {% endblock %}
       <script type="text/javascript">setTimeout(function(){if(typeof SimpleSeer==="undefined"){$("#browser_fail").show()}else{$("#app_load").hide()}if($("#browser_fail").is(":visible")==true){$("#lost_connection, #app_load").hide()}},1e4)</script>
+      {% endblock %}
   </body>
 </html>
