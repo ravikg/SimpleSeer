@@ -140,8 +140,8 @@ def getFrames(filter_params):
     nohtml = str(p.unescape(filter_params))
     allparams = jsondecode(nohtml)
     
-    limit = allparams['limit']
-    skip = allparams['skip']
+    skip = int(params.get('skip', 0))
+    limit = int(params.get('limit', 20))
     
     if 'sortinfo' in allparams:
         sortinfo = allparams['sortinfo']
