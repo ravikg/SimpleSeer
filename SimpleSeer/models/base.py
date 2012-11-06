@@ -70,8 +70,11 @@ class WithPlugins(object):
         except KeyError:
             raise ValueError, ('Plugin not found: %s. Valid plugins: %r' %
                                (name, self._plugins.keys()))
-        return PluginClass(self)
-
+        try:
+            return PluginClass(self)
+        except TypeError:
+            return PluginClass()
+            
     @classmethod
     def register_plugins(cls, group):
         if not hasattr(cls, '_plugins'):

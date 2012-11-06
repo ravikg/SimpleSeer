@@ -438,6 +438,7 @@ class Filter():
         flatFrames = []
         for frame in frames:
             tmpFrame = {'id': frame['id']}
+            tmpFrame['capturetime_epoch'] = frame['capturetime_epoch']
         
             for filt in filters:
                 nameParts = filt['name'].split('.')
