@@ -138,17 +138,17 @@ def getFrames(filter_params):
     # that probably was also html encoded 
     p = HTMLParser()
     nohtml = str(p.unescape(filter_params))
-    allparams = jsondecode(nohtml)
+    params = jsondecode(nohtml)
     
     skip = int(params.get('skip', 0))
     limit = int(params.get('limit', 20))
     
-    if 'sortinfo' in allparams:
-        sortinfo = allparams['sortinfo']
+    if 'sortinfo' in params:
+        sortinfo = params['sortinfo']
     else:
         sortinfo = {}
         
-    query = allparams['query']
+    query = params['query']
     
     f = Filter()
     #total_frames, frames = f.getFrames(f.negativeFilter(query), limit=limit, skip=skip, sortinfo=sortinfo)
