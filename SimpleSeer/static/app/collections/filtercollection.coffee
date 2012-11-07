@@ -50,6 +50,7 @@ module.exports = class FilterCollection extends Collection
       params.bindFilter.subCollection @
       @bindFilter = params.bindFilter
       @bindFilter
+      @_sortParams = @bindFilter.getSettings()
     else
       @bindFilter = false
     
