@@ -74,7 +74,7 @@ module.exports = class Series extends FilterCollection
     $('.alert_error').remove()
   
   onError: =>
-    SimpleSeer.alert('Connection lost','error')
+    @view.showMessage('error','Error retrieving data')
 
   _clean: (data) =>
     refined = []

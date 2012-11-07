@@ -8,6 +8,10 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width">
     <script type="text/javascript">(function(){function x(x){document.write("<li"+'nk rel="stylesheet" href="'+x+'?v='+a+'">')}function b(b){document.write("<scr"+'ipt type="text/javascript" src="'+b+"?v="+a+'"></scr'+"ipt>")}var a=(new Date).valueOf();x("/stylesheets/app.css");b("javascripts/vendor.js");b("javascripts/app.js");b("/plugins.js")})()</script>
+    <style>
+    {% block style %}
+    {% endblock %}
+    </style>
     <script type="text/javascript">require('initialize');</script>
     <title>{% block title %}Sight Machine{% endblock %}</title>
   </head>
@@ -23,7 +27,8 @@
         </section>
       </header>
       {% endblock %}
-      
+
+      {% block content %}
       <div class="row"><div id="messages" class="span10 offset1"></div></div>
       <section id="main" class="container"></section>
       <div id="lost_connection" title="Error"></div>
@@ -36,5 +41,6 @@
       <div id="modal"></div>
       {% endblock %}
       <script type="text/javascript">setTimeout(function(){if(typeof SimpleSeer==="undefined"){$("#browser_fail").show()}else{$("#app_load").hide()}if($("#browser_fail").is(":visible")==true){$("#lost_connection, #app_load").hide()}},1e4)</script>
+      {% endblock %}
   </body>
 </html>

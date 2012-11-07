@@ -107,7 +107,7 @@ class Blobs(base.InspectionPlugin):
             del params["location"]
             doFF = True
 
-        #These are for fine grain control of flood fill
+        #These are for fine grain control of flood fillters
         #We can also use them to pick out colors using the createBinaryMask function. 
         if( params.has_key("thresh1") ):
             thresh1 = params['thresh1']
@@ -138,13 +138,12 @@ class Blobs(base.InspectionPlugin):
             minsize = params["minSize"]
             del params["minSize"]
         if params.has_key("maxSize"):
-            p = params["maxSize"]
+            maxsize = params["maxSize"]
             del params["maxSize"]
-
-                
+                            
         count = 0
         if( doFF ):
-            count = count + 1
+            count = count + 1 
             if( thresh1 is None ):
                 count = count + 1
         if( doHue ):

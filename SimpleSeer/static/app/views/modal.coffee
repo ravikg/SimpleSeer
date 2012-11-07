@@ -96,8 +96,6 @@ module.exports = class modal extends View
     else
       ele.hide()
 
-    
-    
     #show modal
     @$el.show()
     if options.inputMessage?
@@ -117,15 +115,15 @@ module.exports = class modal extends View
       values.action = 'DEFAULT'
   	if !values.userInput?
       values.userInput = @$el.find('input').val()
+    @$el.hide()
     for f in @_callbacks['success']
       f(values)
     @_reset()
-    @$el.hide()
     return
   
   onCancel: =>
+    @$el.hide()
     for f in @_callbacks['cancel']
       f()
     @_reset()
-    @$el.hide()
     return
