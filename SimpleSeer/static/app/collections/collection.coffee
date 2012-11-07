@@ -14,8 +14,16 @@ module.exports = class Collection extends Backbone.Collection
         @ajaxTried = @ajaxTried+1
         @sync.apply( this, args )
       else if response.status == 500
-        report = {location:window.location, response:response}
-        #todo: report error from here
+        _rep = {}
+        _rep[response.status] = response.responseText
+        $.ajax
+          type:"POST"
+          url:"/log/error"
+          data:
+            "location":Backbone.history.fragment
+            "response":_rep
+          dataType:"json"
+        return
       else
         @ajaxTried = 0
         $('#lost_connection').dialog 'open'

@@ -65,6 +65,17 @@ def vql(query):
 def index():
     return render_template("index.html",foo='bar')
 
+@route('/log/<type>', methods=['POST'])
+def jsLogger(type):
+    levels = {"CRITICAL":50, "ERROR":40, "WARNING":30, "INFO":20, "DEBUG":10}
+    type = type.upper()
+    if type in levels:
+        import logging
+        logger = logging.getLogger()
+        logger.log(levels[type],request.values.to_dict())
+        return 'ok'
+    return 'invalid arguments'
+
 @route('/plugins.js')
 def plugins():
     seer = SeerProxy2()
