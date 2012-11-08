@@ -8,6 +8,11 @@ import time
 from path import path
 from SimpleSeer.Session import Session
 from socket import gethostname
+from contextlib import closing
+from zipfile import ZipFile, ZIP_DEFLATED
+import time
+import shutil
+
 
 class ManageCommand(Command):
     "Simple management tasks that don't require SimpleSeer context"
@@ -41,6 +46,21 @@ class ResetCommand(ManageCommand):
             os.system('echo "db.dropDatabase()" | mongo ' + self.options.database)
         else:
             print "reset cancelled"
+
+class BackupCommand(ManageCommand):
+    "Backup the existing database"
+
+    def __init__(self, subparser):
+       pass
+
+
+    def run(self):
+        sess = Session(os.getcwd())        
+        filename = sess.database + "-backup-" + time.strftime('%Y-%m-%d-%H_%M_%S')
+        subprocess.call(['mongodump','--db',sess.database,'--out',filename])
+        print 'Backup saved to directory:', filename
+        exit()
+        
 
 class DeployCommand(ManageCommand):
     "Deploy an instance"
