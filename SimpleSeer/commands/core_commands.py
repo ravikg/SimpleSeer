@@ -3,6 +3,7 @@ import gevent
 import os, subprocess
 from .base import Command
 
+
 class CoreStatesCommand(Command):
     'Run the core server / state machine'
     use_gevent = True
@@ -254,12 +255,15 @@ class WorkerCommand(Command):
         pass
 
     def run(self):
-        from SimpleSeer.worker import host
+        from SimpleSeer.Session import Session
         import socket
+        session = Session()
+        host = 'mongodb://%s:%d/%s' % (session.mongo['host'], session.mongo['port'], session.database)
         worker_name = socket.gethostname() + '-' + str(time.time())
         cmd = ['celery','worker','--broker',host,'-A','SimpleSeer.worker','-n',worker_name]
+        print " ".join(cmd)
         subprocess.call(cmd)
-
+        
 class ExportMetaCommand(Command):
     
     def __init__(self, subparser):

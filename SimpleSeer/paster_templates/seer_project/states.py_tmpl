@@ -25,9 +25,8 @@ def run(state):
         gc.collect()
         frames = core.capture()
         for frame in frames:
+            frame.save()
             core.process(frame)
-            if config.record_all:
-                frame.save()
                 
 @core.on('run', 'rate/')
 def set_rate(state, name, data):

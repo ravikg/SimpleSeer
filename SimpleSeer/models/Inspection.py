@@ -80,6 +80,12 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
 
     def __repr__(self):
       return "<%s: %s>" % (self.__class__.__name__, self.name)
+      
+    def execute_async(self, image_gridfs_proxy):
+        import SimpleSeer.worker
+        featureset = SimpleSeer.worker.execute_inspection(image_gridfs_proxy.grid_id, self.id)
+        return featureset
+        
                                            
     def execute(self, image, parents = {}):
         """
