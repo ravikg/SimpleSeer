@@ -25,7 +25,7 @@ module.exports = class Series extends FilterCollection
       _url = args.url
     else
       _url = "/chart/data/"
-    @url = _url+@id
+    args.url = _url+@id
     @color = args.color || 'blue'
     # Bind view to collection so we know where our widgets live
     if args.view?
@@ -42,14 +42,10 @@ module.exports = class Series extends FilterCollection
     @fetch()
     return @
 
-  setRaw : (response) =>
-  	@raw = response
-  	
   parse: (response) =>
     super(response)
     @subscribe(response.chart)
     clean = @_clean response.data
-    @setRaw(response)
     return clean
 
   fetch: (args={}) =>

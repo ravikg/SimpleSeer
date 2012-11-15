@@ -55,6 +55,8 @@ module.exports = class FilterCollection extends Collection
       @bindFilter = false
     
     # Set baseUrl off of default url.  url is changed, baseUrl remains root url
+    if params.url?
+      @url = params.url
     @baseUrl = @url
     
     # Load filter widgets
@@ -178,6 +180,9 @@ module.exports = class FilterCollection extends Collection
   globalRefresh:=>
     @fetch({force:true})
 
+  setRaw: (response) =>
+    @raw = response
+
   fetch: (params={}) =>
     total = params.total || false
     _url = @baseUrl+@getUrl(total,params['params']||false)
@@ -196,5 +201,6 @@ module.exports = class FilterCollection extends Collection
         params.success()
   
   parse: (response) =>
-  	@totalavail = response.total_frames
-  	return response.frames
+    @totalavail = response.total_frames
+    @setRaw (response)
+    return response.frames
