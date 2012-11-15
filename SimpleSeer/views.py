@@ -52,13 +52,19 @@ def fromJson(string):
 @route('/mrr/<filter_params>', methods=['GET'])
 @util.jsonify
 def mrr(filter_params):
-    retVal = [{'desc': 'Measurement Precision',
-               'header': ['field one', 'field two', 'field three'],
-               'data': [{'field one': 1, 'field two': 3, 'field three': 5}, {'field one': 2, 'field two': 4, 'field three': 6}]},
-              {'desc': 'Measurement Repeatability',
-               'header': ['field one', 'field two', 'field three'],
-               'data': [{'field one': 2, 'field two': 4, 'field three': 6}, {'field one': 8, 'field two': 10, 'field three': 12}]}]
-    return retVal
+    from SeerCloud.Control import MeasurementRandR
+    tables = []
+    
+    mrr = MeasurementRandR()
+    df, deg = mrr.getData([{'type': 'frame', 'name':'metadata.Part Number', 'eq':'W708508S442' }], ban=['ANOVA 8', 'ANOVA 9'])
+    
+    repeat = mrr.repeatability(df, deg)
+    tables.append(mrr.pdToWeb(repeat, 'Measurement Repeatability'))
+    
+    repro = mrr.reproducability(df, deg)
+    tables.append(mrr.pdToWeb(repro, 'Measurement Reproducability'))
+    
+    return tables
 
 @route('/socket.io/<path:path>')
 def sio(path):
