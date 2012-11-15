@@ -49,6 +49,19 @@ def fromJson(string):
     string = jsondecode(string)
     return string
 
+@route('/mrr/<filter_params>', methods=['GET'])
+@util.jsonify
+def mrr(filter_params):
+    retVal = [{'desc': 'Measurement Precision',
+               'header': ['field one', 'field two', 'field three'],
+               'data':[['row1, col1', 'row1 col2', 'r1c3'],
+                       ['r2c1', 'r2c3', 'r2c3']]},
+              {'desc': 'Measurement Repeatability',
+               'header': ['field one', 'field two', 'field three'],
+               'data':[['row1, col1', 'row1 col2', 'r1c3'],
+                       ['r2c1', 'r2c3', 'r2c3']]}]
+    return retVal
+
 @route('/socket.io/<path:path>')
 def sio(path):
     socketio_manage(
