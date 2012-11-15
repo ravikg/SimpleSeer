@@ -54,10 +54,10 @@ def fromJson(string):
 def mrr(filter_params):
     retVal = [{'desc': 'Measurement Precision',
                'header': ['field one', 'field two', 'field three'],
-               'data': [{'field one': 1}, {'field two': 3}, {'field three': 5}, {'field one': 2}, {'field two': 4}, {'field three': 6}]},
+               'data': [{'field one': 1, 'field two': 3, 'field three': 5}, {'field one': 2, 'field two': 4, 'field three': 6}]},
               {'desc': 'Measurement Repeatability',
                'header': ['field one', 'field two', 'field three'],
-               'data': [{'field one': 2}, {'field two': 4}, {'field three': 6}, {'field one': 8}, {'field two': 10}, {'field three': 12}]}]
+               'data': [{'field one': 2, 'field two': 4, 'field three': 6}, {'field one': 8, 'field two': 10, 'field three': 12}]}]
     return retVal
 
 @route('/socket.io/<path:path>')
