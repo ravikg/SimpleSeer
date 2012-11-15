@@ -108,11 +108,16 @@ module.exports = class TabContainer extends View
     for i,o of @tabLib
       _id = i+'_tab'
       @_tabs[_id] = @addSubview _id, o, '.tabPage', {append:_id}
-    $('.tabPage',@$el).tabs select: (event, ui) =>
-      sid = $('.tabPage',@$el).tabs('option', 'selected')
-      tabs = $('.ui-tabs-panel',@$el)
-      @_tabs[tabs[sid].id].unselect()
-      @_tabs[ui.panel.id].select()
+    $('.tabPage',@$el).tabs
+      select: (event, ui) =>
+        sid = $('.tabPage',@$el).tabs('option', 'selected')
+        tabs = $('.ui-tabs-panel',@$el)
+        @_tabs[tabs[sid].id].unselect()
+        @_tabs[ui.panel.id].select()
+      show: (event, ui) =>
+        sid = $('.tabPage',@$el).tabs('option', 'selected')
+        tabs = $('.ui-tabs-panel',@$el)
+        @_tabs[ui.panel.id].show()
     for i,o of @_tabs
       if o.selected
         o.select()

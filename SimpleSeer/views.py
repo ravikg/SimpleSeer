@@ -76,6 +76,17 @@ def vql(query):
 def index():
     return render_template("index.html",foo='bar')
 
+@route('/log/<type>', methods=['POST'])
+def jsLogger(type):
+    levels = {"CRITICAL":50, "ERROR":40, "WARNING":30, "INFO":20, "DEBUG":10}
+    type = type.upper()
+    if type in levels:
+        import logging
+        logger = logging.getLogger()
+        logger.log(levels[type],request.values.to_dict())
+        return 'ok'
+    return 'invalid arguments'
+
 @route('/plugins.js')
 def plugins():
     seer = SeerProxy2()
@@ -93,7 +104,6 @@ def plugins():
                         print "COFFEE SCRIPT ERROR"
                         print e
                         print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-
                     result.append('}).call(require(%r), require("lib/plugin"));\n' % requirement)
     resp = make_response("\n".join(result), 200)
     resp.headers['Content-Type'] = "text/javascript"
@@ -150,17 +160,17 @@ def getFrames(filter_params):
     # that probably was also html encoded 
     p = HTMLParser()
     nohtml = str(p.unescape(filter_params))
-    allparams = jsondecode(nohtml)
+    params = jsondecode(nohtml)
     
-    limit = allparams['limit']
-    skip = allparams['skip']
+    skip = int(params.get('skip', 0))
+    limit = int(params.get('limit', 20))
     
-    if 'sortinfo' in allparams:
-        sortinfo = allparams['sortinfo']
+    if 'sortinfo' in params:
+        sortinfo = params['sortinfo']
     else:
         sortinfo = {}
         
-    query = allparams['query']
+    query = params['query']
     
     f = Filter()
     #total_frames, frames = f.getFrames(f.negativeFilter(query), limit=limit, skip=skip, sortinfo=sortinfo)
