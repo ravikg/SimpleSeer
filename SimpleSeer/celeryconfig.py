@@ -1,4 +1,4 @@
-from SimpleSeer.Session import Session
+from .Session import Session
 
 session = Session(".")
 
