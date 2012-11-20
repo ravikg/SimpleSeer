@@ -69,11 +69,11 @@ class DeployCommand(ManageCommand):
 
     def run(self):
         link = "/etc/simpleseer"
-        if os.path.exists(link):
+        if os.path.lexists(link):
             os.remove(link)
             
         supervisor_link = "/etc/supervisor/conf.d/simpleseer.conf"
-        if os.path.exists(supervisor_link):
+        if os.path.lexists(supervisor_link):
             os.remove(supervisor_link)
             
         print "Linking %s to %s" % (self.options.directory, link)
@@ -191,6 +191,13 @@ def WatchCommand(ManageCommand):
         time.sleep(0.5)
 
 
+@ManageCommand.simple()
+def WorkerCommand(self):
+        import socket
+        worker_name = socket.gethostname() + '-' + str(time.time())
+        cmd = ['celery','worker','--config',"SimpleSeer.celeryconfig",'-n',worker_name]
+        print " ".join(cmd)
+        subprocess.call(cmd)
 
 @ManageCommand.simple()
 def BuildCommand(self):
