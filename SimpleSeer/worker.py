@@ -33,9 +33,7 @@ def ping_worker(number):
 def execute_inspection(inspection_id, gridfs_id):
     """
     Run an inspection given an image's gridfs id, and the inspection id
-    """
-    print __name__
-    
+    """    
     insp = M.Inspection.objects.get(id = inspection_id)
     db = insp._get_db()
     fs = GridFS(db)
