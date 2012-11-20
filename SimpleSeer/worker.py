@@ -2,48 +2,50 @@ from .Session import Session
 from celery import Celery
 from celery import task
 from celery.exceptions import RetryTaskError
+from celery.contrib import rdb
+
 from bson import ObjectId
 from gridfs import GridFS
 import Image as PIL
 from SimpleCV import Image
 
+from .util import ensure_plugins
+
 session = Session()
-mongo = session.mongo
-
-from .util import load_plugins
-
-if mongo:
-    host = 'mongodb://%s:%d/%s' % (mongo['host'], mongo['port'], session.database)
-    celery = Celery(broker=host, backend='mongodb', mongodb_database=session.database)
-else:
-    Session(".")
-    celery = Celery()
-    load_plugins()
-
-
+celery = Celery()
+celery.config_from_object('SimpleSeer.celeryconfig')
+ensure_plugins()
 
 from .realtime import ChannelManager
 from . import models as M
 
 
 @task()
+def ping_worker(number):
+    """
+    Test workers
+    """
+    print "ping worker with number {}".format(number)
+    return number + 1
+    
+
+@task()
 def execute_inspection(inspection_id, gridfs_id):
     """
     Run an inspection given an image's gridfs id, and the inspection id
     """
+    print __name__
     
-    insp = M.Inspection.objects.get(id = ObjectId(inspection_id))
+    insp = M.Inspection.objects.get(id = inspection_id)
     db = insp._get_db()
     fs = GridFS(db)
-    image = Image(PIL.open(fs.get(ObjectId(gridfs_id))))
-    
+    image = Image(PIL.open(fs.get(gridfs_id)))
     features = insp.execute(image)
     
     print "Finished running inspection {} on image {}".format(inspection_id, gridfs_id)
-    return len(features)
+    return features
 
     
-
 @task()
 def update_frame(frameid, inspection):
     '''

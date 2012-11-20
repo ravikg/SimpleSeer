@@ -25,7 +25,7 @@ def run(state):
         gc.collect()
         frames = core.capture()
         for frame in frames:
-            frame.save()
+            frame.save() 
             core.process(frame)
                 
 @core.on('run', 'rate/')

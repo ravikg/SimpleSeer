@@ -122,22 +122,8 @@ class Frame(SimpleDoc, mongoengine.Document):
         self.width, self.height = value.size()
         self._imgcache = value
 
-    def has_image_data(self):
-        if self.clip_id and self.clip: return True
-        if self.imgfile and self.imgfile.grid_id != None: return True
-        return False
-       
-    def __repr__(self): # pragma no cover
-        capturetime = '???'
-        if self.capturetime:
-            capturetime = self.capturetime.ctime()
-        return "<SimpleSeer Frame Object %d,%d captured with '%s' at %s>" % (
-            self.width, self.height, self.camera, capturetime)
+    def save_image(self):
         
-    def save(self, *args, **kwargs):
-        #TODO: sometimes we want a frame with no image data, basically at this
-        #point we're trusting that if that were the case we won't call .image
-
         if self._imgcache != '' and self._imgcache_dirty:
             s = StringIO()
             img = self._imgcache
@@ -156,7 +142,31 @@ class Frame(SimpleDoc, mongoengine.Document):
                 #TODO, make layerfile a compressed object
             #self._imgcache = ''
             self._imgcache_dirty = False
+            
+        return self.imgfile.grid_id
+
+    def delete_image(self):
+        self.imgfile.delete()
+        self._imgcache = ''
+        self._imgcache_dirty = False
+
+    def has_image_data(self):
+        if self.clip_id and self.clip: return True
+        if self.imgfile and self.imgfile.grid_id != None: return True
+        return False
+       
+    def __repr__(self): # pragma no cover
+        capturetime = '???'
+        if self.capturetime:
+            capturetime = self.capturetime.ctime()
+        return "<SimpleSeer Frame Object %d,%d captured with '%s' at %s>" % (
+            self.width, self.height, self.camera, capturetime)
         
+    def save(self, *args, **kwargs):
+        #TODO: sometimes we want a frame with no image data, basically at this
+        #point we're trusting that if that were the case we won't call .image
+
+        self.save_image()
         
         epoch_ms = timegm(self.capturetime.timetuple()) * 1000 + self.capturetime.microsecond / 1000
         if self.capturetime_epoch != epoch_ms:

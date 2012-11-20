@@ -260,7 +260,7 @@ class WorkerCommand(Command):
         session = Session()
         host = 'mongodb://%s:%d/%s' % (session.mongo['host'], session.mongo['port'], session.database)
         worker_name = socket.gethostname() + '-' + str(time.time())
-        cmd = ['celery','worker','--broker',host,'-A','SimpleSeer.worker','-n',worker_name]
+        cmd = ['celery','worker','--config',"SimpleSeer.celeryconfig",'-n',worker_name]
         print " ".join(cmd)
         subprocess.call(cmd)
         
