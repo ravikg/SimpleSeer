@@ -93,6 +93,12 @@ def jsLogger(type):
         return 'ok'
     return 'invalid arguments'
 
+@route('/context/<name>', methods=['GET'])
+def getContext(name):
+    context = M.Context.objects(name = name)
+    print context
+    return ''
+    
 @route('/plugins.js')
 def plugins():
     seer = SeerProxy2()
