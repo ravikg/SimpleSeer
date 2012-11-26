@@ -46,7 +46,9 @@ exports.config =
           'vendor/scripts/jquery.tinyscrollbar.js',
           'vendor/scripts/jquery.gridster.js',
           'vendor/scripts/sm.datetimerange.js',
-          'vendor/scripts/chosen.jquery.min.js']
+          'vendor/scripts/chosen.jquery.min.js',
+          'vendor/scripts/jquery.ui.touch-punch.min.js',
+          'vendor/scripts/jquery.shapeshift.min.js']
 
     stylesheets:
       defaultExtension: 'less'
