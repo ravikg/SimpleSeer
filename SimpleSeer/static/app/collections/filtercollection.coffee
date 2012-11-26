@@ -5,7 +5,7 @@ application = require '../application'
 module.exports = class FilterCollection extends Collection
   _defaults:
     sortkey:false
-    sortorder:-1
+    sortorder:0
     sorttype:false
     skip:0
     limit:20
@@ -16,18 +16,23 @@ module.exports = class FilterCollection extends Collection
   
   
   initialize: (models,params) =>
-  	# Create callback stack for functions to be called before and after a fetch
-  	@callbackStack = {}
-  	@callbackStack['post'] = []
-  	@callbackStack['pre'] = []
+    if params.context?
+      @context = params.context
+      for path, params of @context
+        application.loadMenuItem(path, params)
+
+    # Create callback stack for functions to be called before and after a fetch
+    @callbackStack = {}
+    @callbackStack['post'] = []
+    @callbackStack['pre'] = []
 
     # The mute param: use if filter collection is a parent and does not contain data
-  	if params.mute?
-  	  @mute = params.mute
-  	
-  	# The clearOnFetch param:
-  	# true: (default) clears collection on fetch.
-  	# false: retains data in collection (for pagination)
+    if params.mute?
+      @mute = params.mute
+    
+    # The clearOnFetch param:
+    # true: (default) clears collection on fetch.
+    # false: retains data in collection (for pagination)
     if params.clearOnFetch?
       @clearOnFetch = params.clearOnFetch
 
@@ -37,7 +42,7 @@ module.exports = class FilterCollection extends Collection
     # init sort params in private space
     @_sortParams = _.clone @_defaults
 
-    super()
+    super(models,params)
     
     # bindFilter:
     #   an instance of FilterCollection that when changed, bubbles the filter
@@ -55,6 +60,8 @@ module.exports = class FilterCollection extends Collection
       @bindFilter = false
     
     # Set baseUrl off of default url.  url is changed, baseUrl remains root url
+    if params.url?
+      @url = params.url
     @baseUrl = @url
     
     # Load filter widgets
@@ -91,10 +98,10 @@ module.exports = class FilterCollection extends Collection
 
   # Get sort param, or return val
   getParam:(key,val=false) =>
-  	if @_sortParams[key]? and @_sortParams[key] != false
-  	  return @_sortParams[key]
-  	else
-  	  return val
+    if @_sortParams[key]? and @_sortParams[key] != false
+      return @_sortParams[key]
+    else
+      return val
 
   # Get filter library from application
   loadFilter: (name) ->
@@ -102,10 +109,10 @@ module.exports = class FilterCollection extends Collection
   
   # Get bound filters and mix-in bound FilterCollection filters
   getFilters: () =>
-  	_filters = @filters
-  	if @bindFilter
-  	  _filters = _filters.concat @bindFilter.getFilters()
-  	return _filters
+    _filters = @filters
+    if @bindFilter
+      _filters = _filters.concat @bindFilter.getFilters()
+    return _filters
 
   # Sort collection
   sortList: (sorttype, sortkey, sortorder) =>
@@ -137,8 +144,6 @@ module.exports = class FilterCollection extends Collection
       skip:skip
       limit:limit
       query: @getParam 'query'
-      sortkey: @getParam 'sortkey', 'capturetime_epoch'
-      sortorder: @getParam 'sortorder'
       sortinfo:
         type: @getParam 'sorttype', ''
         name: @getParam 'sortkey', 'capturetime_epoch'
@@ -178,6 +183,9 @@ module.exports = class FilterCollection extends Collection
   globalRefresh:=>
     @fetch({force:true})
 
+  setRaw: (response) =>
+    @raw = response
+
   fetch: (params={}) =>
     total = params.total || false
     _url = @baseUrl+@getUrl(total,params['params']||false)
@@ -196,5 +204,6 @@ module.exports = class FilterCollection extends Collection
         params.success()
   
   parse: (response) =>
-  	@totalavail = response.total_frames
-  	return response.frames
+    @totalavail = response.total_frames
+    @setRaw (response)
+    return response.frames

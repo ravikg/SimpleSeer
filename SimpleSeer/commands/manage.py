@@ -8,6 +8,11 @@ import time
 from path import path
 from SimpleSeer.Session import Session
 from socket import gethostname
+from contextlib import closing
+from zipfile import ZipFile, ZIP_DEFLATED
+import time
+import shutil
+
 
 class ManageCommand(Command):
     "Simple management tasks that don't require SimpleSeer context"
@@ -42,6 +47,21 @@ class ResetCommand(ManageCommand):
         else:
             print "reset cancelled"
 
+class BackupCommand(ManageCommand):
+    "Backup the existing database"
+
+    def __init__(self, subparser):
+       pass
+
+
+    def run(self):
+        sess = Session(os.getcwd())        
+        filename = sess.database + "-backup-" + time.strftime('%Y-%m-%d-%H_%M_%S')
+        subprocess.call(['mongodump','--db',sess.database,'--out',filename])
+        print 'Backup saved to directory:', filename
+        exit()
+        
+
 class DeployCommand(ManageCommand):
     "Deploy an instance"
     def __init__(self, subparser):
@@ -49,11 +69,11 @@ class DeployCommand(ManageCommand):
 
     def run(self):
         link = "/etc/simpleseer"
-        if os.path.exists(link):
+        if os.path.lexists(link):
             os.remove(link)
             
         supervisor_link = "/etc/supervisor/conf.d/simpleseer.conf"
-        if os.path.exists(supervisor_link):
+        if os.path.lexists(supervisor_link):
             os.remove(supervisor_link)
             
         print "Linking %s to %s" % (self.options.directory, link)
@@ -171,6 +191,13 @@ def WatchCommand(ManageCommand):
         time.sleep(0.5)
 
 
+@ManageCommand.simple()
+def WorkerCommand(self):
+        import socket
+        worker_name = socket.gethostname() + '-' + str(time.time())
+        cmd = ['celery','worker','--config',"SimpleSeer.celeryconfig",'-n',worker_name]
+        print " ".join(cmd)
+        subprocess.call(cmd)
 
 @ManageCommand.simple()
 def BuildCommand(self):

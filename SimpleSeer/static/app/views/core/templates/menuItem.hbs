@@ -1,0 +1,14 @@
+<div class="controlPane">
+  <div class="bar">
+    <div class="tabs">
+      {{#each pane}}<div data-tab="{{this.id}}" class="title">{{this.title}}</div>{{/each}}
+    </div>
+    
+    <div class="context"></div>
+  </div>
+  
+  <div class="content">
+    {{#each pane}}<div class="tab" data-tab="{{this.id}}"></div>{{/each}}
+  </div>
+  <div class="clear"></div>
+</div>

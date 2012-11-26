@@ -49,6 +49,23 @@ def fromJson(string):
     string = jsondecode(string)
     return string
 
+@route('/mrr/<filter_params>', methods=['GET'])
+@util.jsonify
+def mrr(filter_params):
+    from SeerCloud.Control import MeasurementRandR
+    tables = []
+    
+    mrr = MeasurementRandR()
+    df, deg = mrr.getData([{'type': 'frame', 'name':'metadata.Part Number', 'eq':'W708508S442' }], ban=['ANOVA 8', 'ANOVA 9'])
+    
+    repeat = mrr.repeatability(df, deg)
+    tables.append(mrr.pdToWeb(repeat, 'Measurement Repeatability'))
+    
+    repro = mrr.reproducability(df, deg)
+    tables.append(mrr.pdToWeb(repro, 'Measurement Reproducability'))
+    
+    return tables
+
 @route('/socket.io/<path:path>')
 def sio(path):
     socketio_manage(
@@ -76,6 +93,12 @@ def jsLogger(type):
         return 'ok'
     return 'invalid arguments'
 
+@route('/context/<name>', methods=['GET'])
+def getContext(name):
+    context = M.Context.objects(name = name)
+    print context
+    return ''
+    
 @route('/plugins.js')
 def plugins():
     seer = SeerProxy2()
