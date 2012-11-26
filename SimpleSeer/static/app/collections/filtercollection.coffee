@@ -16,18 +16,23 @@ module.exports = class FilterCollection extends Collection
   
   
   initialize: (models,params) =>
-  	# Create callback stack for functions to be called before and after a fetch
-  	@callbackStack = {}
-  	@callbackStack['post'] = []
-  	@callbackStack['pre'] = []
+    if params.context?
+      @context = params.context
+      for path, params of @context
+        application.loadMenuItem(path, params)
+
+    # Create callback stack for functions to be called before and after a fetch
+    @callbackStack = {}
+    @callbackStack['post'] = []
+    @callbackStack['pre'] = []
 
     # The mute param: use if filter collection is a parent and does not contain data
-  	if params.mute?
-  	  @mute = params.mute
-  	
-  	# The clearOnFetch param:
-  	# true: (default) clears collection on fetch.
-  	# false: retains data in collection (for pagination)
+    if params.mute?
+      @mute = params.mute
+    
+    # The clearOnFetch param:
+    # true: (default) clears collection on fetch.
+    # false: retains data in collection (for pagination)
     if params.clearOnFetch?
       @clearOnFetch = params.clearOnFetch
 
@@ -37,7 +42,7 @@ module.exports = class FilterCollection extends Collection
     # init sort params in private space
     @_sortParams = _.clone @_defaults
 
-    super()
+    super(models,params)
     
     # bindFilter:
     #   an instance of FilterCollection that when changed, bubbles the filter
@@ -93,10 +98,10 @@ module.exports = class FilterCollection extends Collection
 
   # Get sort param, or return val
   getParam:(key,val=false) =>
-  	if @_sortParams[key]? and @_sortParams[key] != false
-  	  return @_sortParams[key]
-  	else
-  	  return val
+    if @_sortParams[key]? and @_sortParams[key] != false
+      return @_sortParams[key]
+    else
+      return val
 
   # Get filter library from application
   loadFilter: (name) ->
@@ -104,10 +109,10 @@ module.exports = class FilterCollection extends Collection
   
   # Get bound filters and mix-in bound FilterCollection filters
   getFilters: () =>
-  	_filters = @filters
-  	if @bindFilter
-  	  _filters = _filters.concat @bindFilter.getFilters()
-  	return _filters
+    _filters = @filters
+    if @bindFilter
+      _filters = _filters.concat @bindFilter.getFilters()
+    return _filters
 
   # Sort collection
   sortList: (sorttype, sortkey, sortorder) =>
