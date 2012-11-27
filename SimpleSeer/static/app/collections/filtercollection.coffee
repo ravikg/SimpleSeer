@@ -1,6 +1,7 @@
 Collection = require "./collection"
 application = require '../application'
 #FramelistFrameView = require './framelistframe_view'
+context = require '../models/core/context'
 
 module.exports = class FilterCollection extends Collection
   _defaults:
@@ -17,9 +18,11 @@ module.exports = class FilterCollection extends Collection
   
   initialize: (models,params) =>
     if params.context?
-      @context = params.context
-      for path, params of @context
-        application.loadMenuItem(path, params)
+      @context = new context({name:params.context})
+      @context.fetch()
+      #  success: () =>
+      #    for menuItem of @context.get('menuItems')
+      #      f = 1
 
     # Create callback stack for functions to be called before and after a fetch
     @callbackStack = {}
