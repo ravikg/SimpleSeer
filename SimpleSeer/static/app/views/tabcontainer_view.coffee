@@ -11,17 +11,20 @@ module.exports = class TabContainer extends View
   #lastModel: ""
   
   initialize: (options)=>
-  	if options.context?
-  		context = options.context
-  		options.context = null
+    if options.context?
+      context = options.context
+      options.context = null
+
     super(options)
+    
     if !@model?
       @model = Frame
-    @filtercollection = new Filters([],{model:@model,view:@,mute:true,context:context})
     
+    @filtercollection = new Filters([],{model:@model,view:@,mute:true,context:context})
+
     if options.tabs
       @tabLib = require './'+options.tabs+'/init'
-        
+
     @filtercollection.on 'add', @setCounts
     @filtercollection.on 'reset', @setCounts
 
