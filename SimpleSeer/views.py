@@ -94,10 +94,13 @@ def jsLogger(type):
     return 'invalid arguments'
 
 @route('/context/<name>', methods=['GET'])
+@util.jsonify
 def getContext(name):
     context = M.Context.objects(name = name)
-    print context
-    return ''
+    if context:
+        return context[0]
+    else:
+        return None
     
 @route('/plugins.js')
 def plugins():

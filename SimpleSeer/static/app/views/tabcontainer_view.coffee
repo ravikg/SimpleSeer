@@ -11,9 +11,9 @@ module.exports = class TabContainer extends View
   #lastModel: ""
   
   initialize: (options)=>
-  	if options.context?
-  		context = options.context
-  		options.context = null
+    if options.context?
+      context = options.context
+      options.context = null
     super(options)
     if !@model?
       @model = Frame
