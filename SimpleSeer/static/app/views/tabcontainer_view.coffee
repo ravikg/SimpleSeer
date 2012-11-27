@@ -14,7 +14,7 @@ module.exports = class TabContainer extends View
     if options.context?
       context = options.context
       options.context = null
-
+      
     super(options)
     
     if !@model?

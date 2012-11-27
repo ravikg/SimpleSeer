@@ -60,7 +60,7 @@ module.exports = SeerApplication =
     if !@menuItem[path]?
       #for o in application.settings.ui_filters_framemetadata
       @menuItem[path] = 1
-      console.log path, params, '#filter_form', {params:params,collection:@,append:"filter_" + path}
+      #console.log path, params, '#filter_form', {params:params,collection:@,append:"filter_" + path}
     return @menuItem[path]
 
   # Returns the loading status of the application.
