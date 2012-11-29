@@ -21,7 +21,9 @@ module.exports = class Context extends Model
     if response.menuItems.length > 0
       for o in response.menuItems
         if !application.menuItems[o.id]? and application.menuBars[o.menubar]?
-          application.menuItems[o.id] = application.menuBar[o.menubar].addSubview o.id, o.lib, '#'+o.id, {params:o.params,collection:@,append:"filter_" + o.id}
+          lib = require "views/"+o.lib
+          console.info 'TODO: complete subview adding.  make sure widgets are loaded in to proper area (remove "filter_")'
+          application.menuItems[o.id] = application.menuBars[o.menubar].addSubview o.id, lib, '#'+o.id, {params:o.params,append:"filter_" + o.id}
     super response
     
   fetch:(options=[]) =>

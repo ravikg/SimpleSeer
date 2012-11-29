@@ -61,6 +61,16 @@ module.exports = SeerApplication =
   isLoading: =>
     !$('#modal :hidden').length
 
+  addMenuBar: (target, options) ->
+    _lib = require 'views/core/menuBar'
+    _t = $("#"+target)
+    if _t.length > 0
+      if !options.id?
+        options.id = _.uniqueId()
+      @menuBars[options.id] = new _lib(options)
+      _t.html @menuBars[options.id].render().el
+      return @menuBars[options.id]
+
   alert:(message, alert_type) ->
     _anchor = (@settings.ui_alert_anchor || '#messages')
     _set = true

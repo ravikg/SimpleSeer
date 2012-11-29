@@ -6,7 +6,7 @@ context = require '../models/core/context'
 module.exports = class FilterCollection extends Collection
   _defaults:
     sortkey:false
-    sortorder:0
+    sortorder:-1
     sorttype:false
     skip:0
     limit:20
@@ -100,11 +100,15 @@ module.exports = class FilterCollection extends Collection
     return false
 
   # Get sort param, or return val
-  getParam:(key,val=false) =>
+  getParam:(key,val) =>
     if @_sortParams[key]? and @_sortParams[key] != false
       return @_sortParams[key]
-    else
+    else if val?
       return val
+    else if @_defaults[key]?
+      return @_defaults[key]
+    else
+      return false
 
   # Get filter library from application
   loadFilter: (name) ->
