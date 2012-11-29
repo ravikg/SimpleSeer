@@ -72,11 +72,6 @@ def sio(path):
         request.environ,
         {'/rt': RealtimeNamespace },
         request._get_current_object())
-
-@route('/vql/<query>')
-def vql(query):
-    from VQL import VQL
-    return make_response(VQL.execute(query))
     
 @route('/')
 def index():

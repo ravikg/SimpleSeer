@@ -6,7 +6,7 @@ context = require '../models/core/context'
 module.exports = class FilterCollection extends Collection
   _defaults:
     sortkey:false
-    sortorder:-1
+    sortorder:0
     sorttype:false
     skip:0
     limit:20
@@ -147,8 +147,6 @@ module.exports = class FilterCollection extends Collection
       skip:skip
       limit:limit
       query: @getParam 'query'
-      sortkey: @getParam 'sortkey', 'capturetime_epoch'
-      sortorder: @getParam 'sortorder'
       sortinfo:
         type: @getParam 'sorttype', ''
         name: @getParam 'sortkey', 'capturetime_epoch'

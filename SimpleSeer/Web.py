@@ -1,4 +1,5 @@
 import os
+import sys
 import logging
 
 import mongoengine
@@ -33,12 +34,15 @@ def make_app():
     views.route.register_routes(app)
     crud.register(app)
     
-    if 'Chart' in dir(M):
-        M.Chart.register_web(app)
-    if 'Dashboard' in dir(M):
-        M.Dashboard.register_web(app)
-
+    if 'SeerCloud' in sys.modules:
+        checkCloud(app)
+    
     return app
+
+def checkCloud(app):
+    from SeerCloud.views import CloudViews
+    CloudViews.register_web(app)
+        
 
 class WebServer(object):
     """
