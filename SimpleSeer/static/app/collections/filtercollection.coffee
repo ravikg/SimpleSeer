@@ -1,11 +1,12 @@
 Collection = require "./collection"
 application = require '../application'
 #FramelistFrameView = require './framelistframe_view'
+context = require '../models/core/context'
 
 module.exports = class FilterCollection extends Collection
   _defaults:
     sortkey:false
-    sortorder:0
+    sortorder:-1
     sorttype:false
     skip:0
     limit:20
@@ -17,9 +18,11 @@ module.exports = class FilterCollection extends Collection
   
   initialize: (models,params) =>
     if params.context?
-      @context = params.context
-      for path, params of @context
-        application.loadMenuItem(path, params)
+      @context = new context({name:params.context})
+      @context.fetch()
+      #  success: () =>
+      #    for menuItem of @context.get('menuItems')
+      #      f = 1
 
     # Create callback stack for functions to be called before and after a fetch
     @callbackStack = {}
@@ -97,11 +100,15 @@ module.exports = class FilterCollection extends Collection
     return false
 
   # Get sort param, or return val
-  getParam:(key,val=false) =>
+  getParam:(key,val) =>
     if @_sortParams[key]? and @_sortParams[key] != false
       return @_sortParams[key]
-    else
+    else if val?
       return val
+    else if @_defaults[key]?
+      return @_defaults[key]
+    else
+      return false
 
   # Get filter library from application
   loadFilter: (name) ->

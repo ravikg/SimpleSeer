@@ -11,13 +11,18 @@ from SimpleCV import Image
 
 from .util import ensure_plugins
 
+from . import celeryconfig
+
 session = Session()
 celery = Celery()
-celery.config_from_object('SimpleSeer.celeryconfig')
+celery.config_from_object(celeryconfig)
 ensure_plugins()
 
 from .realtime import ChannelManager
 from . import models as M
+
+import logging
+log = logging.getLogger()
 
 
 @task()

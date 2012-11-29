@@ -12,6 +12,8 @@ from . import util
 from .base import jsondecode, jsonencode
 from .camera import StillCamera, VideoCamera
 
+import logging
+
 
 class Core(object):
     '''Implements the core functionality of SimpleSeer
@@ -72,7 +74,7 @@ class Core(object):
         self.log.info("checking for worker process")
         
         self._worker_checked = checktime
-        while not result.ready()
+        while not result.ready():
             time.sleep(checkinterval)
             if time.time() - checktime > timeout:
                 self.log.info("worker check timeout")
@@ -226,13 +228,13 @@ class Core(object):
         #note that async results refer to Celery results, and not Frame results
         results_complete = []
         while not len(results_complete) == len(results_async):
-			new_ready_results = []
+            new_ready_results = []
             for index, r in enumerate(results_async):
                 if not index in results_complete and r.ready():
                     new_ready_results.append(index)
                     
             for result_index in new_ready_results:
-				features = results_async[result_index].get()
+                features = results_async[result_index].get()
                 frame.features += features
                 
                 for m in inspections[result_index].measurements:
