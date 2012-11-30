@@ -42,7 +42,6 @@ module.exports = class View extends Backbone.View
 
   removeSubviews: =>
     for name, subview of @subviews
-      console.log "deleting subview"
       subview.remove()
       subview.unbind()
     @subviews = {}
