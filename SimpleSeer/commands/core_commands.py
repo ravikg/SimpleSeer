@@ -17,6 +17,7 @@ class CoreStatesCommand(Command):
         from SimpleSeer.states import Core
         import Pyro4
 
+        self.session.memprofile = self.options.memprofile
         core = Core(self.session)
         found_statemachine = False
         with open(self.options.program) as fp:
@@ -42,6 +43,7 @@ class CoreCommand(CoreStatesCommand):
 
     def __init__(self, subparser):
         subparser.add_argument('--disable-pyro', action='store_true')
+        subparser.add_argument('--memprofile', default=0)
 
     def run(self):
         self.options.program = self.session.statemachine or 'states.py'
