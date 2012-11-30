@@ -23,4 +23,4 @@ $ ->
     Backbone.history.start()
     
     # Freeze the object
-    Object.freeze? application
+    #Object.freeze? application
