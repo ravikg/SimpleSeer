@@ -29,12 +29,22 @@ module.exports = class View extends Backbone.View
     @afterRender()
     this
 
+  remove: =>
+    @removeSubviews()
+    super()
+
   afterRender: =>
     return
 
   renderSubviews: =>
     for name, subview of @subviews
       subview.render()
+
+  removeSubviews: =>
+    for name, subview of @subviews
+      subview.remove()
+      subview.unbind()
+    @subviews = {}
 
   addSubview: (name, viewClass, selector, options) =>
     options = options or {}

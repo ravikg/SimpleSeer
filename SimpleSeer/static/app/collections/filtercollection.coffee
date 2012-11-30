@@ -69,7 +69,8 @@ module.exports = class FilterCollection extends Collection
     
     # Load filter widgets
     # TODO: make these collections
-    @filters = []
+    if !@filters?
+      @filters = []
     if !application.settings.ui_filters_framemetadata?
       application.settings.ui_filters_framemetadata = []
 
