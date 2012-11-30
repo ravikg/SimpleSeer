@@ -51,11 +51,18 @@ module.exports = class tableView extends SubView
       if typeof o == 'object'
         text = o.text
         style = o.style
+        link = o.link
       else
         text = o
+        style = false
+        link = false
       if @isEmpty text
         text = @emptyCell
-      newRow[i] = {text:text,style:style||""}
+      newRow[i] = {text:text}
+      if style
+        newRow[i].style = style
+      if link
+        newRow[i].link = link
     @tableData.push newRow
     
   # Pushes the table data into a hidden
