@@ -49,15 +49,11 @@ module.exports = class TabContainer extends View
     if @sideBarOpen is false
       @sideBarOpen = true
       $('#second-tier-menu').show("slide", { direction: "left" }, 100)
-      $("#stage").stop().animate({ 'margin-left':'343px' },
-        100,
-        'linear',(
-          (callback) =>
-            @reflow()
-            if callback
-              callback()
-        )
-      )
+      $("#stage").stop().animate({ 'margin-left':'343px' }, 100, 'linear', (=>
+          @reflow()
+          if callback
+            callback()
+      ))
     else
       callback()
     return
