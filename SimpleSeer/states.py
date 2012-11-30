@@ -188,7 +188,8 @@ class Core(object):
 
     def process(self, frame):
         if self._worker_enabled:
-            return self.process_async(frame)
+            async_results = self.process_async(frame)
+            return self.process_async_complete(async_results)
         
         frame.features = []
         frame.results = []
@@ -220,10 +221,14 @@ class Core(object):
             if inspection.camera and inspection.camera != frame.camera:
                 return
                 
-            results_async.append(inspection_execute.delay(inspection.id, frame.imgfile.grid_id))
+            results_async.append(execute_inspection.delay(inspection.id, frame.imgfile.grid_id))
         
         #poll the tasks to see when they're complete, add them to the frame
         #and take measurements
+        return results_async
+        
+    def process_async_complete(self, frame, results_async):
+        inspections = list(M.Inspection.objects)
         
         #note that async results refer to Celery results, and not Frame results
         results_complete = []
