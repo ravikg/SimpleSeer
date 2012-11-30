@@ -44,6 +44,7 @@ module.exports = class TabContainer extends View
   showMenu: (callback) =>
     @sideBarOpen = false if @sideBarOpen is undefined
     if !callback then callback = =>
+    if typeof callback != "function" then callback = => 
       
     if @sideBarOpen is false
       @sideBarOpen = true
@@ -62,6 +63,7 @@ module.exports = class TabContainer extends View
   hideMenu: (callback) =>
     @sideBarOpen = true if @sideBarOpen is undefined
     if !callback then callback = =>
+    if typeof callback != "function" then callback = => 
       
     if @sideBarOpen is true
       @sideBarOpen = false
