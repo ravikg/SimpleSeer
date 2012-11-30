@@ -14,14 +14,17 @@ module.exports = class TabContainer extends View
     if options.context?
       context = options.context
       options.context = null
+      
     super(options)
+    
     if !@model?
       @model = Frame
-    @filtercollection = new Filters([],{model:@model,view:@,mute:true,context:context})
     
+    @filtercollection = new Filters([],{model:@model,view:@,mute:true,context:context})
+
     if options.tabs
       @tabLib = require './'+options.tabs+'/init'
-        
+
     @filtercollection.on 'add', @setCounts
     @filtercollection.on 'reset', @setCounts
 
@@ -41,6 +44,7 @@ module.exports = class TabContainer extends View
   showMenu: (callback) =>
     @sideBarOpen = false if @sideBarOpen is undefined
     if !callback then callback = =>
+    if typeof callback != "function" then callback = => 
       
     if @sideBarOpen is false
       @sideBarOpen = true
@@ -59,6 +63,7 @@ module.exports = class TabContainer extends View
   hideMenu: (callback) =>
     @sideBarOpen = true if @sideBarOpen is undefined
     if !callback then callback = =>
+    if typeof callback != "function" then callback = => 
       
     if @sideBarOpen is true
       @sideBarOpen = false
