@@ -357,3 +357,28 @@ class ExportImagesQueryCommand(Command):
             file_name = self.options.dir + "/" + str(frame.id) + '.png'
             print 'Saving:',file_name
             frame.image.save(file_name)
+
+class MRRCommand(Command):
+    # Measurement repeatability and reproducability
+    
+    def __init__(self, subparser):
+        subparser.add_argument("--filter", help="Frame filter query", default = '')
+        
+    def run(self):
+        from SeerCloud.Control import MeasurementRandR
+        from ast import literal_eval
+        mrr = MeasurementRandR()
+
+        query = []
+        if self.options.filter:
+            query = [literal_eval(self.options.filter)]
+
+        df, deg = mrr.getData(query)
+        repeat = mrr.repeatability(df, deg)
+        repro = mrr.reproducability(df, deg)
+
+        print '--- Repeatability ---'
+        print repeat.to_string()
+
+        print '--- Reproducability ---'
+        print repro.to_string()
