@@ -9,7 +9,7 @@ from gridfs import GridFS
 import Image as PIL
 from SimpleCV import Image
 
-from .util import ensure_plugins
+from .util import ensure_plugins, jsonencode
 
 from . import celeryconfig
 
@@ -50,7 +50,7 @@ def execute_inspection(inspection_id, gridfs_id):
         features = []
     
     print "Finished running inspection {} on image {}".format(inspection_id, gridfs_id)
-    return features
+    return [f.feature for f in features]
 
     
 @task()

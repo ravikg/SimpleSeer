@@ -239,14 +239,21 @@ class Core(object):
                     new_ready_results.append(index)
                     
             for result_index in new_ready_results:
-                features = results_async[result_index].get()
+                scvfeatures = results_async[result_index].get()
+                features = []
+                
+                for scvfeature in scvfeatures:
+                    scvfeature.image = frame.image 
+                    ff = M.FrameFeature()
+                    ff.setFeature(scvfeature)
+                    features.append(ff)
+                
                 frame.features += features
                 
                 for m in inspections[result_index].measurements:
                     m.execute(frame, features)
             
             results_complete += new_ready_results
-
                 
     @property
     def results(self):
