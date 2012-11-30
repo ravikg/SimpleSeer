@@ -7,6 +7,8 @@ from worker import ping_worker, execute_inspection
 import zmq
 import gevent
 
+from guppy import hpy
+
 from . import models as M
 from . import util
 from .base import jsondecode, jsonencode
@@ -43,7 +45,7 @@ class Core(object):
         self.cameras = []
         self.video_cameras = []
         self.log = logging.getLogger(__name__)
-
+        self._mem_prof_ticker = 0
     
         for cinfo in config.cameras:
             cam = StillCamera(**cinfo)
@@ -317,6 +319,13 @@ class Core(object):
     def tick(self):
         self._handle_events()
         self._clock.tick()
+            
+        if self.config.memprofile:
+            self._mem_prof_ticker += 1
+            if self._mem_prof_ticker == int(self.config.memprofile):
+                self._mem_prof_ticker = 0
+                self.log.info(hpy().heap())
+            
 
     def _handle_events(self):
         while True:
