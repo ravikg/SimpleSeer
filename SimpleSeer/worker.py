@@ -43,7 +43,11 @@ def execute_inspection(inspection_id, gridfs_id):
     db = insp._get_db()
     fs = GridFS(db)
     image = Image(PIL.open(fs.get(gridfs_id)))
-    features = insp.execute(image)
+    try:
+        features = insp.execute(image)
+    except:
+        print "inspection failed"
+        features = []
     
     print "Finished running inspection {} on image {}".format(inspection_id, gridfs_id)
     return features

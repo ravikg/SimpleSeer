@@ -7,6 +7,8 @@ from worker import ping_worker, execute_inspection
 import zmq
 import gevent
 
+from guppy import hpy
+
 from . import models as M
 from . import util
 from .base import jsondecode, jsonencode
@@ -43,7 +45,7 @@ class Core(object):
         self.cameras = []
         self.video_cameras = []
         self.log = logging.getLogger(__name__)
-
+        self._mem_prof_ticker = 0
     
         for cinfo in config.cameras:
             cam = StillCamera(**cinfo)
@@ -188,7 +190,8 @@ class Core(object):
 
     def process(self, frame):
         if self._worker_enabled:
-            return self.process_async(frame)
+            async_results = self.process_async(frame)
+            return self.process_async_complete(async_results)
         
         frame.features = []
         frame.results = []
@@ -220,10 +223,14 @@ class Core(object):
             if inspection.camera and inspection.camera != frame.camera:
                 return
                 
-            results_async.append(inspection_execute.delay(inspection.id, frame.imgfile.grid_id))
+            results_async.append(execute_inspection.delay(inspection.id, frame.imgfile.grid_id))
         
         #poll the tasks to see when they're complete, add them to the frame
         #and take measurements
+        return results_async
+        
+    def process_async_complete(self, frame, results_async):
+        inspections = list(M.Inspection.objects)
         
         #note that async results refer to Celery results, and not Frame results
         results_complete = []
@@ -312,6 +319,13 @@ class Core(object):
     def tick(self):
         self._handle_events()
         self._clock.tick()
+            
+        if self.config.memprofile:
+            self._mem_prof_ticker += 1
+            if self._mem_prof_ticker == int(self.config.memprofile):
+                self._mem_prof_ticker = 0
+                self.log.info(hpy().heap())
+            
 
     def _handle_events(self):
         while True:
