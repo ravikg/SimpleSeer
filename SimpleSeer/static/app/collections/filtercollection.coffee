@@ -89,6 +89,8 @@ module.exports = class FilterCollection extends Collection
 
   # Set sort param.  Bubble up through bound FiltersCollections
   setParam: (key,val) =>
+    if key != "skip"
+      @resetParam("skip") 
     @_sortParams[key] = val
     for o in @_boundCollections
       o.setParam key, val
@@ -195,6 +197,8 @@ module.exports = class FilterCollection extends Collection
     @raw = response
 
   fetch: (params={}) =>
+    if params.forceRefresh
+      @models = []
     total = params.total || false
     _url = @baseUrl+@getUrl(total,params['params']||false)
     for o in @_boundCollections
@@ -213,5 +217,6 @@ module.exports = class FilterCollection extends Collection
   
   parse: (response) =>
     @totalavail = response.total_frames
+    @lastavail = response.frames.length
     @setRaw (response)
     return response.frames
