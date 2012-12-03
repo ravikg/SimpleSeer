@@ -217,6 +217,6 @@ module.exports = class FilterCollection extends Collection
   
   parse: (response) =>
     @totalavail = response.total_frames
-    @lastavail = response.frames.length
+    @lastavail = response.frames?.length || 0
     @setRaw (response)
     return response.frames
