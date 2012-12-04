@@ -206,7 +206,7 @@ class Core(object):
             for m in inspection.measurements:
                 m.execute(frame, features)
     
-    
+    #DOES NOT WORK WITH NESTED INSPECTIONS RIGHT NOW
     def process_async(self, frame):
         frame.features = []
         frame.results = []
