@@ -248,6 +248,7 @@ class Core(object):
                     scvfeature.image = frame.image 
                     ff = M.FrameFeature()
                     ff.setFeature(scvfeature)
+                    ff.inspection = inspections[result_index].id
                     features.append(ff)
                 
                 frame.features += features
