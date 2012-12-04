@@ -8,6 +8,8 @@ module.exports = class SubView extends View
   htmltags: {}
 
   render: () =>
+    if @rendered
+      return @
     tagName = @tagName || 'div'
     className = @className || ''
     tags = ''
@@ -22,9 +24,4 @@ module.exports = class SubView extends View
       #foo.$el.addClass className
     super
     @
-
-  remove: =>
-    if @options.parent.subviews[@id]
-      delete @options.parent.subviews[@id]
-    super
     

@@ -5,6 +5,8 @@
 
 module.exports = SeerApplication =
   settings: {}
+  menuItems: {}
+  menuBars: {}
   
   # Set up the application and include the 
   # necessary modules. Configures the page
@@ -37,7 +39,7 @@ module.exports = SeerApplication =
     m = require './collections/measurements'
     @measurements = new m()
     @measurements.fetch()
-
+    @c = require './models/core/context'
     t = require './views/modal'
     @modal = new t()
 
@@ -58,6 +60,16 @@ module.exports = SeerApplication =
   # Returns the loading status of the application.
   isLoading: =>
     !$('#modal :hidden').length
+
+  addMenuBar: (target, options) ->
+    _lib = require 'views/core/menuBar'
+    _t = $("#"+target)
+    if _t.length > 0
+      if !options.id?
+        options.id = _.uniqueId()
+      @menuBars[options.id] = new _lib(options)
+      _t.html @menuBars[options.id].render().el
+      return @menuBars[options.id]
 
   alert:(message, alert_type) ->
     _anchor = (@settings.ui_alert_anchor || '#messages')

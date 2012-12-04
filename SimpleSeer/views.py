@@ -49,17 +49,13 @@ def fromJson(string):
     string = jsondecode(string)
     return string
 
+
 @route('/socket.io/<path:path>')
 def sio(path):
     socketio_manage(
         request.environ,
         {'/rt': RealtimeNamespace },
         request._get_current_object())
-
-@route('/vql/<query>')
-def vql(query):
-    from VQL import VQL
-    return make_response(VQL.execute(query))
     
 @route('/')
 def index():
@@ -76,6 +72,15 @@ def jsLogger(type):
         return 'ok'
     return 'invalid arguments'
 
+@route('/context/<name>', methods=['GET'])
+@util.jsonify
+def getContext(name):
+    context = M.Context.objects(name = name)
+    if context:
+        return context[0]
+    else:
+        return None
+    
 @route('/plugins.js')
 def plugins():
     seer = SeerProxy2()

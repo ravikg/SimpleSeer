@@ -3,6 +3,7 @@ import gevent
 import os, subprocess
 from .base import Command
 
+
 class CoreStatesCommand(Command):
     'Run the core server / state machine'
     use_gevent = True
@@ -16,6 +17,7 @@ class CoreStatesCommand(Command):
         from SimpleSeer.states import Core
         import Pyro4
 
+        self.session.memprofile = self.options.memprofile
         core = Core(self.session)
         found_statemachine = False
         with open(self.options.program) as fp:
@@ -41,6 +43,7 @@ class CoreCommand(CoreStatesCommand):
 
     def __init__(self, subparser):
         subparser.add_argument('--disable-pyro', action='store_true')
+        subparser.add_argument('--memprofile', default=0)
 
     def run(self):
         self.options.program = self.session.statemachine or 'states.py'
@@ -254,12 +257,12 @@ class WorkerCommand(Command):
         pass
 
     def run(self):
-        from SimpleSeer.worker import host
         import socket
         worker_name = socket.gethostname() + '-' + str(time.time())
-        cmd = ['celery','worker','--broker',host,'-A','SimpleSeer.worker','-n',worker_name]
+        cmd = ['celery','worker','--config',"SimpleSeer.celeryconfig",'-n',worker_name]
+        print " ".join(cmd)
         subprocess.call(cmd)
-
+        
 class ExportMetaCommand(Command):
     
     def __init__(self, subparser):
@@ -354,3 +357,28 @@ class ExportImagesQueryCommand(Command):
             file_name = self.options.dir + "/" + str(frame.id) + '.png'
             print 'Saving:',file_name
             frame.image.save(file_name)
+
+class MRRCommand(Command):
+    # Measurement repeatability and reproducability
+    
+    def __init__(self, subparser):
+        subparser.add_argument("--filter", help="Frame filter query", default = '')
+        
+    def run(self):
+        from SeerCloud.Control import MeasurementRandR
+        from ast import literal_eval
+        mrr = MeasurementRandR()
+
+        query = []
+        if self.options.filter:
+            query = [literal_eval(self.options.filter)]
+
+        df, deg = mrr.getData(query)
+        repeat = mrr.repeatability(df, deg)
+        repro = mrr.reproducability(df, deg)
+
+        print '--- Repeatability ---'
+        print repeat.to_string()
+
+        print '--- Reproducability ---'
+        print repro.to_string()

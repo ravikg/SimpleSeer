@@ -33,7 +33,8 @@ def register(app):
                      'inspection', '/inspection'),
         ModelHandler(M.Measurement, M.MeasurementSchema, 'measurement', '/measurement'),
         ModelHandler(M.Frame, M.FrameSchema, 'frame', "/frame"),
-        ModelHandler(M.FrameSet, M.FrameSetSchema, 'frameset', '/frameset')
+        ModelHandler(M.FrameSet, M.FrameSetSchema, 'frameset', '/frameset'),
+        ModelHandler(M.Context, M.ContextSchema, 'context', '/context')
         ]
     
     # Handlers for SeerCloud objects, if loaded

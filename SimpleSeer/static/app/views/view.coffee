@@ -1,13 +1,17 @@
 require '../lib/view_helper'
+application = require '../application'
 
 Backbone = if describe? then require('backbone') else window.Backbone
 
 # Base class for all views.
 module.exports = class View extends Backbone.View
   subviews: null
-
-  initialize: =>
+  context:null
+  
+  initialize: (options={}) =>
     super()
+    if options.context?
+      @context = options.context
     @subviews = {}
 
   template: =>
@@ -17,11 +21,17 @@ module.exports = class View extends Backbone.View
     return
 
   render: =>
-    # console.debug "Rendering #{@constructor.name}"
+    if @context
+      for path in @context
+        application.loadMenuItem(path)
     @$el.html @template @getRenderData()
     @renderSubviews()
     @afterRender()
     this
+
+  remove: =>
+    @removeSubviews()
+    super()
 
   afterRender: =>
     return
@@ -29,6 +39,12 @@ module.exports = class View extends Backbone.View
   renderSubviews: =>
     for name, subview of @subviews
       subview.render()
+
+  removeSubviews: =>
+    for name, subview of @subviews
+      subview.remove()
+      subview.unbind()
+    @subviews = {}
 
   addSubview: (name, viewClass, selector, options) =>
     options = options or {}

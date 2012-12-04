@@ -11,14 +11,23 @@ module.exports = class TabContainer extends View
   #lastModel: ""
   
   initialize: (options)=>
-    super()
+    if options.context?
+      context = options.context
+      options.context = null
+      
+    super(options)
+    
     if !@model?
       @model = Frame
-    @filtercollection = new Filters([],{model:@model,view:@,mute:true})
     
+    @filtercollection = new Filters([],{model:@model,view:@,mute:true,context:context})
+
     if options.tabs
       @tabLib = require './'+options.tabs+'/init'
-        
+    for i,o of @tabLib
+      _id = i+'_tab'
+      @_tabs[_id] = @addSubview _id, o, '.tabPage', {append:_id}
+
     @filtercollection.on 'add', @setCounts
     @filtercollection.on 'reset', @setCounts
 
@@ -38,17 +47,16 @@ module.exports = class TabContainer extends View
   showMenu: (callback) =>
     @sideBarOpen = false if @sideBarOpen is undefined
     if !callback then callback = =>
+    if typeof callback != "function" then callback = => 
       
     if @sideBarOpen is false
       @sideBarOpen = true
       $('#second-tier-menu').show("slide", { direction: "left" }, 100)
-      $("#stage").animate { 'margin-left':'343px' },
-        100,
-        'linear',
-        (callback) =>
+      $("#stage").stop().animate({ 'margin-left':'343px' }, 100, 'linear', (=>
           @reflow()
           if callback
             callback()
+      ))
     else
       callback()
     return
@@ -56,11 +64,12 @@ module.exports = class TabContainer extends View
   hideMenu: (callback) =>
     @sideBarOpen = true if @sideBarOpen is undefined
     if !callback then callback = =>
+    if typeof callback != "function" then callback = => 
       
     if @sideBarOpen is true
       @sideBarOpen = false
       $('#second-tier-menu').hide("slide", { direction: "left" }, 100)
-      $("#stage").animate({ 'margin-left':'90px' }, 100, 'linear', (=>
+      $("#stage").stop().animate({ 'margin-left':'90px' }, 100, 'linear', (=>
           @reflow()
           if callback
             callback()
@@ -101,21 +110,24 @@ module.exports = class TabContainer extends View
     @sideBarOpen = true
     #@filtercollection.limit = @filtercollection._defaults.limit
     #@filtercollection.skip = @filtercollection._defaults.skip
+    super()
+    $('.tabPage',@$el).tabs
+      select: (event, ui) =>
+        sid = $('.tabPage',@$el).tabs('option', 'selected')
+        tabs = $('.ui-tabs-panel',@$el)
+        @_tabs[tabs[sid].id].unselect()
+        @_tabs[ui.panel.id].select()
+      show: (event, ui) =>
+        sid = $('.tabPage',@$el).tabs('option', 'selected')
+        tabs = $('.ui-tabs-panel',@$el)
+        @_tabs[ui.panel.id].show()
     if @rendered
       @.delegateEvents(@.events)
+    else
+      for i,o of @_tabs
+        if o.selected
+          #o.render()
+          o.select()
+          $('.tabPage',@$el).tabs("select", o.options.append)
     @rendered = true
-    super()
-    for i,o of @tabLib
-      _id = i+'_tab'
-      @_tabs[_id] = @addSubview _id, o, '.tabPage', {append:_id}
-    $('.tabPage',@$el).tabs select: (event, ui) =>
-      sid = $('.tabPage',@$el).tabs('option', 'selected')
-      tabs = $('.ui-tabs-panel',@$el)
-      @_tabs[tabs[sid].id].unselect()
-      @_tabs[ui.panel.id].select()
-    for i,o of @_tabs
-      if o.selected
-        o.select()
-        $('.tabPage',@$el).tabs("select", o.options.append)
-
     return this
