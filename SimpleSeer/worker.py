@@ -35,6 +35,18 @@ def ping_worker(number):
     
 
 @task()
+def backfill_tolerances(measurement_ids, frame_id):
+    f = M.Frame.objects.get(id = frame_id)
+    
+    results = []
+    for m_id in measurement_ids: 
+        m = M.Measurement.objects.get(id = m_id)
+        results = m.tolerance(f, f.results)
+    
+    return results
+    
+
+@task()
 def execute_inspection(inspection_id, gridfs_id):
     """
     Run an inspection given an image's gridfs id, and the inspection id
