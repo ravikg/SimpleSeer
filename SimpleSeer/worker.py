@@ -36,12 +36,13 @@ def ping_worker(number):
 
 @task()
 def backfill_tolerances(measurement_ids, frame_id):
+    
     f = M.Frame.objects.get(id = frame_id)
     
     results = []
     for m_id in measurement_ids: 
         m = M.Measurement.objects.get(id = m_id)
-        results = m.tolerance(f, f.results)
+        results = (f.id, m.tolerance(f, f.results))
     
     return results
     
