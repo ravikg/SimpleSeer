@@ -65,7 +65,7 @@ class Core(object):
         self.lastframes = deque()
         self.framecount = 0
         self.reset()
-
+        
     @classmethod
     def get(cls):
         return cls._instance
@@ -191,11 +191,11 @@ class Core(object):
     def process(self, frame):
         if self._worker_enabled:
             async_results = self.process_async(frame)
-            return self.process_async_complete(async_results)
+            return self.process_async_complete(frame, async_results)
         
         frame.features = []
         frame.results = []
-            
+        
         for inspection in M.Inspection.objects:
             if inspection.parent:
                 return
@@ -205,7 +205,7 @@ class Core(object):
             frame.features += features
             for m in inspection.measurements:
                 m.execute(frame, features)
-    
+        
     #DOES NOT WORK WITH NESTED INSPECTIONS RIGHT NOW
     def process_async(self, frame):
         frame.features = []
