@@ -15,17 +15,17 @@ class MetaSchedule():
         self._db.metaschedule.ensure_index('semaphore')
         
         
-    def enqueue_measurement(self, measurement_id):
+    def enqueue(self, field, field_id):
         to_add = []
         for f in Frame.objects:
             # Add the measurement to the frame/measurement grid.  Create the entry if it does not exist
-            to_add.append({'frame_id': f.id, 'measurement_id': measurement_id})
+            to_add.append({'frame_id': f.id, 'field_id': field_id})
         
         to_check = to_add.pop()
         while to_check:
             # make sure the current entry is not locked:
             if self._db.metaschedule.find({'frame_id': to_check['frame_id'], 'semaphore': 1}).count() == 0:
-                self._db.metaschedule.update({'frame_id': to_check['frame_id'], 'semaphore': 0}, {'$push': {'measurements': to_check['measurement_id']}}, True)
+                self._db.metaschedule.update({'frame_id': to_check['frame_id'], 'semaphore': 0}, {'$push': {field: to_check['field_id']}}, True)
             else:
                 # otherwise, put it back
                 to_add.push(to_check)
@@ -36,12 +36,19 @@ class MetaSchedule():
                 to_check = None
     
     def enqueue_inspection(self, inspection_id):
-        for f in Frame.objects:
-            self._db.metaschedule.update({'frame_id': f.id, 'semaphore': 0}, {'$push': {'inspections': inspection_id}}, True)
+        enqueue('inspections', inspection_id)
     
+    def enqueue_measurement(self, measurement_id):
+        enqueue('measurements', measurement_id)
+    
+    def enqueue_tolerance(self, measurement_id):
+        enqueue('tolerances', measurement_id)
+        
+        
     def run(self):
         from time import sleep
         from . import ResultEmbed
+        from bson import ObjectId
         
         scheduled = []
         while self._db.metaschedule.find().count() > 0 or len(scheduled) > 0:
@@ -53,7 +60,13 @@ class MetaSchedule():
                 meta = self._db.metaschedule.find_and_modify(query = {'semaphore': 0}, update = {'$inc': {'semaphore': 1}})
                 if meta:
                     print 'scheduling %s' % meta['frame_id']
-                    scheduled.append(backfill_tolerances.delay(meta['measurements'], meta['frame_id']))
+                    if 'tolerances' in meta:
+                        scheduled.append(backfill_tolerances.delay(meta['tolerances'], meta['frame_id']))
+                    if 'measurements' in meta:
+                        scheduled.append(backfill_tolerances.delay(meta['measurements'], meta['frame_id']))
+                    if 'inspections' in meta:
+                        scheduled.append(backfill_tolerances.delay(meta['inspections'], meta['frame_id']))
+                        
             else:
                 # wait for the queue to clear a bit
                 print 'sleepy time'
@@ -68,7 +81,7 @@ class MetaSchedule():
             
             for index in complete_indexes:
                 async = scheduled.pop(index)
-                frame_id, results = async.get()
+                frame_id, output = async.get()
                 print 'should save %s' % frame_id
                 
                 # Save the new computations to the db
@@ -76,11 +89,17 @@ class MetaSchedule():
                 # The ResultEmbed object gets mangled, so reconstruct it
                 
                 f.results = []
-                for r in results:
-                    re = ResultEmbed()
-                    re._data.update(r.__dict__)
-                    f.results.append(re)
+                for o in output:
+                    if type(o) == ResultEmbed:
+                        re = ResultEmbed()
+                        re._data.update(o.__dict__)
+                        f.results.append(re)
+                    else:
+                        ff = FrameFeature()
+                        ff._data.update(o.__dict__)
+                        f.features.append(ff)
+                        
                 f.save()
                 
                 # Clear the entry from the queue
-                print self._db.metaschedule.find_and_modify({'frame_id': frame_id, 'semaphore': 1}, {}, remove=True)
+                print self._db.metaschedule.find_and_modify({'frame_id': ObjectId(frame_id), 'semaphore': 1}, {}, remove=True)
