@@ -22,6 +22,10 @@ from .Filter import Filter
 
 log = logging.getLogger()
 
+from flask.ext.login import (current_user, login_required,
+                            login_user, logout_user,
+                            confirm_login, fresh_login_required)
+
 class route(object):
     routes = []
 
@@ -561,3 +565,48 @@ def watcher_remove():
 @route('/_status', methods=['GET', 'POST'])
 def status():
     return 'ok'
+
+@route('/auth', methods=['GET','POST'])
+@login_required
+@util.jsonify
+def auth():
+    #~ import pdb;pdb.set_trace()
+    test = ['test']
+    return test
+    
+@route("/login", methods=["GET", "POST"])
+def login():
+    import pdb;pdb.set_trace()
+    if request.method == "POST" and "username" in request.form:
+        username = request.form["username"]
+        if username in USER_NAMES:
+            remember = request.form.get("remember", "no") == "yes"
+            if login_user(USER_NAMES[username], remember=remember):
+                flash("Logged in!")
+                return redirect(request.args.get("next") or url_for("index"))
+            else:
+                flash("Sorry, but you could not log in.")
+        else:
+            flash(u"Invalid username.")
+    return render_template("login.html")
+    #~ return 'login'
+
+
+@route("/reauth", methods=["GET", "POST"])
+@login_required
+def reauth():
+    #~ import pdb;pdb.set_trace()
+    if request.method == "POST":
+        confirm_login()
+        flash(u"Reauthenticated.")
+        return redirect(request.args.get("next") or url_for("index"))
+    return render_template("reauth.html")
+    #~ return 'reauth'
+
+@route("/logout")
+@login_required
+def logout():
+    logout_user()
+    flash("Logged out.")
+    return redirect(url_for("index"))
+    #~ return 'logout'
