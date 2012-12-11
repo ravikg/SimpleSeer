@@ -6,7 +6,7 @@ import vpx
 import bson
 import numpy as np
 from SimpleCV import Camera as ScvCamera
-from SimpleCV import VirtualCamera, Kinect, FrameSource, Image, Scanner
+from SimpleCV import VirtualCamera, Kinect, FrameSource, Image, Scanner, JpegStreamCamera
 
 from . import util
 from . import models as M
@@ -103,6 +103,8 @@ class StillCamera(object):
                 cam._usedepth = 1
             elif cinfo["kinect"] == "matrix":
                 cam._usematrix = 1
+        elif 'jpegstream' in cinfo:
+            cam = JpegStreamCamera(cinfo['jpegstream'])
         else:
             cam = ScvCamera(cinfo['id'], prop_set=cinfo)
         self._scv_cam = cam
