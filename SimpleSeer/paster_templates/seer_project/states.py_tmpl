@@ -28,8 +28,7 @@ def run(state):
             core.process(frame)
             if config.record_all:
 				frame.save()
-			else:
-				frame.delete_image()
+
                 
 @core.on('run', 'rate/')
 def set_rate(state, name, data):
