@@ -192,3 +192,15 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
     def __repr__(self):
         return "<Measurement: " + str(self.inspection) + " " + self.method + " " + str(self.featurecriteria) + ">"
             
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            banlist = [None, 'updatetime']
+            params = [ a for a in self.__dict__['_data'] if not a in banlist ]
+            
+            for p in params:
+                if self.__getattribute__(p) != other.__getattribute__(p):
+                    return False
+            return True            
+        else:
+            return False
+            
