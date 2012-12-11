@@ -148,5 +148,16 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
     def measurements(self):
         return Measurement.objects(inspection = self.id)
         
-    
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            # Note: ignoring name to test if this inspection is functionally equivalent to other inspection (name is irrelevant)
+            banlist = [None, 'updatetime', 'name']
+            params = [ a for a in self.__dict__['_data'] if not a in banlist ]
+            
+            for p in params:
+                if self.__getattribute__(p) != other.__getattribute__(p):
+                    return False
+            return True
+        else:
+            return False    
 
