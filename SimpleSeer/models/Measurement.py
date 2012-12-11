@@ -61,6 +61,7 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
     featurecriteria = mongoengine.DictField()
     tolerances = mongoengine.ListField()
     updatetime = mongoengine.DateTimeField()
+    conditions = mongoengine.ListField()
 
     def execute(self, frame, features):
         featureset = self.findFeatureset(features)
@@ -93,7 +94,20 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
             
             values = function_ref(frame, featureset)
         
-        results = self.toResults(frame, values)
+        # Test the measurement criteria
+        cond_values = []
+        # If there are no conditions, assume all pass
+        if not self.conditions:
+            cond_values = values
+        else:
+            for cond in self.conditions:
+                criteriaFunc = "testField %s %s" % (cond['operator'], cond['value'])
+                for val in values:
+                    match = eval(criteriaFunc, {}, {'testField': val})
+                    if match:
+                        cond_values.append(val)        
+        
+        results = self.toResults(frame, cond_values)
         results = self.tolerance(frame, results)
         
         return results
