@@ -194,7 +194,8 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
             
     def __eq__(self, other):
         if isinstance(other, self.__class__):
-            banlist = [None, 'updatetime']
+            # Note: ignoring name to test if this measurement is functionally equivalent to other inspection (name is irrelevant)
+            banlist = [None, 'updatetime', 'name']
             params = [ a for a in self.__dict__['_data'] if not a in banlist ]
             
             for p in params:
