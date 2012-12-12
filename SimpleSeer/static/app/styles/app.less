@@ -389,7 +389,7 @@ a { font-size: 13px; color: #08C; font-family: "Helvetica Neue", Helvetica, Aria
   border-radius: 3px;
 }
 
-.tabPage.ui-tabs { padding: 0px !important; border: none !important }
+.tabPage.ui-tabs { padding: 0px !important; border: none !important; background: none !important; }
 #ui-datepicker-div {
 	margin-top: 1px;
 	padding: 8px;
@@ -734,8 +734,8 @@ html[xmlns] .clearfix {
 }
 
 #dash_content {width: 100%;}
-
-.dashboardGrid { min-height: 520px; width: 100%;}
+#stage div.ui-tabs-panel { border: none !important; }
+.dashboardGrid { width: 100%;}
 
 #widget_grid {
   position: relative;
@@ -841,6 +841,7 @@ html[xmlns] .clearfix {
 
 .widget.mini {
   box-shadow: none;
+  -webkit-transition: box-shadow 0ms;
   
   .header {
     background: none;
