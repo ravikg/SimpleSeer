@@ -14,6 +14,9 @@ from .base import SimpleDoc, WithPlugins
 from .Measurement import Measurement
 from .FrameFeature import FrameFeature
 
+import logging
+log = logging.getLogger()
+
 class InspectionSchema(fes.Schema):
     parent = V.ObjectId(if_empty=None, if_missing=None)
     name = fev.UnicodeString(not_empty=True)
@@ -136,6 +139,12 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
         from ..realtime import ChannelManager
         
         self.updatetime = datetime.utcnow()
+        
+        # Ensure name is unique
+        for i in Inspection.objects:
+            if i.name == self.name and i.id != self.id:
+                log.info('trying to save inspections with duplicate names: %s' % i.name)
+                self.name = self.name + '_1'
         
         super(Inspection, self).save(*args, **kwargs)
         ChannelManager().publish('meta/', self)
