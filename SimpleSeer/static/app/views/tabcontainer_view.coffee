@@ -11,16 +11,13 @@ module.exports = class TabContainer extends View
   #lastModel: ""
   
   initialize: (options)=>
-    if options.context?
-      context = options.context
-      options.context = null
       
     super(options)
     
     if !@model?
       @model = Frame
     
-    @filtercollection = new Filters([],{model:@model,view:@,mute:true,context:context})
+    #@filtercollection = new Filters([],{model:@model,view:@,mute:true})
 
     if options.tabs
       @tabLib = require './'+options.tabs+'/init'
@@ -28,17 +25,17 @@ module.exports = class TabContainer extends View
       _id = i+'_tab'
       @_tabs[_id] = @addSubview _id, o, '.tabPage', {append:_id}
 
-    @filtercollection.on 'add', @setCounts
-    @filtercollection.on 'reset', @setCounts
+    #@filtercollection.on 'add', @setCounts
+    #@filtercollection.on 'reset', @setCounts
 
   events:
     'click #minimize-control-panel' : 'toggleMenu'
     'click #second-tier-menu .title' : 'toggleMenu'
     'click .icon-item' : 'toggleMenu'
   
-  setCounts: =>
-    @$el.find('#count_viewing').html @filtercollection.length
-    @$el.find('#count_total').html @filtercollection.totalavail
+  #setCounts: =>
+  #  @$el.find('#count_viewing').html @filtercollection.length
+  #  @$el.find('#count_total').html @filtercollection.totalavail
   
   tabClick: (e,ui) =>
     console.log e,ui
@@ -97,14 +94,14 @@ module.exports = class TabContainer extends View
           o.showMenuCallback()
       @showMenu(callback)
       
-  getRenderData: =>
-    count_viewing: @filtercollection.length
-    count_total: @filtercollection.totalavail
+  #getRenderData: =>
+    #count_viewing: @filtercollection.length
+    #count_total: @filtercollection.totalavail
     #count_new: @newFrames.length
     #sortComboVals: @updateFilterCombo(false)
     #metakeys: application.settings.ui_metadata_keys
     #featurekeys: application.settings.ui_feature_keys
-    filter_url:@filtercollection.getUrl()
+    #filter_url:@filtercollection.getUrl()
 
   render: =>
     @sideBarOpen = true

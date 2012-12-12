@@ -2,10 +2,15 @@ require 'lib/view_helper'
 View = require './view'
 
 module.exports = class SubView extends View
+  ###
   options:
     parent: null
     selector: null
-  htmltags: {}
+  ###
+
+  initialize: =>
+    @htmltags = {}
+    super()
 
   render: () =>
     if @rendered
