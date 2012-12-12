@@ -36,13 +36,13 @@ class MetaSchedule():
                 to_check = None
     
     def enqueue_inspection(self, inspection_id):
-        enqueue('inspections', inspection_id)
+        self.enqueue('inspections', inspection_id)
     
     def enqueue_measurement(self, measurement_id):
-        enqueue('measurements', measurement_id)
+        self.enqueue('measurements', measurement_id)
     
     def enqueue_tolerance(self, measurement_id):
-        enqueue('tolerances', measurement_id)
+        self.enqueue('tolerances', measurement_id)
         
         
     def run(self):
@@ -63,9 +63,9 @@ class MetaSchedule():
                     if 'tolerances' in meta:
                         scheduled.append(backfill_tolerances.delay(meta['tolerances'], meta['frame_id']))
                     if 'measurements' in meta:
-                        scheduled.append(backfill_tolerances.delay(meta['measurements'], meta['frame_id']))
+                        scheduled.append(backfill_measurements.delay(meta['measurements'], meta['frame_id']))
                     if 'inspections' in meta:
-                        scheduled.append(backfill_tolerances.delay(meta['inspections'], meta['frame_id']))
+                        scheduled.append(backfill_inspections.delay(meta['inspections'], meta['frame_id']))
                         
             else:
                 # wait for the queue to clear a bit
