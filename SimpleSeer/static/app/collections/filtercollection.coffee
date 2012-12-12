@@ -1,7 +1,7 @@
 Collection = require "./collection"
 application = require '../application'
 #FramelistFrameView = require './framelistframe_view'
-context = require '../models/core/context'
+#context = require '../models/core/context'
 
 module.exports = class FilterCollection extends Collection
   _defaults:
@@ -17,9 +17,9 @@ module.exports = class FilterCollection extends Collection
   
   
   initialize: (models,params) =>
-    if params.context?
-      @context = new context({name:params.context})
-      @context.fetch()
+    #if params.context?
+      #@context = new context({name:params.context})
+      #@context.fetch()
       #  success: () =>
       #    for menuItem of @context.get('menuItems')
       #      f = 1
@@ -79,7 +79,7 @@ module.exports = class FilterCollection extends Collection
       @view = params.view
       i = 0
       for o in application.settings.ui_filters_framemetadata
-        @filters.push @view.addSubview o.type+"_"+o.field_name, @loadFilter(o.format), '#filter_form', {params:o,collection:@,append:"filter_" + i}
+        #@filters.push @view.addSubview o.type+"_"+o.field_name, @loadFilter(o.format), '#filter_form', {params:o,collection:@,append:"filter_" + i}
         i+=1
     return @
 

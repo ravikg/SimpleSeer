@@ -7,6 +7,7 @@ module.exports = SeerApplication =
   settings: {}
   menuItems: {}
   menuBars: {}
+  context: {}
   
   # Set up the application and include the 
   # necessary modules. Configures the page
@@ -62,7 +63,7 @@ module.exports = SeerApplication =
     !$('#modal :hidden').length
 
   addMenuBar: (target, options) ->
-    _lib = require 'views/core/menuBar'
+    _lib = require 'views/core/menubar'
     _t = $("#"+target)
     if _t.length > 0
       if !options.id?
@@ -70,6 +71,13 @@ module.exports = SeerApplication =
       @menuBars[options.id] = new _lib(options)
       _t.html @menuBars[options.id].render().el
       return @menuBars[options.id]
+
+  loadContext:(name) ->
+    _context = require 'models/core/context'
+    if !@context[name]?
+      @context[name] = new _context({name:name})
+      @context[name].fetch()
+    return @context[name]
 
   alert:(message, alert_type) ->
     _anchor = (@settings.ui_alert_anchor || '#messages')
