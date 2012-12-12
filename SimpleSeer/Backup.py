@@ -17,7 +17,7 @@ class Backup:
         # By default saves to file names seer_export.json, overwriting previous file
         # Pass overwrite = False to append timestamp to file name (preventing overwrite of previous file)
     
-        exportable = ['Inspection', 'Measurement', 'Watcher', 'OLAP', 'Chart', 'Dashboard']
+        exportable = ['Inspection', 'Measurement', 'Watcher', 'OLAP', 'Chart', 'Dashboard', 'Context']
         
         toExport = []
         
