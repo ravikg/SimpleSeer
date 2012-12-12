@@ -1,7 +1,7 @@
 import pymongo
 from collections import defaultdict
 
-from . import Frame, Measurement
+from . import Frame, Measurement, Inspection
 from ..worker import backfill_tolerances
 
 class MetaSchedule():
@@ -28,20 +28,20 @@ class MetaSchedule():
                 self._db.metaschedule.update({'frame_id': to_check['frame_id'], 'semaphore': 0}, {'$push': {field: to_check['field_id']}}, True)
             else:
                 # otherwise, put it back
-                to_add.push(to_check)
+                to_add.append(to_check)
                 
             if to_add:
                 to_check = to_add.pop()
             else:
                 to_check = None
+        
+    def enqueue_inspection(self, insp_id):
+        self.enqueue('inspections', insp_id)
     
-    def enqueue_inspection(self, inspection_id):
-        self.enqueue('inspections', inspection_id)
+    def enqueue_measurement(self, meas_id):
+        self.enqueue('measurements', meas_id)
     
-    def enqueue_measurement(self, measurement_id):
-        self.enqueue('measurements', measurement_id)
-    
-    def enqueue_tolerance(self, measurement_id):
+    def enqueue_tolerance(self, meas_id):
         self.enqueue('tolerances', measurement_id)
         
         
