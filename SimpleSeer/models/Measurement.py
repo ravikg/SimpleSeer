@@ -200,8 +200,11 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
     def save(self, *args, **kwargs):
         from ..realtime import ChannelManager
         
-        if '_changed_fields' not in dir(self) or 'tolerances' in self._changed_fields:
-            self.backfillTolerances()
+        if not kwargs.get('skipBackfill', 0): 
+            if '_changed_fields' not in dir(self) or 'tolerances' in self._changed_fields:
+                self.backfillTolerances()
+        if 'skipBackfill' in kwargs:
+            kwargs.pop('skipBackfill')
         
         self.updatetime = datetime.utcnow()
         
@@ -211,6 +214,7 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
                 log.info('trying to save measurements with duplicate names: %s' % m.name)
                 self.name = self.name + '_1'
         
+            
         super(Measurement, self).save(*args, **kwargs)
         ChannelManager().publish('meta/', self)
 
