@@ -12,6 +12,11 @@ module.exports = class menuBar extends View
     super()
     return @
 
+  events: =>
+    return {
+      "click #toolbar-toggle": "toggleToolbar"
+    }
+
   render: =>
     super()
     return @
@@ -25,4 +30,8 @@ module.exports = class menuBar extends View
     for i,o of @subviews
       o._hide?()
 
-
+  toggleToolbar: =>
+    toolbar = @$el.parents("#toolbar")
+    toolbar.toggleClass("expanded")
+    if( toolbar.hasClass("expanded") )
+      @$el.find(".controlPane").removeClass("showing")
