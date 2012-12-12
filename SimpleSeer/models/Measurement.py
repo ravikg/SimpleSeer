@@ -50,7 +50,6 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
 
     """
     name = mongoengine.StringField()
-    #VALIDATION NEEDED: this should be a unique name
     label = mongoengine.StringField()
     labelkey = mongoengine.StringField()
     method = mongoengine.StringField()
@@ -62,6 +61,7 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
     tolerances = mongoengine.ListField()
     updatetime = mongoengine.DateTimeField()
     conditions = mongoengine.ListField()
+    booleans = mongoengine.ListField()
 
     def execute(self, frame, features):
         featureset = self.findFeatureset(features)
@@ -94,23 +94,27 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
             
             values = function_ref(frame, featureset)
         
-        # Test the measurement criteria
-        cond_values = []
-        # If there are no conditions, assume all pass
-        if not self.conditions:
-            cond_values = values
-        else:
-            for cond in self.conditions:
-                criteriaFunc = "testField %s %s" % (cond['operator'], cond['value'])
-                for val in values:
-                    match = eval(criteriaFunc, {}, {'testField': val})
-                    if match:
-                        cond_values.append(val)        
+        if self.booleans:
+            values = testBooleans(values, self.boolean)
         
-        results = self.toResults(frame, cond_values)
+        if self.conditions:
+            conds = testBooleans(values, self.conditions)
+            values = [ v for v, c in zip(values, conds) if c ]
+        
+        results = self.toResults(frame, values)
         results = self.tolerance(frame, results)
         
         return results
+    
+    def testBooleans(self, values, conditions):
+        # Returns 0/1 for passing/failing conditions
+        
+        cond_values = []
+        for cond in self.conditions:
+            criteriaFunc = "testField %s %s" % (cond['operator'], cond['value'])
+            for val in values:
+                match = eval(criteriaFunc, {}, {'testField': val})
+                cond_values = int(match)        
         
     def tolerance(self, frame, results):
         
@@ -200,6 +204,13 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
             self.backfillTolerances()
         
         self.updatetime = datetime.utcnow()
+        
+        # Ensure name is unique
+        for m in Measurement.objects:
+            if m.name == self.name and m.id != self.id:
+                log.info('trying to save measurements with duplicate names: %s' % m.name)
+                self.name = self.name + '_1'
+        
         super(Measurement, self).save(*args, **kwargs)
         ChannelManager().publish('meta/', self)
 
