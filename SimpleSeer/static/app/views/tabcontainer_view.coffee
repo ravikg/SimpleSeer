@@ -26,6 +26,8 @@ module.exports = class TabContainer extends View
       _id = i+'_tab'
       @_tabs[_id] = @addSubview _id, o, '.tabPage', {append:_id}
       application.router.route options.tabs+"/:name", false, @select
+      application.menuBars[@navbar].addNavigation "#"+@_tabs[_id].href, @_tabs[_id]
+
 
 
     #@filtercollection.on 'add', @setCounts

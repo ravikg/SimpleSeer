@@ -18,7 +18,7 @@ module.exports = class Context extends Model
     lib:false
     params:{}
     unique:0
-    menubar:"main"
+    menubar:"left-main"
   
   initialize: =>
     if !@model?
@@ -34,6 +34,12 @@ module.exports = class Context extends Model
     super response
     application.menuBars[o.menubar].render()
     return response
+    
+  save: =>
+    sd = _.clone @attributes
+    for o in sd.menuItems
+      delete o.parent
+    super(sd)
     
   fetch:(options=[]) =>
     if @attributes.name? and !@attributes.id?
