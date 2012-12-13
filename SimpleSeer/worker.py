@@ -62,7 +62,7 @@ def backfill_measurement(measurement_ids, frame_id):
     
     results = []
     for m_id in measurement_ids:
-        m = M.Inspection.objects.get(id = m_id)
+        m = M.Measurement.objects.get(id = m_id)
         results += m.execute(f, f.features)
         
     return (f.id, results)
