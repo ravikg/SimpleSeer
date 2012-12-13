@@ -8,25 +8,38 @@ module.exports = class TabContainer extends View
   template: template
   sideBarOpen: application.settings.showMenu
   _tabs:{}
+  navbar:"main"
   #lastModel: ""
   
   initialize: (options)=>
-      
     super(options)
+    #console.log options.tabs+"/(.*?)"
     
     if !@model?
       @model = Frame
-    
     #@filtercollection = new Filters([],{model:@model,view:@,mute:true})
-
+    if options.navbar
+      @navbar = options.navbar
     if options.tabs
       @tabLib = require './'+options.tabs+'/init'
     for i,o of @tabLib
       _id = i+'_tab'
       @_tabs[_id] = @addSubview _id, o, '.tabPage', {append:_id}
+      application.router.route options.tabs+"/:name", false, @select
+
 
     #@filtercollection.on 'add', @setCounts
     #@filtercollection.on 'reset', @setCounts
+
+  select: (name) =>
+    if !@$el.is(":visible")
+      $('#main').slideReplace @render().el, 'right'
+    if @_tabs[name]
+      for i,o of @_tabs
+        if o.selected
+          o.unselect()
+      @_tabs[name].select()
+
 
   events:
     'click #minimize-control-panel' : 'toggleMenu'
@@ -108,6 +121,7 @@ module.exports = class TabContainer extends View
     #@filtercollection.limit = @filtercollection._defaults.limit
     #@filtercollection.skip = @filtercollection._defaults.skip
     super()
+    ###
     $('.tabPage',@$el).tabs
       select: (event, ui) =>
         sid = $('.tabPage',@$el).tabs('option', 'selected')
@@ -118,6 +132,7 @@ module.exports = class TabContainer extends View
         sid = $('.tabPage',@$el).tabs('option', 'selected')
         tabs = $('.ui-tabs-panel',@$el)
         @_tabs[ui.panel.id].show()
+    ###
     if @rendered
       @.delegateEvents(@.events)
     else
@@ -125,6 +140,6 @@ module.exports = class TabContainer extends View
         if o.selected
           #o.render()
           o.select()
-          $('.tabPage',@$el).tabs("select", o.options.append)
+          #$('.tabPage',@$el).tabs("select", o.options.append)
     @rendered = true
     return this
