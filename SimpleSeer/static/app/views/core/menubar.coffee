@@ -11,6 +11,9 @@ module.exports = class menuBar extends View
   initialize: =>
     @collectionGroup = {}
     super()
+    if @navigation
+      nmi = @addMenuItem {append:"navigation",id:"navigation",lib:"core/navmenuitem",menubar:@id}
+      @navigation = nmi.widget
     return @
 
   events: =>
@@ -18,9 +21,6 @@ module.exports = class menuBar extends View
 
   render: =>
     super()
-    if @navigation
-      nmi = @addMenuItem {append:"navigation",id:"navigation",lib:"core/navmenuitem",menubar:@id}
-      @navigation = nmi.widget
     return @
 
   addMenuItem: (obj,contextName) =>
