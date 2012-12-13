@@ -62,6 +62,11 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
     updatetime = mongoengine.DateTimeField()
     conditions = mongoengine.ListField()
     booleans = mongoengine.ListField()
+    executeorder = mongoengine.IntField(default=0)
+    
+    meta = {
+        'ordering': ['executeorder']
+    }
 
     def execute(self, frame, features):
         featureset = self.findFeatureset(features)
@@ -95,10 +100,10 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
             values = function_ref(frame, featureset)
         
         if self.booleans:
-            values = testBooleans(values, self.boolean)
+            values = self.testBooleans(values, self.booleans, frame.results)
         
         if self.conditions:
-            conds = testBooleans(values, self.conditions)
+            conds = self.testBooleans(values, self.conditions, frame.results)
             values = [ v for v, c in zip(values, conds) if c ]
         
         results = self.toResults(frame, values)
@@ -106,15 +111,34 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
         
         return results
     
-    def testBooleans(self, values, conditions):
-        # Returns 0/1 for passing/failing conditions
+    def measurementToValue(self, results, meas_id, idx):
+        # Find the result matching the measurement expression
+        # The try to match the indexes of the results.  E.g., if this is the height measure of the 3rd feature, look for the width measure of the 3rd feature
         
+        
+        for r in results:
+            if r.measurement_id == meas_id and r.featureindex == idx:
+                if r.numeric:
+                    return r.numeric
+                else:
+                    return r.string
+                    
+        
+    
+    def testBooleans(self, values, conds, results):
+        # Returns 0/1 for passing/failing conditions
         cond_values = []
-        for cond in self.conditions:
-            criteriaFunc = "testField %s %s" % (cond['operator'], cond['value'])
-            for val in values:
+        for cond in conds:
+            for i, val in enumerate(values):
+                testValue = cond['value']
+                if type(testValue) == bson.ObjectId:
+                    testValue = self.measurementToValue(results, testValue, i)
+                criteriaFunc = "testField %s %s" % (cond['op'], testValue)
+                
                 match = eval(criteriaFunc, {}, {'testField': val})
-                cond_values = int(match)        
+                cond_values.append(int(match))
+        
+        return cond_values
         
     def tolerance(self, frame, results):
         
@@ -189,22 +213,37 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
                 result_id=bson.ObjectId(),
                 numeric=numeric(v),
                 string=str(v),
+                featureindex=i,
                 inspection_id=self.inspection,
                 inspection_name=inspection.name,
                 measurement_id=self.id,
                 measurement_name=self.name)
-            for v in values ]
+            for i, v in enumerate(values) ]
         frame.results.extend(results)
         return results
     
     def save(self, *args, **kwargs):
         from ..realtime import ChannelManager
         
-        if not kwargs.get('skipBackfill', 0): 
+        # Optional parameter: skipBackfill
+        try:
+            skipBackfill = kwargs.pop('skipBackfill')
+        except:
+            skipBackfill = 0
+        
+        if not skipBackfill: 
             if '_changed_fields' not in dir(self) or 'tolerances' in self._changed_fields:
                 self.backfillTolerances()
-        if 'skipBackfill' in kwargs:
-            kwargs.pop('skipBackfill')
+        
+        # Optional parameter: skipDeps
+        try:
+            skipDeps = kwargs.pop('skipDeps')
+        except:
+            skipDeps = 0
+            
+        if not skipDeps:
+            if '_changed_fields' not in dir(self) or 'executeorder' in self._changed_fields:
+                self.updateDependencies()
         
         self.updatetime = datetime.utcnow()
         
@@ -218,6 +257,54 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
         super(Measurement, self).save(*args, **kwargs)
         ChannelManager().publish('meta/', self)
 
+    def measurementsBefore(self):
+        # Find the list of measurements that need to execute before this one
+        before = []
+        for cond in self.conditions:
+            if type(cond['value']) == bson.ObjectId:
+                before.append(cond['value'])
+        
+        return before
+            
+    def measurementsAfter(self):
+        # Find the list of measurements that need to execute after this one
+        after = []
+        for m in Measurement.objects:
+            before = m.measurementsBefore()
+            if self.id in before:
+                after.append(m)
+        
+        return after
+
+    def updateDependencies(self, visited=[]):
+        # Recursively update the dependency tree to update execution order and check for cycles
+        
+        # Add myself to the list of nodes visited
+        visited.append(self.id)
+        
+        # Update execution order
+        xorder = 0
+        before = self.measurementsBefore()
+        for b in before:
+            m = Measurement.objects.get(id=b)
+            xorder = max(xorder, m.executeorder + 1)
+        
+        # Only need to progress if the execution order changed
+        if xorder != self.executeorder:
+            # Update execution order of self  
+            self.executeorder = xorder
+            # We are already computing dependencies, so don't re-run when saving
+            self.save(skipDeps=True)
+        
+            # Change the execution order of measurement that depend on self 
+            after = self.measurementsAfter() 
+            for a in after:
+                if a.id in visited:
+                    raise MeasurementError('Invalid dependency.  Circular reference: %s' % a.name)
+                else:
+                    m = Measurement.objects.get(id=a)
+                    m.updateDependencies(visited)
+        
     def __repr__(self):
         return "<Measurement: " + str(self.inspection) + " " + self.method + " " + str(self.featurecriteria) + ">"
             
@@ -234,3 +321,9 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
         else:
             return False
             
+
+class MeasurementError(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)

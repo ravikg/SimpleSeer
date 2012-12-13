@@ -8,6 +8,7 @@ class ResultEmbed(SimpleEmbeddedDoc, mongoengine.EmbeddedDocument):
     result_id = mongoengine.ObjectIdField()
     numeric = mongoengine.FloatField()
     string = mongoengine.StringField()
+    featureindex = mongoengine.IntField()
     inspection_id = mongoengine.ObjectIdField()
     inspection_name = mongoengine.StringField()
     measurement_id = mongoengine.ObjectIdField()
