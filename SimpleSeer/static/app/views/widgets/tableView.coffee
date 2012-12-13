@@ -98,6 +98,7 @@ module.exports = class tableView extends SubView
         
     js = @rows
     js.unshift @header
+    js = ((r.text for r in row) for row in @rows)
     $("input[name=rawdata]").attr('value',(JSON.stringify js).replace RegExp(@emptyCell,'g'), '' )
     @$el.find('.tablesorter').tablesorter
       widgets: @widgets,
