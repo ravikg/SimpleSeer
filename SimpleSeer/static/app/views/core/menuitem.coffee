@@ -15,21 +15,18 @@ module.exports = class menuItem extends SubView
   
   initialize:(options) =>
     super options
-    @filtercollection = application.context[options.contextName].filtercollection
     @libs = []			# libraries this menuItem belongs to.  View context is based on this.
+    if true
+      lib = require "views/"+options.lib
+      _ops = {params:@options.params}
+      if options.contextName
+        _ops.collection = application.context[@options.contextName].filtercollection
+        #@filtercollection = application.context[options.contextName].filtercollection
+      @widget = @addSubview @options.id, lib, '#'+options.id+"_widget", _ops
     return @
 
   getRenderData: =>
     id: @options.id
-
-  render: =>
-    if !@rendered
-      super()
-      lib = require "views/"+@options.lib
-      @widget = @addSubview @options.id, lib, '#'+@options.id+"_widget", {params:@options.params,collection:application.context[@options.contextName].filtercollection}
-      @widget.render()
-      @rendered = true
-    return @
 
   toggleWidget: =>
     if @open
