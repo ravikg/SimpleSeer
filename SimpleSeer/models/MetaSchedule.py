@@ -2,7 +2,7 @@ import pymongo
 from collections import defaultdict
 
 from . import Frame, Measurement, Inspection
-from ..worker import backfill_tolerances
+from ..worker import backfill_tolerances, backfill_measurement, backfill_inspection
 
 class MetaSchedule():
     
@@ -47,7 +47,7 @@ class MetaSchedule():
         
     def run(self):
         from time import sleep
-        from . import ResultEmbed
+        from . import ResultEmbed, FrameFeature
         from bson import ObjectId
         
         scheduled = []
@@ -63,9 +63,9 @@ class MetaSchedule():
                     if 'tolerances' in meta:
                         scheduled.append(backfill_tolerances.delay(meta['tolerances'], meta['frame_id']))
                     if 'measurements' in meta:
-                        scheduled.append(backfill_measurements.delay(meta['measurements'], meta['frame_id']))
+                        scheduled.append(backfill_measurement.delay(meta['measurements'], meta['frame_id']))
                     if 'inspections' in meta:
-                        scheduled.append(backfill_inspections.delay(meta['inspections'], meta['frame_id']))
+                        scheduled.append(backfill_inspection.delay(meta['inspections'], meta['frame_id']))
                         
             else:
                 # wait for the queue to clear a bit
