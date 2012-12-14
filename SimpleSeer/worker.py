@@ -38,12 +38,12 @@ def ping_worker(number):
 def backfill_tolerances(measurement_ids, frame_id):
     f = M.Frame.objects.get(id = frame_id)
     
-    results = (f.id, None)
+    results = []
     for m_id in measurement_ids: 
         m = M.Measurement.objects.get(id = m_id)
-        results = (f.id, m.tolerance(f, f.results))
+        results += m.tolerance(f, f.results)
     
-    return results
+    return (f.id, results)
     
 @task()
 def backfill_inspection(inspection_ids, frame_id):
@@ -55,6 +55,17 @@ def backfill_inspection(inspection_ids, frame_id):
         features += i.execute(f.image)
     
     return (f.id, features)
+    
+@task
+def backfill_measurement(measurement_ids, frame_id):
+    f = M.Frame.objects.get(id = frame_id)
+    
+    results = []
+    for m_id in measurement_ids:
+        m = M.Measurement.objects.get(id = m_id)
+        results += m.execute(f, f.features)
+        
+    return (f.id, results)
     
 
 @task()

@@ -1,8 +1,8 @@
 import pymongo
 from collections import defaultdict
 
-from . import Frame, Measurement
-from ..worker import backfill_tolerances
+from . import Frame, Measurement, Inspection
+from ..worker import backfill_tolerances, backfill_measurement, backfill_inspection
 
 class MetaSchedule():
     
@@ -28,26 +28,26 @@ class MetaSchedule():
                 self._db.metaschedule.update({'frame_id': to_check['frame_id'], 'semaphore': 0}, {'$push': {field: to_check['field_id']}}, True)
             else:
                 # otherwise, put it back
-                to_add.push(to_check)
+                to_add.append(to_check)
                 
             if to_add:
                 to_check = to_add.pop()
             else:
                 to_check = None
+        
+    def enqueue_inspection(self, insp_id):
+        self.enqueue('inspections', insp_id)
     
-    def enqueue_inspection(self, inspection_id):
-        self.enqueue('inspections', inspection_id)
+    def enqueue_measurement(self, meas_id):
+        self.enqueue('measurements', meas_id)
     
-    def enqueue_measurement(self, measurement_id):
-        self.enqueue('measurements', measurement_id)
-    
-    def enqueue_tolerance(self, measurement_id):
+    def enqueue_tolerance(self, meas_id):
         self.enqueue('tolerances', measurement_id)
         
         
     def run(self):
         from time import sleep
-        from . import ResultEmbed
+        from . import ResultEmbed, FrameFeature
         from bson import ObjectId
         
         scheduled = []
@@ -63,9 +63,9 @@ class MetaSchedule():
                     if 'tolerances' in meta:
                         scheduled.append(backfill_tolerances.delay(meta['tolerances'], meta['frame_id']))
                     if 'measurements' in meta:
-                        scheduled.append(backfill_measurements.delay(meta['measurements'], meta['frame_id']))
+                        scheduled.append(backfill_measurement.delay(meta['measurements'], meta['frame_id']))
                     if 'inspections' in meta:
-                        scheduled.append(backfill_inspections.delay(meta['inspections'], meta['frame_id']))
+                        scheduled.append(backfill_inspection.delay(meta['inspections'], meta['frame_id']))
                         
             else:
                 # wait for the queue to clear a bit
