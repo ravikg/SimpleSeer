@@ -14,7 +14,10 @@ module.exports = class navMenuItem extends SubView
 
     for i,o of @navLinks
       ul = @getLinkGroup o.linkGroup
-      ul.append('<li><a href="'+i+'" class="tab">'+(o.title || '')+'</a></li>')
+      li = $('<li></li>')
+      li.append('<a href="'+i+'" class="tab">'+(o.title || '')+'</a>')
+      li.append('<div class="icon" style="background-image: url()"></div>')
+      ul.append(li)
     return @
 
   addNavigation: (href, obj) =>
@@ -26,7 +29,7 @@ module.exports = class navMenuItem extends SubView
     else
       ul = @$el.find('[linkgroup="'+linkGroup+'"]')
     if ul.length == 0
-      @$el.prepend('<ul class="navLinks" linkgroup="'+linkGroup+'"></ul>')
+      @$el.append('<ul class="navLinks" linkgroup="'+linkGroup+'"></ul>')
       ul = @$el.find('[linkgroup="'+linkGroup+'"]')
-      ul.append('<li>'+linkGroup+'</li>')
+      @$el.find(".navGroups").append('<option>'+linkGroup+'</option>')
     return ul
