@@ -21,26 +21,36 @@ module.exports = class Context extends Model
     menubar:"left-main"
   
   initialize: =>
+    @attributes.menuItems = []
     if !@model?
       @model = Frame
     @filtercollection = new Filters([],{model:@model,view:@,mute:true})
 
   
   parse: (response) =>
-    if response.menuItems.length > 0
+    if response.menuItems? and response.menuItems.length > 0
       for o in response.menuItems
         if !application.menuItems[o.id]? and application.menuBars[o.menubar]?
           application.menuBars[o.menubar].addMenuItem o, @get('name')
+          application.menuBars[o.menubar].render()
     super response
-    application.menuBars[o.menubar].render()
     return response
     
   save: =>
     sd = _.clone @attributes
     for o in sd.menuItems
+      o.append = @_getId(o)
       delete o.parent
     super(sd)
     
+  _getId: (o)=>
+    # TODO: o.unique isnt unique enough
+    md5( JSON.stringify(
+      o.lib
+      o.menubar
+      o.unique
+      o.params
+    ) )
   fetch:(options=[]) =>
     if @attributes.name? and !@attributes.id?
       @url = "/context/"+@attributes.name

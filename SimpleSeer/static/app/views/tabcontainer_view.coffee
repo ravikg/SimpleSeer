@@ -7,11 +7,11 @@ Frame = require "../models/frame"
 module.exports = class TabContainer extends View  
   template: template
   sideBarOpen: application.settings.showMenu
-  _tabs:{}
   navbar:"main"
   #lastModel: ""
   
   initialize: (options)=>
+    @_tabs = {}
     super(options)
     
     if !@model?
