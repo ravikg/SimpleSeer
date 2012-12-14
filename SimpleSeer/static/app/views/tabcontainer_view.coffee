@@ -13,22 +13,20 @@ module.exports = class TabContainer extends View
   
   initialize: (options)=>
     super(options)
-    #console.log options.tabs+"/(.*?)"
     
     if !@model?
       @model = Frame
-    #@filtercollection = new Filters([],{model:@model,view:@,mute:true})
     if options.navbar
       @navbar = options.navbar
     if options.tabs
+      # TODO: move contents of init.coffee into database.
       @tabLib = require './'+options.tabs+'/init'
     for i,o of @tabLib
       _id = i+'_tab'
       @_tabs[_id] = @addSubview _id, o, '.tabPage', {append:_id}
       application.router.route options.tabs+"/:name", false, @select
+      @_tabs[_id].linkGroup = options.name
       application.menuBars[@navbar].addNavigation "#"+@_tabs[_id].href, @_tabs[_id]
-
-
 
     #@filtercollection.on 'add', @setCounts
     #@filtercollection.on 'reset', @setCounts
