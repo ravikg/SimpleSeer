@@ -1,7 +1,6 @@
 #Collection = require "../collection"
-FilterCollection = require "../../collections/filtercollection"
-application = require '../../application'
-
+FilterCollection = require "collections/core/filtercollection"
+application = require 'application'
 module.exports = class Series extends FilterCollection
   url: ""
   redraw: false

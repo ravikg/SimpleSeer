@@ -1,6 +1,6 @@
 Model = require "./model"
-application = require '../application'
-dashboardWidget = require '../views/dashboardWidget'
+application = require 'application'
+dashboardWidget = require 'views/core/dashboardWidget'
 
 module.exports = class Dashboard extends Model
   urlRoot: -> "/api/dashboard"

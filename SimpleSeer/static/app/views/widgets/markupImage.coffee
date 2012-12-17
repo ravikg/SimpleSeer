@@ -1,5 +1,5 @@
-SubView = require '../subview'
-application = require '../../application'
+SubView = require 'views/core/subview'
+application = require 'application'
 template = require './templates/markupImage'
 
 # MarkupImage is a subview / widget used for

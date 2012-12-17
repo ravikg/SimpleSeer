@@ -1,8 +1,8 @@
-Model = require "../model"
-application = require '../../application'
+Model = require "models/model"
+application = require 'application'
 menuItem = require "views/core/menuitem"
-Filters = require "../../collections/filtercollection"
-Frame = require "../frame"
+Filters = require "collections/core/filtercollection"
+Frame = require "models/frame"
 
 ###
 menuItem:

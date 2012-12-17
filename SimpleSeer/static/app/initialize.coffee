@@ -8,19 +8,17 @@ $ ->
     window.SimpleSeer = application
     application._init(data.settings)
 
-    # Instantiate the router.
+      # Instantiate the router.
     application.router = new Router()
-   
-    # Load cloud libs if applicable & available
+      # Load cloud libs if applicable & available
     application.cloud = false
     try
       if data.settings.in_cloud
-        application.cloud = require './cloud'
+        application.cloud = require 'cloud'
         application.cloud.initialize()
     catch error
       #cloud not available
     application.initialize()
     Backbone.history.start()
-        
     # Freeze the object
     #Object.freeze? application

@@ -1,5 +1,5 @@
-SubView = require '../subview'
-application = require '../../application'
+SubView = require 'views/core/subview'
+application = require 'application'
 template = require './templates/tableView'
 
 # TableView is a wrapper for the jQuery UI Tablesorter

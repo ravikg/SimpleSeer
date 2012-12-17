@@ -1,5 +1,5 @@
 require 'lib/view_helper'
-View = require './view'
+View = require 'views/core/view'
 
 module.exports = class SubView extends View
   ###

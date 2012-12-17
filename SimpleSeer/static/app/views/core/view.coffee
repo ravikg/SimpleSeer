@@ -1,5 +1,5 @@
-require '../lib/view_helper'
-application = require '../application'
+require 'lib/view_helper'
+application = require 'application'
 #context = require '../models/core/context'
 
 

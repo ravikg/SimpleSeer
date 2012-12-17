@@ -1,5 +1,5 @@
-Collection = require "./collection"
-application = require '../application'
+Collection = require "collections/collection"
+application = require 'application'
 #FramelistFrameView = require './framelistframe_view'
 #context = require '../models/core/context'
 
