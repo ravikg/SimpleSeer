@@ -114,8 +114,6 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
     def measurementToValue(self, results, meas_id, idx):
         # Find the result matching the measurement expression
         # The try to match the indexes of the results.  E.g., if this is the height measure of the 3rd feature, look for the width measure of the 3rd feature
-        
-        
         for r in results:
             if r.measurement_id == meas_id and r.featureindex == idx:
                 if r.numeric:
@@ -123,8 +121,6 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
                 else:
                     return r.string
                     
-        
-    
     def testBooleans(self, values, conds, results):
         # Returns 0/1 for passing/failing conditions
         cond_values = []
@@ -133,12 +129,24 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
                 testValue = cond['value']
                 if type(testValue) == bson.ObjectId:
                     testValue = self.measurementToValue(results, testValue, i)
+                if type(testValue) == mongoengine.base.BaseDict:
+                    testValue = self.parseMex(testValue, i, results)
                 criteriaFunc = "testField %s %s" % (cond['op'], testValue)
-                
                 match = eval(criteriaFunc, {}, {'testField': val})
                 cond_values.append(int(match))
         
         return cond_values
+        
+    def parseMex(self, mex, i, results):
+        left = mex['field']
+        if type(left) == bson.ObjectId:
+            left = self.measurementToValue(results, left, i)
+        right = mex['value']
+        if type(right) == bson.ObjectId:
+            right = self.measurementToValue(results, right, i)
+        
+        return eval('%s %s %s' % (left, mex['op'], right), {}, {})
+        
         
     def tolerance(self, frame, results):
         
