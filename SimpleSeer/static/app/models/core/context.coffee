@@ -30,7 +30,8 @@ module.exports = class Context extends Model
     if response.menuItems.length > 0
       for o in response.menuItems
         if !application.menuItems[o.id]? and application.menuBars[o.menubar]?
-          application.menuBars[o.menubar].addMenuItem o, @get('name')
+          v = application.menuBars[o.menubar].addMenuItem o, @get('name')
+          v.setColor("yellow")
     super response
     application.menuBars[o.menubar].render()
     return response
