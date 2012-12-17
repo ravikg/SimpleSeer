@@ -37,11 +37,11 @@ module.exports = SeerApplication =
       @socket.on "message:alert/", window.SimpleSeer._serveralert
       @socket.emit 'subscribe', 'alert/'
       
-    m = require './collections/measurements'
+    m = require 'collections/measurements'
     @measurements = new m()
     @measurements.fetch()
-    @c = require './models/core/context'
-    t = require './views/modal'
+    @c = require 'models/core/context'
+    t = require 'views/core/modal'
     @modal = new t()
 
     # Set up the timeout message dialog.

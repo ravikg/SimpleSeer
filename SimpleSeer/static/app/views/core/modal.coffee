@@ -1,5 +1,5 @@
-View = require './view'
-application = require '../application'
+View = require 'views/core/view'
+application = require 'application'
 template = require './templates/modal'
 
 ###
