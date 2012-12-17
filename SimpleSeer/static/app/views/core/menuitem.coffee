@@ -13,6 +13,7 @@ module.exports = class menuItem extends SubView
 
   events: () =>
     'click .shortcut':'toggleWidget'
+    'click .title': 'toggleLevel'
   
   initialize:(options) =>
     @className += " " + @color
@@ -24,19 +25,14 @@ module.exports = class menuItem extends SubView
       if options.contextName
         _ops.collection = application.context[@options.contextName].filtercollection
         #@filtercollection = application.context[options.contextName].filtercollection
-      @widget = @addSubview @options.id, lib, '#'+options.id+"_widget", _ops
-    return @
 
-  setMeta:(options) =>
-    console.log options
-    if options.title
-      @title = options.title
-    if options.color
-      @color = options.color
-    if options.icon
-      @icon = options.icon
-      console.log @$el.find(".shortcut")
-      @$el.find(".shortcut").html("background-image") #, "url(\"" + @icon + "\")");
+      @widget = @addSubview @options.id, lib, '#'+options.id+"_widget", _ops
+      @title = @widget.options.params?.label
+      if "color" in @widget
+        @color = @widget.color
+      else 
+        @color = "yellow"
+    return @
 
   getRenderData: =>
     id: @options.id
@@ -50,10 +46,14 @@ module.exports = class menuItem extends SubView
     else
       @_show(true)
 
+  toggleLevel: =>
+    if @$el.parents("#toolbar").hasClass("expanded")
+      @$el.find(".content").toggle()
+
   _show:(closeAll=false) =>
     if closeAll then @options.parent.hideAll()
     @open = true
-    @$el.find('.controlPane').css('display', 'block')
+    @$el.find('.controlPane').css('display', 'block').find(".content").show()
     
   _hide:=>
     @open = false
