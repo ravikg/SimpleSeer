@@ -31,5 +31,5 @@ module.exports = class navMenuItem extends SubView
     if ul.length == 0
       @$el.append('<ul class="navLinks" linkgroup="'+linkGroup+'"></ul>')
       ul = @$el.find('[linkgroup="'+linkGroup+'"]')
-      @$el.find(".navGroups").append('<option>'+linkGroup+'</option>')
+      @$el.find(".navGroups").append('<option value="'+linkGroup+'">'+linkGroup+'</option>')
     return ul

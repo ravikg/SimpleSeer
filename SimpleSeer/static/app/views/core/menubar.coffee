@@ -7,6 +7,7 @@ menuItem = require "views/core/menuitem"
 module.exports = class menuBar extends View
   template:template
   navigation:true
+  lastGroup: undefined
 
   initialize: =>
     @collectionGroup = {}
@@ -22,15 +23,28 @@ module.exports = class menuBar extends View
   events: =>
     "click #toolbar-toggle": "toggleToolbar"
 
+  navigationChange:(self) =>
+    linkGroup = $(self.options[self.selectedIndex]).attr("value")
+    @showLinkGroup(linkGroup)
+
+  showLinkGroup:(linkGroup='default') =>
+    lastGroup = linkGroup
+    @$el.find(".navLinks").hide()
+    ul = @$el.find('[linkgroup="'+linkGroup+'"]').show()
+
   render: =>
     super()
+    selectBox = @$el.find(".navGroups")[0]
+    selectBox.onchange = =>
+      @navigationChange(selectBox)
+    @showLinkGroup()
     return @
 
   addMenuItem: (obj,contextName) =>
     obj.append = obj.id
     obj.contextName = contextName
     @addSubview obj.id, menuItem, '#toolset', obj
-    
+
   hideAll: =>
     for i,o of @subviews
       o._hide?()
