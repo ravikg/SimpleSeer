@@ -16,7 +16,7 @@ module.exports = class menuBar extends View
       nmi = @addMenuItem {append:"navigation",id:"navigation",lib:"core/navmenuitem",menubar:@id}
       nmi.title = "Navigation"
       nmi.icon = "\/img\/icon_navigation_dark.png"
-      nmi.color = "blue"
+      nmi.setColor("blue")
       @navigation = nmi.widget
     return @
 
