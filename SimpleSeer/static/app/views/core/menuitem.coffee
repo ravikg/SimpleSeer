@@ -13,7 +13,7 @@ module.exports = class menuItem extends SubView
 
   events: () =>
     'click .shortcut':'toggleWidget'
-    'click .title': 'toggleLevel'
+    'dblclick .title': 'toggleLevel'
   
   initialize:(options) =>
     @className += " " + @color
