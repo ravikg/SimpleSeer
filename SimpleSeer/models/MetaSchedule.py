@@ -4,6 +4,9 @@ from collections import defaultdict
 from . import Frame, Measurement, Inspection
 from ..worker import backfill_meta
 
+import logging
+log = logging.getLogger(__name__)
+
 class MetaSchedule():
     
     _db = None
@@ -51,6 +54,7 @@ class MetaSchedule():
         from bson import ObjectId
         
         scheduled = []
+        completed = 0
         while self._db.metaschedule.find().count() > 0 or len(scheduled) > 0:
             
             # If I'm ready to schedule another task and there are tasks to schedule
@@ -88,3 +92,7 @@ class MetaSchedule():
                 
                 # Clear the entry from the queue
                 self._db.metaschedule.find_and_modify({'frame_id': ObjectId(frame_id), 'semaphore': 1}, {}, remove=True)
+                
+                # Print progress stats
+                completed += 1
+                log.info('Backfill waiting: %s, scheduled: %s, completed: %s' % (self._db.metaschedule.find().count(), len(scheduled), completed))
