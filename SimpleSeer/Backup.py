@@ -62,8 +62,24 @@ class Backup:
             Export.exportAll()
 
     @classmethod
-    def importAll(self, fname=None):
+    def importAll(self, fname=None, clean=False, skip=False):
+        from .models.MetaSchedule import MetaSchedule
         
+        if clean:
+            log.info('Removing old metadata')
+            M.Inspection.objects.delete()
+            M.Measurement.objects.delete()
+            M.OLAP.objects.delete()
+            M.Chart.objects.delete()
+            M.Dashboard.objects.delete()
+            
+            log.info('Removing old features and results')
+            for f in M.Frame.objects:
+                f.results = []
+                f.features = []
+                f.save()
+        else:
+            log.info('Preserving old metadata.  Any new results/features will be appended to existing results/features')
         
         if not fname:
             fname = 'seer_export.yaml'
@@ -77,34 +93,42 @@ class Backup:
             log.warn('Import failed: %s' % err.strerror)
             return
             
-        objs = load(yaml)
+        objs = load(yaml)        
         
-        log.info('cleaning up old results')
-        for frame in M.Frame.objects:
-            frame.results = []
-            frame.save()
-        
-        log.info('adding new metadata')
+        ms = MetaSchedule()
+        log.info('Loading new metadata')
         for o in objs:
             model = M.__getattribute__(o['type'])()
             
             for k, v in o['obj']['_data'].iteritems():
                 if k is not None and v is not None:
                     model.__setattr__(k, v)
-            model.id = o['obj']['_id']
+            model.id = o['obj']['_data'][None]
             
             # Delete previous versions, based on overlapping names
             prev = M.__getattribute__(o['type']).objects()
+            found = False
             for p in prev:
-                if p.name == model.name:
-                    p.delete()
+                if p == model:
+                    found = True
+                    log.info('Skipping existing %s: %s' % (o['type'], model.name))
             
-            if o['type'] == 'Measurement':                                        
-                # Need to put the measurement results on frames
-                for frame in M.Frame.objects:
-                    log.info("Updating results for measurement %s, frame %s" % (model.name, frame.id))
-                    model.execute(frame, frame.features)
-                    frame.save()
-
-            model.save()
-            
+            if not found:                    
+                log.info('Adding new  %s %s' % (o['type'], model.name))
+                # Enqueue items for backfill
+                if o['type'] == 'Measurement':
+                    if not skip:
+                        ms.enqueue_measurement(model.id)
+                    model.save(skipBackfill=True)
+                elif o['type'] == 'Inspection':
+                    if not skip:
+                        ms.enqueue_inspection(model.id)
+                    model.save()
+                else:
+                    model.save()
+        
+        if not skip:
+            log.info('Beginning backfill')
+            ms.run()
+        else:
+            log.info('Skipping backfill')
