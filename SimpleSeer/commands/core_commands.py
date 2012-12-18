@@ -272,6 +272,8 @@ class MetaCommand(Command):
         subparser.add_argument("--listen", help="Run export as daemon listing for changes and exporting when changes found.", action='store_true')
         subparser.add_argument("--file", help="The file name to export/import.  If blank, defaults to seer_export.yaml", default="seer_export.yaml")
         subparser.add_argument('--clean', help="Delete existing metadata before importing", action='store_true')
+        subparser.add_argument('--skipbackfill', help="Do not run a backfill after importing", action='store_true')
+        
         
     def run(self):
         from SimpleSeer.Backup import Backup
@@ -292,7 +294,7 @@ class MetaCommand(Command):
             if self.options.listen: 
                 gevent.spawn_link_exception(Backup.listen())
         elif self.options.importmeta:
-            Backup.importAll(self.options.file, self.options.clean)
+            Backup.importAll(self.options.file, self.options.clean, self.options.skipbackfill)
         
         
 class ExportImagesCommand(Command):

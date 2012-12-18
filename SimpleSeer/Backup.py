@@ -62,7 +62,7 @@ class Backup:
             Export.exportAll()
 
     @classmethod
-    def importAll(self, fname=None, clean=False):
+    def importAll(self, fname=None, clean=False, skip=False):
         from .models.MetaSchedule import MetaSchedule
         
         if clean:
@@ -116,14 +116,19 @@ class Backup:
             if not found:                    
                 log.info('Adding new  %s %s' % (o['type'], model.name))
                 # Enqueue items for backfill
-                if o['type'] == 'Measurement':                                        
-                    ms.enqueue_measurement(model.id)
+                if o['type'] == 'Measurement':
+                    if not skip:
+                        ms.enqueue_measurement(model.id)
                     model.save(skipBackfill=True)
                 elif o['type'] == 'Inspection':
-                    ms.enqueue_inspection(model.id)
+                    if not skip:
+                        ms.enqueue_inspection(model.id)
                     model.save()
                 else:
                     model.save()
         
-        log.info('Beginning backfill')
-        ms.run()
+        if not skip:
+            log.info('Beginning backfill')
+            ms.run()
+        else:
+            log.info('Skipping backfill')
