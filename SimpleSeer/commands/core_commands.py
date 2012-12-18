@@ -263,36 +263,38 @@ class WorkerCommand(Command):
         print " ".join(cmd)
         subprocess.call(cmd)
         
-class ExportMetaCommand(Command):
+        
+class MetaCommand(Command):
     
     def __init__(self, subparser):
-        subparser.add_argument("--listen", help="Set to true to run as daemon listing for changes and exporting when changes found.", default="false")
+        subparser.add_argument('--exportmeta', action='store_true')
+        subparser.add_argument('--importmeta', action='store_true')
+        subparser.add_argument("--listen", help="Run export as daemon listing for changes and exporting when changes found.", action='store_true')
+        subparser.add_argument("--file", help="The file name to export/import.  If blank, defaults to seer_export.yaml", default="seer_export.yaml")
+        subparser.add_argument('--clean', help="Delete existing metadata before importing", action='store_true')
         
     def run(self):
         from SimpleSeer.Backup import Backup
         
-        listen = self.options.listen
+        if self.options.exportmeta and self.options.importmeta:
+            self.log.info("Both export and import specified.  Ignoring import command")
+            self.options.importmeta = False
+        if not self.options.exportmeta and not self.options.importmeta:
+            self.log.info("Neither import or export specified.  Defaulting to export")
+            self.options.exportmeta = True
+        if self.options.exportmeta and self.options.clean:
+            self.log.info("Clean option not applicable when exporting.  Ignoring")
+        if self.options.importmeta and self.options.listen:
+            self.log.info("Listen option not applicable when importing.  Ignorning")
         
-        Backup.exportAll()
+        if self.options.exportmeta:
+            Backup.exportAll()
+            if self.options.listen: 
+                gevent.spawn_link_exception(Backup.listen())
+        elif self.options.importmeta:
+            Backup.importAll(self.options.file, self.options.clean)
         
-        if listen.upper() == 'TRUE': 
-            gevent.spawn_link_exception(Backup.listen())
-    
-
-class ImportMetaCommand(Command):
-    
-    def __init__(self, subparser):
-        subparser.add_argument("--file", help="The file name to import.  If blank, defaults to seer_export.yaml", default="seer_export.yaml")
         
-    def run(self):
-        from SimpleSeer.Backup import Backup
-        
-        filename = self.options.file
-        Backup.importAll(filename)
-    
-
-
-
 class ExportImagesCommand(Command):
 
     def __init__(self, subparser):
