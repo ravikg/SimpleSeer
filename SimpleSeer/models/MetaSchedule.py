@@ -2,7 +2,7 @@ import pymongo
 from collections import defaultdict
 
 from . import Frame, Measurement, Inspection
-from ..worker import backfill_tolerances, backfill_measurement, backfill_inspection
+from ..worker import backfill_meta
 
 class MetaSchedule():
     
@@ -54,22 +54,24 @@ class MetaSchedule():
         while self._db.metaschedule.find().count() > 0 or len(scheduled) > 0:
             
             # If I'm ready to schedule another task and there are tasks to schedule
-            print self._db.metaschedule.find().count()
+            #print self._db.metaschedule.find().count()
             if len(scheduled) < self._parallel_tasks and self._db.metaschedule.find({'semaphore': 0}).count() > 0:
                 # Update the semaphore field to lock other frames with the same id from running
                 meta = self._db.metaschedule.find_and_modify(query = {'semaphore': 0}, update = {'$inc': {'semaphore': 1}})
                 if meta:
-                    print 'scheduling %s' % meta['frame_id']
+                    #print 'scheduling %s' % meta['frame_id']
+                    scheduled.append(backfill_meta.delay(meta['frame_id'], meta.get('inspections', []), meta.get('measurements', [])))
+                    """
                     if 'tolerances' in meta:
                         scheduled.append(backfill_tolerances.delay(meta['tolerances'], meta['frame_id']))
                     if 'measurements' in meta:
                         scheduled.append(backfill_measurement.delay(meta['measurements'], meta['frame_id']))
                     if 'inspections' in meta:
                         scheduled.append(backfill_inspection.delay(meta['inspections'], meta['frame_id']))
-                        
+                    """
             else:
                 # wait for the queue to clear a bit
-                print 'sleepy time'
+                #print 'sleepy time'
                 sleep(0.2)
             
             complete_indexes = []
@@ -81,25 +83,8 @@ class MetaSchedule():
             
             for index in complete_indexes:
                 async = scheduled.pop(index)
-                frame_id, output = async.get()
-                print 'should save %s' % frame_id
-                
-                # Save the new computations to the db
-                f = Frame.objects.get(id=frame_id)
-                # The ResultEmbed object gets mangled, so reconstruct it
-                
-                f.results = []
-                for o in output:
-                    if type(o) == ResultEmbed:
-                        re = ResultEmbed()
-                        re._data.update(o.__dict__)
-                        f.results.append(re)
-                    else:
-                        ff = FrameFeature()
-                        ff._data.update(o.__dict__)
-                        f.features.append(ff)
-                        
-                f.save()
+                frame_id = async.get()
+                #print 'completed %s' % frame_id
                 
                 # Clear the entry from the queue
-                print self._db.metaschedule.find_and_modify({'frame_id': ObjectId(frame_id), 'semaphore': 1}, {}, remove=True)
+                self._db.metaschedule.find_and_modify({'frame_id': ObjectId(frame_id), 'semaphore': 1}, {}, remove=True)
