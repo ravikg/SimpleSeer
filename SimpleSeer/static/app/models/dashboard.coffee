@@ -6,10 +6,9 @@ module.exports = class Dashboard extends Model
   urlRoot: -> "/api/dashboard"
   loaded: false
   
-  initialize: (attr) =>
-    if attr.view
-      @view = attr.view
+  initialize: =>
     if @attributes.view
+      @view = @attributes.view
       delete @attributes.view
     super()
 
@@ -17,11 +16,13 @@ module.exports = class Dashboard extends Model
   parse: (response)=>
     if !@loaded
       @loadElements(response)
+    super response
     return response
     
   loadElements: (response) =>
-    for widget in response.widgets
-      vi = @view.addSubview "widget_"+widget.id, dashboardWidget, '#widget_grid', {append:"widget_"+widget.id,widget:widget}
-      vi.render()
-    @loaded = true
+    if @view
+      for widget in response.widgets
+        vi = @view.addSubview "widget_"+widget.id, dashboardWidget, '#widget_grid', {append:"widget_"+widget.id,widget:widget}
+        vi.render()
+      @loaded = true
 
