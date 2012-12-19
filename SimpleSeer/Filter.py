@@ -48,8 +48,29 @@ class Filter():
         
         pipeline += self.conditional(allFilters)
         
-        # Sort the results
-        pipeline += self.sort(sortinfo)
+        # Sort and skip/limit the results
+        # Note: if the skip is negative, first sort by negative criteria, then re-sort regular
+        if skip < 0:
+            presort = sortinfo.copy()
+            presort['order'] = -1 * int(presort['order'])  
+            pipeline += self.sort(presort)
+
+            skip = abs(skip)
+            if limit == float("inf") or limit == None or limit > skip:
+                limit = skip
+                skip = 0
+            else:
+                skip = skip - limit
+            pipeline.append({'$skip': skip})
+            pipeline.append({'$limit': limit})
+        
+            pipeline += self.sort(sortinfo)
+        else:
+            pipeline += self.sort(sortinfo)
+            if skip > 0:
+                pipeline.append({'$skip': skip})
+            if limit < float("inf") and not limit == None:
+                pipeline.append({'$limit': limit})
         
         #pipeline.append({'$match': {'capturetime_epoch': 0}})
         #for p in pipeline:
@@ -61,6 +82,7 @@ class Filter():
         results = cmd['result']
         
         
+        """
         # Perform the skip/limit 
         # Note doing this in python instead of mongo since need original query to give total count of relevant results
         if skip < 0:
@@ -73,8 +95,11 @@ class Filter():
                 results = results[skip:skip+limit]
         else:
             return 0, []
+        """
                 
-        return len(cmd['result']), results    
+        #return len(cmd['result']), results
+        return -1, results    
+        
     
         
     def initialFields(self, projResult = False, projFeat = False):
@@ -212,7 +237,7 @@ class Filter():
             if 'eq' in f:
                 
                 # Need to convert the numbers into digits instead of strings
-                if (type(f['eq']) == str or type(f['eq']) == unicode) and f['eq'].isdigit():
+                if (type(f['eq']) == str or type(f['eq']) == unicode) and f['eq'].isdigit() and not nameParts[0] == 'metadata':
                     f['eq'] = float(f['eq'])
                 
                 # Convert datetimes into epoch ms
@@ -438,6 +463,7 @@ class Filter():
         flatFrames = []
         for frame in frames:
             tmpFrame = {'id': frame['id']}
+            tmpFrame['capturetime_epoch'] = frame['capturetime_epoch']
         
             for filt in filters:
                 nameParts = filt['name'].split('.')

@@ -25,7 +25,7 @@ module.exports = class Measurements extends Collection
             rows[item.criteria[key]][_l] = []
           rows[item.criteria[key]][_l].push {id:o.get("id"), operator:item.rule.operator, value:item.rule.value}
     return {columns:columns,rows:rows}
-  #setTable:(rowKey,valKey,where,operator)=>
+
   setTable:(data)=>
   	#if data.criteria["Part Number"].value() doesnt exist
   	#  create tolerance in o
@@ -54,7 +54,4 @@ module.exports = class Measurements extends Collection
     set = false
     for _t in t
       if _t.criteria
-        set = true
-    if !set
-      foo
-            
+        set = true            

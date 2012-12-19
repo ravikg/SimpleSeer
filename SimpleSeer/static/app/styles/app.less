@@ -24,6 +24,18 @@ input[type=text], input[type=number], textarea {
   display:none !important;
 }
 
+.closeAlerts {
+  cursor: pointer;
+  display: block;
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  width: 12px;
+  height: 13px;
+  font-size: 1px;
+  background: url('/img/chosen-sprite.png') right top no-repeat;
+}
+
 header, #navbar {
   position: fixed;
   top: 0px;
@@ -55,7 +67,6 @@ header, #navbar {
   }
   
   #client-name {
-    display: inline-block;
     height: 17px;
     line-height: 16px;
     border-left: 1px solid #555;
@@ -883,6 +894,12 @@ html[xmlns] .clearfix {
   margin-right: 0px;
   margin-top: 7px !important;
   margin-left: 7px;
+}
+
+.ok-button.capture {
+  display: block;
+  margin: 5px auto;
+  width: 120px;
 }
 
 #throbberGraphic.hidden + .message {

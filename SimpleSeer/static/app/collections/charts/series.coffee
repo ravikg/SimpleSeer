@@ -25,7 +25,7 @@ module.exports = class Series extends FilterCollection
       _url = args.url
     else
       _url = "/chart/data/"
-    @url = _url+@id
+    args.url = _url+@id
     @color = args.color || 'blue'
     # Bind view to collection so we know where our widgets live
     if args.view?
@@ -42,14 +42,10 @@ module.exports = class Series extends FilterCollection
     @fetch()
     return @
 
-  setRaw : (response) =>
-  	@raw = response
-  	
   parse: (response) =>
     super(response)
     @subscribe(response.chart)
     clean = @_clean response.data
-    @setRaw(response)
     return clean
 
   fetch: (args={}) =>
@@ -59,7 +55,7 @@ module.exports = class Series extends FilterCollection
     if !args.error?
       args.error = @onError
     args['total'] = true
-    args['params'] = {skip:~@limit,limit:@limit}
+    args['params'] = {skip:~@limit+1,limit:@limit}
     super(args)
 
   onSuccess: (obj, rawJson) =>
@@ -74,7 +70,7 @@ module.exports = class Series extends FilterCollection
     $('.alert_error').remove()
   
   onError: =>
-    SimpleSeer.alert('Connection lost','error')
+    @view.showMessage('error','Error retrieving data')
 
   _clean: (data) =>
     refined = []

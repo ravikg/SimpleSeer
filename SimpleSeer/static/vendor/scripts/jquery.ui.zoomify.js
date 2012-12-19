@@ -23,7 +23,8 @@ $.widget("ui.zoomify", {
     frame.width(image.width / scale);
     frame.height(image.height * self.options.height / scale);
 
-    var frameWidth = frame.css("border-bottom-width").replace(/\D/g, "");
+    var frameWidth = Number(frame.css("border-bottom-width").replace(/[a-z]/ig, ""));
+    frameWidth = Math.floor(frameWidth);
     frameWidth *= 2;
 
     if( self.viewport.x < 0 ) {
@@ -39,13 +40,13 @@ $.widget("ui.zoomify", {
     }    
 
     if( frame.width() + self.viewport.x > image.width - frameWidth ) {
-      var value = image.width - frame.width() - frameWidth;
+      var value = image.width - Math.ceil(frame.width()) - frameWidth;
       self.viewport.x = value;
       frame.css("left", value);
     }
 
     if( frame.height() + self.viewport.y > image.height - frameWidth ) {
-      var value = image.height - frame.height() - frameWidth;
+      var value = image.height - Math.ceil(frame.height()) - frameWidth;
       self.viewport.y = value;
       frame.css("top", value);
     }

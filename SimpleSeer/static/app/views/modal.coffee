@@ -20,6 +20,7 @@ module.exports = class modal extends View
   _callbacks:
     cancel: []
     success: []
+    
   events:
     'click .ok-button':'onSuccess'
     'click .cancel-button':'onCancel'
@@ -27,6 +28,13 @@ module.exports = class modal extends View
   initialize: =>
     @_reset()
     $('#modal').html @render().el
+
+    inputBox = @$el.find("input")
+    inputBox.live("keypress", (e, ui)=>
+      if (e.which == 13) #Enter
+        @onSuccess()
+    )
+      
     super()
     
   _reset:=>
@@ -82,13 +90,16 @@ module.exports = class modal extends View
     #inputMessage
     ele = @$el.find('input')
     if options.inputMessage?
+      ele.attr('value', "");
       ele.attr('placeholder',options.inputMessage)
       ele.show()
     else
       ele.hide()
-    
+
     #show modal
     @$el.show()
+    if options.inputMessage?
+      ele.get(0).focus()
     return
   
   addCallback:(type,func) =>
@@ -104,15 +115,15 @@ module.exports = class modal extends View
       values.action = 'DEFAULT'
   	if !values.userInput?
       values.userInput = @$el.find('input').val()
+    @$el.hide()
     for f in @_callbacks['success']
       f(values)
     @_reset()
-    @$el.hide()
     return
   
   onCancel: =>
+    @$el.hide()
     for f in @_callbacks['cancel']
       f()
     @_reset()
-    @$el.hide()
     return

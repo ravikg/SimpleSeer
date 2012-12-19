@@ -3,7 +3,7 @@ def load_ipython_extension(ipython):
     from .Session import Session
     from .realtime import ChannelManager
     from . import models as M
-    from SimpleCV import Display, Image, ImageSet, Color
+    from SimpleCV import Image, ImageSet, Color
     import zmq
     
     from .util import load_plugins
@@ -24,7 +24,6 @@ def load_ipython_extension(ipython):
             ImageSet = ImageSet,
             Dashboard = M.Dashboard,
             Color = Color,
-            display=Display(displaytype="notebook"), 
             M=M,
             cm=ChannelManager(zmq.Context.instance())),
         interactive=True)

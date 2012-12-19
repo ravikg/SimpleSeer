@@ -5,6 +5,8 @@
 
 module.exports = SeerApplication =
   settings: {}
+  menuItems: {}
+  menuBars: {}
   
   # Set up the application and include the 
   # necessary modules. Configures the page
@@ -37,7 +39,7 @@ module.exports = SeerApplication =
     m = require './collections/measurements'
     @measurements = new m()
     @measurements.fetch()
-
+    @c = require './models/core/context'
     t = require './views/modal'
     @modal = new t()
 
@@ -59,6 +61,16 @@ module.exports = SeerApplication =
   isLoading: =>
     !$('#modal :hidden').length
 
+  addMenuBar: (target, options) ->
+    _lib = require 'views/core/menuBar'
+    _t = $("#"+target)
+    if _t.length > 0
+      if !options.id?
+        options.id = _.uniqueId()
+      @menuBars[options.id] = new _lib(options)
+      _t.html @menuBars[options.id].render().el
+      return @menuBars[options.id]
+
   alert:(message, alert_type) ->
     _anchor = (@settings.ui_alert_anchor || '#messages')
     _set = true
@@ -78,7 +90,13 @@ module.exports = SeerApplication =
           style: "display: none",
           class: "alert alert-"+alert_type
         ).html message
+        clear = $("<div class='closeAlerts'></div>")
+        clear.click((e, ui) =>
+          $(e.currentTarget).parent().remove()
+        )
+        div.append clear
         $(_anchor).append div
+        
         div.show('normal')
 
   # Uses a regular expression to determine

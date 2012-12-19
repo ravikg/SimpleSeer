@@ -51,11 +51,18 @@ module.exports = class tableView extends SubView
       if typeof o == 'object'
         text = o.text
         style = o.style
+        link = o.link
       else
         text = o
+        style = false
+        link = false
       if @isEmpty text
         text = @emptyCell
-      newRow[i] = {text:text,style:style||""}
+      newRow[i] = {text:text}
+      if style
+        newRow[i].style = style
+      if link
+        newRow[i].link = link
     @tableData.push newRow
     
   # Pushes the table data into a hidden
@@ -160,7 +167,7 @@ module.exports = class tableView extends SubView
       for i in @widgetData.editable
         ind = (cols[i])+1
         $('tr td:nth-child('+ind+')',table).each (index) ->
-          _lab = ['high','low']
+          _lab = ['max','min']
           if $(@).find('input').length <=0
             arr = @innerHTML.split(',')
             str = ""
