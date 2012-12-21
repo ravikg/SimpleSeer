@@ -24,19 +24,20 @@ class MetaSchedule():
             # Add the measurement to the frame/measurement grid.  Create the entry if it does not exist
             to_add.append({'frame_id': f.id, 'field_id': field_id})
         
-        to_check = to_add.pop()
-        while to_check:
-            # make sure the current entry is not locked:
-            if self._db.metaschedule.find({'frame_id': to_check['frame_id'], 'semaphore': 1}).count() == 0:
-                self._db.metaschedule.update({'frame_id': to_check['frame_id'], 'semaphore': 0}, {'$push': {field: to_check['field_id']}}, True)
-            else:
-                # otherwise, put it back
-                to_add.append(to_check)
-                
-            if to_add:
-                to_check = to_add.pop()
-            else:
-                to_check = None
+        if to_add:
+            to_check = to_add.pop()
+            while to_check:
+                # make sure the current entry is not locked:
+                if self._db.metaschedule.find({'frame_id': to_check['frame_id'], 'semaphore': 1}).count() == 0:
+                    self._db.metaschedule.update({'frame_id': to_check['frame_id'], 'semaphore': 0}, {'$push': {field: to_check['field_id']}}, True)
+                else:
+                    # otherwise, put it back
+                    to_add.append(to_check)
+                    
+                if to_add:
+                    to_check = to_add.pop()
+                else:
+                    to_check = None
         
     def enqueue_inspection(self, insp_id):
         self.enqueue('inspections', insp_id)
