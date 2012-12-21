@@ -89,11 +89,8 @@ class EdgeWidth(base.InspectionPlugin):
     retVal = []
     if(result[0] is not None and
        result[1] is not None ):
-      ff = M.FrameFeature()
-      
       ewf = EdgeWidthFeature(image,[pt0,pt1],result)
-      ff.setFeature(ewf)
-      retVal.append(ff)
+      retVal.append(ewf)
     
     if( params.has_key("saveFile") ):
       if(result[0] is not None and 

@@ -56,19 +56,19 @@ plugin this, MotionFeature:MotionFeature
 '''
 
   def __call__(self, image):
-    SS = util.get_seer()
-    if len(SS.lastframes) > 1:
+    #SS = util.get_seer()
+    #if len(SS.lastframes) > 1:
+    if M.Frame.objects.count > 1:
       #TODO, find the index of the named camera
-      lastframe = SS.lastframes[-2][0]
+      #lastframe = SS.lastframes[-2][0]
+      lastframe = M.Frame.objects.order_by('-capturetime')[1]
       lastimage = lastframe.image
     else:
       return None
 
     diff = (image - lastimage) + (lastimage - image)
 
-    ff = M.FrameFeature()
     fid = None
     if hasattr(lastframe, "_id"):
       fid = lastframe._id
-    ff.setFeature(MotionFeature(image, np.mean(diff.meanColor()), fid))
-    return [ff]
+    return [MotionFeature(image, np.mean(diff.meanColor()), fid)]
