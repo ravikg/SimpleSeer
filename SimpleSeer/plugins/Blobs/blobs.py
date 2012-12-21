@@ -17,7 +17,7 @@ class Blobs(base.InspectionPlugin):
     @classmethod
     def reverseParams(cls):
         retVal = {}
-        retVal.update({'Color.' + col: 'color' for col in dir(Color)})
+        retVal.update({ str(getattr(Color,col)): 'color' for col in dir(Color) })
         retVal.update({'square': 'shape', 'circle': 'shape', 'rectangle': 'shape'})
         
         return retVal
