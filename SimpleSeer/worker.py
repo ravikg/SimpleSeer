@@ -70,20 +70,27 @@ def backfill_meta(frame_id, inspection_ids, measurement_ids):
 @task()
 def execute_inspections(inspection_ids, gridfs_id):
     # Works like execute_inspection below, but takes multiple inspection ID's
+    
+    # If no inspection_ids, assume all inspections
+    if not inspection_ids:
+        inspection_ids = [ i.id for i in M.Inspection.objects ]
+    
     db = M.Inspection._get_db()
     fs = GridFS(db)
     image = Image(PIL.open(fs.get(gridfs_id)))
     
     features = []
+    
     for insp_id in inspection_ids:
         insp = M.Inspection.objects.get(id=insp_id)
+        
         try:
             features += insp.execute(image)
-            log.info('Finished inspection %s on image %s' % (insp_id, gridfs_id))
+            print 'Finished inspection %s on image %s' % (insp_id, gridfs_id)
         except:
-            log.warn('Inspection Failed')
+            print 'Inspection Failed'
     
-    log.info('Finished inspections on image %s' % gridfs_id)
+    print 'Finished inspections on image %s' % gridfs_id
     return [ f.feature for f in features ]
 
 @task()
