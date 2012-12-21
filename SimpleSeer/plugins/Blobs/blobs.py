@@ -200,10 +200,8 @@ class Blobs(base.InspectionPlugin):
         for b in reversed(blobs): #change sort order to big->small
             c = b.meanColor()
             b.mColor = (int(c[0]),int(c[1]),int(c[2]))
-            ff = M.FrameFeature()
             b.image = image
-            ff.setFeature(b)
-            feats.append(ff)
+            feats.append(b)
 
         if( params.has_key("saveFile") ):
             image.save(params["saveFile"])

@@ -20,12 +20,4 @@ class Face(base.InspectionPlugin):
         if not faces:
             return []
         
-        features = []
-        
-        for f in faces:
-            f.__class__ = FaceFeature
-            ff = M.FrameFeature()
-            ff.setFeature(f)
-            features.append(ff)
-        
-        return features
+        return faces

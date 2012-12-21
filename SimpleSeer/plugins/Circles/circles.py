@@ -42,8 +42,6 @@ class Circles(base.InspectionPlugin):
         distance = -1
         radius = (None,None)
 
-        retVal = []
-
         #we assume all of this is validated and correct 
         if( params.has_key('canny') ):
             canny = params['canny'] 
@@ -65,13 +63,9 @@ class Circles(base.InspectionPlugin):
             if( radius[1] is not None ):
                 fs = FeatureSet(f for f in fs if( f.radius()<=radius[1] ) )
             fs.draw(width=3)
-            for f in fs: # do the conversion from SCV featureset to SimpleSeer featureset
-                ff = M.FrameFeature()
-                ff.setFeature(f)
-                retVal.append(ff)
-
+        
         if( params.has_key("saveFile") ):
             image.save("derp.png")
             image.save(params["saveFile"])
 
-        return retVal 
+        return fs 

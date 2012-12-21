@@ -106,25 +106,35 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
         if not featureset:
             return []
     
+        frameFeatSet = []
+        if type(featureset[0]) == FrameFeature:
+            log.warn('Plugins should return SimpleCV Features.')
+            frameFeatSet = featureset
+        else:
+            for feat in featureset:
+                ff = FrameFeature()
+                ff.setFeature(feat)
+                frameFeatSet.append(ff)
+    
         if "skip" in self.parameters or "limit" in self.parameters:
-            featureset = featureset[self.parameters.get("skip",None):self.parameters.get("limit",None)]
+            frameFeatSet = frameFeatSet[self.parameters.get("skip",None):self.parameters.get("limit",None)]
         
         #we're executing an unsaved inspection, which can have no children
         if not self.id:
-            return featureset
+            return frameFeatSet
         
-        for r in featureset:
+        for r in frameFeatSet:
             r.inspection = self.id
         
         children = self.children
         
         if not children:
-            return featureset
+            return frameFeatSet
         
         if children:
             newparents = deepcopy(parents)
             newparents[self.id] = True
-            for r in featureset:
+            for r in frameFeatSet:
                 f = r.feature
                 f.image = image
                 roi = f.crop()
@@ -132,8 +142,7 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
                 for child in children:    
                     r.children.extend(child.execute(roi, newparents))
                 
-        
-        return featureset
+        return frameFeatSet
 
     def save(self, *args, **kwargs):
         from ..realtime import ChannelManager

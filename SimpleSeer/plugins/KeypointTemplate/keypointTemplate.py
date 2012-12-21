@@ -84,9 +84,7 @@ class KeypointTemplate(base.InspectionPlugin):
         #print f._minRect
         #print type(f._minRect)
         f.contour = [f._minRect[0],f._minRect[1],f._minRect[2],f._minRect[3]]
-        ff = M.FrameFeature()
-        ff.setFeature(f)
-        retVal.append(ff)
+        retVal.append(f)
 
     if( params.has_key("saveFile") ):
       image.save(params["saveFile"])

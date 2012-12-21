@@ -48,13 +48,9 @@ class OCR(base.InspectionPlugin):
     if(len(myWords)==0 or myWords == " \n\n"):
       return []
     
-    ff = M.FrameFeature()
-    ff.setFeature(OCRFeature(image,myWords))
-    retVal.append(ff)
-
     if( params.has_key("saveFile") ):
       image.drawText(myWords,20,20,color=Color.RED)
       image.save(params["saveFile"])
 
-    return retVal 
+    return [OCRFeature(image,myWords)] 
 
