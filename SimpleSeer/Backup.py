@@ -25,16 +25,22 @@ class Backup:
             objClass = M.__getattribute__(exportName)
             for obj in objClass.objects:
                 
-                objDict = obj.__dict__
-                # yaml does not take kindly to mongoengine BaseLists in the _data
-                # so convert them to lists
-                if '_data' in objDict:
-                    for k, v in objDict['_data'].iteritems():
-                        if type(v) == mongoengine.base.BaseList:
-                            objDict['_data'][k] = list(v)
+                okToExport = True
+                if (type(obj) == M.OLAP or type(obj) == M.Chart) and obj.transient:
+                    # Don't export transient olap
+                    okToExport = False
                     
-                # yaml dump does not take kindly to mongoeninge docs, so just store the dict
-                toExport.append({'type': exportName, 'obj': objDict})
+                if okToExport:
+                    objDict = obj.__dict__
+                    # yaml does not take kindly to mongoengine BaseLists in the _data
+                    # so convert them to lists
+                    if '_data' in objDict:
+                        for k, v in objDict['_data'].iteritems():
+                            if type(v) == mongoengine.base.BaseList:
+                                objDict['_data'][k] = list(v)
+                        
+                    # yaml dump does not take kindly to mongoeninge docs, so just store the dict
+                    toExport.append({'type': exportName, 'obj': objDict})
         
         yaml = dump(toExport)
         
