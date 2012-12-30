@@ -76,7 +76,7 @@ module.exports = SeerApplication =
     _context = require 'models/core/context'
     if !@context[name]?
       @context[name] = new _context({name:name})
-      @context[name].fetch()
+      a = @context[name].fetch()
     return @context[name]
 
   alert:(message, alert_type) ->

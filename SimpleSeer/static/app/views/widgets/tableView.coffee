@@ -173,7 +173,14 @@ module.exports = class tableView extends SubView
             arr = @innerHTML.split(',')
             str = ""
             for o, _i in arr
-              str += '<input editFieldIndex="'+i+"."+index+"."+_i+'" placeholder="'+_lab[_i]+'" type="text" value="'+o.trim()+'">'
+              args=
+                editFieldIndex:i+"."+index+"."+_i
+                placeholder:_lab[_i]
+                type:"text"
+                value:o.trim()
+              # TODO: i dont like this outerHTML stuff
+              foo = $('<input/>',args)
+              str += foo[0].outerHTML
             @innerHTML = str
             return
       ind = (cols[@widgetData.editableKey])+1
