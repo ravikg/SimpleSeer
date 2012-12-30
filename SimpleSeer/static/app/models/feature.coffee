@@ -2,7 +2,7 @@ Model = require "./model"
 
 
 module.exports = class Feature extends Model
-
+  
   represent: =>
     plugin = @getPluginMethod(@.get("featuretype"), 'represent')
     if plugin?

@@ -17,8 +17,9 @@ module.exports = class imageView extends SubView
   getRenderData: =>
     md = @model.get('metadata')
     metadata = []
-    for i in application.settings.ui_metadata_keys
-      metadata.push {key:i,val:md[i]}
+    if application.settings.ui_metadata_keys?
+      for i in application.settings.ui_metadata_keys
+        metadata.push {key:i,val:md[i]}
     retVal =
       capturetime_epoch: new moment(parseInt @model.get('capturetime_epoch')).format("M/D/YYYY h:mm a")
       camera: @model.get('camera')
