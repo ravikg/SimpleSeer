@@ -71,7 +71,7 @@ class Frame(SimpleDoc, mongoengine.Document):
     @classmethod
     #which fields we care about for Filter.py
     def filterFieldNames(cls):
-        return ['_id', 'camera', 'capturetime', 'capturetime_epoch', 'metadata', 'notes', 'height', 'width', 'imgfile', 'features', 'results']
+        return ['_id', 'camera', 'capturetime', 'capturetime_epoch', 'metadata', 'notes', 'height', 'width', 'imgfile', 'results']
 
 
     @LazyProperty

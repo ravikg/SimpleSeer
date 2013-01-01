@@ -17,7 +17,6 @@ class MetaSchedule():
         self._db.metaschedule.ensure_index('frame_id')
         self._db.metaschedule.ensure_index('semaphore')
         
-        
     def enqueue(self, field, field_id):
         to_add = []
         for f in Frame.objects:
@@ -48,6 +47,9 @@ class MetaSchedule():
     def enqueue_tolerance(self, meas_id):
         self.enqueue('tolerances', measurement_id)
         
+    def run_async(self):
+        from SimpleSeer.worker import metaschedule_run
+        metaschedule_run.delay()
         
     def run(self):
         from time import sleep
@@ -56,6 +58,7 @@ class MetaSchedule():
         
         scheduled = []
         completed = 0
+        
         while self._db.metaschedule.find().count() > 0 or len(scheduled) > 0:
             
             # If I'm ready to schedule another task and there are tasks to schedule
@@ -97,3 +100,5 @@ class MetaSchedule():
                 # Print progress stats
                 completed += 1
                 log.info('Backfill waiting: %s, scheduled: %s, completed: %s' % (self._db.metaschedule.find().count(), len(scheduled), completed))
+        
+        log.info('Done backfilling')
