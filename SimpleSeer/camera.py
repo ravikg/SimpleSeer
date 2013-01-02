@@ -2,7 +2,6 @@ from glob import glob
 import gevent.queue
 from datetime import datetime
 
-import vpx
 import bson
 import numpy as np
 from SimpleCV import Camera as ScvCamera
@@ -16,6 +15,7 @@ class VideoCamera(object):
     def __init__(self, stillcam, rate,
                  frames_per_clip=10, deadline=vpx.VPX_DL_REALTIME,
                  queue_size=50):
+        import vpx
         self._cam = stillcam
         self._rate = rate
         self._fpc = frames_per_clip
