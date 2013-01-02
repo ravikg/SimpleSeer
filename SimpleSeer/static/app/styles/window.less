@@ -4,7 +4,6 @@
   position: relative;
   top: 6px;
   left: 34px;
-  z-index: 40;
   width: 239px;
   height: auto;
   border: 1px solid #1B1C1E;
@@ -34,8 +33,11 @@
     background: none;
     .tab { width: 100%; }
 
-    /* THIS PART JUST FOR MOCKS */
-    p { padding: 4px; }
+    /* Reset box model for chosen popups. */
+    * {
+      box-sizing: content-box;
+      -moz-box-sizing: content-box;
+    }
   }  
 
   .bar {
