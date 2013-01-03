@@ -13,9 +13,11 @@ from . import models as M
 class VideoCamera(object):
 
     def __init__(self, stillcam, rate,
-                 frames_per_clip=10, deadline=vpx.VPX_DL_REALTIME,
+                 frames_per_clip=10, deadline=None,
                  queue_size=50):
         import vpx
+        if not deadline:
+            deadline = vpx.VPX_DL_REALTIME
         self._cam = stillcam
         self._rate = rate
         self._fpc = frames_per_clip
