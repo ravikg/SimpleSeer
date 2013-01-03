@@ -48,6 +48,14 @@ def backfill_tolerances(measurement_ids, frame_id):
 """
 
 @task()
+def metaschedule_run():
+    from .models.MetaSchedule import MetaSchedule
+    ms = MetaSchedule()
+    print 'Running metaschedule asynchronously'
+    ms.run()
+    print 'Finished async metaschedule run'
+
+@task()
 def backfill_meta(frame_id, inspection_ids, measurement_ids):
     f = M.Frame.objects.get(id = frame_id)
     

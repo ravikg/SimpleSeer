@@ -153,7 +153,10 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
         for i in Inspection.objects:
             if i.name == self.name and i.id != self.id:
                 log.info('trying to save inspections with duplicate names: %s' % i.name)
-                self.name = self.name + '_1'
+                if self.name[-1].isdigit():
+                    self.name = self.name[:-1] + str(int(self.name[-1]) + 1)
+                else:
+                    self.name = self.name + '_1'
         
         super(Inspection, self).save(*args, **kwargs)
         ChannelManager().publish('meta/', self)

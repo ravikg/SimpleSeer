@@ -1,6 +1,8 @@
 import pymongo
 from collections import defaultdict
 
+from SimpleSeer.realtime import ChannelManager    
+    
 from . import Frame, Measurement, Inspection
 from ..worker import backfill_meta
 
@@ -12,11 +14,23 @@ class MetaSchedule():
     _db = None
     _parallel_tasks = 10
     
+    __shared_state = {}
+    
     def __init__(self):
-        self._db = Frame._get_db()
-        self._db.metaschedule.ensure_index('frame_id')
-        self._db.metaschedule.ensure_index('semaphore')
+        self.__dict__ = self.__shared_state
         
+        if not self._db:
+            self._db = Frame._get_db()
+            self._db.metaschedule.ensure_index('frame_id')
+            self._db.metaschedule.ensure_index('semaphore')
+        
+            #from ..Session import Session
+            #s = Session()
+            #self.cleanup(s.procname)
+    
+    #def cleanup(self, procname):
+    #    log.info('Cleaning up metadata for process %s' % procname)
+    #    self._db.remove({'procname': procname}) 
         
     def enqueue(self, field, field_id):
         to_add = []
@@ -48,6 +62,9 @@ class MetaSchedule():
     def enqueue_tolerance(self, meas_id):
         self.enqueue('tolerances', measurement_id)
         
+    def run_async(self):
+        from SimpleSeer.worker import metaschedule_run
+        metaschedule_run.delay()
         
     def run(self):
         from time import sleep
@@ -56,6 +73,7 @@ class MetaSchedule():
         
         scheduled = []
         completed = 0
+        
         while self._db.metaschedule.find().count() > 0 or len(scheduled) > 0:
             
             # If I'm ready to schedule another task and there are tasks to schedule
@@ -96,4 +114,8 @@ class MetaSchedule():
                 
                 # Print progress stats
                 completed += 1
+                
+                ChannelManager().publish('worker/', dict(u='data', m={'waiting': self._db.metaschedule.find().count() + len(scheduled), 'complete': completed}))
                 log.info('Backfill waiting: %s, scheduled: %s, completed: %s' % (self._db.metaschedule.find().count(), len(scheduled), completed))
+        
+        log.info('Done backfilling')
