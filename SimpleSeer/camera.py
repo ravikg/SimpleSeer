@@ -139,7 +139,7 @@ class DirectoryCamera(FrameSource):
     counter = 0
 
     def __init__(self, path):
-	self.filelist = glob(path)
+        self.filelist = sorted(glob(path))
         self.counter = 0
 
     def getImage(self):
