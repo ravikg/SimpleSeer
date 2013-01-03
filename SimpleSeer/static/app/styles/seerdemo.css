@@ -115,19 +115,17 @@ section#controls {
   font-family: monospace;
   font-size: 13px;
   border-radius: 2px;
-  box-shadow: 0px 1px 0px #999, 0px -1px 0 #999;
+  box-shadow: 0px 1px 0px #fff, 0px -1px 0 #fff;
   outline: none;
   border: none;
   background: #fff;
   color: #000;
-  -moz-transition: box-shadow 200ms linear;
+  -moz-transition: box-shadow 100ms linear;
+  -webkit-transition: box-shadow 100ms linear;
 }
 
 #code-input:focus {
-  box-shadow:
-    0px 1px 0px #999,
-    0px -1px 0 #999,
-    0 0 19px #FF4400;
+  box-shadow:  0px 1px 0px #420, 0px -1px 0 #520, 0 0 22px rgba(255, 68, 0,.7)
 }
 
 #code-submit {
