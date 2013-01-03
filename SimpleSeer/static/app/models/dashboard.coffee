@@ -21,6 +21,7 @@ module.exports = class Dashboard extends Model
     
   loadElements: (response) =>
     if @view
+      @view.clearSubviews()
       for widget in response.widgets
         vi = @view.addSubview "widget_"+widget.id, dashboardWidget, '#widget_grid', {append:"widget_"+widget.id,widget:widget}
         vi.render()

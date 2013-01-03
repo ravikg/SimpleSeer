@@ -110,27 +110,21 @@ Handlebars.registerHelper 'featuredetail', (features) ->
   ret += "</tbody></table>"
   new Handlebars.SafeString(ret)
 
-Handlebars.registerHelper 'featurelist', (features = []) ->
+Handlebars.registerHelper 'featurelist', (features = {}) ->
   if !@featureStyles?
     @featureStyles = {}
   if !features
   	features = []
-  unless features.length > 0
-    return new Handlebars.SafeString("")
   ret = ""
-  if features.models[0]
-    keys = features.models[0].tableHeader() || []
-    values = features.models[0].tableData() || []
-    metadata = features.models[0].getPluginMethod(features.models[0].get("featuretype"), 'metadata')
-    if metadata
-      f = metadata()
-    else
-      f = {}
-    for i,o of f
-      _lk = "["+o.labelkey+"] " || ""
+  for fetName,feature of features
+    keys = feature.tableHeader() || []
+    values = feature.tableData() || []
+    metadata = feature.metadata(fetName)
+    for key,val of metadata
+      _lk = "["+val.labelkey+"] " || ""
       ret += '<div style="clear:both;">'
-      ret += '<p class="item-detail"><span class="featureLabel">'+_lk+'</span>' + o.title + ':</p>'
-      ret += '<p class="item-detail-value" style="'+(o.style || @featureStyles[i] || "")+'">'+o.value+'<span>'+o.units+'</span></p>'
+      ret += '<p class="item-detail"><span class="featureLabel">'+_lk+'</span>' + val.title + ':</p>'
+      ret += '<p class="item-detail-value" style="'+(val.style || @featureStyles[key] || "")+'">'+val.value+'<span>'+val.units+'</span></p>'
       ret += "</div>"
   return new Handlebars.SafeString(ret)
 
