@@ -35,7 +35,7 @@ class SimpleSeerProjectTemplate(Template):
             'SimpleSeer', 'static')
         base_esc = base.replace('/', '\\/')
         static = json.dumps({
-                '/': (path(output_dir) / vars['package'] / 'static').abspath()})
+                '/': (path(vars['package']) / 'static')})
 
         vars.update(
             brunch_base=base,
