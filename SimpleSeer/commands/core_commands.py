@@ -207,6 +207,9 @@ def ScrubCommand(self):
             f.imgfile.delete()
             f.imgfile = None
             f.save(False)
+        # This line of code needed to solve fragmentation bug in mongo
+        # Can run very slow when run on large collections
+        M.Frame._get_db().command({'compact': 'fs.files'})
         self.log.info('Purged %d frame files', q_csr.count())
         time.sleep(retention["interval"])
 
