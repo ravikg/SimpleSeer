@@ -41,8 +41,8 @@ module.exports = class Series extends FilterCollection
     @fetch()
     return @
 
-  #comparator: (point) =>
-  #  return point.get('x')
+  comparator: (point) =>
+    return ~point.get('x').unix()
 
   parse: (response) =>
     super(response)
