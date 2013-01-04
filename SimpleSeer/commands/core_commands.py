@@ -12,7 +12,8 @@ class CoreStatesCommand(Command):
     def __init__(self, subparser):
         subparser.add_argument('program')
         subparser.add_argument('--disable-pyro', action='store_true')
-
+        subparser.add_argument('--procname', default='corecommand', help='give each process a name for tracking within session')
+        
     def run(self):
         from SimpleSeer.states import Core
         import Pyro4
@@ -44,6 +45,7 @@ class CoreCommand(CoreStatesCommand):
     def __init__(self, subparser):
         subparser.add_argument('--disable-pyro', action='store_true')
         subparser.add_argument('--memprofile', default=0)
+        subparser.add_argument('--procname', default='core', help='give each process a name for tracking within session')
 
     def run(self):
         self.options.program = self.session.statemachine or 'states.py'
@@ -87,34 +89,38 @@ def OlapCommand(self):
     ro = RealtimeOLAP()
     ro.monitorRealtime()
 
-@Command.simple(use_gevent=True, remote_seer=True)
-def WebCommand(self):
-    'Run the web server'
-    from SimpleSeer.Web import WebServer, make_app
-    from SimpleSeer import models as M
-    from pymongo import Connection, DESCENDING, ASCENDING
-    from SimpleSeer.models.Inspection import Inspection, Measurement
+class WebCommand(Command):
+    
+    def __init__(self, subparser):
+        subparser.add_argument('--procname', default='web', help='give each process a name for tracking within session')
 
-    # Plugins must be registered for queries
-    Inspection.register_plugins('seer.plugins.inspection')
-    Measurement.register_plugins('seer.plugins.measurement')
+    def run(self):
+        'Run the web server'
+        from SimpleSeer.Web import WebServer, make_app
+        from SimpleSeer import models as M
+        from pymongo import Connection, DESCENDING, ASCENDING
+        from SimpleSeer.models.Inspection import Inspection, Measurement
 
-    dbName = self.session.database
-    if not dbName:
-        dbName = 'default'
-    db = Connection()[dbName]
-    # Ensure indexes created for filterable fields
-    # TODO: should make this based on actual plugin params or filter data
-    try:
-        db.frame.ensure_index([('results', 1)])
-        db.frame.ensure_index([('results.measurement_name', 1)])
-        db.frame.ensure_index([('results.numeric', 1)])
-        db.frame.ensure_index([('results.string', 1)])
-    except:
-        self.log.info('Could not create indexes')
-        
-    web = WebServer(make_app())
-    web.run_gevent_server()
+        # Plugins must be registered for queries
+        Inspection.register_plugins('seer.plugins.inspection')
+        Measurement.register_plugins('seer.plugins.measurement')
+
+        dbName = self.session.database
+        if not dbName:
+            dbName = 'default'
+        db = Connection()[dbName]
+        # Ensure indexes created for filterable fields
+        # TODO: should make this based on actual plugin params or filter data
+        try:
+            db.frame.ensure_index([('results', 1)])
+            db.frame.ensure_index([('results.measurement_name', 1)])
+            db.frame.ensure_index([('results.numeric', 1)])
+            db.frame.ensure_index([('results.string', 1)])
+        except:
+            self.log.info('Could not create indexes')
+            
+        web = WebServer(make_app())
+        web.run_gevent_server()
 
 @Command.simple(use_gevent=True, remote_seer=True)
 def OPCCommand(self):
@@ -263,7 +269,6 @@ class WorkerCommand(Command):
         print " ".join(cmd)
         subprocess.call(cmd)
         
-        
 class MetaCommand(Command):
     
     def __init__(self, subparser):
@@ -274,6 +279,8 @@ class MetaCommand(Command):
         subparser.add_argument('--clean', help="Delete existing metadata before importing", action='store_true')
         subparser.add_argument('--skipbackfill', help="Do not run a backfill after importing", action='store_true')
         
+        subparser.add_argument('--procname', default='meta', help='give each process a name for tracking within session')
+
         
     def run(self):
         from SimpleSeer.Backup import Backup

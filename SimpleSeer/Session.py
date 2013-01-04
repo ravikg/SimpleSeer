@@ -29,7 +29,7 @@ class Session():
     __shared_state = dict(
         _config = {})
     
-    def __init__(self, yaml_config_dir = ''):
+    def __init__(self, yaml_config_dir = '', procname='simpleseer'):
         self.__dict__ = self.__shared_state
         
         if not yaml_config_dir:
@@ -53,7 +53,9 @@ class Session():
             config_dict.update(alt_config_dict)
         
         self.configure(config_dict)
-
+        if not self.procname:
+            self.procname = procname
+        
     def configure(self, d):
         from .models.base import SONScrub
         self._config = d
