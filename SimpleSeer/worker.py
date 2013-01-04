@@ -57,8 +57,16 @@ def metaschedule_run():
 
 @task()
 def backfill_meta(frame_id, inspection_ids, measurement_ids):
-    f = M.Frame.objects.get(id = frame_id)
+    from SeerCloud.OLAPUtils import RealtimeOLAP
+    from SeerCloud.models.OLAP import OLAP
+    from .Filter import Filter
     
+    f = M.Frame.objects.get(id = frame_id)
+    # Need the filter format for realtime publishing
+    ro = RealtimeOLAP()
+    ff = Filter()
+    allFilters = [{'type': 'frame', 'name': 'id', 'eq': frame_id}]
+    res = ff.getFrames(allFilters)[1]
     for i_id in inspection_ids:
         i = M.Inspection.objects.get(id=i_id)
         
@@ -69,6 +77,14 @@ def backfill_meta(frame_id, inspection_ids, measurement_ids):
         print m_id
         m = M.Measurement.objects.get(id=m_id)
         m.execute(f, f.features)
+        
+        # Publish the charts
+        charts = m.findCharts()
+        for chart in charts:
+            olap = OLAP.objects(name=chart.name)[0]
+            data = ff.flattenFrame(res, olap.olapFilter)
+            data = chart.mapData(data)
+            ro.sendMessage(chart, data)
         
     f.save()    
     return f.id

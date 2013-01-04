@@ -313,6 +313,20 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
                     m = Measurement.objects.get(id=a)
                     m.updateDependencies(visited)
         
+    def findCharts(self):
+        # Get the list of charts that show data from this measurement
+        from SeerCloud.models.OLAP import OLAP
+        from SeerCloud.models.Chart import Chart
+        
+        olaps = OLAP.objects(olapFilter__type=self.name)
+        charts = []
+        
+        for o in olaps:
+            charts += Chart.objects(olap=o.name)
+        
+        return charts     
+            
+    
     def __repr__(self):
         return "<Measurement: " + str(self.inspection) + " " + self.method + " " + str(self.featurecriteria) + ">"
             
@@ -328,7 +342,8 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
             return True            
         else:
             return False
-            
+
+    
 
 class MeasurementError(Exception):
     def __init__(self, value):
