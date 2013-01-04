@@ -519,8 +519,15 @@ def ping():
 @route('/settings', methods=['GET', 'POST'])
 @util.jsonify
 def settings():
+    util.ensure_plugins()
     text = Session().get_config()
-    return {"settings": text }
+    plugins = {'Inspection':[],'Measurement':[],'Watcher':[]}
+    for i in plugins:
+        try:
+            plugins[i] =  [o for o in eval("M.{0}._plugins".format(i))]
+        except AttributeError:
+            pass    
+    return {"settings": text, "plugins":plugins }
 
 @route('/start', methods=['GET', 'POST'])
 def start():

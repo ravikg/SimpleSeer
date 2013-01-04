@@ -113,20 +113,19 @@ section#controls {
   width: 538px;
   height: 26px;
   font-family: monospace;
+  font-size: 13px;
   border-radius: 2px;
-  box-shadow: 0px 1px 0px #999, 0px -1px 0 #999;
+  box-shadow: 0px 1px 0px #fff, 0px -1px 0 #fff;
   outline: none;
   border: none;
   background: #fff;
   color: #000;
-  -moz-transition: box-shadow 200ms linear;
+  -moz-transition: box-shadow 100ms linear;
+  -webkit-transition: box-shadow 100ms linear;
 }
 
 #code-input:focus {
-  box-shadow:
-    0px 1px 0px #999,
-    0px -1px 0 #999,
-    0 0 19px #FF4400;
+  box-shadow:  0px 1px 0px #420, 0px -1px 0 #520, 0 0 22px rgba(255, 68, 0,.7)
 }
 
 #code-submit {
@@ -137,11 +136,17 @@ section#controls {
   height: 28px;
   border: none;
   border-radius: 3px;
-  background: none repeat scroll 0 0 #0174B5;
+  background: #0174B5;
   box-shadow: 0 -1px 0 #020D11, 0 1px 0 #5E6268, 0 1px 0 #0098DB inset, 0 -1px 0 #004865 inset;
   color: white;
   cursor: pointer;
   font-weight: bold;
   text-align: center;
   text-shadow: 0px 1px 0px #004865;
+}
+
+#code-submit.inactive {
+  text-shadow: 0px 1px 0px black;
+  background: #888;
+  box-shadow: 0 -1px 0 #020D11, 0 1px 0 #5E6268, 0 1px 0 #CCC inset, 0 -1px 0 #444 inset;
 }

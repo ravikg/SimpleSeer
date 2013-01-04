@@ -3,6 +3,9 @@ Model = require "./model"
 
 module.exports = class Feature extends Model
   
+  addTrait: (trait) =>
+    @data[trait.measurement_name] = trait.numeric
+  
   represent: =>
     plugin = @getPluginMethod(@.get("featuretype"), 'represent')
     if plugin?
