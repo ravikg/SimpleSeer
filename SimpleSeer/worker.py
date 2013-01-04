@@ -62,11 +62,8 @@ def backfill_meta(frame_id, inspection_ids, measurement_ids):
     from .Filter import Filter
     
     f = M.Frame.objects.get(id = frame_id)
-    # Need the filter format for realtime publishing
-    ro = RealtimeOLAP()
-    ff = Filter()
-    allFilters = [{'type': 'frame', 'name': 'id', 'eq': frame_id}]
-    res = ff.getFrames(allFilters)[1]
+    print frame_id
+    
     for i_id in inspection_ids:
         i = M.Inspection.objects.get(id=i_id)
         
@@ -74,19 +71,28 @@ def backfill_meta(frame_id, inspection_ids, measurement_ids):
             f.features += i.execute(f.image)
             
     for m_id in measurement_ids:
-        print m_id
         m = M.Measurement.objects.get(id=m_id)
         m.execute(f, f.features)
+    
+    f.save()    
+    
+    # Need the filter format for realtime publishing
+    ro = RealtimeOLAP()
+    ff = Filter()
+    allFilters = [{'type': 'frame', 'name': 'id', 'eq': frame_id}]
+    res = ff.getFrames(allFilters)[1]
+    
+    for m_id in measurement_ids:
+        m = M.Measurement.objects.get(id=m_id)
         
         # Publish the charts
         charts = m.findCharts()
         for chart in charts:
-            olap = OLAP.objects(name=chart.name)[0]
+            olap = OLAP.objects.get(name=chart.olap)
             data = ff.flattenFrame(res, olap.olapFilter)
             data = chart.mapData(data)
             ro.sendMessage(chart, data)
-        
-    f.save()    
+    
     return f.id
     
     
