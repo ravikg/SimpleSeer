@@ -24,13 +24,13 @@ class MetaSchedule():
             self._db.metaschedule.ensure_index('frame_id')
             self._db.metaschedule.ensure_index('semaphore')
         
-            #from ..Session import Session
-            #s = Session()
-            #self.cleanup(s.procname)
+            from ..Session import Session
+            s = Session()
+            self.cleanup(s.procname)
     
-    #def cleanup(self, procname):
-    #    log.info('Cleaning up metadata for process %s' % procname)
-    #    self._db.remove({'procname': procname}) 
+    def cleanup(self, procname):
+        log.info('Cleaning up metadata for process %s' % procname)
+        self._db.metaschedule.remove({'semaphore': 1}) 
         
     def enqueue(self, field, field_id):
         to_add = []
