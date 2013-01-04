@@ -129,7 +129,7 @@ class Frame(SimpleDoc, mongoengine.Document):
             img = self._imgcache
             if self.clip_id is None:
                 img.getPIL().save(s, "jpeg", quality = 100)
-                self.imgfile.replace(s.getvalue(), content_type = "image/jpg")
+                self.imgfile.replace(s.getvalue(), content_type = "image/jpeg")
           
             if len(img._mLayers):
                 if len(img._mLayers) > 1:
