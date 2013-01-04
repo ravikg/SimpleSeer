@@ -162,8 +162,8 @@ section#controls {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  -moz-transition: background 100ms linear, box-shadow 100ms linear;
-  -webkit-transition: background 100ms linear, box-shadow 100ms linear;  
+  -moz-transition: background 300ms linear, box-shadow 300ms linear;
+  -webkit-transition: background 300ms linear, box-shadow 300ms linear;  
 }
 
 #statusBar #light.green {
