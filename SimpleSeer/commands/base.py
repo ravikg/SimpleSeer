@@ -13,8 +13,8 @@ class Command(object):
 
     def __init__(self, subparser):
         '''Add any options here'''
-        subparser.add_argument('--procname', default='sightmachine', help='give each process a name for tracking within session')
-
+        pass
+        
     def configure(self, options):
         self.options = options
         if self.use_gevent:
