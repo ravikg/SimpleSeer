@@ -80,35 +80,37 @@ def backfill_meta(frame_id, inspection_ids, measurement_ids):
     f = M.Frame.objects.get(id = frame_id)
     print frame_id
     
-    for i_id in inspection_ids:
-        i = M.Inspection.objects.get(id=i_id)
-        
-        if not i.parent:
-            f.features += i.execute(f.image)
+    # Scrubber may clear old images from frames, so can't backfill on those
+    if f.image:
+        for i_id in inspection_ids:
+            i = M.Inspection.objects.get(id=i_id)
             
-    for m_id in measurement_ids:
-        m = M.Measurement.objects.get(id=m_id)
-        m.execute(f, f.features)
-    
-    f.save()    
-    
-    # Need the filter format for realtime publishing
-    ro = RealtimeOLAP()
-    ff = Filter()
-    allFilters = [{'type': 'frame', 'name': 'id', 'eq': frame_id}]
-    res = ff.getFrames(allFilters)[1]
-    
-    for m_id in measurement_ids:
-        m = M.Measurement.objects.get(id=m_id)
+            if not i.parent:
+                f.features += i.execute(f.image)
+                
+        for m_id in measurement_ids:
+            m = M.Measurement.objects.get(id=m_id)
+            m.execute(f, f.features)
         
-        # Publish the charts
-        charts = m.findCharts()
-        for chart in charts:
-            olap = OLAP.objects.get(name=chart.olap)
-            data = ff.flattenFrame(res, olap.olapFilter)
-            data = chart.mapData(data)
-            ro.sendMessage(chart, data)
-    
+        f.save()    
+        
+        # Need the filter format for realtime publishing
+        ro = RealtimeOLAP()
+        ff = Filter()
+        allFilters = [{'type': 'frame', 'name': 'id', 'eq': frame_id}]
+        res = ff.getFrames(allFilters)[1]
+        
+        for m_id in measurement_ids:
+            m = M.Measurement.objects.get(id=m_id)
+            
+            # Publish the charts
+            charts = m.findCharts()
+            for chart in charts:
+                olap = OLAP.objects.get(name=chart.olap)
+                data = ff.flattenFrame(res, olap.olapFilter)
+                data = chart.mapData(data)
+                ro.sendMessage(chart, data)
+        
     return f.id
     
     
