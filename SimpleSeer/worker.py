@@ -54,6 +54,22 @@ def metaschedule_run():
     print 'Running metaschedule asynchronously'
     ms.run()
     print 'Finished async metaschedule run'
+    
+@task()
+def metaschedule_run_complete(insps, meass):
+    from .models.MetaSchedule import MetaSchedule
+    ms = MetaSchedule()
+    
+    print 'Async scheduling tasks'
+    for insp in insps:
+        ms.enqueue_inspection(insp)
+    for meas in meass:
+        ms.enqueue_measurement(meas)
+    print 'Running metaschedule asynchronously'
+    ms.run()
+    print 'Finished async metaschedule run'
+    
+    
 
 @task()
 def backfill_meta(frame_id, inspection_ids, measurement_ids):

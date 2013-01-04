@@ -62,6 +62,10 @@ class MetaSchedule():
     def enqueue_tolerance(self, meas_id):
         self.enqueue('tolerances', measurement_id)
         
+    def run_complete_async(self, insps, meass):
+        from SimpleSeer.worker import metaschedule_run_complete
+        metaschedule_run_complete.delay(insps, meass)
+        
     def run_async(self):
         from SimpleSeer.worker import metaschedule_run
         metaschedule_run.delay()
