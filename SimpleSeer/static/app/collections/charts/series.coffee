@@ -41,6 +41,9 @@ module.exports = class Series extends FilterCollection
     @fetch()
     return @
 
+  comparator: (point) =>
+    return point.get('x')
+
   parse: (response) =>
     super(response)
     @subscribe(response.chart)
