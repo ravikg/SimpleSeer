@@ -26,7 +26,10 @@ class Command(object):
         # These imports need to happen *after* monkey patching
         from SimpleSeer.Session import Session
         from SimpleSeer import models as M
-        self.session = Session(options.config, options.procname)
+        try:
+            self.session = Session(options.config, options.procname)
+        except:
+            self.session = Session(options.config, 'simpleseer')
         if self.remote_seer:
             from SimpleSeer.SimpleSeer import SimpleSeer as SS
             SS(disable=True)
