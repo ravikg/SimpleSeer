@@ -35,8 +35,9 @@ class MetaSchedule():
     def enqueue(self, field, field_id):
         to_add = []
         for f in Frame.objects:
-            # Add the measurement to the frame/measurement grid.  Create the entry if it does not exist
-            to_add.append({'frame_id': f.id, 'field_id': field_id})
+            if f.imgfile:
+                # Add the measurement to the frame/measurement grid.  Create the entry if it does not exist
+                to_add.append({'frame_id': f.id, 'field_id': field_id})
         
         if to_add:
             to_check = to_add.pop()
