@@ -81,7 +81,7 @@ def backfill_meta(frame_id, inspection_ids, measurement_ids):
     print frame_id
     
     # Scrubber may clear old images from frames, so can't backfill on those
-    if f.image:
+    if f.imgfile:
         for i_id in inspection_ids:
             i = M.Inspection.objects.get(id=i_id)
             
@@ -110,6 +110,8 @@ def backfill_meta(frame_id, inspection_ids, measurement_ids):
                 data = ff.flattenFrame(res, olap.olapFilter)
                 data = chart.mapData(data)
                 ro.sendMessage(chart, data)
+    else:
+        print 'no image on frame.  skipping'
         
     return f.id
     
