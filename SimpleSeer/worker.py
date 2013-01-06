@@ -54,23 +54,65 @@ def metaschedule_run():
     print 'Running metaschedule asynchronously'
     ms.run()
     print 'Finished async metaschedule run'
+    
+@task()
+def metaschedule_run_complete(insps, meass):
+    from .models.MetaSchedule import MetaSchedule
+    ms = MetaSchedule()
+    
+    print 'Async scheduling tasks'
+    for insp in insps:
+        ms.enqueue_inspection(insp)
+    for meas in meass:
+        ms.enqueue_measurement(meas)
+    print 'Running metaschedule asynchronously'
+    ms.run()
+    print 'Finished async metaschedule run'
+    
+    
 
 @task()
 def backfill_meta(frame_id, inspection_ids, measurement_ids):
-    f = M.Frame.objects.get(id = frame_id)
+    from SeerCloud.OLAPUtils import RealtimeOLAP
+    from SeerCloud.models.OLAP import OLAP
+    from .Filter import Filter
     
-    for i_id in inspection_ids:
-        i = M.Inspection.objects.get(id=i_id)
-        
-        if not i.parent:
-            f.features += i.execute(f.image)
+    f = M.Frame.objects.get(id = frame_id)
+    print frame_id
+    
+    # Scrubber may clear old images from frames, so can't backfill on those
+    if f.imgfile:
+        for i_id in inspection_ids:
+            i = M.Inspection.objects.get(id=i_id)
             
-    for m_id in measurement_ids:
-        print m_id
-        m = M.Measurement.objects.get(id=m_id)
-        m.execute(f, f.features)
+            if not i.parent:
+                f.features += i.execute(f.image)
+                
+        for m_id in measurement_ids:
+            m = M.Measurement.objects.get(id=m_id)
+            m.execute(f, f.features)
         
-    f.save()    
+        f.save()    
+        
+        # Need the filter format for realtime publishing
+        ro = RealtimeOLAP()
+        ff = Filter()
+        allFilters = [{'type': 'frame', 'name': 'id', 'eq': frame_id}]
+        res = ff.getFrames(allFilters)[1]
+        
+        for m_id in measurement_ids:
+            m = M.Measurement.objects.get(id=m_id)
+            
+            # Publish the charts
+            charts = m.findCharts()
+            for chart in charts:
+                olap = OLAP.objects.get(name=chart.olap)
+                data = ff.flattenFrame(res, olap.olapFilter)
+                data = chart.mapData(data)
+                ro.sendMessage(chart, data)
+    else:
+        print 'no image on frame.  skipping'
+        
     return f.id
     
     

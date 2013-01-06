@@ -2,7 +2,6 @@ from glob import glob
 import gevent.queue
 from datetime import datetime
 
-import vpx
 import bson
 import numpy as np
 from SimpleCV import Camera as ScvCamera
@@ -14,8 +13,11 @@ from . import models as M
 class VideoCamera(object):
 
     def __init__(self, stillcam, rate,
-                 frames_per_clip=10, deadline=vpx.VPX_DL_REALTIME,
+                 frames_per_clip=10, deadline=None,
                  queue_size=50):
+        import vpx
+        if not deadline:
+            deadline = vpx.VPX_DL_REALTIME
         self._cam = stillcam
         self._rate = rate
         self._fpc = frames_per_clip
@@ -137,7 +139,7 @@ class DirectoryCamera(FrameSource):
     counter = 0
 
     def __init__(self, path):
-	self.filelist = glob(path)
+        self.filelist = sorted(glob(path))
         self.counter = 0
 
     def getImage(self):

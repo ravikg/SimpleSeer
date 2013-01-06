@@ -13,7 +13,8 @@ class Command(object):
 
     def __init__(self, subparser):
         '''Add any options here'''
-
+        pass
+        
     def configure(self, options):
         self.options = options
         if self.use_gevent:
@@ -25,14 +26,17 @@ class Command(object):
         # These imports need to happen *after* monkey patching
         from SimpleSeer.Session import Session
         from SimpleSeer import models as M
-        self.session = Session(options.config)
+        try:
+            self.session = Session(options.config, options.procname)
+        except:
+            self.session = Session(options.config, 'simpleseer')
         if self.remote_seer:
             from SimpleSeer.SimpleSeer import SimpleSeer as SS
             SS(disable=True)
         if self.session.mongo.get('is_slave'):
             M.base.SimpleDoc.meta['auto_create_index'] = False
         if options.profile_heap: self._start_profile_heap()
-
+        
     def run(self):
         '''Actually run the command'''
         raise NotImplementedError, 'run'

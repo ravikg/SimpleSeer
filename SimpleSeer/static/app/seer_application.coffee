@@ -40,7 +40,6 @@ module.exports = SeerApplication =
     m = require 'collections/measurements'
     @measurements = new m()
     @measurements.fetch()
-    @c = require 'models/core/context'
     t = require 'views/core/modal'
     @modal = new t()
 
