@@ -42,7 +42,7 @@ module.exports = class Series extends FilterCollection
     return @
 
   comparator: (point) =>
-    return ~point.get('x').unix()
+    return ~point.attributes.x.unix()
 
   parse: (response) =>
     super(response)
@@ -77,7 +77,9 @@ module.exports = class Series extends FilterCollection
   _clean: (data) =>
     refined = []
     for d in data
-      refined.push @_formatChartPoint d
+      point = @_formatChartPoint d
+      if point.attributes != {}
+        refined.push point
     return refined
 
   _drawData: =>
@@ -152,14 +154,22 @@ module.exports = class Series extends FilterCollection
   receive: (data) =>
     for o in data.data.m.data
       p = @_formatChartPoint o
-      @shiftStack()
-      @view.addPoint p, @id
-      @add @_formatChartPoint o
-      @view.hasData = true
+      if @inStack(p)
+        #@shiftStack()
+        @add p
+        @_drawData()
+        #@view.addPoint p, @id
+        @view.hasData = true
     if @view.hasData && @view.hasMessage
       @view.hideMessage()
     return
-    
+
+  inStack:(point) =>
+    @sort()
+    if @length == 0
+      return true
+    return point.x > @at(0).get("x")
+  
     ###
     dm = @view.model.attributes.dataMap
     mdm = @view.model.attributes.metaMap
