@@ -209,7 +209,12 @@ def ScrubCommand(self):
             f.save(False)
         # This line of code needed to solve fragmentation bug in mongo
         # Can run very slow when run on large collections
-        M.Frame._get_db().command({'compact': 'fs.files'})
+        db = M.Frame._get_db()
+        if 'fs.files' in db.collection_names():
+            db.command({'compact': 'fs.files'})
+        if 'fs.chunks' in db.collection_names():
+            db.command({'compact': 'fs.chunks'})
+        
         self.log.info('Purged %d frame files', q_csr.count())
         time.sleep(retention["interval"])
 
