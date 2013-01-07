@@ -1,1 +1,1 @@
-from .blobs import Blobs, BlobCount, BlobRadius, BlobLength, BlobMeanGrayColor
+from .blobs import Blobs, BlobCount, BlobRadius, BlobLength
