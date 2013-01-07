@@ -208,6 +208,14 @@ class Blobs(base.InspectionPlugin):
 
         return feats
 
+class BlobMeanGrayColor(base.MeasurementPlugin):
+    # Smash the color data into a single average measurement across all blobs
+    # Assumes grayscale (otherwise will only give mean of red component)
+    # Basically an average depth measure for blobs captured from the Kinect
+    
+    def __call__(self, frame, featureset):
+        return [float(np.mean([ f.featuredata['mColor'][0] for f in featureset if f.featuretype == 'Blob']))]
+
 class BlobLength(base.MeasurementPlugin):
     """
     Measurement(name =  "blob_length",
@@ -225,11 +233,12 @@ class BlobLength(base.MeasurementPlugin):
 class BlobCount(base.MeasurementPlugin):
 
     def __call__(self, frame, featureset):
-        return [len(featureset)]
+        blob_features = [ f for f in featureset if f.featuretype == 'Blob']
+        return [len(blob_features)]
 
 
 class BlobRadius(base.MeasurementPlugin):
     
     def __call__(self, frame, featureset):
-        return [f.feature.radius() for f in featureset]
-
+        return [f.feature.radius() for f in featureset  if f.featuretype == 'Blob']
+        
