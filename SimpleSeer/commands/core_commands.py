@@ -204,9 +204,14 @@ def ScrubCommand(self):
         q_csr = q_csr.order_by('-capturetime')
         q_csr = q_csr.skip(retention['maxframes'])
         for f in q_csr:
+            # clean out the fs.files and .chunks
             f.imgfile.delete()
             f.imgfile = None
-            f.save(False)
+        
+            if retention['purge']:
+                f.delete()
+            else:
+                f.save(False)
         # This line of code needed to solve fragmentation bug in mongo
         # Can run very slow when run on large collections
         db = M.Frame._get_db()
