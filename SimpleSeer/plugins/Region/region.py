@@ -16,8 +16,8 @@ class Region(base.InspectionPlugin):
         retVal = []
         mask = Image((image.width,image.height))
         if( params.has_key('w') and  params.has_key('h') and params.has_key('x') and params.has_key('y') ): #rectangle
-            if( params['x'] + params['w'] < image.width and
-                params['y'] + params['h'] < image.height and
+            if( params['x'] + params['w'] <= image.width and
+                params['y'] + params['h'] <= image.height and
                 params['y'] >= 0 and 
                 params['x'] >= 0 ):
                 mask.drawRectangle(params['x'],params['y'],params['w'],params['h'],width=-1,color=Color.WHITE)
@@ -34,8 +34,8 @@ class Region(base.InspectionPlugin):
                     retVal = [ff]
   
         elif( params.has_key('x') and  params.has_key('y') and params.has_key('r') ): # circle
-            if( params['x'] + params['r'] < image.width and
-                params['y'] + params['r'] < image.height and 
+            if( params['x'] + params['r'] <= image.width and
+                params['y'] + params['r'] <= image.height and 
                 params['x'] - params['r'] >= 0 and 
                 params['y'] - params['r'] >= 0 ):
 
