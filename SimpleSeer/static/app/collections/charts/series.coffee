@@ -41,8 +41,11 @@ module.exports = class Series extends FilterCollection
     @fetch()
     return @
 
-  comparator: (point) =>
-    return ~point.attributes.x.unix()
+  comparator: (point,point2) =>
+    if point2.attributes.x.unix() > point.attributes.x.unix()
+      return -1
+    else
+      return 1
 
   parse: (response) =>
     super(response)
@@ -156,7 +159,7 @@ module.exports = class Series extends FilterCollection
       p = @_formatChartPoint o
       if @inStack(p)
         #@shiftStack()
-        @add p
+        @add p, {silent: true}
         @_drawData()
         #@view.addPoint p, @id
         @view.hasData = true
@@ -165,7 +168,7 @@ module.exports = class Series extends FilterCollection
     return
 
   inStack:(point) =>
-    @sort()
+    #@sort()
     if @length == 0
       return true
     return point.x > @at(0).get("x")
