@@ -146,18 +146,32 @@ module.exports = class Series extends FilterCollection
   
   shiftStack: (silent=false)=>
     #TODO: remove against, grab from filter
+    shifted = 0
+    #against = new moment().subtract('days',5000)
+    while @_needShift()
+      @shift {silent:silent}
+      shifted++      
+    return shifted
+
+  _needShift: (offset=0)=>
+    #TODO: remove against, grab from filter
     against = new moment().subtract('days',5000)
     if @xAxis.type == "datetime"
-      while @.at(0) && @.at(0).attributes.x < against
-        @shift {silent:silent}
-    while @models.length - @view.maxPointSize >= silent
-      @shift {silent:silent}
-    return
+      if @.at(0) && @.at(0).attributes.x < against
+        return true
+    if @models.length - @view.maxPointSize >= offset
+      return true
+    return false
+    
   
   receive: (data) =>
+    #@shiftStack()
+    console.info 'RECEIVE'
     for o in data.data.m.data
+      console.info 'POINT RUNNING...'
       p = @_formatChartPoint o
       if @inStack(p)
+        console.log 'good instack'
         #@shiftStack()
         @add p, {silent: true}
         @_drawData()
@@ -166,12 +180,12 @@ module.exports = class Series extends FilterCollection
     if @view.hasData && @view.hasMessage
       @view.hideMessage()
     return
-
+    
   inStack:(point) =>
     #@sort()
     if @length == 0
       return true
-    return point.x > @at(0).get("x")
+    return point.x > @at(0).get("x") or @_needShift(-1)
   
     ###
     dm = @view.model.attributes.dataMap
