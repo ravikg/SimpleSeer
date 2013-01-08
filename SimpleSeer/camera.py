@@ -97,6 +97,9 @@ class StillCamera(object):
             cam = Scanner(id, cinfo)
         elif 'directory' in cinfo:
             cam = DirectoryCamera(cinfo['directory'])
+        elif 'avt' in cinfo:
+            from SimpleCV import AVTCamera
+            cam = AVTCamera(cinfo['id'], cinfo)
         elif 'kinect' in cinfo:
             cam = Kinect()
             cam._usedepth = 0
