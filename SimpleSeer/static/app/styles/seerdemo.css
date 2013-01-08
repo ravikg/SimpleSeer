@@ -109,8 +109,8 @@ section#controls {
 #code-input {
   position: absolute;
   top: 23px;
-  left: 38px;
-  width: 538px;
+  left: 17px;
+  width: 559px;
   height: 26px;
   font-family: monospace;
   font-size: 13px;
@@ -132,7 +132,7 @@ section#controls {
   position: absolute;
   left: 593px;
   top: 22px;
-  width: 105px;
+  width: 107px;
   height: 28px;
   border: none;
   border-radius: 3px;

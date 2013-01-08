@@ -99,12 +99,12 @@ module.exports = SeerApplication =
         ).html message
         clear = $("<div class='closeAlerts'></div>")
         clear.click((e, ui) =>
-          $(e.currentTarget).parent().remove()
+          $(e.currentTarget).parent().fadeOut(-> $(this).remove())
         )
         div.append clear
         $(_anchor).append div
         
-        div.show('normal')
+        div.fadeIn()
 
   # Uses a regular expression to determine
   # if the user is on a mobile browser or not.
