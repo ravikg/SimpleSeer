@@ -61,6 +61,16 @@ def sio(path):
 def index():
     return render_template("index.html",foo='bar')
 
+@route('/reset', methods=['GET'])
+def reset():
+    from .Backup import Backup
+    log.info('about to run cleanup')
+    M.Frame._get_db().metaschedule.remove()
+    Backup.importAll(clean=True)
+    log.info('cleanup done')
+    return 'Meta objects removed.  Frames being cleaned in background'
+    
+
 @route('/log/<type>', methods=['POST'])
 def jsLogger(type):
     levels = {"CRITICAL":50, "ERROR":40, "WARNING":30, "INFO":20, "DEBUG":10}
