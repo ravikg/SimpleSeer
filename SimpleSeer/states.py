@@ -257,6 +257,7 @@ class Core(object):
                     m.execute(frame, features)
             
             results_complete += new_ready_results
+            time.sleep(0.2)
                 
     @property
     def results(self):
