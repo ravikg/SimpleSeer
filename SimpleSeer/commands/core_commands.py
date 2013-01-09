@@ -100,15 +100,13 @@ class WebCommand(Command):
         from SimpleSeer import models as M
         from pymongo import Connection, DESCENDING, ASCENDING
         from SimpleSeer.models.Inspection import Inspection, Measurement
+	import mongoengine
 
         # Plugins must be registered for queries
         Inspection.register_plugins('seer.plugins.inspection')
         Measurement.register_plugins('seer.plugins.measurement')
 
-        dbName = self.session.database
-        if not dbName:
-            dbName = 'default'
-        db = Connection()[dbName]
+        db = mongoengine.connection.get_db() 
         # Ensure indexes created for filterable fields
         # TODO: should make this based on actual plugin params or filter data
         try:
