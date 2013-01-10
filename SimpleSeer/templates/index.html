@@ -37,7 +37,24 @@
     {% endblock %}
 
     {% block content %}
-      <section id="main" class="container"></section>
+      <section id="everything">
+        <section id="toolbar">
+        {% block left_toolbar %}
+        {% endblock %}
+        </section>
+      
+        <section id="content">
+          <div id="slides">
+            <div id="main">
+            </div>
+          </div>
+        </section>
+      </section>
+      
+      <section id="controls">
+        {% block bottom_toolbar %}
+        {% endblock %}
+      </section>
     {% endblock %}
     
     <!-- browser compatability check -->
