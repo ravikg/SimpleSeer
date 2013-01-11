@@ -195,16 +195,14 @@ class Core(object):
         
         frame.features = []
         frame.results = []
-        
+       
         for inspection in M.Inspection.objects:
-            if inspection.parent:
-                return
-            if inspection.camera and inspection.camera != frame.camera:
-                return
-            features = inspection.execute(frame.image)
-            frame.features += features
-            for m in inspection.measurements:
-                m.execute(frame, features)
+            if not inspection.parent:
+                if not inspection.camera or inspection.camera == frame.camera: 
+                    features = inspection.execute(frame)
+                    frame.features += features
+                    for m in inspection.measurements:
+                        m.execute(frame, features)
         
     #DOES NOT WORK WITH NESTED INSPECTIONS RIGHT NOW
     def process_async(self, frame):
