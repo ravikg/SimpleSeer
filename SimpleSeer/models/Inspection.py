@@ -13,6 +13,7 @@ from datetime import datetime
 from .base import SimpleDoc, WithPlugins
 from .Measurement import Measurement
 from .FrameFeature import FrameFeature
+from .Frame import Frame
 
 import logging
 log = logging.getLogger()
@@ -84,12 +85,20 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
     def __repr__(self):
       return "<%s: %s>" % (self.__class__.__name__, self.name)
                     
-    def execute(self, image, parents = {}):
+    def execute(self, frame, parents = {}):
         """
         The execute method takes in a frame object, executes the method
         and sends the samples to each measurement object.  The results are returned
         as a multidimensional array [ samples ][ measurements ] = result
         """
+        
+        # For legacy testing, make sure we have a frame and not an image
+        if not type(frame) == Frame:
+            log.warn('inspection execute not expects a frame instead of an image')
+            return []
+        
+        # Pull the frame metadata into the inspection's metadata
+        self.parameters.metadata = frame.metadata
         
         #execute the morphs?
         
@@ -101,7 +110,7 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
         #get the ROI function that we want
         #note that we should validate/roi method
  
-        featureset = method_ref(image)
+        featureset = method_ref(frame.image)
         
         if not featureset:
             return []
@@ -136,7 +145,7 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
             newparents[self.id] = True
             for r in frameFeatSet:
                 f = r.feature
-                f.image = image
+                f.image = frame.image
                 roi = f.crop()
             
                 for child in children:    
