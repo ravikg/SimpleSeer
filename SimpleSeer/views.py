@@ -89,16 +89,20 @@ def plugins():
         for name, plugin in plugins.items():
             if 'coffeescript' in dir(plugin):
                 for requirement, cs in plugin.coffeescript():
-                    result.append('(function(plugin){')
-                    try:
-                        result.append(coffeescript.compile(cs, True))
-                    except Exception, e:
-
-                        print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-                        print "COFFEE SCRIPT ERROR"
-                        print e
-                        print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-                    result.append('}).call(require(%r), require("lib/plugin"));\n' % requirement)
+                    #result.append('(function(plugin){')
+                    #print name, plugin
+                    print plugin.__name__
+                    if True:
+                        result.append("window.require.define({{\"plugins/{0}\": function(exports, require, module) {{(function() {{".format(name))
+                        try:
+                            result.append(coffeescript.compile(cs, True))
+                        except Exception, e:
+                            print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+                            print "COFFEE SCRIPT ERROR"
+                            print e
+                            print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+                        #result.append('}).call(require(%r), require("lib/plugin"));\n' % requirement)
+                        result.append("}).call(this);}});")
     resp = make_response("\n".join(result), 200)
     resp.headers['Content-Type'] = "text/javascript"
     return resp
