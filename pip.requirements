@@ -35,4 +35,5 @@ path.py
 statsmodels
 patsy
 celery-with-mongodb
+guppy
 

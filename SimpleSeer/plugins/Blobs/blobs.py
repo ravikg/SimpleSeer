@@ -209,27 +209,19 @@ class Blobs(base.InspectionPlugin):
         return feats
 
 class BlobLength(base.MeasurementPlugin):
-    """
-    Measurement(name =  "blob_length",
-        label = "Blob Area",
-        method = "blob_length",
-        parameters = dict(),
-        featurecriteria = dict( index = 0 ),
-        units =  "px",
-        inspection = Inspection.objects[0].id).save()
-    """
 
     def __call__(self, frame, featureset):
-        return [np.max(eval(featureset[0].featuredata["mMinRectangle"])[1])]
+        # the 1-th element of mMinRectangle is tuple of (width, height)
+        return [float(np.max(f.featuredata["mMinRectangle"][1])) for f in featureset]
 
 class BlobCount(base.MeasurementPlugin):
 
     def __call__(self, frame, featureset):
-        return [len(featureset)]
-
+        blob_features = [ f for f in featureset if f.featuretype == 'Blob']
+        return [len(blob_features)]
 
 class BlobRadius(base.MeasurementPlugin):
     
     def __call__(self, frame, featureset):
-        return [f.feature.radius() for f in featureset]
-
+        return [f.feature.radius() for f in featureset  if f.featuretype == 'Blob']
+        

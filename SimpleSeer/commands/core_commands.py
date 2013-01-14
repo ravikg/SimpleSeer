@@ -100,15 +100,13 @@ class WebCommand(Command):
         from SimpleSeer import models as M
         from pymongo import Connection, DESCENDING, ASCENDING
         from SimpleSeer.models.Inspection import Inspection, Measurement
+	import mongoengine
 
         # Plugins must be registered for queries
         Inspection.register_plugins('seer.plugins.inspection')
         Measurement.register_plugins('seer.plugins.measurement')
 
-        dbName = self.session.database
-        if not dbName:
-            dbName = 'default'
-        db = Connection()[dbName]
+        db = mongoengine.connection.get_db() 
         # Ensure indexes created for filterable fields
         # TODO: should make this based on actual plugin params or filter data
         try:
@@ -204,12 +202,22 @@ def ScrubCommand(self):
         q_csr = q_csr.order_by('-capturetime')
         q_csr = q_csr.skip(retention['maxframes'])
         for f in q_csr:
+            # clean out the fs.files and .chunks
             f.imgfile.delete()
             f.imgfile = None
-            f.save(False)
+        
+            if retention['purge']:
+                f.delete()
+            else:
+                f.save(False)
         # This line of code needed to solve fragmentation bug in mongo
         # Can run very slow when run on large collections
-        M.Frame._get_db().command({'compact': 'fs.files'})
+        db = M.Frame._get_db()
+        if 'fs.files' in db.collection_names():
+            db.command({'compact': 'fs.files'})
+        if 'fs.chunks' in db.collection_names():
+            db.command({'compact': 'fs.chunks'})
+        
         self.log.info('Purged %d frame files', q_csr.count())
         time.sleep(retention["interval"])
 

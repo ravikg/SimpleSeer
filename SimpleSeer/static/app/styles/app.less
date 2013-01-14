@@ -24,18 +24,6 @@ input[type=text], input[type=number], textarea {
   display:none !important;
 }
 
-.closeAlerts {
-  cursor: pointer;
-  display: block;
-  position: absolute;
-  right: 6px;
-  top: 6px;
-  width: 12px;
-  height: 13px;
-  font-size: 1px;
-  background: url('/img/chosen-sprite.png') right top no-repeat;
-}
-
 header, #navbar {
   position: fixed;
   top: 0px;
@@ -88,14 +76,6 @@ header, #navbar {
   bottom: 0;
   margin: 0 0 1em 1em;
   opacity: .9;
-}
-
-.alert {
-  text-align: center; 
-  font-size: 200%;
-  width: 100%;
-  padding: 8px 0 !important;
-  line-height: 1em;
 }
 
 #second-tier-menu{
@@ -400,52 +380,70 @@ a { font-size: 13px; color: #08C; font-family: "Helvetica Neue", Helvetica, Aria
 /**
  * Bootstrap alerts
  */
+
 #messages {
   position: fixed;
-  top: 55px;
-  width: 800px;
-  margin-left: -400px;
-  left: 50%;
+  top: 43px; right: 8px;
   z-index: 9999;
+  width: 250px;
 }
+
 .alert {
   position: relative;
   z-index: 9999;
-  padding: 8px 35px 8px 14px;
-  margin-bottom: 20px;
+  
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 10px;
+  
+  box-shadow: 0px 1px 5px rgba(0, 0, 0, .15);
+  background-color: #fefefe;
+  border: 1px solid #888888;
+  border-radius: 2px;
+
+  color: #666666;
+  line-height: 135%;
+  text-align: center;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
-  background-color: #fcf8e3;
-  border: 1px solid #fbeed5;
-  -webkit-border-radius: 4px;
-  -moz-border-radius: 4px;
-  border-radius: 4px;
-  color: #c09853;
 }
-.alert h4 {
-  margin: 0;
+
+.closeAlerts {
+  display: block;
+  position: absolute;
+  right: 4px; top: 4px;
+
+  width: 7px;
+  height: 7px;
+  
+  cursor: pointer;
+  opacity: 0.5;
+  font-size: 1px;
+  background: url('/img/alert-close.png') right top no-repeat;
 }
-.alert .close {
-  position: relative;
-  top: -2px;
-  right: -21px;
-  line-height: 20px;
-}
+
+.alert h4 { margin: 0; }
+
 .alert-success {
+  box-shadow: 0px 1px 5px rgba(70, 136, 71, 0.2);
   background-color: #dff0d8;
-  border-color: #d6e9c6;
+  border-color: #468847;
   color: #468847;
 }
-.alert-danger,
-.alert-error {
-  background-color: #f2dede;
-  border-color: #eed3d7;
-  color: #b94a48;
+
+.alert-danger, .alert-error {
+  box-shadow: 0px 1px 5px rgba(185, 74, 72, 0.2);
+  background-color: #F2DEDE;
+  border-color: #B94A48;
+  color: #B94A48;
 }
+
 .alert-info {
-  background-color: #d9edf7;
-  border-color: #bce8f1;
-  color: #3a87ad;
+  box-shadow: 0px 1px 5px rgba(58, 135, 173, 0.2);
+  background-color: #D9EDF7;
+  border-color: #3A87AD;
+  color: #3A87AD;
 }
+
 .alert-block {
   padding-top: 14px;
   padding-bottom: 14px;
@@ -456,257 +454,6 @@ a { font-size: 13px; color: #08C; font-family: "Helvetica Neue", Helvetica, Aria
 }
 .alert-block p + p {
   margin-top: 5px;
-}
-
-
-/** DASHBOARD STUFF **/
-
-
-.graphBuilderControls {
-  z-index: 1003;
-  background: white;
-  box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  width: 343px;
-  position: absolute;
-  left: 30px
-  top: 30px;
-  padding: 20px;
-}
-
-.accordion {
-  min-height: 435px;
-  margin-top: 20px;
-  margin-left: 10px;
-  border: 1px solid #ccc;
-}
-
-.accordion .head {
-  box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  background: #F8F8F8;
-  border-top: 1px solid #FEFEFE;
-  border-bottom: 1px solid #CCC;
-  height: 30px;
-  line-height: 27px;
-  width: 100%;
-  cursor: pointer;
-}
-
-.accordion .head h2 {
-  display: inline-block;
-  margin-left: 8px;
-  color: #0090D6;
-}  
-
-.accordion .head .toggle {
-  float: right;
-  margin-top: 7px;
-  margin-right: 6px;
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
-  background-image: url("/img/arrows-down.png");
-  background-repeat: no-repeat;
-}
-
-.accordion .group.expanded .head .toggle {
-  background-image: url("/img/arrows-up.png");
-}
-
-.accordion .group {
-  border-top: 1px solid #ccc;
-  margin-bottom: 10px;
-}
-
-.accordion .group:first-child {
-  border-top: none;
-}
-
-.accordion .content {
-  display: none;
-  padding: 20px;
-}
-
-.graphBuilderControls button.save, .graphBuilderControls button.cancel {
-  display: inline-block;
-  width: 120px;
-  height: 30px;
-  margin-top: 3px;
-  margin-right: 12px;
-  margin-bottom: 12px;
-}
-
-.graphBuilderControls button.cancel {
-  width: 81px;
-  height: 30px;
-}
-
-.graphBuilderControls button.save {
-  display: inline-block;
-  outline: none;
-  cursor: pointer;
-  text-align: center;
-  text-decoration: none;
-  padding: .5em 2em .55em;
-  text-shadow: 0 1px 1px rgba(0,0,0,.3);
-  -webkit-border-radius: 3px; 
-  -moz-border-radius: 3px;
-  border-radius: 3px;
-  color: #fef4e9;
-  border: solid 1px #da7c0c;
-  background: #f78d1d;
-  background: -webkit-gradient(linear, left top, left bottom, from(#faa51a), to(#f47a20));
-  background: -moz-linear-gradient(top,  #faa51a,  #f47a20);
-  filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#faa51a', endColorstr='#f47a20');    
-}
-
-.graphBuilderControls button.save:hover {
-  text-decoration: none;
-  background: #f47c20;
-  background: -webkit-gradient(linear, left top, left bottom, from(#f88e11), to(#f06015));
-  background: -moz-linear-gradient(top,  #f88e11,  #f06015);
-  filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#f88e11', endColorstr='#f06015');    
-}
-
-.graphBuilderControls button.save:active {
-  position: relative;
-  top: 1px;
-  color: #fcd3a5;
-  background: -webkit-gradient(linear, left top, left bottom, from(#f47a20), to(#faa51a));
-  background: -moz-linear-gradient(top,  #f47a20,  #faa51a);
-  filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#f47a20', endColorstr='#faa51a');    
-}
-
-.trim {
-  padding-bottom: 0px !important;
-}
-
-.chartStyleType {
-  width: 122px;
-  display: inline-block;
-  margin-bottom: 10px;
-}
-
-.chartStyleType label {
-  text-align: center;
-  display: block;
-  line-height: 28px;
-  font-weight: bold;
-  font-size: 13px;
-}
-
-.chartStyleType input[type=radio] { display: none; }
-
-.chartStyleType input[type=radio] + label {
-  -moz-appearance: none !important;
-  -webkit-appearance: none !important;
-  -ms-appearance: none !important;
-  -o-appearance: none !important;
-  appearance: none !important;
-  background-color: #f8f8f8;
-  background-repeat: no-repeat;
-  background-position: center center;
-  border: 1px solid #ccc;
-  border-bottom: 1px solid #bbb;
-  border-radius: 3px;
-  color: #333;
-  font: bold 11px/1 "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Geneva, Verdana, sans-serif;
-  text-align: center;
-  text-shadow: 0 1px 0 #eee;
-  margin: 0 auto;
-  display: block;
-  width: 85px;
-  height: 47px;
-}
-
-.chartStyleType input[type="radio"]:checked + label {
-  background-color: #eeeeee;
-  border: 1px solid #99A;
-  border-bottom: 1px solid #88A;
-  -webkit-box-shadow: inset 0 0 12px 3px #aaaabb, 0px 0px 12px -3px #88a;
-  -moz-box-shadow: inset 0 0 12px 3px #aaaabb, 0px 0px 12px -3px #88a;
-  box-shadow: inset 0 0 12px 3px #aaaabb, 0px 0px 12px -3px #88a;
-}
-
-.breadcrumb {
-  font-size: 17px;
-  font-weight: bold;
-}
-
-.breadcrumb span {
-  color: #0090D6;
-}
-
-.graphBuilderPreview {
-  z-index: 1001;
-  background: white;
-  position: absolute;
-  left: 346px;
-  padding: 20px;
-  box-sizing: border-box;
-  -moz-box-sizing: border-box;
-}
-
-#dbcontrol {
-  padding: 10px;
-  
-  a { display: block; }
-}
-
-.graphBuilderControls .ui-combobox input, .graphBuilderControls input {
-  width: 150px;
-  height: 15px;
-}
-
-#palette_preview {
-  margin-left: 71px;
-  margin-top: 6px;
-}
-
-.graphBuilderControls .oneLine {
-  width: 100%;
-  margin-bottom: 25px;
-  
-  &:last-child {
-    margin-bottom: 0px;
-  }
-  
-  &.floated {
-    label { float: left; }
-    .color-block { float: right; }
-  }
-  
-  label {
-    font-weight: bold;
-    margin-right: 20px;
-  }
-  
-  .category {
-    height: 18px;
-    line-height: 16px;
-    font-size: 13px;
-    margin-bottom: 4px;
-    
-    .title {
-      float: left;
-      width: 220px;
-      text-align: right;
-      margin-right: 11px;
-    }
-    
-    &:first-child {
-      margin-top: -16px;
-    }
-  }
-}
-
-.color-block {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  margin-right: 2px;
-  border: 1px solid rgba(0, 0, 0, .1);
 }
 
 .clearfix:after {
@@ -948,4 +695,10 @@ html[xmlns] .clearfix {
 #throbberGraphic.hidden + .message {
   padding-top: 0px;
   margin-top: 0px;
+}
+
+/** Image VIEW in Arc **/
+img.fillImage { 
+  min-height: 100%;
+  min-width: 100%;
 }

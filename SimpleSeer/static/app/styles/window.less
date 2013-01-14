@@ -13,6 +13,7 @@
 
   &.showing {
     display: block;
+    width: 241px;
   }
 
   &:before {
@@ -22,7 +23,7 @@
     z-index: 43;
     width: 5px;
     height: 10px;
-    background: url("../img/arrow_popout_dark.png") no-repeat;
+    background: url("../img/popout_arrow.png") no-repeat;
     content: " ";
   }
 
@@ -48,6 +49,9 @@
     background: url("../img/MT_666666.png") repeat;
 
     .context {
+      /* Drop-down in top right, not being
+         used at the time. Uncomment when used. */
+      display: none;
       cursor: pointer;
       float: right;
       width: 18px;
@@ -79,9 +83,9 @@
 
         &.active {
           cursor: default;
-          padding: 3px 11px 0px 15px;
+          padding: 3px 11px 0px 10px;
           background:
-            url("../img/arrow_expand_v.png") no-repeat 5px 8px,
+            /*url("../img/arrow_expand_v.png") no-repeat 5px 8px,*/
             url("../img/MT_999999.png") repeat;  
         }
 
