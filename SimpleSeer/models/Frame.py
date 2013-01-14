@@ -16,7 +16,7 @@ from datetime import datetime
 from .base import SimpleDoc, SONScrub
 from .FrameFeature import FrameFeature
 from .Clip import Clip
-from .Result import Result, ResultEmbed
+from .Result import ResultEmbed
 from .. import realtime
 from ..util import LazyProperty
 
@@ -185,14 +185,6 @@ class Frame(SimpleDoc, mongoengine.Document):
             newFrame = True
         
         super(Frame, self).save(*args, **kwargs)
-
-        #TODO, this is sloppy -- we should handle this with cascading saves
-        #or some other mechanism
-        #for r in self.results:
-        #    result, created = r.get_or_create_result()
-        #    result.capturetime = self.capturetime
-        #    result.frame_id = self.id
-        #    result.save(*args, **kwargs)
         
         # Once everything else is saved, publish result
         # Do not place any other save actions after this line or realtime objects will miss data
