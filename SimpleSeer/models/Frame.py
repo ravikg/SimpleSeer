@@ -200,18 +200,18 @@ class Frame(SimpleDoc, mongoengine.Document):
         if newFrame:
             #send the frame without features, and some other stuff
             realtime.ChannelManager().publish('frame/', dict(
-                id = self.id,
-                capturetime = self.capturetime,
+                id = str(self.id),
+                capturetime = timegm(self.capturetime.timetuple()),
                 capturetime_epoch = self.capturetime_epoch,
-                updatetime = self.updatetime,
+                updatetime = timegm(self.updatetime.timetuple()),
                 camera = self.camera,
                 results = self.results,
                 height = self.height,
                 width = self.width,
-                clip_id = self.clip_id,
+                clip_id = str(self.clip_id),
                 clip_frame = self.clip_frame,
                 imgfile = "/grid/imgfile/" + str(self.id),
-                thumbnail_file = self.thumbnail_file,
+                thumbnail_file = "/grid/thumbnail_file/" + str(self.id),
                 metadata = self.metadata,
                 notes = self.notes)
             )

@@ -16,6 +16,7 @@ log = logging.getLogger(__name__)
 class Picklable(object):
     _jsonignore = [None]
     
+    #TODO: move into son manipulators
     def __getstate__(self):  
         ret = {}
         if hasattr(self, 'id'):
