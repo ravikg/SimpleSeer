@@ -204,7 +204,6 @@ class Core(object):
                     for m in inspection.measurements:
                         m.execute(frame, features)
         
-    #DOES NOT WORK WITH NESTED INSPECTIONS RIGHT NOW
     def process_async(self, frame):
         frame.features = []
         frame.results = []
@@ -215,16 +214,11 @@ class Core(object):
         
         inspections = list(M.Inspection.objects)
         #allocate each inspection to a celery task
-        for inspection in inspections:
-            if inspection.parent:
-                return
-            if inspection.camera and inspection.camera != frame.camera:
-                return
-                
-            results_async.append(execute_inspection.delay(inspection.id, frame.imgfile.grid_id))
+        for inspection in M.Inspection.objects:
+            if not inspection.parent:
+                if not inspection.camera or inspection.camera == frame.camera: 
+                    results_async.append(execute_inspection.delay(inspection.id, frame.imgfile.grid_id, frame.metadata))
         
-        #poll the tasks to see when they're complete, add them to the frame
-        #and take measurements
         return results_async
         
     def process_async_complete(self, frame, results_async):

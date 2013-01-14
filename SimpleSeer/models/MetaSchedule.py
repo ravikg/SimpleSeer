@@ -89,14 +89,6 @@ class MetaSchedule():
                 if meta:
                     #print 'scheduling %s' % meta['frame_id']
                     scheduled.append(backfill_meta.delay(meta['frame_id'], meta.get('inspections', []), meta.get('measurements', [])))
-                    """
-                    if 'tolerances' in meta:
-                        scheduled.append(backfill_tolerances.delay(meta['tolerances'], meta['frame_id']))
-                    if 'measurements' in meta:
-                        scheduled.append(backfill_measurement.delay(meta['measurements'], meta['frame_id']))
-                    if 'inspections' in meta:
-                        scheduled.append(backfill_inspection.delay(meta['inspections'], meta['frame_id']))
-                    """
             else:
                 # wait for the queue to clear a bit
                 #print 'sleepy time'
