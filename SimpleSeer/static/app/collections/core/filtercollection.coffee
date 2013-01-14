@@ -1,7 +1,7 @@
-Collection = require "./collection"
-application = require '../application'
+Collection = require "collections/collection"
+application = require 'application'
 #FramelistFrameView = require './framelistframe_view'
-context = require '../models/core/context'
+#context = require '../models/core/context'
 
 module.exports = class FilterCollection extends Collection
   _defaults:
@@ -17,9 +17,9 @@ module.exports = class FilterCollection extends Collection
   
   
   initialize: (models,params) =>
-    if params.context?
-      @context = new context({name:params.context})
-      @context.fetch()
+    #if params.context?
+      #@context = new context({name:params.context})
+      #@context.fetch()
       #  success: () =>
       #    for menuItem of @context.get('menuItems')
       #      f = 1
@@ -69,7 +69,8 @@ module.exports = class FilterCollection extends Collection
     
     # Load filter widgets
     # TODO: make these collections
-    @filters = []
+    if !@filters?
+      @filters = []
     if !application.settings.ui_filters_framemetadata?
       application.settings.ui_filters_framemetadata = []
 
@@ -78,7 +79,7 @@ module.exports = class FilterCollection extends Collection
       @view = params.view
       i = 0
       for o in application.settings.ui_filters_framemetadata
-        @filters.push @view.addSubview o.type+"_"+o.field_name, @loadFilter(o.format), '#filter_form', {params:o,collection:@,append:"filter_" + i}
+        #@filters.push @view.addSubview o.type+"_"+o.field_name, @loadFilter(o.format), '#filter_form', {params:o,collection:@,append:"filter_" + i}
         i+=1
     return @
 
@@ -88,6 +89,8 @@ module.exports = class FilterCollection extends Collection
 
   # Set sort param.  Bubble up through bound FiltersCollections
   setParam: (key,val) =>
+    if key != "skip"
+      @resetParam("skip") 
     @_sortParams[key] = val
     for o in @_boundCollections
       o.setParam key, val
@@ -194,6 +197,8 @@ module.exports = class FilterCollection extends Collection
     @raw = response
 
   fetch: (params={}) =>
+    if params.forceRefresh
+      @models = []
     total = params.total || false
     _url = @baseUrl+@getUrl(total,params['params']||false)
     for o in @_boundCollections
@@ -212,5 +217,6 @@ module.exports = class FilterCollection extends Collection
   
   parse: (response) =>
     @totalavail = response.total_frames
+    @lastavail = response.frames?.length || 0
     @setRaw (response)
     return response.frames

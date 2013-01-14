@@ -65,6 +65,16 @@ def sio(path):
 def index():
     return render_template("index.html",foo='bar')
 
+@route('/reset', methods=['GET'])
+def reset():
+    from .Backup import Backup
+    log.info('about to run cleanup')
+    M.Frame._get_db().metaschedule.remove()
+    Backup.importAll(clean=True)
+    log.info('cleanup done')
+    return 'Meta objects removed.  Frames being cleaned in background'
+    
+
 @route('/log/<type>', methods=['POST'])
 def jsLogger(type):
     levels = {"CRITICAL":50, "ERROR":40, "WARNING":30, "INFO":20, "DEBUG":10}
@@ -93,16 +103,20 @@ def plugins():
         for name, plugin in plugins.items():
             if 'coffeescript' in dir(plugin):
                 for requirement, cs in plugin.coffeescript():
-                    result.append('(function(plugin){')
-                    try:
-                        result.append(coffeescript.compile(cs, True))
-                    except Exception, e:
-
-                        print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-                        print "COFFEE SCRIPT ERROR"
-                        print e
-                        print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-                    result.append('}).call(require(%r), require("lib/plugin"));\n' % requirement)
+                    #result.append('(function(plugin){')
+                    #print name, plugin
+                    print plugin.__name__
+                    if True:
+                        result.append("window.require.define({{\"plugins/{0}\": function(exports, require, module) {{(function() {{".format(name))
+                        try:
+                            result.append(coffeescript.compile(cs, True))
+                        except Exception, e:
+                            print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+                            print "COFFEE SCRIPT ERROR"
+                            print e
+                            print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+                        #result.append('}).call(require(%r), require("lib/plugin"));\n' % requirement)
+                        result.append("}).call(this);}});")
     resp = make_response("\n".join(result), 200)
     resp.headers['Content-Type'] = "text/javascript"
     return resp
@@ -523,8 +537,15 @@ def ping():
 @route('/settings', methods=['GET', 'POST'])
 @util.jsonify
 def settings():
+    util.ensure_plugins()
     text = Session().get_config()
-    return {"settings": text }
+    plugins = {'Inspection':[],'Measurement':[],'Watcher':[]}
+    for i in plugins:
+        try:
+            plugins[i] =  [o for o in eval("M.{0}._plugins".format(i))]
+        except AttributeError:
+            pass    
+    return {"settings": text, "plugins":plugins }
 
 @route('/start', methods=['GET', 'POST'])
 def start():

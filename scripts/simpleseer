@@ -7,8 +7,6 @@ import argparse
 import cProfile
 import threading
 
-import guppy
-import gevent
 import pkg_resources
 
 def main():
@@ -43,6 +41,7 @@ def main():
                         filename=fn)
     else:
         options.subcommand.run()
+
 
 if __name__ == '__main__':
    main()

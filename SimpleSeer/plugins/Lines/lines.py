@@ -68,10 +68,7 @@ class Lines(base.InspectionPlugin):
   
       for f in fs: # do the conversion from SCV featureset to SimpleSeer featureset
         f.lineLength= int(f.length())
-        ff = M.FrameFeature()
-    
-        ff.setFeature(f)
-        retVal.append(ff)
+        retVal.append(f)
 
     if( params.has_key("saveFile") ):
       image.save(params["saveFile"])

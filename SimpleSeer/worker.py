@@ -9,7 +9,7 @@ from gridfs import GridFS
 import Image as PIL
 from SimpleCV import Image
 
-from .util import ensure_plugins
+from .util import ensure_plugins, jsonencode
 
 from . import celeryconfig
 
@@ -34,6 +34,115 @@ def ping_worker(number):
     return number + 1
     
 
+"""
+@task()
+def backfill_tolerances(measurement_ids, frame_id):
+    f = M.Frame.objects.get(id = frame_id)
+    
+    results = []
+    for m_id in measurement_ids: 
+        m = M.Measurement.objects.get(id = m_id)
+        results += m.tolerance(f, f.results)
+    
+    return (f.id, results)
+"""
+
+@task()
+def metaschedule_run():
+    from .models.MetaSchedule import MetaSchedule
+    ms = MetaSchedule()
+    print 'Running metaschedule asynchronously'
+    ms.run()
+    print 'Finished async metaschedule run'
+    
+@task()
+def metaschedule_run_complete(insps, meass):
+    from .models.MetaSchedule import MetaSchedule
+    ms = MetaSchedule()
+    
+    print 'Async scheduling tasks'
+    for insp in insps:
+        ms.enqueue_inspection(insp)
+    for meas in meass:
+        ms.enqueue_measurement(meas)
+    print 'Running metaschedule asynchronously'
+    ms.run()
+    print 'Finished async metaschedule run'
+    
+    
+
+@task()
+def backfill_meta(frame_id, inspection_ids, measurement_ids):
+    from SeerCloud.OLAPUtils import RealtimeOLAP
+    from SeerCloud.models.OLAP import OLAP
+    from .Filter import Filter
+    
+    f = M.Frame.objects.get(id = frame_id)
+    print frame_id
+    
+    # Scrubber may clear old images from frames, so can't backfill on those
+    if f.imgfile:
+        for i_id in inspection_ids:
+            i = M.Inspection.objects.get(id=i_id)
+            
+            if not i.parent:
+                f.features += i.execute(f.image)
+                
+        for m_id in measurement_ids:
+            m = M.Measurement.objects.get(id=m_id)
+            m.execute(f, f.features)
+        
+        f.save()    
+        
+        # Need the filter format for realtime publishing
+        ro = RealtimeOLAP()
+        ff = Filter()
+        allFilters = [{'type': 'frame', 'name': 'id', 'eq': frame_id}]
+        res = ff.getFrames(allFilters)[1]
+        
+        for m_id in measurement_ids:
+            m = M.Measurement.objects.get(id=m_id)
+            
+            # Publish the charts
+            charts = m.findCharts()
+            for chart in charts:
+                olap = OLAP.objects.get(name=chart.olap)
+                data = ff.flattenFrame(res, olap.olapFilter)
+                data = chart.mapData(data)
+                ro.sendMessage(chart, data)
+    else:
+        print 'no image on frame.  skipping'
+        
+    return f.id
+    
+    
+
+@task()
+def execute_inspections(inspection_ids, gridfs_id):
+    # Works like execute_inspection below, but takes multiple inspection ID's
+    
+    # If no inspection_ids, assume all inspections
+    if not inspection_ids:
+        inspection_ids = [ i.id for i in M.Inspection.objects ]
+    
+    db = M.Inspection._get_db()
+    fs = GridFS(db)
+    image = Image(PIL.open(fs.get(gridfs_id)))
+    
+    features = []
+    
+    for insp_id in inspection_ids:
+        insp = M.Inspection.objects.get(id=insp_id)
+        
+        try:
+            features += insp.execute(image)
+            print 'Finished inspection %s on image %s' % (insp_id, gridfs_id)
+        except:
+            print 'Inspection Failed'
+    
+    print 'Finished inspections on image %s' % gridfs_id
+    return [ f.feature for f in features ]
+
 @task()
 def execute_inspection(inspection_id, gridfs_id):
     """
@@ -43,10 +152,14 @@ def execute_inspection(inspection_id, gridfs_id):
     db = insp._get_db()
     fs = GridFS(db)
     image = Image(PIL.open(fs.get(gridfs_id)))
-    features = insp.execute(image)
+    try:
+        features = insp.execute(image)
+    except:
+        print "inspection failed"
+        features = []
     
     print "Finished running inspection {} on image {}".format(inspection_id, gridfs_id)
-    return features
+    return [f.feature for f in features]
 
     
 @task()

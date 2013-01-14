@@ -1,4 +1,4 @@
-SubView = require './subview'
+SubView = require './core/subview'
 template = require './templates/frame'
 application = require 'application'
 

@@ -48,7 +48,8 @@ exports.config =
           'vendor/scripts/sm.datetimerange.js',
           'vendor/scripts/chosen.jquery.min.js',
           'vendor/scripts/jquery.ui.touch-punch.min.js',
-          'vendor/scripts/jquery.shapeshift.min.js']
+          'vendor/scripts/jquery.shapeshift.min.js',
+          'vendor/scripts/md5.js']
 
     stylesheets:
       defaultExtension: 'less'

@@ -1,7 +1,6 @@
 #Collection = require "../collection"
-FilterCollection = require "../../collections/filtercollection"
-application = require '../../application'
-
+FilterCollection = require "collections/core/filtercollection"
+application = require 'application'
 module.exports = class Series extends FilterCollection
   url: ""
   redraw: false
@@ -42,6 +41,12 @@ module.exports = class Series extends FilterCollection
     @fetch()
     return @
 
+  comparator: (point,point2) =>
+    if point2.attributes.x.unix() > point.attributes.x.unix()
+      return -1
+    else
+      return 1
+
   parse: (response) =>
     super(response)
     @subscribe(response.chart)
@@ -56,7 +61,6 @@ module.exports = class Series extends FilterCollection
       args.error = @onError
     args['total'] = true
     args['params'] = {skip:~@limit+1,limit:@limit}
-    console.log args
     super(args)
 
   onSuccess: (obj, rawJson) =>
@@ -76,7 +80,9 @@ module.exports = class Series extends FilterCollection
   _clean: (data) =>
     refined = []
     for d in data
-      refined.push @_formatChartPoint d
+      point = @_formatChartPoint d
+      if point.attributes != {}
+        refined.push point
     return refined
 
   _drawData: =>
@@ -140,25 +146,47 @@ module.exports = class Series extends FilterCollection
   
   shiftStack: (silent=false)=>
     #TODO: remove against, grab from filter
+    shifted = 0
+    #against = new moment().subtract('days',5000)
+    while @_needShift()
+      @shift {silent:silent}
+      shifted++      
+    return shifted
+
+  _needShift: (offset=0)=>
+    #TODO: remove against, grab from filter
     against = new moment().subtract('days',5000)
     if @xAxis.type == "datetime"
-      while @.at(0) && @.at(0).attributes.x < against
-        @shift {silent:silent}
-    while @models.length - @view.maxPointSize >= silent
-      @shift {silent:silent}
-    return
+      if @.at(0) && @.at(0).attributes.x < against
+        return true
+    if @models.length - @view.maxPointSize >= offset
+      return true
+    return false
+    
   
   receive: (data) =>
+    #@shiftStack()
+    console.info 'RECEIVE'
     for o in data.data.m.data
+      console.info 'POINT RUNNING...'
       p = @_formatChartPoint o
-      @shiftStack()
-      @view.addPoint p, @id
-      @add @_formatChartPoint o
-      @view.hasData = true
+      if @inStack(p)
+        console.log 'good instack'
+        #@shiftStack()
+        @add p, {silent: true}
+        @_drawData()
+        #@view.addPoint p, @id
+        @view.hasData = true
     if @view.hasData && @view.hasMessage
       @view.hideMessage()
     return
     
+  inStack:(point) =>
+    #@sort()
+    if @length == 0
+      return true
+    return point.x > @at(0).get("x") or @_needShift(-1)
+  
     ###
     dm = @view.model.attributes.dataMap
     mdm = @view.model.attributes.metaMap

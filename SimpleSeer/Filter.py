@@ -14,7 +14,7 @@ class Filter():
     
     names = {}
     
-    def getFrames(self, allFilters, skip=0, limit=float("inf"), sortinfo = {}, timeEpoch = True):
+    def getFrames(self, allFilters, skip=0, limit=float("inf"), sortinfo = {}, groupByField = ''):
         
         pipeline = []
         #frames = []
@@ -34,18 +34,11 @@ class Filter():
             
         # Need to initialize the fields for the query.  Do this sparingly, as mongo has major memory limitations
         pipeline += self.initialFields(projResult = resCount, projFeat = featCount)
+       
+        if groupByField: 
+            pipeline += self.groupBy(groupByField)
         
-        """
-        if frames:
-            pipeline += self.filterFrames(frames)
-        
-        if measurements:    
-            pipeline += self.conditional(measurements, 'results', 'measurement_name')           
-        
-        if features:
-            pipeline += self.conditional(measurements, 'features', 'featuretype')     
-        """
-        
+        # Apply the sort criteria
         pipeline += self.conditional(allFilters)
         
         # Sort and skip/limit the results
@@ -100,7 +93,14 @@ class Filter():
         #return len(cmd['result']), results
         return -1, results    
         
-    
+    def groupBy(self, groupByField):
+       proj = []
+       
+       # Have to unwind results so they get reconstructed as a single array when re-grouping
+       proj.append({'$unwind': '$results'})
+       proj.append({'$group': {'_id': '$' + groupByField, 'id': {'$first': '$id'}, 'metadata': {'$first': '$metadata'}, 'capturetime': {'$first': '$capturetime'}, 'capturetime_epoch': {'$first': '$capturetime_epoch'}, 'results': {'$addToSet': '$results'}}})
+ 
+       return proj
         
     def initialFields(self, projResult = False, projFeat = False):
         # This is a pre-filter of the relevant fields
@@ -464,6 +464,7 @@ class Filter():
         for frame in frames:
             tmpFrame = {'id': frame['id']}
             tmpFrame['capturetime_epoch'] = frame['capturetime_epoch']
+            tmpFrame['capturetime'] = frame['capturetime']
         
             for filt in filters:
                 nameParts = filt['name'].split('.')

@@ -7,6 +7,8 @@ from worker import ping_worker, execute_inspection
 import zmq
 import gevent
 
+from guppy import hpy
+
 from . import models as M
 from . import util
 from .base import jsondecode, jsonencode
@@ -43,7 +45,7 @@ class Core(object):
         self.cameras = []
         self.video_cameras = []
         self.log = logging.getLogger(__name__)
-
+        self._mem_prof_ticker = 0
     
         for cinfo in config.cameras:
             cam = StillCamera(**cinfo)
@@ -63,7 +65,7 @@ class Core(object):
         self.lastframes = deque()
         self.framecount = 0
         self.reset()
-
+        
     @classmethod
     def get(cls):
         return cls._instance
@@ -188,22 +190,21 @@ class Core(object):
 
     def process(self, frame):
         if self._worker_enabled:
-            return self.process_async(frame)
+            async_results = self.process_async(frame)
+            return self.process_async_complete(frame, async_results)
         
         frame.features = []
         frame.results = []
-            
+       
         for inspection in M.Inspection.objects:
-            if inspection.parent:
-                return
-            if inspection.camera and inspection.camera != frame.camera:
-                return
-            features = inspection.execute(frame.image)
-            frame.features += features
-            for m in inspection.measurements:
-                m.execute(frame, features)
-    
-    
+            if not inspection.parent:
+                if not inspection.camera or inspection.camera == frame.camera: 
+                    features = inspection.execute(frame)
+                    frame.features += features
+                    for m in inspection.measurements:
+                        m.execute(frame, features)
+        
+    #DOES NOT WORK WITH NESTED INSPECTIONS RIGHT NOW
     def process_async(self, frame):
         frame.features = []
         frame.results = []
@@ -220,10 +221,14 @@ class Core(object):
             if inspection.camera and inspection.camera != frame.camera:
                 return
                 
-            results_async.append(inspection_execute.delay(inspection.id, frame.imgfile.grid_id))
+            results_async.append(execute_inspection.delay(inspection.id, frame.imgfile.grid_id))
         
         #poll the tasks to see when they're complete, add them to the frame
         #and take measurements
+        return results_async
+        
+    def process_async_complete(self, frame, results_async):
+        inspections = list(M.Inspection.objects)
         
         #note that async results refer to Celery results, and not Frame results
         results_complete = []
@@ -234,14 +239,23 @@ class Core(object):
                     new_ready_results.append(index)
                     
             for result_index in new_ready_results:
-                features = results_async[result_index].get()
+                scvfeatures = results_async[result_index].get()
+                features = []
+                
+                for scvfeature in scvfeatures:
+                    scvfeature.image = frame.image 
+                    ff = M.FrameFeature()
+                    ff.setFeature(scvfeature)
+                    ff.inspection = inspections[result_index].id
+                    features.append(ff)
+                
                 frame.features += features
                 
                 for m in inspections[result_index].measurements:
                     m.execute(frame, features)
             
             results_complete += new_ready_results
-
+            time.sleep(0.2)
                 
     @property
     def results(self):
@@ -312,6 +326,13 @@ class Core(object):
     def tick(self):
         self._handle_events()
         self._clock.tick()
+            
+        if self.config.memprofile:
+            self._mem_prof_ticker += 1
+            if self._mem_prof_ticker == int(self.config.memprofile):
+                self._mem_prof_ticker = 0
+                self.log.info(hpy().heap())
+            
 
     def _handle_events(self):
         while True:

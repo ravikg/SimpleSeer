@@ -1,13 +1,20 @@
 require 'lib/view_helper'
-View = require './view'
+View = require 'views/core/view'
 
 module.exports = class SubView extends View
+  ###
   options:
     parent: null
     selector: null
-  htmltags: {}
+  ###
+
+  initialize: =>
+    @htmltags = {}
+    super()
 
   render: () =>
+    if @rendered
+      return @
     tagName = @tagName || 'div'
     className = @className || ''
     tags = ''
@@ -22,9 +29,4 @@ module.exports = class SubView extends View
       #foo.$el.addClass className
     super
     @
-
-  remove: =>
-    if @options.parent.subviews[@id]
-      delete @options.parent.subviews[@id]
-    super
     

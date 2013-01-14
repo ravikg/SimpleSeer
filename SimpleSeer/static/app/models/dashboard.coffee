@@ -1,15 +1,14 @@
 Model = require "./model"
-application = require '../application'
-dashboardWidget = require '../views/dashboardWidget'
+application = require 'application'
+dashboardWidget = require 'views/core/dashboardWidget'
 
 module.exports = class Dashboard extends Model
   urlRoot: -> "/api/dashboard"
   loaded: false
   
-  initialize: (attr) =>
-    if attr.view
-      @view = attr.view
+  initialize: =>
     if @attributes.view
+      @view = @attributes.view
       delete @attributes.view
     super()
 
@@ -17,11 +16,14 @@ module.exports = class Dashboard extends Model
   parse: (response)=>
     if !@loaded
       @loadElements(response)
+    super response
     return response
     
   loadElements: (response) =>
-    for widget in response.widgets
-      vi = @view.addSubview "widget_"+widget.id, dashboardWidget, '#widget_grid', {append:"widget_"+widget.id,widget:widget}
-      vi.render()
-    @loaded = true
+    if @view
+      @view.clearSubviews()
+      for widget in response.widgets
+        vi = @view.addSubview "widget_"+widget.id, dashboardWidget, '#widget_grid', {append:"widget_"+widget.id,widget:widget}
+        vi.render()
+      @loaded = true
 

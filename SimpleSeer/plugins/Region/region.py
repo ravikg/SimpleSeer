@@ -16,8 +16,8 @@ class Region(base.InspectionPlugin):
         retVal = []
         mask = Image((image.width,image.height))
         if( params.has_key('w') and  params.has_key('h') and params.has_key('x') and params.has_key('y') ): #rectangle
-            if( params['x'] + params['w'] < image.width and
-                params['y'] + params['h'] < image.height and
+            if( params['x'] + params['w'] <= image.width and
+                params['y'] + params['h'] <= image.height and
                 params['y'] >= 0 and 
                 params['x'] >= 0 ):
                 mask.drawRectangle(params['x'],params['y'],params['w'],params['h'],width=-1,color=Color.WHITE)
@@ -34,8 +34,8 @@ class Region(base.InspectionPlugin):
                     retVal = [ff]
   
         elif( params.has_key('x') and  params.has_key('y') and params.has_key('r') ): # circle
-            if( params['x'] + params['r'] < image.width and
-                params['y'] + params['r'] < image.height and 
+            if( params['x'] + params['r'] <= image.width and
+                params['y'] + params['r'] <= image.height and 
                 params['x'] - params['r'] >= 0 and 
                 params['y'] - params['r'] >= 0 ):
 
@@ -46,15 +46,13 @@ class Region(base.InspectionPlugin):
                 mask.drawCircle((x,y),r,thickness=-1,color=Color.WHITE)
                 mask = mask.applyLayers()
                 fs = image.findBlobsFromMask(mask)
-                ff = M.FrameFeature()
                 if( fs is not None and len(fs) > 0 ):                    
                     #fs[-1].draw()
                     b = fs[-1]
                     b.__class__ = BlobRegion                  
                     c = b.meanColor()
                     b.mColor = (int(c[0]),int(c[1]),int(c[2]))
-                    ff.setFeature(b)
-                    retVal = [ff]
+                    retVal = [b]
 
         elif( params.has_key('contour') ):
             contour = params['contour'] # this may bail out
@@ -62,15 +60,13 @@ class Region(base.InspectionPlugin):
                 mask.dl().polygon(contour,filled=True,color=Color.WHITE)
                 mask = mask.applyLayers()
                 fs = image.findBlobsFromMask(mask)
-                ff = M.FrameFeature()
                 if( fs is not None and len(fs) > 0 ):                    
                     #fs[-1].draw()
                     b = fs[-1]
                     b.__class__ = BlobRegion                   
                     c = b.meanColor()
                     b.mColor = (int(c[0]),int(c[1]),int(c[2])) 
-                    ff.setFeature(b)
-                    retVal = [ff]
+                    retVal = [b]
             
         if( params.has_key("saveFile") ):
             image.save(params["saveFile"])

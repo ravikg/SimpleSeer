@@ -12,11 +12,13 @@ class CoreStatesCommand(Command):
     def __init__(self, subparser):
         subparser.add_argument('program')
         subparser.add_argument('--disable-pyro', action='store_true')
-
+        subparser.add_argument('--procname', default='corecommand', help='give each process a name for tracking within session')
+        
     def run(self):
         from SimpleSeer.states import Core
         import Pyro4
 
+        self.session.memprofile = self.options.memprofile
         core = Core(self.session)
         found_statemachine = False
         with open(self.options.program) as fp:
@@ -42,6 +44,8 @@ class CoreCommand(CoreStatesCommand):
 
     def __init__(self, subparser):
         subparser.add_argument('--disable-pyro', action='store_true')
+        subparser.add_argument('--memprofile', default=0)
+        subparser.add_argument('--procname', default='core', help='give each process a name for tracking within session')
 
     def run(self):
         self.options.program = self.session.statemachine or 'states.py'
@@ -85,34 +89,36 @@ def OlapCommand(self):
     ro = RealtimeOLAP()
     ro.monitorRealtime()
 
-@Command.simple(use_gevent=True, remote_seer=True)
-def WebCommand(self):
-    'Run the web server'
-    from SimpleSeer.Web import WebServer, make_app
-    from SimpleSeer import models as M
-    from pymongo import Connection, DESCENDING, ASCENDING
-    from SimpleSeer.models.Inspection import Inspection, Measurement
+class WebCommand(Command):
+    
+    def __init__(self, subparser):
+        subparser.add_argument('--procname', default='web', help='give each process a name for tracking within session')
 
-    # Plugins must be registered for queries
-    Inspection.register_plugins('seer.plugins.inspection')
-    Measurement.register_plugins('seer.plugins.measurement')
+    def run(self):
+        'Run the web server'
+        from SimpleSeer.Web import WebServer, make_app
+        from SimpleSeer import models as M
+        from pymongo import Connection, DESCENDING, ASCENDING
+        from SimpleSeer.models.Inspection import Inspection, Measurement
+	import mongoengine
 
-    dbName = self.session.database
-    if not dbName:
-        dbName = 'default'
-    db = Connection()[dbName]
-    # Ensure indexes created for filterable fields
-    # TODO: should make this based on actual plugin params or filter data
-    try:
-        db.frame.ensure_index([('results', 1)])
-        db.frame.ensure_index([('results.measurement_name', 1)])
-        db.frame.ensure_index([('results.numeric', 1)])
-        db.frame.ensure_index([('results.string', 1)])
-    except:
-        self.log.info('Could not create indexes')
-        
-    web = WebServer(make_app())
-    web.run_gevent_server()
+        # Plugins must be registered for queries
+        Inspection.register_plugins('seer.plugins.inspection')
+        Measurement.register_plugins('seer.plugins.measurement')
+
+        db = mongoengine.connection.get_db() 
+        # Ensure indexes created for filterable fields
+        # TODO: should make this based on actual plugin params or filter data
+        try:
+            db.frame.ensure_index([('results', 1)])
+            db.frame.ensure_index([('results.measurement_name', 1)])
+            db.frame.ensure_index([('results.numeric', 1)])
+            db.frame.ensure_index([('results.string', 1)])
+        except:
+            self.log.info('Could not create indexes')
+            
+        web = WebServer(make_app())
+        web.run_gevent_server()
 
 @Command.simple(use_gevent=True, remote_seer=True)
 def OPCCommand(self):
@@ -196,9 +202,22 @@ def ScrubCommand(self):
         q_csr = q_csr.order_by('-capturetime')
         q_csr = q_csr.skip(retention['maxframes'])
         for f in q_csr:
+            # clean out the fs.files and .chunks
             f.imgfile.delete()
             f.imgfile = None
-            f.save(False)
+        
+            if retention['purge']:
+                f.delete()
+            else:
+                f.save(False)
+        # This line of code needed to solve fragmentation bug in mongo
+        # Can run very slow when run on large collections
+        db = M.Frame._get_db()
+        if 'fs.files' in db.collection_names():
+            db.command({'compact': 'fs.files'})
+        if 'fs.chunks' in db.collection_names():
+            db.command({'compact': 'fs.chunks'})
+        
         self.log.info('Purged %d frame files', q_csr.count())
         time.sleep(retention["interval"])
 
@@ -261,36 +280,41 @@ class WorkerCommand(Command):
         print " ".join(cmd)
         subprocess.call(cmd)
         
-class ExportMetaCommand(Command):
+class MetaCommand(Command):
     
     def __init__(self, subparser):
-        subparser.add_argument("--listen", help="Set to true to run as daemon listing for changes and exporting when changes found.", default="false")
+        subparser.add_argument('--exportmeta', action='store_true')
+        subparser.add_argument('--importmeta', action='store_true')
+        subparser.add_argument("--listen", help="Run export as daemon listing for changes and exporting when changes found.", action='store_true')
+        subparser.add_argument("--file", help="The file name to export/import.  If blank, defaults to seer_export.yaml", default="seer_export.yaml")
+        subparser.add_argument('--clean', help="Delete existing metadata before importing", action='store_true')
+        subparser.add_argument('--skipbackfill', help="Do not run a backfill after importing", action='store_true')
+        
+        subparser.add_argument('--procname', default='meta', help='give each process a name for tracking within session')
+
         
     def run(self):
         from SimpleSeer.Backup import Backup
         
-        listen = self.options.listen
+        if self.options.exportmeta and self.options.importmeta:
+            self.log.info("Both export and import specified.  Ignoring import command")
+            self.options.importmeta = False
+        if not self.options.exportmeta and not self.options.importmeta:
+            self.log.info("Neither import or export specified.  Defaulting to export")
+            self.options.exportmeta = True
+        if self.options.exportmeta and self.options.clean:
+            self.log.info("Clean option not applicable when exporting.  Ignoring")
+        if self.options.importmeta and self.options.listen:
+            self.log.info("Listen option not applicable when importing.  Ignorning")
         
-        Backup.exportAll()
+        if self.options.exportmeta:
+            Backup.exportAll()
+            if self.options.listen: 
+                gevent.spawn_link_exception(Backup.listen())
+        elif self.options.importmeta:
+            Backup.importAll(self.options.file, self.options.clean, self.options.skipbackfill)
         
-        if listen.upper() == 'TRUE': 
-            gevent.spawn_link_exception(Backup.listen())
-    
-
-class ImportMetaCommand(Command):
-    
-    def __init__(self, subparser):
-        subparser.add_argument("--file", help="The file name to import.  If blank, defaults to seer_export.yaml", default="seer_export.yaml")
         
-    def run(self):
-        from SimpleSeer.Backup import Backup
-        
-        filename = self.options.file
-        Backup.importAll(filename)
-    
-
-
-
 class ExportImagesCommand(Command):
 
     def __init__(self, subparser):
@@ -355,3 +379,28 @@ class ExportImagesQueryCommand(Command):
             file_name = self.options.dir + "/" + str(frame.id) + '.png'
             print 'Saving:',file_name
             frame.image.save(file_name)
+
+class MRRCommand(Command):
+    # Measurement repeatability and reproducability
+    
+    def __init__(self, subparser):
+        subparser.add_argument("--filter", help="Frame filter query", default = '')
+        
+    def run(self):
+        from SeerCloud.Control import MeasurementRandR
+        from ast import literal_eval
+        mrr = MeasurementRandR()
+
+        query = []
+        if self.options.filter:
+            query = [literal_eval(self.options.filter)]
+
+        df, deg = mrr.getData(query)
+        repeat = mrr.repeatability(df, deg)
+        repro = mrr.reproducability(df, deg)
+
+        print '--- Repeatability ---'
+        print repeat.to_string()
+
+        print '--- Reproducability ---'
+        print repro.to_string()

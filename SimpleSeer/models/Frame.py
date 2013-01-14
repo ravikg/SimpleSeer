@@ -71,7 +71,7 @@ class Frame(SimpleDoc, mongoengine.Document):
     @classmethod
     #which fields we care about for Filter.py
     def filterFieldNames(cls):
-        return ['_id', 'camera', 'capturetime', 'capturetime_epoch', 'metadata', 'notes', 'height', 'width', 'imgfile', 'features', 'results']
+        return ['_id', 'camera', 'capturetime', 'capturetime_epoch', 'metadata', 'notes', 'height', 'width', 'imgfile', 'results']
 
 
     @LazyProperty
@@ -129,7 +129,7 @@ class Frame(SimpleDoc, mongoengine.Document):
             img = self._imgcache
             if self.clip_id is None:
                 img.getPIL().save(s, "jpeg", quality = 100)
-                self.imgfile.replace(s.getvalue(), content_type = "image/jpg")
+                self.imgfile.replace(s.getvalue(), content_type = "image/jpeg")
           
             if len(img._mLayers):
                 if len(img._mLayers) > 1:
@@ -179,6 +179,11 @@ class Frame(SimpleDoc, mongoengine.Document):
                 self.metadata['tolstate'] = 'Fail'
         
         self.updatetime = datetime.utcnow()
+        
+        newFrame = False
+        if not self.id:
+            newFrame = True
+        
         super(Frame, self).save(*args, **kwargs)
 
         #TODO, this is sloppy -- we should handle this with cascading saves
@@ -191,7 +196,9 @@ class Frame(SimpleDoc, mongoengine.Document):
         
         # Once everything else is saved, publish result
         # Do not place any other save actions after this line or realtime objects will miss data
-        realtime.ChannelManager().publish('frame/', self)
+        # Only publish to frame/ channel if this is a new frame (not a re-saved frame from a backfill)
+        if newFrame:
+            realtime.ChannelManager().publish('frame/', self)
         
         
     def serialize(self):
