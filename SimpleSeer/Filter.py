@@ -424,11 +424,11 @@ class Filter():
     
     @classmethod
     def unEmbed(self, frame):
-        feats = frame['features']
-        newFeats = []
-        for f in feats:
-            newFeats.append(f['py/state'])
-        frame['features'] = newFeats
+        #feats = frame['features']
+        #newFeats = []
+        #for f in feats:
+        #    newFeats.append(f['py/state'])
+        #frame['features'] = newFeats
         
         results = frame['results']
         newRes = []
@@ -467,14 +467,19 @@ class Filter():
             tmpFrame['capturetime'] = frame['capturetime']
         
             for filt in filters:
+                #import pdb; pdb.set_trace()
                 nameParts = filt['name'].split('.')
-                if nameParts[0] == 'results':
-                    rest = '.'.join(nameParts[1:])
-                    key = filt['type'] + '.' + rest
+                if True: #if nameParts[0] == 'results':
+                    #rest = '.'.join(nameParts[1:])
+                    #key = filt['type'] + '.' + rest
                     for res in frame.get('results', []):
                         if res['measurement_name'] == filt['type']:
-                            val = self.getField(res, nameParts[1:]) 
-                            tmpFrame[key] = val
+                            key = '.'.join(nameParts)
+                            # quick hack to always make it numeric
+                            key = 'numeric'
+                            val = self.getField(res, [key]) 
+                            tmpFrame["%s.%s" % (filt['type'], key)] = val
+                """
                 elif nameParts[0] == 'features':
                     rest = '.'.join(nameParts[1:])
                     key = filt['type'] + '.' + rest
@@ -485,36 +490,7 @@ class Filter():
                     
                 else:
                     tmpFrame[filt['name']] = self.getField(frame, nameParts)
-            
-            """
-            # Grab the fields from the frame itself
-            for key in Frame.filterFieldNames():
-                if key == '_id' and 'id' in frame:
-                    key = 'id'
-                
-                keyParts = key.split('.')
-                tmpFrame[key] = self.getField(frame, keyParts)
-        
-        
-            
-            # Fields from the features
-            for feature in frame.get('features', []):
-                # If this feature has items that need to be saved
-                inspection_name = self.inspectionIdToName(feature['inspection']) 
-                if  inspection_name in featureKeys.keys():
-                    # Pull up the relevant keys, named featuretype.field
-                    for field in featureKeys[inspection_name]:
-                        keyParts = field.split('.')
-                        tmpFrame[feature['featuretype'] + '.' + field] = self.getField(feature, keyParts)
-             
-            # Fields from the results
-            for result in frame.get('results', []):
-                # If this result has items that need to be saved
-                if result['measurement_name'] in resultKeys.keys():
-                    for field in resultKeys[result['measurement_name']]:
-                        keyParts = field.split('.')
-                        tmpFrame[result['measurement_name'] + '.' + field] = self.getField(result, keyParts)
-        """
+                """
                     
             flatFrames.append(tmpFrame)
             
