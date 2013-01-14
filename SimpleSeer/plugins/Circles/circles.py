@@ -62,10 +62,7 @@ class Circles(base.InspectionPlugin):
                 fs = FeatureSet(f for f in fs if( f.radius()>=radius[0] ) )
             if( radius[1] is not None ):
                 fs = FeatureSet(f for f in fs if( f.radius()<=radius[1] ) )
-            fs.draw(width=3)
+            #fs.draw(width=3)
         
-        if( params.has_key("saveFile") ):
-            image.save("derp.png")
-            image.save(params["saveFile"])
 
         return fs 
