@@ -198,7 +198,24 @@ class Frame(SimpleDoc, mongoengine.Document):
         # Do not place any other save actions after this line or realtime objects will miss data
         # Only publish to frame/ channel if this is a new frame (not a re-saved frame from a backfill)
         if newFrame:
-            realtime.ChannelManager().publish('frame/', self)
+            #send the frame without features, and some other stuff
+            realtime.ChannelManager().publish('frame/', dict(
+                id = self.id,
+                capturetime = self.capturetime,
+                capturetime_epoch = self.capturetime_epoch,
+                updatetime = self.updatetime,
+                camera = self.camera,
+                results = self.results,
+                height = self.height,
+                width = self.width,
+                clip_id = self.clip_id,
+                clip_frame = self.clip_frame,
+                imgfile = self.imgfile,
+                thumbnail_file = self.thumbnail_file,
+                metadata = self.metadata,
+                notes = self.notes)
+            )
+        
         
         
     def serialize(self):
