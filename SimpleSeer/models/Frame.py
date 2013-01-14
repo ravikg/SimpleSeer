@@ -210,7 +210,7 @@ class Frame(SimpleDoc, mongoengine.Document):
                 width = self.width,
                 clip_id = self.clip_id,
                 clip_frame = self.clip_frame,
-                imgfile = self.imgfile,
+                imgfile = "/grid/imgfile/" + str(self.id),
                 thumbnail_file = self.thumbnail_file,
                 metadata = self.metadata,
                 notes = self.notes)
