@@ -5,6 +5,7 @@ import logging
 import calendar
 from datetime import datetime
 from cStringIO import StringIO
+import hashlib
 
 import bson.json_util
 import gevent
@@ -59,7 +60,15 @@ def sio(path):
     
 @route('/')
 def index():
-    return render_template("index.html",foo='bar')
+    files= ["javascripts/app.js","javascripts/vendor.js","stylesheets/app.css"]
+    settings = Session().get_config()
+    MD5Hashes = {}
+    for f in files:
+      fHandler = open("{0}/{1}".format(settings['web']['static']['/'],f), 'r')
+      m = hashlib.md5()
+      m.update(fHandler.read())
+      MD5Hashes[f] = dict(path=m.hexdigest(),type=f.rsplit(".")[1])
+    return render_template("index.html",MD5Hashes=MD5Hashes)
 
 @route('/reset', methods=['GET'])
 def reset():
