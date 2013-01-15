@@ -17,7 +17,6 @@ import shutil
 class ManageCommand(Command):
     "Simple management tasks that don't require SimpleSeer context"
     use_gevent = False
-    remote_seer = False
 
     def configure(self, options):
         self.options = options

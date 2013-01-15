@@ -27,7 +27,7 @@ class FrameSchema(fes.Schema):
     camera = fev.UnicodeString(not_empty=True)
     metadata = V.JSON(if_empty={}, if_missing={})
     notes = fev.UnicodeString(if_empty="", if_missing="")
-	#TODO, make this feasible as a formencode schema for upload
+    #TODO, make this feasible as a formencode schema for upload
 
 
 

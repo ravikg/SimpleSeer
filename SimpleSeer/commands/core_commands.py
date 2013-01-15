@@ -4,24 +4,23 @@ import os, subprocess
 from .base import Command
 
 
-class CoreStatesCommand(Command):
+class CoreCommand(Command):
     'Run the core server / state machine'
     use_gevent = True
-    remote_seer = False
 
     def __init__(self, subparser):
-        subparser.add_argument('program')
-        subparser.add_argument('--disable-pyro', action='store_true')
+        subparser.add_argument('program', default='', nargs="?")
         subparser.add_argument('--procname', default='corecommand', help='give each process a name for tracking within session')
         
     def run(self):
         from SimpleSeer.states import Core
-        import Pyro4
 
-        self.session.memprofile = self.options.memprofile
         core = Core(self.session)
         found_statemachine = False
-        with open(self.options.program) as fp:
+        
+        program = self.options.program or self.session.statemachine or 'states.py'
+
+        with open(program) as fp:
             exec fp in dict(core=core)
             found_statemachine = True
         
@@ -30,28 +29,10 @@ class CoreStatesCommand(Command):
             
 
         core.start_socket_communication()
+        core.run()
 
-        if not self.options.disable_pyro:
-            gevent.spawn_link_exception(core.run)
-            Pyro4.Daemon.serveSimple(
-                { core: "sightmachine.seer" },
-                ns=True)
-        else:
-            core.run()
 
-class CoreCommand(CoreStatesCommand):
-    'Run the core server'
-
-    def __init__(self, subparser):
-        subparser.add_argument('--disable-pyro', action='store_true')
-        subparser.add_argument('--memprofile', default=0)
-        subparser.add_argument('--procname', default='core', help='give each process a name for tracking within session')
-
-    def run(self):
-        self.options.program = self.session.statemachine or 'states.py'
-        super(CoreCommand, self).run()
-
-@Command.simple(use_gevent=False, remote_seer=True)
+@Command.simple(use_gevent=False)
 def ControlsCommand(self):
     'Run a control event server'
     from SimpleSeer.Controls import Controls
@@ -59,7 +40,7 @@ def ControlsCommand(self):
     if self.session.arduino:
        Controls(self.session).run()
 
-@Command.simple(use_gevent=False, remote_seer=False)
+@Command.simple(use_gevent=False)
 def PerfTestCommand(self):
     'Run the core performance test'
     from SimpleSeer.SimpleSeer import SimpleSeer
@@ -70,7 +51,7 @@ def PerfTestCommand(self):
     seer = SimpleSeer()
     seer.run()
 
-@Command.simple(use_gevent=True, remote_seer=False)
+@Command.simple(use_gevent=True)
 def OlapCommand(self):
     try:
         from SeerCloud.OLAPUtils import ScheduledOLAP, RealtimeOLAP
@@ -120,7 +101,7 @@ class WebCommand(Command):
         web = WebServer(make_app())
         web.run_gevent_server()
 
-@Command.simple(use_gevent=True, remote_seer=True)
+@Command.simple(use_gevent=True)
 def OPCCommand(self):
     '''
     You will also need to add the following to your config file:
@@ -180,7 +161,7 @@ def OPCCommand(self):
         counter = tagcounter
 
 
-@Command.simple(use_gevent=True, remote_seer=True)
+@Command.simple(use_gevent=True)
 def BrokerCommand(self):
     'Run the message broker'
     from SimpleSeer.broker import PubSubBroker
@@ -189,7 +170,7 @@ def BrokerCommand(self):
     psb.start()
     psb.join()
 
-@Command.simple(use_gevent=False, remote_seer=True)
+@Command.simple(use_gevent=False)
 def ScrubCommand(self):
     'Run the frame scrubber'
     from SimpleSeer import models as M
@@ -221,7 +202,7 @@ def ScrubCommand(self):
         self.log.info('Purged %d frame files', q_csr.count())
         time.sleep(retention["interval"])
 
-@Command.simple(use_gevent=False, remote_seer=True)
+@Command.simple(use_gevent=False)
 def ShellCommand(self):
     'Run the ipython shell'
     import subprocess
@@ -234,7 +215,7 @@ def ShellCommand(self):
       
     subprocess.call(cmd, stderr=subprocess.STDOUT)
 
-@Command.simple(use_gevent=True, remote_seer=False)
+@Command.simple(use_gevent=True)
 def NotebookCommand(self):
     'Run the ipython notebook server'
     import subprocess
@@ -242,7 +223,7 @@ def NotebookCommand(self):
             '--port', '5050',
             '--ext', 'SimpleSeer.notebook', '--pylab', 'inline'], stderr=subprocess.STDOUT)
 
-#~ @Command.simple(use_gevent=True, remote_seer=False)
+#~ @Command.simple(use_gevent=True)
 class WorkerCommand(Command):
     '''
     This Starts a distributed worker object using the celery library.
