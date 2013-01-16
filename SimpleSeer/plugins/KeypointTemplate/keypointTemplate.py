@@ -1,9 +1,8 @@
 import numpy as np
 
-from SimpleCV import *
+from SimpleCV import Image
 from SimpleSeer import models as M
 from SimpleSeer import util
-
 from SimpleSeer.plugins import base
 """
 Overly simplified template matching plugin
