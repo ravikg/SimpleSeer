@@ -198,27 +198,30 @@ def ScrubCommand(self):
         self.log.info('No retention policy set, skipping cleanup')
         return
     while retention['interval']:
-        q_csr = M.Frame.objects(imgfile__ne = None)
-        q_csr = q_csr.order_by('-capturetime')
-        q_csr = q_csr.skip(retention['maxframes'])
-        for f in q_csr:
-            # clean out the fs.files and .chunks
-            f.imgfile.delete()
-            f.imgfile = None
+        if not M.Frame._get_db().metaschedule.count():
+            q_csr = M.Frame.objects(imgfile__ne = None)
+            q_csr = q_csr.order_by('-capturetime')
+            q_csr = q_csr.skip(retention['maxframes'])
+            for f in q_csr:
+                # clean out the fs.files and .chunks
+                f.imgfile.delete()
+                f.imgfile = None
         
-            if retention['purge']:
-                f.delete()
-            else:
-                f.save(False)
-        # This line of code needed to solve fragmentation bug in mongo
-        # Can run very slow when run on large collections
-        db = M.Frame._get_db()
-        if 'fs.files' in db.collection_names():
-            db.command({'compact': 'fs.files'})
-        if 'fs.chunks' in db.collection_names():
-            db.command({'compact': 'fs.chunks'})
+                if retention['purge']:
+                    f.delete()
+                else:
+                    f.save(False)
+            # This line of code needed to solve fragmentation bug in mongo
+            # Can run very slow when run on large collections
+            db = M.Frame._get_db()
+            if 'fs.files' in db.collection_names():
+                db.command({'compact': 'fs.files'})
+            if 'fs.chunks' in db.collection_names():
+                db.command({'compact': 'fs.chunks'})
         
-        self.log.info('Purged %d frame files', q_csr.count())
+            self.log.info('Purged %d frame files', q_csr.count())
+        else:
+            self.log.info('Backfill running.  Waiting to scrube')
         time.sleep(retention["interval"])
 
 @Command.simple(use_gevent=False, remote_seer=True)
