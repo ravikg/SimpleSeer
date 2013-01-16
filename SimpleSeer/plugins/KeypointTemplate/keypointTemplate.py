@@ -76,7 +76,6 @@ class KeypointTemplate(base.InspectionPlugin):
         break 
 
     if fs is not None:
-      fs.draw()
       for f in fs: # do the conversion from SCV featureset to SimpleSeer featureset
         f._homography = None
         f._template = None
@@ -87,6 +86,7 @@ class KeypointTemplate(base.InspectionPlugin):
         retVal.append(f)
 
     if( params.has_key("saveFile") ):
+      fs.draw()
       image.save(params["saveFile"])
 
     return retVal 
