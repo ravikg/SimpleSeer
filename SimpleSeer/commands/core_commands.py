@@ -198,6 +198,9 @@ def ScrubCommand(self):
         self.log.info('No retention policy set, skipping cleanup')
         return
     while retention['interval']:
+        while M.Frame._get_db().metaschedule.count() > 0:
+            self.log.info('backfill running.  delaying scrub')
+            time.sleep(30)
         q_csr = M.Frame.objects(imgfile__ne = None)
         q_csr = q_csr.order_by('-capturetime')
         q_csr = q_csr.skip(retention['maxframes'])
