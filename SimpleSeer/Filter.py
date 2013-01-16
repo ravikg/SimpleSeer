@@ -469,6 +469,8 @@ class Filter():
             for filt in filters:
                 #import pdb; pdb.set_trace()
                 nameParts = filt['name'].split('.')
+                if nameParts[0] == 'results':
+                    nameParts = nameParts[1:]
                 if True: #if nameParts[0] == 'results':
                     #rest = '.'.join(nameParts[1:])
                     #key = filt['type'] + '.' + rest
@@ -476,8 +478,8 @@ class Filter():
                         if res['measurement_name'] == filt['type']:
                             key = '.'.join(nameParts)
                             # quick hack to always make it numeric
-                            key = 'numeric'
-                            val = self.getField(res, [key]) 
+                            #key = 'numeric'
+                            val = self.getField(res, nameParts) 
                             tmpFrame["%s.%s" % (filt['type'], key)] = val
                 """
                 elif nameParts[0] == 'features':
