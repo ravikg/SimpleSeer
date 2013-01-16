@@ -72,18 +72,24 @@ class Backup:
         from .models.MetaSchedule import MetaSchedule
         
         if clean:
+            log.info('Removing old features and results')
+            M.Frame._get_db().frame.update({}, {'results': [], 'features': []})
+            M.Frame._get_db().metaschedule.remove()
+           
+            log.info('Stopping celery tasks')
+            from celery import Celery
+            from . import celeryconfig
+            celery = Celery()
+            celery.config_from_object(celeryconfig)
+            res = celery.control.purge()
+            log.info('Stopped %s celery tasks' % res)
+ 
             log.info('Removing old metadata')
             M.Inspection.objects.delete()
             M.Measurement.objects.delete()
             M.OLAP.objects.delete()
             M.Chart.objects.delete()
             M.Dashboard.objects.delete()
-            
-            log.info('Removing old features and results')
-            for f in M.Frame.objects:
-                f.results = []
-                f.features = []
-                f.save()
         else:
             log.info('Preserving old metadata.  Any new results/features will be appended to existing results/features')
         
