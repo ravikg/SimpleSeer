@@ -87,7 +87,7 @@ def backfill_meta(frame_id, inspection_ids, measurement_ids):
                     i = M.Inspection.objects.get(id=i_id)
                     
                     if not i.parent:
-                        if not i.camera or i.camera == frame.camera: 
+                        if not i.camera or i.camera == f.camera: 
                             f.features += i.execute(f)
                 except Exception as e:
                     print 'Error on inspection %s: %s' % (i_id, e)
