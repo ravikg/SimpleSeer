@@ -56,7 +56,6 @@ class Frame(SimpleDoc, mongoengine.Document):
     clip_id = mongoengine.ObjectIdField(default=None)
     clip_frame = mongoengine.IntField(default=None)
     imgfile = mongoengine.FileField()
-    layerfile = mongoengine.FileField()
     thumbnail_file = mongoengine.FileField()
     metadata = mongoengine.DictField()
     notes = mongoengine.StringField()
@@ -109,11 +108,6 @@ class Frame(SimpleDoc, mongoengine.Document):
         else: # pragma no cover
             self._imgcache = None
 
-
-        if self.layerfile:
-            self.layerfile.get().seek(0,0)
-            self._imgcache.dl()._mSurface = pygame.image.fromstring(self.layerfile.read(), self._imgcache.size(), "RGBA")
-
         return self._imgcache
 
     @image.setter
@@ -123,7 +117,6 @@ class Frame(SimpleDoc, mongoengine.Document):
         self._imgcache = value
 
     def save_image(self):
-        
         if self._imgcache != '' and self._imgcache_dirty:
             s = StringIO()
             img = self._imgcache
@@ -131,16 +124,6 @@ class Frame(SimpleDoc, mongoengine.Document):
                 img.getPIL().save(s, "jpeg", quality = 100)
                 self.imgfile.replace(s.getvalue(), content_type = "image/jpeg")
           
-            if len(img._mLayers):
-                if len(img._mLayers) > 1:
-                    mergedlayer = DrawingLayer(img.size())
-                    for layer in img._mLayers[::-1]:
-                        layer.renderToOtherLayer(mergedlayer)
-                else:
-                    mergedlayer = img.dl()
-                self.layerfile.replace(pygame.image.tostring(mergedlayer._mSurface, "RGBA"))
-                #TODO, make layerfile a compressed object
-            #self._imgcache = ''
             self._imgcache_dirty = False
             
         return self.imgfile.grid_id
