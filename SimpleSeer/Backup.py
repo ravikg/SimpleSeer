@@ -80,10 +80,8 @@ class Backup:
             M.Dashboard.objects.delete()
             
             log.info('Removing old features and results')
-            for f in M.Frame.objects:
-                f.results = []
-                f.features = []
-                f.save()
+            M.Frame._get_db().frame.update({}, {'results': [], 'features': []})
+            M.Frame._get_db().metaschedule.remove()
         else:
             log.info('Preserving old metadata.  Any new results/features will be appended to existing results/features')
         
