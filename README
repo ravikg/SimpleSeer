@@ -1,13 +1,16 @@
 The SimpleSeer is a framework to create inspections and take measurements,
 it uses the SimpleCV framework and MongoDB to turn any PC into a vision appliance.
 
-Examples of usage:
+Examples of command line usage:
 ==========================
 
-To start SimpleSeer in continuous mode:
+SimpleSeer requires you to create a new project to use:
+    $ simpleseer create MYPROJECT 
+    $ cd MYPROJECT 
+
+Once enabled, you can start SimpleSeer in continuous mode:
 
     $ cd SimpleSeer
-    $ python -mPyro4.naming &
     $ simpleseer broker & 
     $ simpleseer core &
     $ simpleseer web 
@@ -21,22 +24,34 @@ To run a script:
    
     $ simpleseer script my-commands.py
 
-To create a new project (this will create a new directory PROJECTNAME):
-  
-    $ paster create -t simpleseer PROJECTNAME
+To export the last 10 images:
+    
+    $ simpleseer images -n 10
+
+To rebuild the web interface:
+
+    $ simpleseer build
+
+To deploy to a production server (with supervisord):
+
+    $ simpleseer deploy
 
 
-To capture an image, display, and store in the database:
-
-    >>> frames = SS.capture()
-    >>> frames[0].image.show()
-    >>> frames[0].save()
+Examples of shell/script usage:
+==========================
 
 To retrieve and display all captured frames at a 1 second delay:
 
     >>> for f in Frame.objects:
     >>>   f.image.show()
     >>>   time.sleep(1)
+
+To list loaded inspections and measurements:
+
+   >>> print Inspection.objects
+   >>> print Measurement.objects
+
+
 
 Installation instructions:
 ==========================
