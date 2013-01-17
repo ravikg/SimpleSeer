@@ -29,4 +29,3 @@ module.exports = class SubView extends View
       #foo.$el.addClass className
     super
     @
-    
