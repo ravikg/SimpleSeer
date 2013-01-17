@@ -17,7 +17,6 @@ import flask
 from . import models as M
 from . import util
 from .realtime import RealtimeNamespace, ChannelManager
-from .service import SeerProxy2
 from .Session import Session
 from .Filter import Filter
 
@@ -102,9 +101,8 @@ def getContext(name):
     
 @route('/plugins.js')
 def plugins():
-    seer = SeerProxy2()
     result = []
-    for ptype, plugins in seer.plugins.items():
+    for ptype, plugins in util.all_plugins().items():
         for name, plugin in plugins.items():
             if 'coffeescript' in dir(plugin):
                 for requirement, cs in plugin.coffeescript():
@@ -136,18 +134,6 @@ def test_json():
     return 'This is a test of the emergency broadcast system'
 
 
-@route('/frame', methods=['GET', 'POST'])
-def frame():
-    params = {
-        'index': -1,
-        'camera': 0,
-        }
-    params.update(request.values)
-    seer = SeerProxy2()
-    result = seer.get_image(**params)
-    resp = make_response(result['data'], 200)
-    resp.headers['Content-Type'] = result['content_type']
-    return resp
 
 @route('/frames', methods=['GET'])
 @util.jsonify
@@ -285,253 +271,6 @@ def thumbnail(frame_id):
     resp.headers['Content-Type'] = frame.thumbnail_file.content_type
     return resp    
 
-
-@route('/latestimage-width<int:width>-camera<int:camera>.jpg', methods=['GET'])
-def latest_image(width=0, camera=0):
-    params = {
-        'width': width,
-        'index': -1,
-        'camera': camera,
-        }
-    params.update(request.values)
-
-    seer = SeerProxy2()
-    log.info('Getting latest image in greenlet %s', gevent.getcurrent())
-    img = seer.get_image(**params)
-    resp = make_response(img['data'], 200)
-    resp.headers['Content-Type'] = img['content_type']
-    resp.headers['Content-Length'] = len(img['data'])
-    return resp
-
-
-@route('/videofeed-width<int:width>-camera<int:camera>.mjpeg', methods=['GET'])
-def videofeed(width=0, camera=0):    
-    params = {
-        'width': width,
-        'index': -1,
-        'camera': camera,
-        }
-    params.update(request.values)
-    
-
-    seer = SeerProxy2()
-    log.info('Feeding video in greenlet %s', gevent.getcurrent())
-    def generate():        
-        socket = ChannelManager().subscribe("capture/")
-        
-        while True:
-            img = seer.get_image(**params)
-            yield '--BOUNDARYSTRING\r\n'
-            yield 'Content-Type: %s\r\n' % img['content_type']
-            yield 'Content-Length: %d\r\n' % len(img['data'])
-
-            yield '\r\n'
-            yield img['data']
-            yield '\r\n'
-            gevent.sleep(0)
-            socket.recv() #we actually ignore the message
-    return Response(
-        generate(),
-        headers=[
-            ('Connection', 'close'),
-            ('Max-Age', '0'),
-            ('Expires', '0'),
-            ('Cache-Control', 'no-cache, private'),
-            ('Pragma', 'no-cache'),
-            ('Content-Type',
-             "multipart/x-mixed-replace; boundary=--BOUNDARYSTRING") ])
-
-
-@route('/videofeed-width<int:width>.mjpeg', methods=['GET'])
-def videofeed_width_only(width=0):
-    return videofeed(width)
-
-@route('/videofeed-camera<int:camera>.mjpeg', methods=['GET'])
-def videofeed_camera_only(camera=0):
-    return videofeed(0,camera)
-
-@route('/videofeed.mjpeg', methods=['GET'])
-def videofeed_camera_res():
-    return videofeed()
-    
-
-@route('/frame_capture', methods=['GET', 'POST'])
-@util.jsonify
-def frame_capture():
-    seer = util.get_seer()
-    seer.capture()
-    seer.inspect()
-    seer.update()
-    return dict( capture = "ok" )
-
-@route('/frame_inspect', methods=['GET', 'POST'])
-@util.jsonify
-def frame_inspect():
-    seer = util.get_seer()
-    try:
-        seer.inspect()
-        seer.update()
-        return dict( inspect = "ok")
-    except:
-        return dict( inspect = "fail")
-
-@route('/histogram', methods=['GET', 'POST'])
-@util.jsonify
-def histogram():
-    params = dict(bins = 50, channel = '', focus = "",
-                  camera = 0, index = -1, frameid = '')
-    params.update(request.values.to_dict())
-    
-    frame = (util.get_seer().lastframes
-             [params['index']]
-             [params['camera']])
-    focus = params['focus']
-    if focus != "" and int(focus) < len(frame.features):
-        feature = frame.features[int(focus)].feature
-        feature.image = frame.image
-        img = feature.crop()
-    else:
-        img = frame.image
-
-    bins = params['bins']
-    return img.histogram(bins)
-
-
-@route('/inspection_add', methods=['GET', 'POST'])
-@util.jsonify
-def inspection_add():
-    params = request.values.to_dict()
-
-    try:
-        seer = util.get_seer()
-        M.Inspection(
-            name = params.get("name"),    
-            camera = params.get("camera"),
-            method = params.get("method"),
-            parameters = json.loads(params.get("parameters"))).save()
-        seer.reloadInspections()
-        seer.inspect()
-        #util.get_seer().update()
-        return seer.inspections()
-    except:
-        return dict(status = "fail")
-
-@route('/inspection_preview', methods=['GET', 'POST'])
-@util.jsonify
-def inspection_preview():
-    params = request.values.to_dict()
-    try:
-        insp = M.Inspection(
-            name = params.get("name"),
-            camera = params.get("camera"),
-            method = params.get("method"),
-            parameters = json.loads(params.get("parameters")))
-        #TODO fix for different cameras
-        #TODO catch malformed data
-        features = insp.execute(util.get_seer().lastframes[-1][0].image)
-        return { "inspection": insp, "features": features }
-    except:
-        return dict(status = "fail")
-
-
-
-@route('/inspection_remove', methods=['GET', 'POST'])
-@util.jsonify
-def inspection_remove():
-    params = request.values.to_dict()
-    seer = util.get_seer()
-    M.Inspection.objects(id = bson.ObjectId(params["id"])).delete()
-    #for m in Measurement.objects(inspection = bson.ObjectId(params["id"])):
-    M.Watcher.objects.delete() #todo narrow by measurement
-
-    M.Measurement.objects(inspection = bson.ObjectId(params["id"])).delete()
-    #M.Result.objects(inspection_id = bson.ObjectId(params["id"])).delete()
-    seer.reloadInspections()
-    seer.inspect()
-    #util.get_seer().update()
-
-
-    return seer.inspections
-  #except:
-  #  return dict(status = "fail")
-
-@route('/inspection_update', methods=['GET', 'POST'])
-@util.jsonify
-def inspection_update():
-    try:
-        params = request.values.to_dict()
-        results = M.Inspection.objects(id = bson.ObjectId(params["id"]))
-        if not len(results):
-            return { "error": "no inspection id"}
-
-        insp = results[0]
-
-        if params.has_key("name"):
-            insp.name = params["name"]
-
-        if params.has_key("parameters"):
-            insp.parameters = json.loads(params["parameters"])
-
-        #TODO, add sorts, filters etc
-        insp.save()
-        return util.get_seer().inspections
-    except:
-        return dict(status = "fail")
-
-@route('/measurement_add', methods=['GET', 'POST'])
-@util.jsonify
-def measurement_add():
-    try:
-        params = request.values.to_dict()
-        if not params.has_key('units'):
-            params['units'] = 'px';
-
-        m = M.Measurement(name = params["name"],
-                          label = params['label'],
-                          method = params['method'],
-                          featurecriteria = json.loads(params["featurecriteria"]),
-                          parameters = json.loads(params["parameters"]),
-                          units = params['units'],
-                          inspection = bson.ObjectId(params['inspection']))
-        m.save()
-
-        #backfill?
-        seer = util.get_seer()
-        seer.reloadInspections()
-        seer.inspect()
-        #util.get_seer().update()
-
-        return m
-    except:
-        return dict(status = "fail")
-
-@route('/measurement_remove', methods=['GET', 'POST'])
-@util.jsonify
-def measurement_remove():
-    try:
-        params = request.values.to_dict()
-        M.Measurement.objects(id = bson.ObjectId(params["id"])).delete()
-        #M.Result.objects(measurement_id = bson.ObjectId(params["id"])).delete()
-        M.Watcher.objects.delete() #todo narrow by measurement
-
-        util.get_seer().reloadInspections()
-        #util.get_seer().update()
-
-        return dict( remove = "ok")
-    except:
-        return dict(status = "fail")
-
-"""
-@route('/measurement_results', methods=['GET', 'POST'])
-@util.jsonify
-def measurement_results(self, **params):
-    try:
-        params = request.values.to_dict()
-        return list(M.Result.objects(measurement = bson.ObjectId(params["id"])).order_by("-capturetime"))
-    except:
-        return dict(status = "fail")
-"""
-
 @route('/ping', methods=['GET', 'POST'])
 @util.jsonify
 def ping():
@@ -552,41 +291,7 @@ def settings():
             pass    
     return {"settings": text, "plugins":plugins }
 
-@route('/start', methods=['GET', 'POST'])
-def start():
-    try:
-        util.get_seer().start()
-    except:
-        util.get_seer().resume()
-    return "OK"
 
-@route('/stop', methods=['GET', 'POST'])
-def stop():
-    util.get_seer().stop()
-    return "OK"
-
-@route('/watcher_add', methods=['GET', 'POST'])
-@util.jsonify
-def watcher_add():
-    params = request.values.to_dict()
-    M.Watcher(**params).save()
-
-    util.get_seer().reloadInspections()
-    return util.get_seer().watchers
-
-@route('/watcher_list_handlers', methods=['GET', 'POST'])
-@util.jsonify
-def watcher_list_handlers():
-    return [s for s in dir(M.Watcher) if re.match("handler_", s)]
-
-@route('/watch_remove', methods=['GET', 'POST'])
-@util.jsonify
-def watcher_remove():
-    params = request.values.to_dict()
-    M.Watcher.objects(id = bson.ObjectId(params["id"])).delete()
-    
-    util.get_seer().reloadInspections()
-    return util.get_seer().watchers
 
 @route('/_status', methods=['GET', 'POST'])
 def status():
