@@ -17,7 +17,6 @@ def load_ipython_extension(ipython):
     ipython.push(
         dict(
             Frame = M.Frame,
-            Result = M.Result,
             OLAP = M.OLAP,
             Chart = M.Chart,
             FrameSet = M.FrameSet,

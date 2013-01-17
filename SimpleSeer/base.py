@@ -23,13 +23,6 @@ except(ImportError):
 
 import cv
 
-try:
-    import pyfirmata
-except:
-    warnings.warn(
-        'Pyfirmata is not installed on this system. '
-        'It is not required but recommended', Warning)
-
 #import redis
 import mongoengine
 import bson

@@ -6,7 +6,7 @@ from FrameFeature import FrameFeature
 from Inspection import Inspection, InspectionSchema
 from Measurement import Measurement, MeasurementSchema
 from FrameSet import FrameSet, FrameSetSchema
-from Result import Result, ResultEmbed
+from Result import ResultEmbed
 from Watcher import Watcher
 from Alert import Alert
 from Clip import Clip

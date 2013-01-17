@@ -27,7 +27,7 @@ class Clip(SimpleDoc, mongoengine.Document):
             deadline = vpx.VPX_DL_REALTIME
 
         def result(img_iter):
-	    packets, images = [], []
+            packets, images = [], []
             encoder = pyvpx.Encoder(width, height)
             for f_no, scv_img in enumerate(img_iter):
                 images.append(scv_img)

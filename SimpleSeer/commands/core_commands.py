@@ -4,24 +4,23 @@ import os, subprocess
 from .base import Command
 
 
-class CoreStatesCommand(Command):
+class CoreCommand(Command):
     'Run the core server / state machine'
     use_gevent = True
-    remote_seer = False
 
     def __init__(self, subparser):
-        subparser.add_argument('program')
-        subparser.add_argument('--disable-pyro', action='store_true')
+        subparser.add_argument('program', default='', nargs="?")
         subparser.add_argument('--procname', default='corecommand', help='give each process a name for tracking within session')
         
     def run(self):
         from SimpleSeer.states import Core
-        import Pyro4
 
-        self.session.memprofile = self.options.memprofile
         core = Core(self.session)
         found_statemachine = False
-        with open(self.options.program) as fp:
+        
+        program = self.options.program or self.session.statemachine or 'states.py'
+
+        with open(program) as fp:
             exec fp in dict(core=core)
             found_statemachine = True
         
@@ -30,28 +29,10 @@ class CoreStatesCommand(Command):
             
 
         core.start_socket_communication()
+        core.run()
 
-        if not self.options.disable_pyro:
-            gevent.spawn_link_exception(core.run)
-            Pyro4.Daemon.serveSimple(
-                { core: "sightmachine.seer" },
-                ns=True)
-        else:
-            core.run()
 
-class CoreCommand(CoreStatesCommand):
-    'Run the core server'
-
-    def __init__(self, subparser):
-        subparser.add_argument('--disable-pyro', action='store_true')
-        subparser.add_argument('--memprofile', default=0)
-        subparser.add_argument('--procname', default='core', help='give each process a name for tracking within session')
-
-    def run(self):
-        self.options.program = self.session.statemachine or 'states.py'
-        super(CoreCommand, self).run()
-
-@Command.simple(use_gevent=False, remote_seer=True)
+@Command.simple(use_gevent=False)
 def ControlsCommand(self):
     'Run a control event server'
     from SimpleSeer.Controls import Controls
@@ -59,18 +40,7 @@ def ControlsCommand(self):
     if self.session.arduino:
        Controls(self.session).run()
 
-@Command.simple(use_gevent=False, remote_seer=False)
-def PerfTestCommand(self):
-    'Run the core performance test'
-    from SimpleSeer.SimpleSeer import SimpleSeer
-    from SimpleSeer import models as M
-
-    self.session.auto_start = False
-    self.session.poll_interval = 0
-    seer = SimpleSeer()
-    seer.run()
-
-@Command.simple(use_gevent=True, remote_seer=False)
+@Command.simple(use_gevent=True)
 def OlapCommand(self):
     try:
         from SeerCloud.OLAPUtils import ScheduledOLAP, RealtimeOLAP
@@ -120,7 +90,7 @@ class WebCommand(Command):
         web = WebServer(make_app())
         web.run_gevent_server()
 
-@Command.simple(use_gevent=True, remote_seer=True)
+@Command.simple(use_gevent=True)
 def OPCCommand(self):
     '''
     You will also need to add the following to your config file:
@@ -180,7 +150,7 @@ def OPCCommand(self):
         counter = tagcounter
 
 
-@Command.simple(use_gevent=True, remote_seer=True)
+@Command.simple(use_gevent=True)
 def BrokerCommand(self):
     'Run the message broker'
     from SimpleSeer.broker import PubSubBroker
@@ -189,7 +159,7 @@ def BrokerCommand(self):
     psb.start()
     psb.join()
 
-@Command.simple(use_gevent=False, remote_seer=True)
+@Command.simple(use_gevent=False)
 def ScrubCommand(self):
     'Run the frame scrubber'
     from SimpleSeer import models as M
@@ -224,7 +194,7 @@ def ScrubCommand(self):
             self.log.info('Backfill running.  Waiting to scrube')
         time.sleep(retention["interval"])
 
-@Command.simple(use_gevent=False, remote_seer=True)
+@Command.simple(use_gevent=False)
 def ShellCommand(self):
     'Run the ipython shell'
     import subprocess
@@ -237,7 +207,7 @@ def ShellCommand(self):
       
     subprocess.call(cmd, stderr=subprocess.STDOUT)
 
-@Command.simple(use_gevent=True, remote_seer=False)
+@Command.simple(use_gevent=True)
 def NotebookCommand(self):
     'Run the ipython notebook server'
     import subprocess
@@ -245,7 +215,6 @@ def NotebookCommand(self):
             '--port', '5050',
             '--ext', 'SimpleSeer.notebook', '--pylab', 'inline'], stderr=subprocess.STDOUT)
 
-#~ @Command.simple(use_gevent=True, remote_seer=False)
 class WorkerCommand(Command):
     '''
     This Starts a distributed worker object using the celery library.
@@ -286,12 +255,11 @@ class WorkerCommand(Command):
 class MetaCommand(Command):
     
     def __init__(self, subparser):
-        subparser.add_argument('--exportmeta', action='store_true')
-        subparser.add_argument('--importmeta', action='store_true')
-        subparser.add_argument("--listen", help="Run export as daemon listing for changes and exporting when changes found.", action='store_true')
+        subparser.add_argument('subsubcommand', help="metadata [import|export]", default="export")
+        subparser.add_argument("--listen", help="(export) Run as daemon listing for changes and exporting when changes found.", action='store_true')
         subparser.add_argument("--file", help="The file name to export/import.  If blank, defaults to seer_export.yaml", default="seer_export.yaml")
-        subparser.add_argument('--clean', help="Delete existing metadata before importing", action='store_true')
-        subparser.add_argument('--skipbackfill', help="Do not run a backfill after importing", action='store_true')
+        subparser.add_argument('--clean', help="(import) Delete existing metadata before importing", action='store_true')
+        subparser.add_argument('--skipbackfill', help="(import) Do not run a backfill after importing", action='store_true')
         
         subparser.add_argument('--procname', default='meta', help='give each process a name for tracking within session')
 
@@ -299,22 +267,18 @@ class MetaCommand(Command):
     def run(self):
         from SimpleSeer.Backup import Backup
         
-        if self.options.exportmeta and self.options.importmeta:
-            self.log.info("Both export and import specified.  Ignoring import command")
-            self.options.importmeta = False
-        if not self.options.exportmeta and not self.options.importmeta:
-            self.log.info("Neither import or export specified.  Defaulting to export")
-            self.options.exportmeta = True
-        if self.options.exportmeta and self.options.clean:
+        if self.options.subsubcommand != 'import' and self.options.subsubcommand != 'export':
+            self.log.info("Valid subcommands are import and export.  Ignoring \"{}\".".format(self.options.subsubcommand))
+        if self.options.subsubcommand == "export" and self.options.clean:
             self.log.info("Clean option not applicable when exporting.  Ignoring")
-        if self.options.importmeta and self.options.listen:
+        if self.options.subsubcommand == "import" and self.options.listen:
             self.log.info("Listen option not applicable when importing.  Ignorning")
         
-        if self.options.exportmeta:
+        if self.options.subsubcommand == "export":
             Backup.exportAll()
             if self.options.listen: 
                 gevent.spawn_link_exception(Backup.listen())
-        elif self.options.importmeta:
+        elif self.options.subsubcommand == "import":
             Backup.importAll(self.options.file, self.options.clean, self.options.skipbackfill)
         
         
@@ -323,34 +287,6 @@ class ExportImagesCommand(Command):
     def __init__(self, subparser):
         subparser.add_argument("--number", help="This is the number of lastframes you want, use 'all' if you want all the images ever", default='all', nargs='?')
         subparser.add_argument("--dir", default=".", nargs="?")
-
-
-    def run(self):
-        "Dump the images stored in the database to a local directory in standard image format"
-        from SimpleSeer.SimpleSeer import SimpleSeer
-        from SimpleSeer import models as M
-
-
-        number_of_images = self.options.number
-
-        if number_of_images != 'all':
-            number_of_images = int(number_of_images)
-            frames = M.Frame.objects().order_by("-capturetime").limit(number_of_images)
-        else:
-            frames = M.Frame.objects()
-
-        num_of_frames = len(frames)
-        counter = 1
-
-        for frame in frames:
-            file_name = self.options.dir + "/" + str(frame.id) + '.png'
-            print 'Saving file (',counter,'of',len(frames),'):',file_name
-            frame.image.save(file_name)
-            counter += 1
-
-class ExportImagesQueryCommand(Command):
-
-    def __init__(self, subparser):
         from argparse import RawTextHelpFormatter, RawDescriptionHelpFormatter
         subparser.formatter_class=RawDescriptionHelpFormatter
         help_text = '''
@@ -364,24 +300,35 @@ class ExportImagesQueryCommand(Command):
         So you would run the command as:
         simpleseer export-images-query "{'id':'502bfa6856a8bf1e755c702d', 'width__gte': '50'}"
         '''
-        subparser.add_argument("--query", help=help_text)
-        subparser.add_argument("--dir", default=".", nargs="?")
+        subparser.add_argument("--query", help=help_text, nargs="?")
 
     def run(self):
-        "Dump the images stored in the database to a local directory in standard image format with a specific query"
-        from SimpleSeer.SimpleSeer import SimpleSeer
+        "Dump the images stored in the database to a local directory in standard image format"
         from SimpleSeer import models as M
         import ast
+        
+        query = {}
+        if self.options.query:
+            query = self.options.query
+            query = ast.literal_eval(query)
+        
+        number_of_images = self.options.number
 
-        print "Saving images to local directory"
-        query = self.options.query
-        query = ast.literal_eval(query)
-        frames = M.Frame.objects(**query).order_by("-capturetime")
+        if number_of_images != 'all':
+            number_of_images = int(number_of_images)
+            frames = M.Frame.objects(**query).order_by("-capturetime").limit(number_of_images)
+        else:
+            frames = M.Frame.objects(**query)
+
+        num_of_frames = len(frames)
+        counter = 1
 
         for frame in frames:
             file_name = self.options.dir + "/" + str(frame.id) + '.png'
-            print 'Saving:',file_name
+            print 'Saving file (',counter,'of',len(frames),'):',file_name
             frame.image.save(file_name)
+            counter += 1
+
 
 class MRRCommand(Command):
     # Measurement repeatability and reproducability
