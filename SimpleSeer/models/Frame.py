@@ -121,7 +121,7 @@ class Frame(SimpleDoc, mongoengine.Document):
             s = StringIO()
             img = self._imgcache
             if self.clip_id is None:
-                img.getPIL().save(s, "jpeg", quality = 100)
+                img.getPIL().save(s, "jpeg", quality = Session().compression_quality or 100)
                 self.imgfile.replace(s.getvalue(), content_type = "image/jpeg")
           
             self._imgcache_dirty = False
