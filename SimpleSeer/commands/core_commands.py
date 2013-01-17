@@ -27,9 +27,11 @@ class CoreCommand(Command):
         if not found_statemachine:
             raise Exception("State machine " + self.options.program + " not found!")
             
-
-        core.start_socket_communication()
-        core.run()
+        try:
+            core.start_socket_communication()
+            core.run()
+        except KeyboardInterrupt as e:
+            print "Interupted by user"
 
 
 @Command.simple(use_gevent=False)
@@ -70,7 +72,7 @@ class WebCommand(Command):
         from SimpleSeer import models as M
         from pymongo import Connection, DESCENDING, ASCENDING
         from SimpleSeer.models.Inspection import Inspection, Measurement
-	import mongoengine
+        import mongoengine
 
         # Plugins must be registered for queries
         Inspection.register_plugins('seer.plugins.inspection')
@@ -88,8 +90,11 @@ class WebCommand(Command):
             self.log.info('Could not create indexes')
             
         web = WebServer(make_app())
-        web.run_gevent_server()
-
+        try:
+            web.run_gevent_server()
+        except KeyboardInterrupt as e:
+            print "Interrupted by user"
+        
 @Command.simple(use_gevent=True)
 def OPCCommand(self):
     '''
