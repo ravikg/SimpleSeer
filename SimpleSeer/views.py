@@ -106,13 +106,13 @@ def plugins():
     result = []
     for ptype, plugins in seer.plugins.items():
         for name, plugin in plugins.items():
+            #print plugin.__name__, name
             if 'coffeescript' in dir(plugin):
                 for requirement, cs in plugin.coffeescript():
                     #result.append('(function(plugin){')
-                    #print name, plugin
-                    print plugin.__name__
+                    pluginType = requirement.split('/')[1]
                     if True:
-                        result.append("window.require.define({{\"plugins/{0}\": function(exports, require, module) {{(function() {{".format(name))
+                        result.append("window.require.define({{\"plugins/{0}/{1}\": function(exports, require, module) {{(function() {{".format(pluginType,name))
                         try:
                             result.append(coffeescript.compile(cs, True))
                         except Exception, e:
