@@ -70,7 +70,7 @@ class WebCommand(Command):
         from SimpleSeer import models as M
         from pymongo import Connection, DESCENDING, ASCENDING
         from SimpleSeer.models.Inspection import Inspection, Measurement
-	import mongoengine
+        import mongoengine
 
         # Plugins must be registered for queries
         Inspection.register_plugins('seer.plugins.inspection')
