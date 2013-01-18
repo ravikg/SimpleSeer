@@ -45,9 +45,9 @@ class Command(object):
                 logging.config.fileConfig(self.options.logging)
             else:
                 warnings.warn("Could not find logging configuration %s, defaulting to basic config" % self.options.logging)
-                logging.basicConfig()
+                logging.basicConfig(level=logging.DEBUG)
         else:
-            logging.basicConfig()
+            logging.basicConfig(level=logging.DEBUG)
         self.log = logging.getLogger(__name__)
 
     @classmethod
