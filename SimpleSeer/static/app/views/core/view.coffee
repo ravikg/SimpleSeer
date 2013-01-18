@@ -8,6 +8,7 @@ Backbone = if describe? then require('backbone') else window.Backbone
 # Base class for all views.
 module.exports = class View extends Backbone.View
   subviews: null
+  events: {}
   
   initialize: (options={}) =>
     super()
@@ -57,3 +58,13 @@ module.exports = class View extends Backbone.View
         subview.clearSubviews()
       subview.remove()
     @subviews = {}
+
+  customEvent: (event) =>
+    @events[event]()?
+    for name, subview of @subviews
+      subview.customEvent(event)
+    return
+
+  addCustomEvent: (name, callback) =>
+    @events[name] = callback
+    return
