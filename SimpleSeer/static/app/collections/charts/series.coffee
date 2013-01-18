@@ -166,12 +166,12 @@ module.exports = class Series extends FilterCollection
   
   receive: (data) =>
     #@shiftStack()
-    console.info 'RECEIVE'
+    #console.info 'RECEIVE'
     for o in data.data.m.data
-      console.info 'POINT RUNNING...'
+      #console.info 'POINT RUNNING...'
       p = @_formatChartPoint o
       if @inStack(p)
-        console.log 'good instack'
+        #console.log 'good instack'
         #@shiftStack()
         @add p, {silent: true}
         @_drawData()
