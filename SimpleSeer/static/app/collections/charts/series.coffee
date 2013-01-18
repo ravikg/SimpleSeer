@@ -95,21 +95,8 @@ module.exports = class Series extends FilterCollection
       @view.hasData = true
     return
   
-    dd = []
-    if reset
-      if @.model.accumulate
-        dd = @.stack.buildData data
-      else
-        dd = data
-      @.setData dd, true
-    else
-      for d in data
-        if @.model.accumulate
-          @.incPoint d
-        else
-          @.addPoint(d.attributes,true,true)
 
-  _formatChartPoint: (d) =>
+  _formatChartPoint: (d) =>    
     if !@accumulate
       cp = @view.clickPoint
       mo = @view.overPoint
@@ -126,6 +113,7 @@ module.exports = class Series extends FilterCollection
       marker:{}
       y:d.d[1]
       x:d.d[0]
+      raw:d.d
       id:_id
       events:
         mouseOver: @pointEvents.over
@@ -139,18 +127,18 @@ module.exports = class Series extends FilterCollection
     if channel
       application.socket.removeListener "message:Chart/#{@.name}/", @receive
       @name = channel
+    #if application.debug
+      #console.info "series:  subscribing to channel "+"message:Chart/#{@.name}/"
     if application.socket
       application.socket.on "message:Chart/#{@.name}/", @receive
       if !application.subscriptions["Chart/#{@.name}/"]
         application.subscriptions["Chart/#{@.name}/"] = application.socket.emit 'subscribe', "Chart/#{@.name}/"
   
   shiftStack: (silent=false)=>
-    #TODO: remove against, grab from filter
     shifted = 0
-    #against = new moment().subtract('days',5000)
     while @_needShift()
-      @shift {silent:silent}
-      shifted++      
+      foo = @shift {silent:silent}
+      shifted++
     return shifted
 
   _needShift: (offset=0)=>
@@ -165,43 +153,20 @@ module.exports = class Series extends FilterCollection
     
   
   receive: (data) =>
-    #@shiftStack()
-    console.info 'RECEIVE'
     for o in data.data.m.data
-      console.info 'POINT RUNNING...'
       p = @_formatChartPoint o
       if @inStack(p)
-        console.log 'good instack'
-        #@shiftStack()
         @add p, {silent: true}
         @_drawData()
-        #@view.addPoint p, @id
         @view.hasData = true
     if @view.hasData && @view.hasMessage
       @view.hideMessage()
     return
     
   inStack:(point) =>
-    #@sort()
     if @length == 0
       return true
-    return point.x > @at(0).get("x") or @_needShift(-1)
-  
-    ###
-    dm = @view.model.attributes.dataMap
-    mdm = @view.model.attributes.metaMap
+    return point.x >= @at(0).get("x") or @_needShift(-1)
     
-    m = {}
-    d = {}
-    for o in data.data.m.data
-      for i of o.d
-        d[dm[i]] = o.d[i]
-      for i of o.m
-        m[mdm[i]] = o.m[i]
-        
-      console.dir d
-      console.dir m
-    ###
-  
   shiftChart: =>
     @view.shiftPoint @id, false    
