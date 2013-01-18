@@ -127,8 +127,8 @@ module.exports = class Series extends FilterCollection
     if channel
       application.socket.removeListener "message:Chart/#{@.name}/", @receive
       @name = channel
-    if application.debug
-      console.info "series:  subscribing to channel "+"message:Chart/#{@.name}/"
+    #if application.debug
+      #console.info "series:  subscribing to channel "+"message:Chart/#{@.name}/"
     if application.socket
       application.socket.on "message:Chart/#{@.name}/", @receive
       if !application.subscriptions["Chart/#{@.name}/"]
