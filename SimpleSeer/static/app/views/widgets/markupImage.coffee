@@ -40,9 +40,8 @@ module.exports = class markupImage extends SubView
       @pjs.background(0,0)
       @pjs.size @$el.width(), @model.get("height") * scale
       @pjs.scale scale
-      
-      if @model.get('features').length
-        @model.get('features').each (f) => f.render(@pjs)
+      for i,o of @model.get('features')
+        o.render(@pjs)
   
   # Setter function for the model. Will
   # re-render the view automatically.

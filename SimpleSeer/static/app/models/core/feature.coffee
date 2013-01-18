@@ -1,10 +1,16 @@
-Model = require "./model"
+Model = require "models/model"
 
 
 module.exports = class Feature extends Model
   
+  #initialize: =>
+  #  @data = {}
+  #  console.log @
+  #  super
+  
   addTrait: (trait) =>
-    @data[trait.measurement_name] = trait.numeric
+    #@data[trait.measurement_name] = trait.numeric
+    @attributes[trait.measurement_name] = trait.numeric
   
   represent: =>
     plugin = @getPluginMethod(@.get("featuretype"), 'represent')

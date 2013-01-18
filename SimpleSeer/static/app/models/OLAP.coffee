@@ -4,6 +4,13 @@ module.exports = class OLAP extends Model
   urlRoot: "/api/chart"
   shift: false
   
+  save:(a,b,c)=>
+    console.log a,b,c
+    console.log @attributes.dataMap
+    super()
+    console.log @attributes.dataMap
+    
+
   setColor:(title, value) =>
     if title == "chartColor"
       @set("color", value)
