@@ -86,17 +86,17 @@ module.exports = class Series extends FilterCollection
     return refined
 
   _drawData: =>
-    @shiftStack(true)
     points = []
     for p in @models
       points.push p.attributes
     @view.setData points, @id
     if points.length
       @view.hasData = true
+    @shiftStack(true)
     return
   
 
-  _formatChartPoint: (d) =>    
+  _formatChartPoint: (d) =>
     if !@accumulate
       cp = @view.clickPoint
       mo = @view.overPoint
@@ -118,6 +118,14 @@ module.exports = class Series extends FilterCollection
       events:
         mouseOver: @pointEvents.over
         click: @pointEvents.click
+    if d.d.length > 2
+      #remove y
+      y = d.d.shift()
+      _point.multipoint = []
+      for p in d.d
+         _point.multipoint.push @_formatChartPoint {d:[y,p],m:d.m}
+        
+
     #for i,s of @model.metaMap
     #  if s == 'string' && @model.colormap
     #    _point.marker.fillColor = @model.colormap[d.m[i]]
