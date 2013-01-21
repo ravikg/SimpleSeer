@@ -12,12 +12,8 @@ module.exports = class frameViewer extends SubView
     #todo: make camera dependent?
     application.socket.on "message:frame/", @capEvent
     application.socket.emit 'subscribe', 'frame/'
-    @addCustomEvent("resize", =>
-      @setSize(@$el.find(".fillImage:visible"))
-    )
-    $(window).resize(=>
-      @setSize(@$el.find(".fillImage:visible"))
-    )
+    @addCustomEvent("resize", => @setSize())
+    $(window).resize( => @setSize())
 
   loaderToggle:(img)=>
     @$el.find('.fillImage:visible').css("display", "none")  
@@ -25,7 +21,7 @@ module.exports = class frameViewer extends SubView
     ci.css("display","inline-block")
     @setSize(ci)
 
-  setSize:(ci) =>
+  setSize:(ci=@$el.find(".fillImage:visible")) =>
     ci.css("margin-top", ((@$el.find(".fillImageCont").height() / 2) - (ci.height() / 2) + "px"))    
 
   capEvent:(frame)=>
