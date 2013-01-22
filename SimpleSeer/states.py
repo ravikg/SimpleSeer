@@ -162,6 +162,9 @@ class Core(object):
             new_frame_ids.append(frame.id)
         self.publish('capture/', { "capture": 1, "frame_ids": new_frame_ids})
         return currentframes
+    
+    """
+    This is probably not used any more.  commenting out to make sure
         
     def inspect(self, frames = []):
         if not len(frames) and not len(self.lastframes):
@@ -187,7 +190,8 @@ class Core(object):
                     
             for watcher in self.watchers:
                 watcher.check(frame.results)
-
+    """
+    
     def process(self, frame):
         if self._worker_enabled:
             async_results = self.process_async(frame)
@@ -263,12 +267,14 @@ class Core(object):
             
         return ret
 
+    """
     def get_inspection(self, name):
         return M.Inspection.objects(name=name).next()
 
     def get_measurement(self, name):
         return M.Measurement.objects(name=name).next()
-
+    """
+    
     def state(self, name):
         if name in self._states: return self._states[name]
         s = self._states[name] = State(self, name)
@@ -327,7 +333,6 @@ class Core(object):
                 self._mem_prof_ticker = 0
                 self.log.info(hpy().heap())
             
-
     def _handle_events(self):
         while True:
             try:
