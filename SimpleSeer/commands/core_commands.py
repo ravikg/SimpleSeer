@@ -52,14 +52,17 @@ def OlapCommand(self):
     
     from SimpleSeer.models.Inspection import Inspection, Measurement
 
-    Inspection.register_plugins('seer.plugins.inspection')
-    Measurement.register_plugins('seer.plugins.measurement')
+    try:
+        Inspection.register_plugins('seer.plugins.inspection')
+        Measurement.register_plugins('seer.plugins.measurement')
 
-    so = ScheduledOLAP()
-    gevent.spawn_link_exception(so.runSked)
-    
-    ro = RealtimeOLAP()
-    ro.monitorRealtime()
+        so = ScheduledOLAP()
+        gevent.spawn_link_exception(so.runSked)
+        
+        ro = RealtimeOLAP()
+        ro.monitorRealtime()
+    except KeyboardInterrupt as e:
+        print "Interrupted by user"
 
 class WebCommand(Command):
     
@@ -160,9 +163,13 @@ def BrokerCommand(self):
     'Run the message broker'
     from SimpleSeer.broker import PubSubBroker
     from SimpleSeer import models as M
-    psb = PubSubBroker(self.session.pub_uri, self.session.sub_uri)
-    psb.start()
-    psb.join()
+    try:
+        psb = PubSubBroker(self.session.pub_uri, self.session.sub_uri)
+        psb.start()
+        psb.join()
+    except KeyboardInterrupt as e:
+        print "Interrupted by user"
+
 
 @Command.simple(use_gevent=False)
 def ScrubCommand(self):

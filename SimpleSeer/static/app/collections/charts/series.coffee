@@ -106,7 +106,10 @@ module.exports = class Series extends FilterCollection
       d.d[0] = new moment d.d[0]
       d.d[0].subtract('ms', application.timeOffset)
     if @accumulate
-      _id = d.d[1]
+      if @xAxis.type == 'datetime'
+        _id = d.d[0].unix()
+      else
+        _id = d.d[1]
     else
       _id = d.m[2]
     _point =
@@ -123,7 +126,7 @@ module.exports = class Series extends FilterCollection
       y = d.d.shift()
       _point.multipoint = []
       for p in d.d
-         _point.multipoint.push @_formatChartPoint {d:[y,p],m:d.m}
+        _point.multipoint.push @_formatChartPoint {d:[y,p],m:d.m}
         
 
     #for i,s of @model.metaMap
@@ -164,6 +167,8 @@ module.exports = class Series extends FilterCollection
     for o in data.data.m.data
       p = @_formatChartPoint o
       if @inStack(p)
+        if @accumulate
+          @remove p.x.unix(), {silent: true}
         @add p, {silent: true}
         @_drawData()
         @view.hasData = true
