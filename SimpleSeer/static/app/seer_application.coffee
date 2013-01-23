@@ -79,6 +79,7 @@ module.exports = SeerApplication =
     return @context[name]
 
   alert:(message, alert_type) ->
+    if !message then return
     _anchor = (@settings.ui_alert_anchor || '#messages')
     _set = true
     
