@@ -12,6 +12,7 @@ from SimpleSeer import validators as V
 import formencode as fe
 
 from datetime import datetime
+from pytz import timezone
 
 from .base import SimpleDoc, SONScrub
 from .FrameFeature import FrameFeature
@@ -47,6 +48,7 @@ class Frame(SimpleDoc, mongoengine.Document):
     capturetime = mongoengine.DateTimeField()
     capturetime_epoch = mongoengine.IntField(default = 0)
     updatetime = mongoengine.DateTimeField()
+    localtz = mongoengine.StringField(default='UTC')
     camera = mongoengine.StringField()
     features = mongoengine.ListField(mongoengine.EmbeddedDocumentField(FrameFeature))
     results = mongoengine.ListField(mongoengine.EmbeddedDocumentField(ResultEmbed))
@@ -70,7 +72,7 @@ class Frame(SimpleDoc, mongoengine.Document):
     @classmethod
     #which fields we care about for Filter.py
     def filterFieldNames(cls):
-        return ['_id', 'camera', 'capturetime', 'capturetime_epoch', 'metadata', 'notes', 'height', 'width', 'imgfile', 'results']
+        return ['_id', 'camera', 'capturetime', 'capturetime_epoch', 'localtz', 'metadata', 'notes', 'height', 'width', 'imgfile', 'results']
 
 
     @LazyProperty
@@ -166,7 +168,7 @@ class Frame(SimpleDoc, mongoengine.Document):
         newFrame = False
         if not self.id:
             newFrame = True
-        
+
         super(Frame, self).save(*args, **kwargs)
         
         # Once everything else is saved, publish result

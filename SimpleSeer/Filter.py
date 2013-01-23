@@ -65,7 +65,6 @@ class Filter():
             if limit < float("inf") and not limit == None:
                 pipeline.append({'$limit': limit})
         
-        #pipeline.append({'$match': {'capturetime_epoch': 0}})
         #for p in pipeline:
         #    print '%s' % str(p)
         
@@ -98,7 +97,7 @@ class Filter():
        
        # Have to unwind results so they get reconstructed as a single array when re-grouping
        proj.append({'$unwind': '$results'})
-       proj.append({'$group': {'_id': '$' + groupByField, 'id': {'$first': '$id'}, 'metadata': {'$first': '$metadata'}, 'capturetime': {'$first': '$capturetime'}, 'capturetime_epoch': {'$first': '$capturetime_epoch'}, 'results': {'$addToSet': '$results'}}})
+       proj.append({'$group': {'_id': '$' + groupByField, 'id': {'$first': '$id'}, 'metadata': {'$first': '$metadata'}, 'capturetime': {'$first': '$capturetime'}, 'capturetime_epoch': {'$first': '$capturetime_epoch'}, 'localtz': {'$first': '$localtz'}, 'results': {'$addToSet': '$results'}}})
  
        return proj
         
@@ -465,6 +464,7 @@ class Filter():
             tmpFrame = {'id': frame['id']}
             tmpFrame['capturetime_epoch'] = frame['capturetime_epoch']
             tmpFrame['capturetime'] = frame['capturetime']
+            tmpFrame['localtz'] = frame['localtz']
         
             for filt in filters:
                 #import pdb; pdb.set_trace()
