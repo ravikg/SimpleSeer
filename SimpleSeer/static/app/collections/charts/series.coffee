@@ -95,7 +95,6 @@ module.exports = class Series extends FilterCollection
     @shiftStack(true)
     return
   
-
   _formatChartPoint: (d) =>
     if !@accumulate
       cp = @view.clickPoint
@@ -103,8 +102,8 @@ module.exports = class Series extends FilterCollection
     if !@xAxis.type? or @xAxis.type == ""
       d.d[0] = @_counter++
     else if @xAxis.type == 'datetime'
-      d.d[0] = new moment d.d[0]
-      d.d[0].subtract('ms', application.timeOffset)
+      d.d[0] = moment.utc( d.d[0] )
+      #d.d[0].subtract('ms', application.timeOffset)
     if @accumulate
       if @xAxis.type == 'datetime'
         _id = d.d[0].unix()
@@ -164,8 +163,13 @@ module.exports = class Series extends FilterCollection
     
   
   receive: (data) =>
+    #console.dir data.data.m.data[0].d
     for o in data.data.m.data
       p = @_formatChartPoint o
+      if @view.type == 'defects by type'
+        console.info '---------------'
+        console.log o.d[0]
+        console.log p.x
       if @inStack(p)
         if @accumulate
           @remove p.x.unix(), {silent: true}
