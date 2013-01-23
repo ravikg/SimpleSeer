@@ -166,10 +166,6 @@ module.exports = class Series extends FilterCollection
     #console.dir data.data.m.data[0].d
     for o in data.data.m.data
       p = @_formatChartPoint o
-      if @view.type == 'defects by type'
-        console.info '---------------'
-        console.log o.d[0]
-        console.log p.x
       if @inStack(p)
         if @accumulate
           @remove p.x.unix(), {silent: true}
