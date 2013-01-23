@@ -1,0 +1,96 @@
+header {
+  height: 33px;
+  padding: 7px 0 0 6px;
+  background: url("../img/MT_222222.png") repeat;
+  box-shadow: none;
+  border-bottom: 1px solid #000000;
+
+  nav {
+    height: 19px;
+    overflow: hidden;
+
+    .group {
+      display: inline-block;
+
+      &.left { float: left; }
+      &.right { float: right; }
+    }
+
+    #login-menu {
+      cursor: pointer;
+      display: inline-block;
+      vertical-align: top;
+      width: 27px;
+      height: 20px;
+      margin-left: -4px;
+      border-left: 1px solid black;
+      background: url("../img/arrow_userrolls.png") no-repeat center center;
+    }
+
+    #login {
+      height: 20px;
+      vertical-align: top;
+      display: inline-block;
+      color: #999;
+      padding-right: 9px;
+      border-right: 1px solid #2F3133;
+      
+      .username {
+        display: inline-block;
+        vertical-align: top;
+        font-size: 11px;
+        font-weight: bold;
+        margin-top: 1px;
+      }
+
+      .tag {
+        margin-top: 2px;
+        height: 16px;
+        font-size: 9px;
+        display: inline-block;
+        text-align: center;
+        padding: 0px 7px;
+        color: #000;
+        background: #999;
+        border-radius: 2px;
+        line-height: 16px;
+        vertical-align: top;
+
+        &.blue {
+          color: #000;
+          background: #006EAD;
+        }
+      }
+    }
+  }
+
+  .text {
+    width: 400px;
+    display: inline-block;
+    vertical-align: top;
+    height: 19px;
+    margin-left: 6px;
+    border-left: 1px solid #2F3133;
+  }
+
+  .brand {
+    width: 145px;
+    height: 20px;
+    background: url("../img/logo_sightmachine.png") no-repeat;
+    vertical-align: top;
+
+    img { display: none; }
+  }
+
+  #client-name {
+    display: block;
+    height: 19px;
+    color: #999;
+    font-size: 15px;
+    font-weight: bold;
+    line-height: 20px;
+    border-color: black;
+    text-shadow: none;
+    padding-left: 10px;
+  }
+}

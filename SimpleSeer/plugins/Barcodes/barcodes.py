@@ -27,15 +27,7 @@ class Barcodes(base.InspectionPlugin):
     if not code:
       return []
 
-    feats = []
-    for f in code:
-      f.draw()
-      ff = M.FrameFeature()
-      code.image = image
-      ff.setFeature(f)
-      feats.append(ff)
-
     if( params.has_key("saveFile") ):
       image.save(params["saveFile"])
 
-    return feats
+    return code

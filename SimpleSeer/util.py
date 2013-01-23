@@ -15,6 +15,31 @@ def load_plugins():
         inspection=models.Inspection.register_plugins('seer.plugins.inspection'),
         measurement=models.Measurement.register_plugins('seer.plugins.measurement'),
         watcher=models.Watcher.register_plugins('seer.plugins.watcher'))
+        
+def ensure_plugins():
+    from . import models as M
+    
+    classes = (M.Inspection, M.Measurement, M.Watcher)
+    plugins_loaded = True
+
+    for cls in classes:
+        if not hasattr(cls, "_plugins"):
+            plugins_loaded = False
+    
+    if not plugins_loaded:
+        load_plugins()
+    
+    return True
+
+def all_plugins():
+    from . import models as M
+    ensure_plugins()
+    
+    classes = (M.Inspection, M.Measurement, M.Watcher)
+    allplugins = {}
+    for cls in classes:
+        allplugins[cls] = cls._plugins
+    return allplugins
 
 class LazyProperty(object):
 
@@ -78,15 +103,6 @@ def utf8convert(data):
         return list(map(utf8convert, data))
     else:
         return data
-
-def get_seer():
-    # from .SimpleSeer import SimpleSeer as SS
-    from .states import Core
-    from . import service
-    inst = Core.get()
-    if inst is None:
-        return service.SeerProxy2()
-    return inst
 
 def initialize_slave():
     from .Session import Session

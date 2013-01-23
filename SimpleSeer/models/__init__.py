@@ -6,10 +6,11 @@ from FrameFeature import FrameFeature
 from Inspection import Inspection, InspectionSchema
 from Measurement import Measurement, MeasurementSchema
 from FrameSet import FrameSet, FrameSetSchema
-from Result import Result, ResultEmbed
+from Result import ResultEmbed
 from Watcher import Watcher
 from Alert import Alert
 from Clip import Clip
+from Context import Context, ContextSchema
 
 for ep in pkg_resources.iter_entry_points('seercloud.models'):
     mod = sys.modules['SimpleSeer.models.%s' % ep.name] = __import__(ep.module_name, globals(), locals(), [ep.name])

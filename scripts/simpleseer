@@ -7,13 +7,11 @@ import argparse
 import cProfile
 import threading
 
-import guppy
-import gevent
 import pkg_resources
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-l', '--logging', dest='logging', default='simpleseer-logging.cfg')
+    parser.add_argument('-l', '--logging', dest='logging', default='')
     parser.add_argument(
         '-c', '--config', dest='config', default='.')
     parser.add_argument('-p', '--profile', action='store_true')
@@ -43,6 +41,7 @@ def main():
                         filename=fn)
     else:
         options.subcommand.run()
+
 
 if __name__ == '__main__':
    main()

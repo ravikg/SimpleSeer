@@ -5,6 +5,9 @@
 
 module.exports = SeerApplication =
   settings: {}
+  menuItems: {}
+  menuBars: {}
+  context: {}
   
   # Set up the application and include the 
   # necessary modules. Configures the page
@@ -34,11 +37,10 @@ module.exports = SeerApplication =
       @socket.on "message:alert/", window.SimpleSeer._serveralert
       @socket.emit 'subscribe', 'alert/'
       
-    m = require './collections/measurements'
+    m = require 'collections/measurements'
     @measurements = new m()
     @measurements.fetch()
-
-    t = require './views/modal'
+    t = require 'views/core/modal'
     @modal = new t()
 
     # Set up the timeout message dialog.
@@ -58,6 +60,23 @@ module.exports = SeerApplication =
   # Returns the loading status of the application.
   isLoading: =>
     !$('#modal :hidden').length
+
+  addMenuBar: (target, options) ->
+    _lib = require 'views/core/menubar'
+    _t = $("#"+target)
+    if _t.length > 0
+      if !options.id?
+        options.id = _.uniqueId()
+      @menuBars[options.id] = new _lib(options)
+      _t.html @menuBars[options.id].render().el
+      return @menuBars[options.id]
+
+  loadContext:(name) ->
+    _context = require 'models/core/context'
+    if !@context[name]?
+      @context[name] = new _context({name:name})
+      a = @context[name].fetch()
+    return @context[name]
 
   alert:(message, alert_type) ->
     _anchor = (@settings.ui_alert_anchor || '#messages')
@@ -80,12 +99,12 @@ module.exports = SeerApplication =
         ).html message
         clear = $("<div class='closeAlerts'></div>")
         clear.click((e, ui) =>
-          $(e.currentTarget).parent().remove()
+          $(e.currentTarget).parent().fadeOut(-> $(this).remove())
         )
         div.append clear
         $(_anchor).append div
         
-        div.show('normal')
+        div.fadeIn()
 
   # Uses a regular expression to determine
   # if the user is on a mobile browser or not.

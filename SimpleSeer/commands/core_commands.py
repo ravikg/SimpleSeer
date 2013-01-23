@@ -3,50 +3,38 @@ import gevent
 import os, subprocess
 from .base import Command
 
-class CoreStatesCommand(Command):
+
+class CoreCommand(Command):
     'Run the core server / state machine'
     use_gevent = True
-    remote_seer = False
 
     def __init__(self, subparser):
-        subparser.add_argument('program')
-        subparser.add_argument('--disable-pyro', action='store_true')
-
+        subparser.add_argument('program', default='', nargs="?")
+        subparser.add_argument('--procname', default='corecommand', help='give each process a name for tracking within session')
+        
     def run(self):
         from SimpleSeer.states import Core
-        import Pyro4
 
         core = Core(self.session)
         found_statemachine = False
-        with open(self.options.program) as fp:
+        
+        program = self.options.program or self.session.statemachine or 'states.py'
+
+        with open(program) as fp:
             exec fp in dict(core=core)
             found_statemachine = True
         
         if not found_statemachine:
             raise Exception("State machine " + self.options.program + " not found!")
             
-
-        core.start_socket_communication()
-
-        if not self.options.disable_pyro:
-            gevent.spawn_link_exception(core.run)
-            Pyro4.Daemon.serveSimple(
-                { core: "sightmachine.seer" },
-                ns=True)
-        else:
+        try:
+            core.start_socket_communication()
             core.run()
+        except KeyboardInterrupt as e:
+            print "Interupted by user"
 
-class CoreCommand(CoreStatesCommand):
-    'Run the core server'
 
-    def __init__(self, subparser):
-        subparser.add_argument('--disable-pyro', action='store_true')
-
-    def run(self):
-        self.options.program = self.session.statemachine or 'states.py'
-        super(CoreCommand, self).run()
-
-@Command.simple(use_gevent=False, remote_seer=True)
+@Command.simple(use_gevent=False)
 def ControlsCommand(self):
     'Run a control event server'
     from SimpleSeer.Controls import Controls
@@ -54,18 +42,7 @@ def ControlsCommand(self):
     if self.session.arduino:
        Controls(self.session).run()
 
-@Command.simple(use_gevent=False, remote_seer=False)
-def PerfTestCommand(self):
-    'Run the core performance test'
-    from SimpleSeer.SimpleSeer import SimpleSeer
-    from SimpleSeer import models as M
-
-    self.session.auto_start = False
-    self.session.poll_interval = 0
-    seer = SimpleSeer()
-    seer.run()
-
-@Command.simple(use_gevent=True, remote_seer=False)
+@Command.simple(use_gevent=True)
 def OlapCommand(self):
     try:
         from SeerCloud.OLAPUtils import ScheduledOLAP, RealtimeOLAP
@@ -75,45 +52,53 @@ def OlapCommand(self):
     
     from SimpleSeer.models.Inspection import Inspection, Measurement
 
-    Inspection.register_plugins('seer.plugins.inspection')
-    Measurement.register_plugins('seer.plugins.measurement')
-
-    so = ScheduledOLAP()
-    gevent.spawn_link_exception(so.runSked)
-    
-    ro = RealtimeOLAP()
-    ro.monitorRealtime()
-
-@Command.simple(use_gevent=True, remote_seer=True)
-def WebCommand(self):
-    'Run the web server'
-    from SimpleSeer.Web import WebServer, make_app
-    from SimpleSeer import models as M
-    from pymongo import Connection, DESCENDING, ASCENDING
-    from SimpleSeer.models.Inspection import Inspection, Measurement
-
-    # Plugins must be registered for queries
-    Inspection.register_plugins('seer.plugins.inspection')
-    Measurement.register_plugins('seer.plugins.measurement')
-
-    dbName = self.session.database
-    if not dbName:
-        dbName = 'default'
-    db = Connection()[dbName]
-    # Ensure indexes created for filterable fields
-    # TODO: should make this based on actual plugin params or filter data
     try:
-        db.frame.ensure_index([('results', 1)])
-        db.frame.ensure_index([('results.measurement_name', 1)])
-        db.frame.ensure_index([('results.numeric', 1)])
-        db.frame.ensure_index([('results.string', 1)])
-    except:
-        self.log.info('Could not create indexes')
-        
-    web = WebServer(make_app())
-    web.run_gevent_server()
+        Inspection.register_plugins('seer.plugins.inspection')
+        Measurement.register_plugins('seer.plugins.measurement')
 
-@Command.simple(use_gevent=True, remote_seer=True)
+        so = ScheduledOLAP()
+        gevent.spawn_link_exception(so.runSked)
+        
+        ro = RealtimeOLAP()
+        ro.monitorRealtime()
+    except KeyboardInterrupt as e:
+        print "Interrupted by user"
+
+class WebCommand(Command):
+    
+    def __init__(self, subparser):
+        subparser.add_argument('--procname', default='web', help='give each process a name for tracking within session')
+
+    def run(self):
+        'Run the web server'
+        from SimpleSeer.Web import WebServer, make_app
+        from SimpleSeer import models as M
+        from pymongo import Connection, DESCENDING, ASCENDING
+        from SimpleSeer.models.Inspection import Inspection, Measurement
+        import mongoengine
+
+        # Plugins must be registered for queries
+        Inspection.register_plugins('seer.plugins.inspection')
+        Measurement.register_plugins('seer.plugins.measurement')
+
+        db = mongoengine.connection.get_db() 
+        # Ensure indexes created for filterable fields
+        # TODO: should make this based on actual plugin params or filter data
+        try:
+            db.frame.ensure_index([('results', 1)])
+            db.frame.ensure_index([('results.measurement_name', 1)])
+            db.frame.ensure_index([('results.numeric', 1)])
+            db.frame.ensure_index([('results.string', 1)])
+        except:
+            self.log.info('Could not create indexes')
+            
+        web = WebServer(make_app())
+        try:
+            web.run_gevent_server()
+        except KeyboardInterrupt as e:
+            print "Interrupted by user"
+        
+@Command.simple(use_gevent=True)
 def OPCCommand(self):
     '''
     You will also need to add the following to your config file:
@@ -173,16 +158,20 @@ def OPCCommand(self):
         counter = tagcounter
 
 
-@Command.simple(use_gevent=True, remote_seer=True)
+@Command.simple(use_gevent=True)
 def BrokerCommand(self):
     'Run the message broker'
     from SimpleSeer.broker import PubSubBroker
     from SimpleSeer import models as M
-    psb = PubSubBroker(self.session.pub_uri, self.session.sub_uri)
-    psb.start()
-    psb.join()
+    try:
+        psb = PubSubBroker(self.session.pub_uri, self.session.sub_uri)
+        psb.start()
+        psb.join()
+    except KeyboardInterrupt as e:
+        print "Interrupted by user"
 
-@Command.simple(use_gevent=False, remote_seer=True)
+
+@Command.simple(use_gevent=False)
 def ScrubCommand(self):
     'Run the frame scrubber'
     from SimpleSeer import models as M
@@ -191,17 +180,33 @@ def ScrubCommand(self):
         self.log.info('No retention policy set, skipping cleanup')
         return
     while retention['interval']:
-        q_csr = M.Frame.objects(imgfile__ne = None)
-        q_csr = q_csr.order_by('-capturetime')
-        q_csr = q_csr.skip(retention['maxframes'])
-        for f in q_csr:
-            f.imgfile.delete()
-            f.imgfile = None
-            f.save(False)
-        self.log.info('Purged %d frame files', q_csr.count())
+        if not M.Frame._get_db().metaschedule.count():
+            q_csr = M.Frame.objects(imgfile__ne = None)
+            q_csr = q_csr.order_by('-capturetime')
+            q_csr = q_csr.skip(retention['maxframes'])
+            for f in q_csr:
+                # clean out the fs.files and .chunks
+                f.imgfile.delete()
+                f.imgfile = None
+        
+                if retention['purge']:
+                    f.delete()
+                else:
+                    f.save(False)
+            # This line of code needed to solve fragmentation bug in mongo
+            # Can run very slow when run on large collections
+            db = M.Frame._get_db()
+            if 'fs.files' in db.collection_names():
+                db.command({'compact': 'fs.files'})
+            if 'fs.chunks' in db.collection_names():
+                db.command({'compact': 'fs.chunks'})
+        
+            self.log.info('Purged %d frame files', q_csr.count())
+        else:
+            self.log.info('Backfill running.  Waiting to scrube')
         time.sleep(retention["interval"])
 
-@Command.simple(use_gevent=False, remote_seer=True)
+@Command.simple(use_gevent=False)
 def ShellCommand(self):
     'Run the ipython shell'
     import subprocess
@@ -214,7 +219,7 @@ def ShellCommand(self):
       
     subprocess.call(cmd, stderr=subprocess.STDOUT)
 
-@Command.simple(use_gevent=True, remote_seer=False)
+@Command.simple(use_gevent=True)
 def NotebookCommand(self):
     'Run the ipython notebook server'
     import subprocess
@@ -222,107 +227,43 @@ def NotebookCommand(self):
             '--port', '5050',
             '--ext', 'SimpleSeer.notebook', '--pylab', 'inline'], stderr=subprocess.STDOUT)
 
-#~ @Command.simple(use_gevent=True, remote_seer=False)
-class WorkerCommand(Command):
-    '''
-    This Starts a distributed worker object using the celery library.
 
-    Run from the the command line where you have a project created.
-
-    >>> simpleseer worker
-
-
-    The database the worker pool queue connects to is the same one used
-    in the default configuration file (simpleseer.cfg).  It stores the
-    data in the default collection 'celery'.
-
-    To issue commands to a worker, basically a task master, you run:
-
-    >>> simpleseer shell
-    >>> from SimpleSeer.command.worker import update_frame
-    >>> for frame in M.Frame.objects():
-          update_frame.delay(str(frame.id))
-    >>>
-
-    That will basically iterate through all the frames, if you want
-    to change it then pass the frame id you want to update.
-    
-
-    '''
-
-    def __init__(self, subparser):
-        pass
-
-    def run(self):
-        from SimpleSeer.worker import host
-        import socket
-        worker_name = socket.gethostname() + '-' + str(time.time())
-        cmd = ['celery','worker','--broker',host,'-A','SimpleSeer.worker','-n',worker_name]
-        subprocess.call(cmd)
-
-class ExportMetaCommand(Command):
+        
+class MetaCommand(Command):
     
     def __init__(self, subparser):
-        subparser.add_argument("--listen", help="Set to true to run as daemon listing for changes and exporting when changes found.", default="false")
+        subparser.add_argument('subsubcommand', help="metadata [import|export]", default="export")
+        subparser.add_argument("--listen", help="(export) Run as daemon listing for changes and exporting when changes found.", action='store_true')
+        subparser.add_argument("--file", help="The file name to export/import.  If blank, defaults to seer_export.yaml", default="seer_export.yaml")
+        subparser.add_argument('--clean', help="(import) Delete existing metadata before importing", action='store_true')
+        subparser.add_argument('--skipbackfill', help="(import) Do not run a backfill after importing", action='store_true')
+        
+        subparser.add_argument('--procname', default='meta', help='give each process a name for tracking within session')
+
         
     def run(self):
         from SimpleSeer.Backup import Backup
         
-        listen = self.options.listen
+        if self.options.subsubcommand != 'import' and self.options.subsubcommand != 'export':
+            self.log.info("Valid subcommands are import and export.  Ignoring \"{}\".".format(self.options.subsubcommand))
+        if self.options.subsubcommand == "export" and self.options.clean:
+            self.log.info("Clean option not applicable when exporting.  Ignoring")
+        if self.options.subsubcommand == "import" and self.options.listen:
+            self.log.info("Listen option not applicable when importing.  Ignorning")
         
-        Backup.exportAll()
+        if self.options.subsubcommand == "export":
+            Backup.exportAll()
+            if self.options.listen: 
+                gevent.spawn_link_exception(Backup.listen())
+        elif self.options.subsubcommand == "import":
+            Backup.importAll(self.options.file, self.options.clean, self.options.skipbackfill)
         
-        if listen.upper() == 'TRUE': 
-            gevent.spawn_link_exception(Backup.listen())
-    
-
-class ImportMetaCommand(Command):
-    
-    def __init__(self, subparser):
-        subparser.add_argument("--file", help="The file name to import.  If blank, defaults to seer_export.yaml", default="seer_export.yaml")
         
-    def run(self):
-        from SimpleSeer.Backup import Backup
-        
-        filename = self.options.file
-        Backup.importAll(filename)
-    
-
-
-
 class ExportImagesCommand(Command):
 
     def __init__(self, subparser):
         subparser.add_argument("--number", help="This is the number of lastframes you want, use 'all' if you want all the images ever", default='all', nargs='?')
         subparser.add_argument("--dir", default=".", nargs="?")
-
-
-    def run(self):
-        "Dump the images stored in the database to a local directory in standard image format"
-        from SimpleSeer.SimpleSeer import SimpleSeer
-        from SimpleSeer import models as M
-
-
-        number_of_images = self.options.number
-
-        if number_of_images != 'all':
-            number_of_images = int(number_of_images)
-            frames = M.Frame.objects().order_by("-capturetime").limit(number_of_images)
-        else:
-            frames = M.Frame.objects()
-
-        num_of_frames = len(frames)
-        counter = 1
-
-        for frame in frames:
-            file_name = self.options.dir + "/" + str(frame.id) + '.png'
-            print 'Saving file (',counter,'of',len(frames),'):',file_name
-            frame.image.save(file_name)
-            counter += 1
-
-class ExportImagesQueryCommand(Command):
-
-    def __init__(self, subparser):
         from argparse import RawTextHelpFormatter, RawDescriptionHelpFormatter
         subparser.formatter_class=RawDescriptionHelpFormatter
         help_text = '''
@@ -336,21 +277,57 @@ class ExportImagesQueryCommand(Command):
         So you would run the command as:
         simpleseer export-images-query "{'id':'502bfa6856a8bf1e755c702d', 'width__gte': '50'}"
         '''
-        subparser.add_argument("--query", help=help_text)
-        subparser.add_argument("--dir", default=".", nargs="?")
+        subparser.add_argument("--query", help=help_text, nargs="?")
 
     def run(self):
-        "Dump the images stored in the database to a local directory in standard image format with a specific query"
-        from SimpleSeer.SimpleSeer import SimpleSeer
+        "Dump the images stored in the database to a local directory in standard image format"
         from SimpleSeer import models as M
         import ast
+        
+        query = {}
+        if self.options.query:
+            query = self.options.query
+            query = ast.literal_eval(query)
+        
+        number_of_images = self.options.number
 
-        print "Saving images to local directory"
-        query = self.options.query
-        query = ast.literal_eval(query)
-        frames = M.Frame.objects(**query).order_by("-capturetime")
+        if number_of_images != 'all':
+            number_of_images = int(number_of_images)
+            frames = M.Frame.objects(**query).order_by("-capturetime").limit(number_of_images)
+        else:
+            frames = M.Frame.objects(**query)
+
+        num_of_frames = len(frames)
+        counter = 1
 
         for frame in frames:
             file_name = self.options.dir + "/" + str(frame.id) + '.png'
-            print 'Saving:',file_name
+            print 'Saving file (',counter,'of',len(frames),'):',file_name
             frame.image.save(file_name)
+            counter += 1
+
+
+class MRRCommand(Command):
+    # Measurement repeatability and reproducability
+    
+    def __init__(self, subparser):
+        subparser.add_argument("--filter", help="Frame filter query", default = '')
+        
+    def run(self):
+        from SeerCloud.Control import MeasurementRandR
+        from ast import literal_eval
+        mrr = MeasurementRandR()
+
+        query = []
+        if self.options.filter:
+            query = [literal_eval(self.options.filter)]
+
+        df, deg = mrr.getData(query)
+        repeat = mrr.repeatability(df, deg)
+        repro = mrr.reproducability(df, deg)
+
+        print '--- Repeatability ---'
+        print repeat.to_string()
+
+        print '--- Reproducability ---'
+        print repro.to_string()

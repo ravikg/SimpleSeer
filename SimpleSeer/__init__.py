@@ -4,6 +4,5 @@ if False:
     from SimpleSeer import SimpleSeer 
     from Inspection import Inspection
     from Measurement import Measurement
-    from Result import Result
     from Frame import Frame
 

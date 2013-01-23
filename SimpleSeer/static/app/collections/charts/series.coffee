@@ -1,7 +1,6 @@
 #Collection = require "../collection"
-FilterCollection = require "../../collections/filtercollection"
-application = require '../../application'
-
+FilterCollection = require "collections/core/filtercollection"
+application = require 'application'
 module.exports = class Series extends FilterCollection
   url: ""
   redraw: false
@@ -25,7 +24,7 @@ module.exports = class Series extends FilterCollection
       _url = args.url
     else
       _url = "/chart/data/"
-    @url = _url+@id
+    args.url = _url+@id
     @color = args.color || 'blue'
     # Bind view to collection so we know where our widgets live
     if args.view?
@@ -42,14 +41,16 @@ module.exports = class Series extends FilterCollection
     @fetch()
     return @
 
-  setRaw : (response) =>
-  	@raw = response
-  	
+  comparator: (point,point2) =>
+    if point2.attributes.x.unix() > point.attributes.x.unix()
+      return -1
+    else
+      return 1
+
   parse: (response) =>
     super(response)
     @subscribe(response.chart)
     clean = @_clean response.data
-    @setRaw(response)
     return clean
 
   fetch: (args={}) =>
@@ -59,7 +60,7 @@ module.exports = class Series extends FilterCollection
     if !args.error?
       args.error = @onError
     args['total'] = true
-    args['params'] = {skip:~@limit,limit:@limit}
+    args['params'] = {skip:~@limit+1,limit:@limit}
     super(args)
 
   onSuccess: (obj, rawJson) =>
@@ -74,37 +75,26 @@ module.exports = class Series extends FilterCollection
     $('.alert_error').remove()
   
   onError: =>
-    SimpleSeer.alert('Connection lost','error')
+    @view.showMessage('error','Error retrieving data')
 
   _clean: (data) =>
     refined = []
     for d in data
-      refined.push @_formatChartPoint d
+      point = @_formatChartPoint d
+      if point.attributes != {}
+        refined.push point
     return refined
 
   _drawData: =>
-    @shiftStack(true)
     points = []
     for p in @models
       points.push p.attributes
     @view.setData points, @id
     if points.length
       @view.hasData = true
+    @shiftStack(true)
     return
   
-    dd = []
-    if reset
-      if @.model.accumulate
-        dd = @.stack.buildData data
-      else
-        dd = data
-      @.setData dd, true
-    else
-      for d in data
-        if @.model.accumulate
-          @.incPoint d
-        else
-          @.addPoint(d.attributes,true,true)
 
   _formatChartPoint: (d) =>
     if !@accumulate
@@ -116,17 +106,29 @@ module.exports = class Series extends FilterCollection
       d.d[0] = new moment d.d[0]
       d.d[0].subtract('ms', application.timeOffset)
     if @accumulate
-      _id = d.d[1]
+      if @xAxis.type == 'datetime'
+        _id = d.d[0].unix()
+      else
+        _id = d.d[1]
     else
       _id = d.m[2]
     _point =
       marker:{}
       y:d.d[1]
       x:d.d[0]
+      raw:d.d
       id:_id
       events:
         mouseOver: @pointEvents.over
         click: @pointEvents.click
+    if d.d.length > 2
+      #remove y
+      y = d.d.shift()
+      _point.multipoint = []
+      for p in d.d
+        _point.multipoint.push @_formatChartPoint {d:[y,p],m:d.m}
+        
+
     #for i,s of @model.metaMap
     #  if s == 'string' && @model.colormap
     #    _point.marker.fillColor = @model.colormap[d.m[i]]
@@ -136,47 +138,48 @@ module.exports = class Series extends FilterCollection
     if channel
       application.socket.removeListener "message:Chart/#{@.name}/", @receive
       @name = channel
+    #if application.debug
+      #console.info "series:  subscribing to channel "+"message:Chart/#{@.name}/"
     if application.socket
       application.socket.on "message:Chart/#{@.name}/", @receive
       if !application.subscriptions["Chart/#{@.name}/"]
         application.subscriptions["Chart/#{@.name}/"] = application.socket.emit 'subscribe', "Chart/#{@.name}/"
   
   shiftStack: (silent=false)=>
+    shifted = 0
+    while @_needShift()
+      foo = @shift {silent:silent}
+      shifted++
+    return shifted
+
+  _needShift: (offset=0)=>
     #TODO: remove against, grab from filter
     against = new moment().subtract('days',5000)
     if @xAxis.type == "datetime"
-      while @.at(0) && @.at(0).attributes.x < against
-        @shift {silent:silent}
-    while @models.length - @view.maxPointSize >= silent
-      @shift {silent:silent}
-    return
+      if @.at(0) && @.at(0).attributes.x < against
+        return true
+    if @models.length - @view.maxPointSize >= offset
+      return true
+    return false
+    
   
   receive: (data) =>
     for o in data.data.m.data
       p = @_formatChartPoint o
-      @shiftStack()
-      @view.addPoint p, @id
-      @add @_formatChartPoint o
-      @view.hasData = true
+      if @inStack(p)
+        if @accumulate
+          @remove p.x.unix(), {silent: true}
+        @add p, {silent: true}
+        @_drawData()
+        @view.hasData = true
     if @view.hasData && @view.hasMessage
       @view.hideMessage()
     return
     
-    ###
-    dm = @view.model.attributes.dataMap
-    mdm = @view.model.attributes.metaMap
+  inStack:(point) =>
+    if @length == 0
+      return true
+    return point.x >= @at(0).get("x") or @_needShift(-1)
     
-    m = {}
-    d = {}
-    for o in data.data.m.data
-      for i of o.d
-        d[dm[i]] = o.d[i]
-      for i of o.m
-        m[mdm[i]] = o.m[i]
-        
-      console.dir d
-      console.dir m
-    ###
-  
   shiftChart: =>
     @view.shiftPoint @id, false    

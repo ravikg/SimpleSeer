@@ -1,14 +1,21 @@
+import time
 from collections import deque
 from Queue import Queue, Empty
 from cStringIO import StringIO
+from worker import ping_worker, execute_inspection
 
 import zmq
 import gevent
+
+from guppy import hpy
 
 from . import models as M
 from . import util
 from .base import jsondecode, jsonencode
 from .camera import StillCamera, VideoCamera
+
+import logging
+
 
 class Core(object):
     '''Implements the core functionality of SimpleSeer
@@ -32,9 +39,14 @@ class Core(object):
         self._events = Queue()
         self._clock = util.Clock(1.0, sleep=gevent.sleep)
         self._config = config
+        self._worker_enabled = None
+        self._worker_checked = None
         self.config = config #bkcompat for old SeerCore stuff
         self.cameras = []
         self.video_cameras = []
+        self.log = logging.getLogger(__name__)
+        self._mem_prof_ticker = 0
+    
         for cinfo in config.cameras:
             cam = StillCamera(**cinfo)
             video = cinfo.get('video')
@@ -46,14 +58,39 @@ class Core(object):
 
         util.load_plugins()
         self.reloadInspections()
+        
+        if not self.config.skip_worker_check:
+            self.workerCheck(5.0) #wait up to 5s for worker processes
+        
         self.lastframes = deque()
         self.framecount = 0
         self.reset()
-
+        
     @classmethod
     def get(cls):
         return cls._instance
-
+        
+    def workerCheck(self, timeout = 0.5, checkinterval = 0.1):
+        result = ping_worker.delay(1)
+        checktime = time.time()
+        self.log.info("checking for worker process")
+        
+        self._worker_checked = checktime
+        while not result.ready():
+            time.sleep(checkinterval)
+            if time.time() - checktime > timeout:
+                self.log.info("worker check timeout")
+                self._worker_enabled = False
+                return False
+        
+        if result.get() == 2:
+            self.log.info("worker found")
+            self._worker_enabled = True
+            return True
+        else:
+            self._worker_enabled = False
+            return False
+                
     def reloadInspections(self):
         i = list(M.Inspection.objects)
         m = list(M.Measurement.objects)
@@ -125,6 +162,9 @@ class Core(object):
             new_frame_ids.append(frame.id)
         self.publish('capture/', { "capture": 1, "frame_ids": new_frame_ids})
         return currentframes
+    
+    """
+    This is probably not used any more.  commenting out to make sure
         
     def inspect(self, frames = []):
         if not len(frames) and not len(self.lastframes):
@@ -150,20 +190,70 @@ class Core(object):
                     
             for watcher in self.watchers:
                 watcher.check(frame.results)
-
+    """
+    
     def process(self, frame):
+        if self._worker_enabled:
+            async_results = self.process_async(frame)
+            return self.process_async_complete(frame, async_results)
+        
         frame.features = []
         frame.results = []
+       
         for inspection in M.Inspection.objects:
-            if inspection.parent:
-                return
-            if inspection.camera and inspection.camera != frame.camera:
-                return
-            results = inspection.execute(frame.image)
-            frame.features += results
-            for m in inspection.measurements:
-                m.execute(frame, results)
-
+            if not inspection.parent:
+                if not inspection.camera or inspection.camera == frame.camera: 
+                    features = inspection.execute(frame)
+                    frame.features += features
+                    for m in inspection.measurements:
+                        m.execute(frame, features)
+        
+    def process_async(self, frame):
+        frame.features = []
+        frame.results = []
+        frame.save_image()
+        #make sure the image is in gridfs (does nothing if already saved)
+        
+        results_async = []
+        
+        inspections = list(M.Inspection.objects)
+        #allocate each inspection to a celery task
+        for inspection in M.Inspection.objects:
+            if not inspection.parent:
+                if not inspection.camera or inspection.camera == frame.camera: 
+                    results_async.append(execute_inspection.delay(inspection.id, frame.imgfile.grid_id, frame.metadata))
+        
+        return results_async
+        
+    def process_async_complete(self, frame, results_async):
+        inspections = list(M.Inspection.objects)
+        
+        #note that async results refer to Celery results, and not Frame results
+        results_complete = []
+        while not len(results_complete) == len(results_async):
+            new_ready_results = []
+            for index, r in enumerate(results_async):
+                if not index in results_complete and r.ready():
+                    new_ready_results.append(index)
+                    
+            for result_index in new_ready_results:
+                scvfeatures = results_async[result_index].get()
+                features = []
+                
+                for scvfeature in scvfeatures:
+                    scvfeature.image = frame.image 
+                    ff = M.FrameFeature()
+                    ff.setFeature(scvfeature)
+                    ff.inspection = inspections[result_index].id
+                    features.append(ff)
+                
+                frame.features += features
+                
+                for m in inspections[result_index].measurements:
+                    m.execute(frame, features)
+            
+            results_complete += new_ready_results
+            time.sleep(0.2)
                 
     @property
     def results(self):
@@ -177,12 +267,14 @@ class Core(object):
             
         return ret
 
+    """
     def get_inspection(self, name):
         return M.Inspection.objects(name=name).next()
 
     def get_measurement(self, name):
         return M.Measurement.objects(name=name).next()
-
+    """
+    
     def state(self, name):
         if name in self._states: return self._states[name]
         s = self._states[name] = State(self, name)
@@ -234,7 +326,13 @@ class Core(object):
     def tick(self):
         self._handle_events()
         self._clock.tick()
-
+            
+        if self.config.memprofile:
+            self._mem_prof_ticker += 1
+            if self._mem_prof_ticker == int(self.config.memprofile):
+                self._mem_prof_ticker = 0
+                self.log.info(hpy().heap())
+            
     def _handle_events(self):
         while True:
             try:

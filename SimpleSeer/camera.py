@@ -2,11 +2,10 @@ from glob import glob
 import gevent.queue
 from datetime import datetime
 
-import vpx
 import bson
 import numpy as np
 from SimpleCV import Camera as ScvCamera
-from SimpleCV import VirtualCamera, Kinect, FrameSource, Image, Scanner
+from SimpleCV import VirtualCamera, Kinect, FrameSource, Image, Scanner, JpegStreamCamera
 
 from . import util
 from . import models as M
@@ -14,8 +13,11 @@ from . import models as M
 class VideoCamera(object):
 
     def __init__(self, stillcam, rate,
-                 frames_per_clip=10, deadline=vpx.VPX_DL_REALTIME,
+                 frames_per_clip=10, deadline=None,
                  queue_size=50):
+        import vpx
+        if not deadline:
+            deadline = vpx.VPX_DL_REALTIME
         self._cam = stillcam
         self._rate = rate
         self._fpc = frames_per_clip
@@ -95,6 +97,9 @@ class StillCamera(object):
             cam = Scanner(id, cinfo)
         elif 'directory' in cinfo:
             cam = DirectoryCamera(cinfo['directory'])
+        elif 'avt' in cinfo:
+            from SimpleCV import AVTCamera
+            cam = AVTCamera(cinfo['id'], cinfo)
         elif 'kinect' in cinfo:
             cam = Kinect()
             cam._usedepth = 0
@@ -103,6 +108,8 @@ class StillCamera(object):
                 cam._usedepth = 1
             elif cinfo["kinect"] == "matrix":
                 cam._usematrix = 1
+        elif 'jpegstream' in cinfo:
+            cam = JpegStreamCamera(cinfo['jpegstream'])
         else:
             cam = ScvCamera(cinfo['id'], prop_set=cinfo)
         self._scv_cam = cam
@@ -135,7 +142,7 @@ class DirectoryCamera(FrameSource):
     counter = 0
 
     def __init__(self, path):
-	self.filelist = glob(path)
+        self.filelist = sorted(glob(path))
         self.counter = 0
 
     def getImage(self):

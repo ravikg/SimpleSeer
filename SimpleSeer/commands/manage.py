@@ -8,11 +8,15 @@ import time
 from path import path
 from SimpleSeer.Session import Session
 from socket import gethostname
+from contextlib import closing
+from zipfile import ZipFile, ZIP_DEFLATED
+import time
+import shutil
+
 
 class ManageCommand(Command):
     "Simple management tasks that don't require SimpleSeer context"
     use_gevent = False
-    remote_seer = False
 
     def configure(self, options):
         self.options = options
@@ -42,6 +46,21 @@ class ResetCommand(ManageCommand):
         else:
             print "reset cancelled"
 
+class BackupCommand(ManageCommand):
+    "Backup the existing database"
+
+    def __init__(self, subparser):
+       pass
+
+
+    def run(self):
+        sess = Session(os.getcwd())        
+        filename = sess.database + "-backup-" + time.strftime('%Y-%m-%d-%H_%M_%S')
+        subprocess.call(['mongodump','--db',sess.database,'--out',filename])
+        print 'Backup saved to directory:', filename
+        exit()
+        
+
 class DeployCommand(ManageCommand):
     "Deploy an instance"
     def __init__(self, subparser):
@@ -49,11 +68,11 @@ class DeployCommand(ManageCommand):
 
     def run(self):
         link = "/etc/simpleseer"
-        if os.path.exists(link):
+        if os.path.lexists(link):
             os.remove(link)
             
         supervisor_link = "/etc/supervisor/conf.d/simpleseer.conf"
-        if os.path.exists(supervisor_link):
+        if os.path.lexists(supervisor_link):
             os.remove(supervisor_link)
             
         print "Linking %s to %s" % (self.options.directory, link)
@@ -171,6 +190,48 @@ def WatchCommand(ManageCommand):
         time.sleep(0.5)
 
 
+class WorkerCommand(Command):
+    '''
+    This Starts a distributed worker object using the celery library.
+
+    Run from the the command line where you have a project created.
+
+    >>> simpleseer worker
+
+
+    The database the worker pool queue connects to is the same one used
+    in the default configuration file (simpleseer.cfg).  It stores the
+    data in the default collection 'celery'.
+
+    To issue commands to a worker, basically a task master, you run:
+
+    >>> simpleseer shell
+    >>> from SimpleSeer.command.worker import update_frame
+    >>> for frame in M.Frame.objects():
+          update_frame.delay(str(frame.id))
+    >>>
+
+    That will basically iterate through all the frames, if you want
+    to change it then pass the frame id you want to update.
+    
+    '''
+    use_gevent = False
+    
+    def __init__(self, subparser):
+        subparser.add_argument("--purge", help="clear out the task queue", action="store_true")
+
+    def run(self):
+        if self.options.purge:
+            cmd = ('celery', 'purge', '--config', 'SimpleSeer.celeryconfig')
+            subprocess.call(cmd)
+            print " ".join(cmd)
+            print "Task queue purged"
+        else:
+            import socket
+            worker_name = socket.gethostname() + '-' + str(time.time())
+            cmd = ['celery','worker','--config',"SimpleSeer.celeryconfig",'-n',worker_name]
+            print " ".join(cmd)
+            subprocess.call(cmd)
 
 @ManageCommand.simple()
 def BuildCommand(self):

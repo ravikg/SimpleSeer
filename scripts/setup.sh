@@ -54,7 +54,7 @@ seer_auto_install () {
 
 install_requirements() {
   echo "installing required system libraries"
-  sudo apt-get install -y --yes python-dev python-setuptools python-pip libzmq-dev nodejs npm build-essential python-gevent libevent-dev supervisor ipython-notebook swig libvpx-dev subversion python-pastescript ipython python-opencv python-scipy python-numpy python-pygame libsdl1.2-dev libsmpeg-dev libv4l-dev
+  sudo apt-get install -y --yes python-dev python-setuptools python-pip libzmq-dev nodejs npm build-essential python-gevent libevent-dev supervisor ipython-notebook swig libvpx-dev subversion python-pastescript ipython python-opencv python-scipy python-numpy python-pygame libsdl1.2-dev libsmpeg-dev libv4l-dev libfreetype6-dev libpng-dev
   echo "installing brunch"
   sudo npm install -g brunch
 }
@@ -62,6 +62,7 @@ install_requirements() {
 install_pip_requirements() {
   echo "installing PIP requirements"
   sudo pip install -r pip.requirements
+  #TODO make sure it completes
 }
 
 setup_environment() {

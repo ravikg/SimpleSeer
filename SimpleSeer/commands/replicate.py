@@ -7,7 +7,6 @@ from .base import Command
 class ReplicateCommand(Command):
     'Run the mmm replicator based on the "replication" info in the config file'
     use_gevent = True
-    remote_seer = True
 
     def run(self):
         'Run the mmm replicator based on the "replication" info in the config file'

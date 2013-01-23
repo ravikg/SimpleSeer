@@ -9,6 +9,8 @@ from socketio.namespace import BaseNamespace
 from .Session import Session
 from .base import jsonencode, jsondecode
 
+
+
 log = logging.getLogger(__name__)
 
 class ChannelManager(object):
@@ -40,8 +42,8 @@ class ChannelManager(object):
         get relayed down to the browser, which is expecting JSON.
         '''
         with self._lock:
-            self.pub_sock.send(channel, zmq.SNDMORE)
-            self.pub_sock.send(jsonencode(message))
+            self.pub_sock.send(channel, zmq.SNDMORE, copy = False)
+            self.pub_sock.send(jsonencode(message), copy = False)
             
 
     def subscribe(self, name):
@@ -86,6 +88,10 @@ class RealtimeNamespace(BaseNamespace):
 
     def on_unsubscribe(self, name):
         self._unsubscribe(name)
+
+    def on_publish(self, name, payload):
+        jsondict = jsondecode(payload)
+        self._channel_manager.publish(str(name), jsondict)
 
     def _subscribe(self, name):
         socket = self._channel_manager.subscribe(name)

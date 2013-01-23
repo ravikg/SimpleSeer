@@ -8,6 +8,7 @@ class ResultEmbed(SimpleEmbeddedDoc, mongoengine.EmbeddedDocument):
     result_id = mongoengine.ObjectIdField()
     numeric = mongoengine.FloatField()
     string = mongoengine.StringField()
+    featureindex = mongoengine.IntField()
     inspection_id = mongoengine.ObjectIdField()
     inspection_name = mongoengine.StringField()
     measurement_id = mongoengine.ObjectIdField()
@@ -32,49 +33,4 @@ class ResultEmbed(SimpleEmbeddedDoc, mongoengine.EmbeddedDocument):
             result.measurement_name = self.measurement_name
         return result, created
 
-class Result(SimpleDoc, mongoengine.Document):
-    """
-    """
-    #this needs some work yet, should be much simpler
-    numeric = mongoengine.FloatField()
-    #list = mongoEngine.ListField()  #todo encode results as lists or dicts
-    string = mongoengine.StringField()
-    capturetime = mongoengine.DateTimeField()
-    camera = mongoengine.StringField()
-
-    frame_id = mongoengine.ObjectIdField()
-
-    inspection_id = mongoengine.ObjectIdField()
-    inspection_name = mongoengine.StringField()
-    measurement_id = mongoengine.ObjectIdField()
-    measurement_name = mongoengine.StringField()
-    state = mongoengine.IntField()
-    message = mongoengine.StringField()
-
-    meta = {
-        'indexes': ["capturetime", ('camera', '-capturetime'),
-                    "frame_id", "inspection_id", "measurement_id"]
-    }
-
-    
-    """
-    def capEpochMS(self):
-        # Shortcut to return the capture time in epoch microseconds
-        
-        epochTime = calendar.timegm(self.capturetime.timetuple()) + self.capturetime.time().microsecond / 1000000.0
-        return epochTime
-
-    capturetimeEpochMS = property(capEpochMS)
-    """
-    
-    def save(self, *args, **kwargs):
-        log.warn ("Results depricated.  Not saved")
-        return
-
-        # Push notification to OLAP to decide whether to publish this update
-        #from SimpleSeer.OLAPUtils import RealtimeOLAP
-        #ro = RealtimeOLAP()
-        #ro.realtime(self)
-        
-        super(Result, self).save(*args, **kwargs)
 

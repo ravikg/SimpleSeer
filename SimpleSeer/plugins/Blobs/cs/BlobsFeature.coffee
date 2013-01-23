@@ -1,7 +1,10 @@
-class BlobsFeature
-	constructor: (feature) ->
+Feature = require "models/feature"
+module.exports = class blobs extends Feature
+  ###
+	initialize: (feature) ->
 		@feature = feature
-
+		super()
+  ###
 	icon: () => "/img/object.png" 
 		
 	represent: () =>
@@ -38,4 +41,4 @@ class BlobsFeature
 		# LHS - The name of the python class that is the feature
 		# by the inspection
 		# RHS - The name of this coffee script feature class.
-plugin this, Blob:BlobsFeature
+#plugin this, Blob:BlobsFeature

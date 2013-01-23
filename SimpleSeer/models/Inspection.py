@@ -13,6 +13,10 @@ from datetime import datetime
 from .base import SimpleDoc, WithPlugins
 from .Measurement import Measurement
 from .FrameFeature import FrameFeature
+from .Frame import Frame
+
+import logging
+log = logging.getLogger()
 
 class InspectionSchema(fes.Schema):
     parent = V.ObjectId(if_empty=None, if_missing=None)
@@ -80,13 +84,21 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
 
     def __repr__(self):
       return "<%s: %s>" % (self.__class__.__name__, self.name)
-                                           
-    def execute(self, image, parents = {}):
+                    
+    def execute(self, frame, parents = {}):
         """
         The execute method takes in a frame object, executes the method
         and sends the samples to each measurement object.  The results are returned
         as a multidimensional array [ samples ][ measurements ] = result
         """
+        
+        # For legacy testing, make sure we have a frame and not an image
+        if not type(frame) == Frame:
+            log.warn('inspection execute not expects a frame instead of an image')
+            return []
+        
+        # Pull the frame metadata into the inspection's metadata
+        self.parameters.metadata = frame.metadata
         
         #execute the morphs?
         
@@ -98,44 +110,62 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
         #get the ROI function that we want
         #note that we should validate/roi method
  
-        featureset = method_ref(image)
+        featureset = method_ref(frame.image)
         
         if not featureset:
             return []
     
+        frameFeatSet = []
+        if type(featureset[0]) == FrameFeature:
+            log.warn('Plugins should return SimpleCV Features.')
+            frameFeatSet = featureset
+        else:
+            for feat in featureset:
+                ff = FrameFeature()
+                ff.setFeature(feat)
+                frameFeatSet.append(ff)
+    
         if "skip" in self.parameters or "limit" in self.parameters:
-            featureset = featureset[self.parameters.get("skip",None):self.parameters.get("limit",None)]
+            frameFeatSet = frameFeatSet[self.parameters.get("skip",None):self.parameters.get("limit",None)]
         
         #we're executing an unsaved inspection, which can have no children
         if not self.id:
-            return featureset
+            return frameFeatSet
         
-        for r in featureset:
+        for r in frameFeatSet:
             r.inspection = self.id
         
         children = self.children
         
         if not children:
-            return featureset
+            return frameFeatSet
         
         if children:
             newparents = deepcopy(parents)
             newparents[self.id] = True
-            for r in featureset:
+            for r in frameFeatSet:
                 f = r.feature
-                f.image = image
+                f.image = frame.image
                 roi = f.crop()
             
                 for child in children:    
                     r.children.extend(child.execute(roi, newparents))
                 
-        
-        return featureset
+        return frameFeatSet
 
     def save(self, *args, **kwargs):
         from ..realtime import ChannelManager
         
         self.updatetime = datetime.utcnow()
+        
+        # Ensure name is unique
+        for i in Inspection.objects:
+            if i.name == self.name and i.id != self.id:
+                log.info('trying to save inspections with duplicate names: %s' % i.name)
+                if self.name[-1].isdigit():
+                    self.name = self.name[:-1] + str(int(self.name[-1]) + 1)
+                else:
+                    self.name = self.name + '_1'
         
         super(Inspection, self).save(*args, **kwargs)
         ChannelManager().publish('meta/', self)
@@ -148,5 +178,16 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
     def measurements(self):
         return Measurement.objects(inspection = self.id)
         
-    
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            # Note: ignoring name to test if this inspection is functionally equivalent to other inspection (name is irrelevant)
+            banlist = [None, 'updatetime', 'name']
+            params = [ a for a in self.__dict__['_data'] if not a in banlist ]
+            
+            for p in params:
+                if self.__getattribute__(p) != other.__getattribute__(p):
+                    return False
+            return True
+        else:
+            return False    
 
