@@ -176,6 +176,10 @@ class Frame(SimpleDoc, mongoengine.Document):
         # Only publish to frame/ channel if this is a new frame (not a re-saved frame from a backfill)
         if newFrame:
             #send the frame without features, and some other stuff
+            if hasattr(self, 'skipOLAP'):
+                skip = True
+            else:
+                skip = False
             realtime.ChannelManager().publish('frame/', dict(
                 id = str(self.id),
                 capturetime = timegm(self.capturetime.timetuple()),
@@ -190,7 +194,8 @@ class Frame(SimpleDoc, mongoengine.Document):
                 imgfile = "/grid/imgfile/" + str(self.id),
                 thumbnail_file = "/grid/thumbnail_file/" + str(self.id),
                 metadata = self.metadata,
-                notes = self.notes)
+                notes = self.notes,
+                skipOLAP = skip)
             )
         
         
