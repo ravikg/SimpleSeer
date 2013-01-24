@@ -146,12 +146,15 @@ class Core(object):
         self._states = dict(start=start)
         self._cur_state = start
 
-    def capture(self):
+    def capture(self, indexes = []):
         currentframes = []
         self.framecount += 1
 
-        currentframes = [
-            cam.getFrame() for cam in self.cameras ]
+        cameras = self.cameras
+        if len(indexes):
+            cameras = [ self.cameras[i] for i in indexes ]
+        
+        currentframes = [ cam.getFrame() for cam in cameras ]
 
         while len(self.lastframes) >= (self._config.max_frames or 30):
             self.lastframes.popleft()
