@@ -399,10 +399,10 @@ class Filter():
                     resultKeys[m.name] = plugin.printFields()
                     resultKeys[m.name].append('measurement_name')
                 else:
-                    resultKeys[m.name] = ['measurement_name', 'measurement_id', 'inspection_id', 'string', 'numeric']
+                    resultKeys[m.name] = ['measurement_name', 'measurement_id', 'inspection_id', 'string', 'numeric', 'state', 'message']
             except ValueError:
                 # log.info('No plugin found for %s, using default fields' % m.method)
-                resultKeys[m.name] = ['measurement_name', 'measurement_id', 'inspection_id', 'string', 'numeric']
+                resultKeys[m.name] = ['measurement_name', 'measurement_id', 'inspection_id', 'string', 'numeric', 'state', 'message']
         
         
         return featureKeys, resultKeys
