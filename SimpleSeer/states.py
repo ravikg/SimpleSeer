@@ -215,7 +215,6 @@ class Core(object):
         #make sure the image is in gridfs (does nothing if already saved)
         
         results_async = []
-        
         inspections = list(M.Inspection.objects)
         #allocate each inspection to a celery task
         for inspection in M.Inspection.objects:
@@ -226,7 +225,6 @@ class Core(object):
         return results_async
         
     def process_async_complete(self, frame, results_async):
-        inspections = list(M.Inspection.objects)
         
         #note that async results refer to Celery results, and not Frame results
         results_complete = []
@@ -237,19 +235,21 @@ class Core(object):
                     new_ready_results.append(index)
                     
             for result_index in new_ready_results:
-                scvfeatures = results_async[result_index].get()
+                (scvfeatures, inspection_id) = results_async[result_index].get()
+                insp = M.Inspection.objects.get(id=inspection_id)
                 features = []
+                
                 
                 for scvfeature in scvfeatures:
                     scvfeature.image = frame.image 
                     ff = M.FrameFeature()
                     ff.setFeature(scvfeature)
-                    ff.inspection = inspections[result_index].id
+                    ff.inspection = insp.id
                     features.append(ff)
                 
                 frame.features += features
-                
-                for m in inspections[result_index].measurements:
+                #import pdb;pdb.set_trace()
+                for m in insp.measurements:
                     m.execute(frame, features)
             
             results_complete += new_ready_results

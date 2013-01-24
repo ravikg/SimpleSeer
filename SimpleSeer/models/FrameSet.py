@@ -13,10 +13,12 @@ class FrameSet():
     _metadata = {}
     _frames = []
     _reqInspections = []
+    _saveCams = []
 
-    def __init__(self, reqInspections = [], metadata = {}):
+    def __init__(self, reqInspections = [], metadata = {}, saveCams = []):
         self._metadata = metadata
         self._frames = []
+        self._saveCams = saveCams
         
         for req in reqInspections:
             self._reqInspections.append(Inspection.objects.get(name=req).id)
@@ -56,8 +58,10 @@ class FrameSet():
         
     def save(self):
         for f in self._frames:
-            f.skipOLAP = True
+            if self._saveCams and not f.camera in self._saveCams:
+                f.skipOLAP = True
+            
             f.save()
-        
+            
     def __repr__(self):
         return "[FrameSet %s ]" % self._metadata

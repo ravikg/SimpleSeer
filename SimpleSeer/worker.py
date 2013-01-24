@@ -182,7 +182,7 @@ def execute_inspection(inspection_id, gridfs_id, frame_meta):
         features = []
     
     print "Finished running inspection {} on image {}".format(inspection_id, gridfs_id)
-    return [f.feature for f in features]
+    return ([f.feature for f in features], inspection_id)
 
     
 @task()
