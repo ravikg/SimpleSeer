@@ -33,13 +33,16 @@ class Filter():
                 featCount += 1
             
         # Need to initialize the fields for the query.  Do this sparingly, as mongo has major memory limitations
-        pipeline += self.initialFields(projResult = resCount, projFeat = featCount)
+        #pipeline += self.initialFields(projResult = resCount, projFeat = featCount)
        
         if groupByField: 
             pipeline += self.groupBy(groupByField)
         
         # Apply the sort criteria
         pipeline += self.conditional(allFilters)
+        
+        pipeline += self.initialFields(projResult = resCount, projFeat = featCount)
+       
         
         # Sort and skip/limit the results
         # Note: if the skip is negative, first sort by negative criteria, then re-sort regular
