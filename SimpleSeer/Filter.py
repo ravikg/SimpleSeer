@@ -14,7 +14,7 @@ class Filter():
     
     names = {}
     
-    def getFrames(self, allFilters, skip=0, limit=float("inf"), sortinfo = {}, groupByField = ''):
+    def getFrames(self, allFilters, boolean='and', skip=0, limit=float("inf"), sortinfo = {}, groupByField = ''):
         
         pipeline = []
         #frames = []
@@ -39,7 +39,7 @@ class Filter():
             pipeline += self.groupBy(groupByField)
         
         # Apply the sort criteria
-        pipeline += self.conditional(allFilters)
+        pipeline += self.conditional(allFilters, boolean)
         
         pipeline += self.initialFields(projResult = resCount, projFeat = featCount)
        
@@ -223,7 +223,7 @@ class Filter():
         return proj #, group
     
     
-    def conditional(self, filters):
+    def conditional(self, filters, boolean):
         # This function generates the $match clauses for the aggregation
         
         allfilts = []
@@ -265,11 +265,11 @@ class Filter():
                     comp['featuretype'] = f['type']
                     
             #allfilts.append({'$match': {embedField: {'$elemMatch': comp}}})
-                allfilts.append({'$match': {nameParts[0]: {'$elemMatch': comp}}})
+                allfilts.append({nameParts[0]: {'$elemMatch': comp}})
             else:
-                allfilts.append({'$match': comp})
+                allfilts.append(comp)
                 
-        return allfilts
+        return [{'$match': {'$' + boolean: allfilts}}]
         
         
     def checkFilter(self, filterType, filterName, filterFormat):
