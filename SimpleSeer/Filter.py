@@ -6,6 +6,8 @@ from .models.Measurement import Measurement
 from datetime import datetime
 from calendar import timegm
 
+import mongoengine
+
 import numpy as np
 
 log = logging.getLogger(__name__)
@@ -19,6 +21,9 @@ class Filter():
         #frames = []
         #measurements = []
         #features = []
+        
+        if type(allFilters) == list or type(allFilters) == mongoengine.base.BaseList:
+            allFilters = {'logic': 'and', 'criteria': allFilters}
         
         # Filter the data based on the filter parameters
         # Frame features are easy to filter, but measurements and features are embedded in the frame
@@ -42,7 +47,6 @@ class Filter():
         
         pipeline += self.initialFields(projResult = resCount, projFeat = featCount)
        
-        
         # Sort and skip/limit the results
         # Note: if the skip is negative, first sort by negative criteria, then re-sort regular
         if skip < 0:
