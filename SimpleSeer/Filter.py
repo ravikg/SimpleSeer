@@ -14,7 +14,7 @@ class Filter():
     
     names = {}
     
-    def getFrames(self, allFilters, boolean='and', skip=0, limit=float("inf"), sortinfo = {}, groupByField = '', collection='frame'):
+    def getFrames(self, allFilters={}, skip=0, limit=float("inf"), sortinfo = {}, groupByField = '', collection='frame'):
         pipeline = []
         #frames = []
         #measurements = []
@@ -23,13 +23,13 @@ class Filter():
         # Filter the data based on the filter parameters
         # Frame features are easy to filter, but measurements and features are embedded in the frame
         # so they need their own syntax to filter
-        resCount = 0
+        resCount = 1
         featCount = 0
-        for f in allFilters:
-            if f['name'][:7] == 'results':
-                resCount += 1
-            elif f['name'][:8] == 'features':
-                featCount += 1
+        #for f in allFilters:
+        #    if f['name'][:7] == 'results':
+        #        resCount += 1
+        #    elif f['name'][:8] == 'features':
+        #        featCount += 1
             
         # Need to initialize the fields for the query.  Do this sparingly, as mongo has major memory limitations
         #pipeline += self.initialFields(projResult = resCount, projFeat = featCount)
@@ -38,7 +38,7 @@ class Filter():
             pipeline += self.groupBy(groupByField)
         
         # Apply the sort criteria
-        pipeline += self.conditional(allFilters, boolean)
+        pipeline.append({'$match': self.conditional(allFilters['criteria'], allFilters['logic'])})
         
         pipeline += self.initialFields(projResult = resCount, projFeat = featCount)
        
@@ -155,54 +155,58 @@ class Filter():
         
         return proj
     
+
     
     def conditional(self, filters, boolean):
         # This function generates the $match clauses for the aggregation
-        
+
         allfilts = []
         for f in filters:    
-            nameParts = f['name'].split('.')
-            
-            name = f['name']
-            if not f['type'] == 'frame':
-                name = '.'.join(nameParts[1:])
-            
-            # create the basic conditional
-            comp = {}
-            if 'eq' in f:
-                
-                # Need to convert the numbers into digits instead of strings
-                if (type(f['eq']) == str or type(f['eq']) == unicode) and f['eq'].isdigit() and not nameParts[0] == 'metadata':
-                    f['eq'] = float(f['eq'])
-                
-                # Convert datetimes into epoch ms
-                if type(f['eq']) == datetime:
-                    f['eq'] = datetime.fromtimestamp(f['eq'] / 1000)
-                
-                comp[name] = f['eq']
-            if 'gt' in f or 'lt' in f:
-                parts = {}
-                if 'gt' in f:
-                    parts['$gte'] = f['gt']
-                if 'lt' in f:
-                    parts['$lte'] = f['lt']
-                comp[name] = parts
-            if 'exists' in f:
-                comp[name] = {'$exists': True}
-            
-            # if not a frame-level filter, restrict to appropriate measurement/feature type
-            if not f['type'] == 'frame':
-                if nameParts[0] == 'results':    
-                    comp['measurement_name'] = f['type']
-                if nameParts[0] == 'features':
-                    comp['featuretype'] = f['type']
-                    
-            #allfilts.append({'$match': {embedField: {'$elemMatch': comp}}})
-                allfilts.append({nameParts[0]: {'$elemMatch': comp}})
+            if 'logic' in f:
+                allfilts.append(self.conditional(f['criteria'], f['logic']))
             else:
-                allfilts.append(comp)
+                nameParts = f['name'].split('.')
                 
-        return [{'$match': {'$' + boolean: allfilts}}]
+                name = f['name']
+                if not f['type'] == 'frame':
+                    name = '.'.join(nameParts[1:])
+                
+                # create the basic conditional
+                comp = {}
+                if 'eq' in f:
+                    
+                    # Need to convert the numbers into digits instead of strings
+                    if (type(f['eq']) == str or type(f['eq']) == unicode) and f['eq'].isdigit() and not nameParts[0] == 'metadata':
+                        f['eq'] = float(f['eq'])
+                    
+                    # Convert datetimes into epoch ms
+                    if type(f['eq']) == datetime:
+                        f['eq'] = datetime.fromtimestamp(f['eq'] / 1000)
+                    
+                    comp[name] = f['eq']
+                if 'gt' in f or 'lt' in f:
+                    parts = {}
+                    if 'gt' in f:
+                        parts['$gte'] = f['gt']
+                    if 'lt' in f:
+                        parts['$lte'] = f['lt']
+                    comp[name] = parts
+                if 'exists' in f:
+                    comp[name] = {'$exists': True}
+                
+                # if not a frame-level filter, restrict to appropriate measurement/feature type
+                if not f['type'] == 'frame':
+                    if nameParts[0] == 'results':    
+                        comp['measurement_name'] = f['type']
+                    if nameParts[0] == 'features':
+                        comp['featuretype'] = f['type']
+                        
+                #allfilts.append({'$match': {embedField: {'$elemMatch': comp}}})
+                    allfilts.append({nameParts[0]: {'$elemMatch': comp}})
+                else:
+                    allfilts.append(comp)
+                
+        return {'$' + boolean: allfilts}
         
     def checkFilter(self, filterType, filterName, filterFormat):
         pipeline = []
