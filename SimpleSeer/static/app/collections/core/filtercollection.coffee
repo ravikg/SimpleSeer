@@ -3,6 +3,14 @@ application = require 'application'
 #FramelistFrameView = require './framelistframe_view'
 #context = require '../models/core/context'
 
+###
+Simple Query:
+"query":{"logic":"and","criteria":[{"type":"left","eq":1,"name":"results.state"}]}
+
+Logical Query:
+"query":{"logic":"and","criteria":[{"type":"left","eq":1,"name":"results.state","logic":"and","criteria":[{"type":"left","eq":1,"name":"results.state"}]}]}
+###
+
 module.exports = class FilterCollection extends Collection
   _defaults:
     sortkey:false
@@ -134,12 +142,44 @@ module.exports = class FilterCollection extends Collection
     return
   
   # Sync filters
+  #"query":{"logic":"and","criteria":[{"type":"left","eq":1,"name":"results.state"}]}
+
+  ###
+  # select * where datetime = 123456789 and (results.left.state = 1 or results.right.state = 1) 
+    "query":{
+      "logic":"and",
+      "criteria":[
+        {
+          "type":"frame",
+          "eq":123456789,
+          "name":"dt"
+        },
+        {
+          "logic":"or",
+          "criteria":[
+            {          
+              "type":"left",
+              "eq":1,
+              "name":"results.state"
+            },
+            {          
+              "type":"right",
+              "eq":1,
+              "name":"results.state"
+            }
+          ]
+        }
+      ]
+    }
+  ###
   alterFilters:() =>
-    _json = []
+    _json = {logic:'and',criteria:[]}
     for o in @filters
       val = o.toJson()
       if val
-        _json.push val
+        #o.logic = "and"
+        console.log val
+        _json.criteria.push val
     @setParam 'query', _json
     return
   
