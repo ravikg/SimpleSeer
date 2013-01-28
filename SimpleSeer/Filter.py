@@ -21,7 +21,8 @@ class Filter():
         #frames = []
         #measurements = []
         #features = []
-        
+       
+        print 'snarf' 
         if type(allFilters) == list or type(allFilters) == mongoengine.base.BaseList:
             allFilters = {'logic': 'and', 'criteria': allFilters}
         
