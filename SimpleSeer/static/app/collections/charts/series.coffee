@@ -86,29 +86,15 @@ module.exports = class Series extends FilterCollection
     return refined
 
   _drawData: =>
-    @shiftStack(true)
     points = []
     for p in @models
       points.push p.attributes
     @view.setData points, @id
     if points.length
       @view.hasData = true
+    @shiftStack(true)
     return
   
-    dd = []
-    if reset
-      if @.model.accumulate
-        dd = @.stack.buildData data
-      else
-        dd = data
-      @.setData dd, true
-    else
-      for d in data
-        if @.model.accumulate
-          @.incPoint d
-        else
-          @.addPoint(d.attributes,true,true)
-
   _formatChartPoint: (d) =>
     if !@accumulate
       cp = @view.clickPoint
@@ -116,20 +102,32 @@ module.exports = class Series extends FilterCollection
     if !@xAxis.type? or @xAxis.type == ""
       d.d[0] = @_counter++
     else if @xAxis.type == 'datetime'
-      d.d[0] = new moment d.d[0]
-      d.d[0].subtract('ms', application.timeOffset)
+      d.d[0] = moment.utc( d.d[0] )
+      #d.d[0].subtract('ms', application.timeOffset)
     if @accumulate
-      _id = d.d[1]
+      if @xAxis.type == 'datetime'
+        _id = d.d[0].unix()
+      else
+        _id = d.d[1]
     else
       _id = d.m[2]
     _point =
       marker:{}
       y:d.d[1]
       x:d.d[0]
+      raw:d.d
       id:_id
       events:
         mouseOver: @pointEvents.over
         click: @pointEvents.click
+    if d.d.length > 2
+      #remove y
+      y = d.d.shift()
+      _point.multipoint = []
+      for p in d.d
+        _point.multipoint.push @_formatChartPoint {d:[y,p],m:d.m}
+        
+
     #for i,s of @model.metaMap
     #  if s == 'string' && @model.colormap
     #    _point.marker.fillColor = @model.colormap[d.m[i]]
@@ -139,18 +137,18 @@ module.exports = class Series extends FilterCollection
     if channel
       application.socket.removeListener "message:Chart/#{@.name}/", @receive
       @name = channel
+    #if application.debug
+      #console.info "series:  subscribing to channel "+"message:Chart/#{@.name}/"
     if application.socket
       application.socket.on "message:Chart/#{@.name}/", @receive
       if !application.subscriptions["Chart/#{@.name}/"]
         application.subscriptions["Chart/#{@.name}/"] = application.socket.emit 'subscribe', "Chart/#{@.name}/"
   
   shiftStack: (silent=false)=>
-    #TODO: remove against, grab from filter
     shifted = 0
-    #against = new moment().subtract('days',5000)
     while @_needShift()
-      @shift {silent:silent}
-      shifted++      
+      foo = @shift {silent:silent}
+      shifted++
     return shifted
 
   _needShift: (offset=0)=>
@@ -165,43 +163,23 @@ module.exports = class Series extends FilterCollection
     
   
   receive: (data) =>
-    #@shiftStack()
-    console.info 'RECEIVE'
+    #console.dir data.data.m.data[0].d
     for o in data.data.m.data
-      console.info 'POINT RUNNING...'
       p = @_formatChartPoint o
       if @inStack(p)
-        console.log 'good instack'
-        #@shiftStack()
+        if @accumulate
+          @remove p.x.unix(), {silent: true}
         @add p, {silent: true}
         @_drawData()
-        #@view.addPoint p, @id
         @view.hasData = true
     if @view.hasData && @view.hasMessage
       @view.hideMessage()
     return
     
   inStack:(point) =>
-    #@sort()
     if @length == 0
       return true
-    return point.x > @at(0).get("x") or @_needShift(-1)
-  
-    ###
-    dm = @view.model.attributes.dataMap
-    mdm = @view.model.attributes.metaMap
+    return point.x >= @at(0).get("x") or @_needShift(-1)
     
-    m = {}
-    d = {}
-    for o in data.data.m.data
-      for i of o.d
-        d[dm[i]] = o.d[i]
-      for i of o.m
-        m[mdm[i]] = o.m[i]
-        
-      console.dir d
-      console.dir m
-    ###
-  
   shiftChart: =>
     @view.shiftPoint @id, false    

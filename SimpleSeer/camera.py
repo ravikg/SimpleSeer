@@ -88,6 +88,7 @@ class StillCamera(object):
 
     def __init__(self, name='default', crop=None, **cinfo):
         self.name = name
+        self.localtz = cinfo['timezone'] or 'UTC'
         self.crop = crop
         if 'virtual' in cinfo:
             cam = VirtualCamera(cinfo['source'], cinfo['virtual'])
@@ -97,6 +98,9 @@ class StillCamera(object):
             cam = Scanner(id, cinfo)
         elif 'directory' in cinfo:
             cam = DirectoryCamera(cinfo['directory'])
+        elif 'avt' in cinfo:
+            from SimpleCV import AVTCamera
+            cam = AVTCamera(cinfo['id'], cinfo)
         elif 'kinect' in cinfo:
             cam = Kinect()
             cam._usedepth = 0
@@ -127,7 +131,7 @@ class StillCamera(object):
         return img
 
     def getFrame(self):
-        frame = M.Frame(capturetime=datetime.utcnow(), camera=self.name)
+        frame = M.Frame(capturetime=datetime.utcnow(), camera=self.name, localtz=self.localtz)
         frame.image = self.getImage()
         return frame
 

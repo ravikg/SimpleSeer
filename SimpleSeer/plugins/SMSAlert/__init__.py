@@ -1,1 +1,0 @@
-from .smsalert import SMSAlert

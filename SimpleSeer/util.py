@@ -31,6 +31,16 @@ def ensure_plugins():
     
     return True
 
+def all_plugins():
+    from . import models as M
+    ensure_plugins()
+    
+    classes = (M.Inspection, M.Measurement, M.Watcher)
+    allplugins = {}
+    for cls in classes:
+        allplugins[cls] = cls._plugins
+    return allplugins
+
 class LazyProperty(object):
 
     def __init__(self, func):
@@ -93,15 +103,6 @@ def utf8convert(data):
         return list(map(utf8convert, data))
     else:
         return data
-
-def get_seer():
-    # from .SimpleSeer import SimpleSeer as SS
-    from .states import Core
-    from . import service
-    inst = Core.get()
-    if inst is None:
-        return service.SeerProxy2()
-    return inst
 
 def initialize_slave():
     from .Session import Session

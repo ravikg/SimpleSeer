@@ -12,11 +12,12 @@ from SimpleSeer import validators as V
 import formencode as fe
 
 from datetime import datetime
+from pytz import timezone
 
 from .base import SimpleDoc, SONScrub
 from .FrameFeature import FrameFeature
 from .Clip import Clip
-from .Result import Result, ResultEmbed
+from .Result import ResultEmbed
 from .. import realtime
 from ..util import LazyProperty
 
@@ -27,7 +28,7 @@ class FrameSchema(fes.Schema):
     camera = fev.UnicodeString(not_empty=True)
     metadata = V.JSON(if_empty={}, if_missing={})
     notes = fev.UnicodeString(if_empty="", if_missing="")
-	#TODO, make this feasible as a formencode schema for upload
+    #TODO, make this feasible as a formencode schema for upload
 
 
 
@@ -47,6 +48,7 @@ class Frame(SimpleDoc, mongoengine.Document):
     capturetime = mongoengine.DateTimeField()
     capturetime_epoch = mongoengine.IntField(default = 0)
     updatetime = mongoengine.DateTimeField()
+    localtz = mongoengine.StringField(default='UTC')
     camera = mongoengine.StringField()
     features = mongoengine.ListField(mongoengine.EmbeddedDocumentField(FrameFeature))
     results = mongoengine.ListField(mongoengine.EmbeddedDocumentField(ResultEmbed))
@@ -56,7 +58,6 @@ class Frame(SimpleDoc, mongoengine.Document):
     clip_id = mongoengine.ObjectIdField(default=None)
     clip_frame = mongoengine.IntField(default=None)
     imgfile = mongoengine.FileField()
-    layerfile = mongoengine.FileField()
     thumbnail_file = mongoengine.FileField()
     metadata = mongoengine.DictField()
     notes = mongoengine.StringField()
@@ -71,7 +72,7 @@ class Frame(SimpleDoc, mongoengine.Document):
     @classmethod
     #which fields we care about for Filter.py
     def filterFieldNames(cls):
-        return ['_id', 'camera', 'capturetime', 'capturetime_epoch', 'metadata', 'notes', 'height', 'width', 'imgfile', 'results']
+        return ['_id', 'camera', 'capturetime', 'capturetime_epoch', 'localtz', 'metadata', 'notes', 'height', 'width', 'imgfile', 'results']
 
 
     @LazyProperty
@@ -109,11 +110,6 @@ class Frame(SimpleDoc, mongoengine.Document):
         else: # pragma no cover
             self._imgcache = None
 
-
-        if self.layerfile:
-            self.layerfile.get().seek(0,0)
-            self._imgcache.dl()._mSurface = pygame.image.fromstring(self.layerfile.read(), self._imgcache.size(), "RGBA")
-
         return self._imgcache
 
     @image.setter
@@ -123,24 +119,13 @@ class Frame(SimpleDoc, mongoengine.Document):
         self._imgcache = value
 
     def save_image(self):
-        
         if self._imgcache != '' and self._imgcache_dirty:
             s = StringIO()
             img = self._imgcache
             if self.clip_id is None:
-                img.getPIL().save(s, "jpeg", quality = 100)
+                img.getPIL().save(s, "jpeg", quality = Session().compression_quality or 100)
                 self.imgfile.replace(s.getvalue(), content_type = "image/jpeg")
           
-            if len(img._mLayers):
-                if len(img._mLayers) > 1:
-                    mergedlayer = DrawingLayer(img.size())
-                    for layer in img._mLayers[::-1]:
-                        layer.renderToOtherLayer(mergedlayer)
-                else:
-                    mergedlayer = img.dl()
-                self.layerfile.replace(pygame.image.tostring(mergedlayer._mSurface, "RGBA"))
-                #TODO, make layerfile a compressed object
-            #self._imgcache = ''
             self._imgcache_dirty = False
             
         return self.imgfile.grid_id
@@ -183,22 +168,36 @@ class Frame(SimpleDoc, mongoengine.Document):
         newFrame = False
         if not self.id:
             newFrame = True
-        
-        super(Frame, self).save(*args, **kwargs)
 
-        #TODO, this is sloppy -- we should handle this with cascading saves
-        #or some other mechanism
-        #for r in self.results:
-        #    result, created = r.get_or_create_result()
-        #    result.capturetime = self.capturetime
-        #    result.frame_id = self.id
-        #    result.save(*args, **kwargs)
+        super(Frame, self).save(*args, **kwargs)
         
         # Once everything else is saved, publish result
         # Do not place any other save actions after this line or realtime objects will miss data
         # Only publish to frame/ channel if this is a new frame (not a re-saved frame from a backfill)
         if newFrame:
-            realtime.ChannelManager().publish('frame/', self)
+            #send the frame without features, and some other stuff
+            if hasattr(self, 'skipOLAP'):
+                skip = True
+            else:
+                skip = False
+            realtime.ChannelManager().publish('frame/', dict(
+                id = str(self.id),
+                capturetime = timegm(self.capturetime.timetuple()),
+                capturetime_epoch = self.capturetime_epoch,
+                updatetime = timegm(self.updatetime.timetuple()),
+                camera = self.camera,
+                results = self.results,
+                height = self.height,
+                width = self.width,
+                clip_id = str(self.clip_id),
+                clip_frame = self.clip_frame,
+                imgfile = "/grid/imgfile/" + str(self.id),
+                thumbnail_file = "/grid/thumbnail_file/" + str(self.id),
+                metadata = self.metadata,
+                notes = self.notes,
+                skipOLAP = skip)
+            )
+        
         
         
     def serialize(self):

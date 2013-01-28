@@ -42,8 +42,8 @@ class ChannelManager(object):
         get relayed down to the browser, which is expecting JSON.
         '''
         with self._lock:
-            self.pub_sock.send(channel, zmq.SNDMORE)
-            self.pub_sock.send(jsonencode(message))
+            self.pub_sock.send(channel, zmq.SNDMORE, copy = False)
+            self.pub_sock.send(jsonencode(message), copy = False)
             
 
     def subscribe(self, name):

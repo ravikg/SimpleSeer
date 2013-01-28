@@ -153,7 +153,7 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
         for result in results:
             if result.measurement_name == self.name:
                 testField = None
-                if result.numeric:
+                if result.numeric is not None:
                     testField = result.numeric
                 else:
                     testField = result.string
@@ -167,7 +167,10 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
                         
                         if not match:
                             result.state = 1
-                            messages.append("%s %s %s" % (self.label, rule['rule']['operator'], rule['rule']['value']))
+                            if 'msg' in rule:
+                                messages.append(rule['msg'])
+                            else:
+                                messages.append("%s %s %s" % (self.label, rule['rule']['operator'], rule['rule']['value']))
                         
                 result.message = ",".join(messages)
                 

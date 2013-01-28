@@ -3,7 +3,6 @@ from .base import Command
 class ScriptCommand(Command):
     "Run a user-defined script in the seer 'context'"
     # use_gevent = 'Configurable by command line'
-    remote_seer = True
 
     def __init__(self, subparser):
         subparser.add_argument('-g', '--use-gevent', action='store_true')

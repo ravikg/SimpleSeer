@@ -7,7 +7,17 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width">
-    <script type="text/javascript">(function(){function x(x){document.write("<li"+'nk rel="stylesheet" href="'+x+'?v='+a+'">')}function b(b){document.write("<scr"+'ipt type="text/javascript" src="'+b+"?v="+a+'"></scr'+"ipt>")}var a=(new Date).valueOf();x("/stylesheets/app.css");b("javascripts/vendor.js");b("javascripts/app.js");b("/plugins.js")})()</script>
+    <script type="text/javascript">
+      cacheHashes = {{MD5Hashes|tojson|safe}}
+    </script>
+    {% for key, value in MD5Hashes.items() %}
+      {%if value.type == "js"%}
+    <script type="text/javascript" src="{{key}}?v={{value.path}}"></script>
+      {%elif value.type == "css" %}
+    <link rel="stylesheet" href="{{key}}?v={{value.path}}">
+      {% endif %}
+    {% endfor %}  
+    <script type="text/javascript" src="/plugins.js"></script>
     <style>
     {% block style %}
     {% endblock %}

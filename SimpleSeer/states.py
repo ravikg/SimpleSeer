@@ -146,12 +146,15 @@ class Core(object):
         self._states = dict(start=start)
         self._cur_state = start
 
-    def capture(self):
+    def capture(self, indexes = []):
         currentframes = []
         self.framecount += 1
 
-        currentframes = [
-            cam.getFrame() for cam in self.cameras ]
+        cameras = self.cameras
+        if len(indexes):
+            cameras = [ self.cameras[i] for i in indexes ]
+        
+        currentframes = [ cam.getFrame() for cam in cameras ]
 
         while len(self.lastframes) >= (self._config.max_frames or 30):
             self.lastframes.popleft()
@@ -162,6 +165,9 @@ class Core(object):
             new_frame_ids.append(frame.id)
         self.publish('capture/', { "capture": 1, "frame_ids": new_frame_ids})
         return currentframes
+    
+    """
+    This is probably not used any more.  commenting out to make sure
         
     def inspect(self, frames = []):
         if not len(frames) and not len(self.lastframes):
@@ -187,7 +193,8 @@ class Core(object):
                     
             for watcher in self.watchers:
                 watcher.check(frame.results)
-
+    """
+    
     def process(self, frame):
         if self._worker_enabled:
             async_results = self.process_async(frame)
@@ -204,7 +211,6 @@ class Core(object):
                     for m in inspection.measurements:
                         m.execute(frame, features)
         
-    #DOES NOT WORK WITH NESTED INSPECTIONS RIGHT NOW
     def process_async(self, frame):
         frame.features = []
         frame.results = []
@@ -212,23 +218,16 @@ class Core(object):
         #make sure the image is in gridfs (does nothing if already saved)
         
         results_async = []
-        
         inspections = list(M.Inspection.objects)
         #allocate each inspection to a celery task
-        for inspection in inspections:
-            if inspection.parent:
-                return
-            if inspection.camera and inspection.camera != frame.camera:
-                return
-                
-            results_async.append(execute_inspection.delay(inspection.id, frame.imgfile.grid_id))
+        for inspection in M.Inspection.objects:
+            if not inspection.parent:
+                if not inspection.camera or inspection.camera == frame.camera: 
+                    results_async.append(execute_inspection.delay(inspection.id, frame.imgfile.grid_id, frame.metadata))
         
-        #poll the tasks to see when they're complete, add them to the frame
-        #and take measurements
         return results_async
         
     def process_async_complete(self, frame, results_async):
-        inspections = list(M.Inspection.objects)
         
         #note that async results refer to Celery results, and not Frame results
         results_complete = []
@@ -239,19 +238,21 @@ class Core(object):
                     new_ready_results.append(index)
                     
             for result_index in new_ready_results:
-                scvfeatures = results_async[result_index].get()
+                (scvfeatures, inspection_id) = results_async[result_index].get()
+                insp = M.Inspection.objects.get(id=inspection_id)
                 features = []
+                
                 
                 for scvfeature in scvfeatures:
                     scvfeature.image = frame.image 
                     ff = M.FrameFeature()
                     ff.setFeature(scvfeature)
-                    ff.inspection = inspections[result_index].id
+                    ff.inspection = insp.id
                     features.append(ff)
                 
                 frame.features += features
-                
-                for m in inspections[result_index].measurements:
+                #import pdb;pdb.set_trace()
+                for m in insp.measurements:
                     m.execute(frame, features)
             
             results_complete += new_ready_results
@@ -269,12 +270,14 @@ class Core(object):
             
         return ret
 
+    """
     def get_inspection(self, name):
         return M.Inspection.objects(name=name).next()
 
     def get_measurement(self, name):
         return M.Measurement.objects(name=name).next()
-
+    """
+    
     def state(self, name):
         if name in self._states: return self._states[name]
         s = self._states[name] = State(self, name)
@@ -333,7 +336,6 @@ class Core(object):
                 self._mem_prof_ticker = 0
                 self.log.info(hpy().heap())
             
-
     def _handle_events(self):
         while True:
             try:

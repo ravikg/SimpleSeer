@@ -61,7 +61,7 @@ module.exports = SeerApplication =
   isLoading: =>
     !$('#modal :hidden').length
 
-  addMenuBar: (target, options) ->
+  addMenuBar:(target, options) ->
     _lib = require 'views/core/menubar'
     _t = $("#"+target)
     if _t.length > 0
@@ -79,32 +79,25 @@ module.exports = SeerApplication =
     return @context[name]
 
   alert:(message, alert_type) ->
-    _anchor = (@settings.ui_alert_anchor || '#messages')
-    _set = true
-    
-    if alert_type == 'clear'
-      moo = _anchor+" > .alert"
-      $(moo).hide 'slow', -> $(@).remove()
-    else if alert_type == "redirect"
-      window.SimpleSeer.router.navigate(message, true)
-    else
-      $(".alert-"+alert_type).each (e,v)->
-        if v.innerHTML == message
-          _set = false
-      if _set
-        console.log message
-        div = $("<div>",
-          style: "display: none",
-          class: "alert alert-"+alert_type
-        ).html message
-        clear = $("<div class='closeAlerts'></div>")
-        clear.click((e, ui) =>
-          $(e.currentTarget).parent().fadeOut(-> $(this).remove())
-        )
-        div.append clear
-        $(_anchor).append div
+    switch alert_type
+      when "clear"
+        $("#messages > .alert").fadeOut(400, -> $(@).remove())
+      when "redirect"
+        window.SimpleSeer.router.navigate(message, true)
+      else 
+        if !message then return false
+        _duplicate = false
+
+        console.group(new Date()); console.log(message); console.groupEnd();
+        $(".alert-#{alert_type}").each (e,v)->
+          if ($(v).data("message") == message) then _duplicate = true
         
-        div.fadeIn()
+        if _duplicate is false
+          popup = $("<div style=\"display: none\">#{message}</div>")
+          popup.addClass("alert alert-#{alert_type}").data("message", message).appendTo("#messages")
+          closeBtn = $("<div class='closeAlerts'></div>")
+          closeBtn.click((e, ui) => $(e.currentTarget).parent().fadeOut(-> $(this).remove())).appendTo(popup)
+          popup.fadeIn()
 
   # Uses a regular expression to determine
   # if the user is on a mobile browser or not.

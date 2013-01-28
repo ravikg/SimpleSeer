@@ -77,48 +77,61 @@ def backfill_meta(frame_id, inspection_ids, measurement_ids):
     from SeerCloud.models.OLAP import OLAP
     from .Filter import Filter
     
-    f = M.Frame.objects.get(id = frame_id)
-    print frame_id
+    try:
+        f = M.Frame.objects.get(id = frame_id)
+        
+        # Scrubber may clear old images from frames, so can't backfill on those
+        if f.imgfile:
+            for i_id in inspection_ids:
+                try:
+                    i = M.Inspection.objects.get(id=i_id)
+                    
+                    if not i.parent:
+                        if not i.camera or i.camera == f.camera: 
+                            f.features += i.execute(f)
+                except Exception as e:
+                    print 'Error on inspection %s: %s' % (i_id, e)
+                    
+            for m_id in measurement_ids:
+                try:
+                    m = M.Measurement.objects.get(id=m_id)
+                    m.execute(f, f.features)
+                except Exception as e:
+                    print 'Error on measurement %s: %s' % (m_id, e)
+            
+            f.save()    
+            
+            # Need the filter format for realtime publishing
+            ro = RealtimeOLAP()
+            ff = Filter()
+            allFilters = [{'type': 'frame', 'name': 'id', 'eq': frame_id}]
+            res = ff.getFrames(allFilters)[1]
+            
+            for m_id in measurement_ids:
+                try:
+                    m = M.Measurement.objects.get(id=m_id)
+                    
+                    # Publish the charts
+                    charts = m.findCharts()
+                    for chart in charts:
+                        olap = OLAP.objects.get(name=chart.olap)
+                        data = ff.flattenFrame(res, olap.olapFilter)
+                        data = chart.mapData(data)
+                        ro.sendMessage(chart, data)
+                except Exception as e:
+                    print 'Could not publish realtime for %s: %s' % (m_id, e)
+        else:
+            print 'no image on frame.  skipping'
+    except Exception as e:
+        print 'Error on frame %s: %s' % (frame_id, e)        
     
-    # Scrubber may clear old images from frames, so can't backfill on those
-    if f.imgfile:
-        for i_id in inspection_ids:
-            i = M.Inspection.objects.get(id=i_id)
-            
-            if not i.parent:
-                f.features += i.execute(f.image)
-                
-        for m_id in measurement_ids:
-            m = M.Measurement.objects.get(id=m_id)
-            m.execute(f, f.features)
-        
-        f.save()    
-        
-        # Need the filter format for realtime publishing
-        ro = RealtimeOLAP()
-        ff = Filter()
-        allFilters = [{'type': 'frame', 'name': 'id', 'eq': frame_id}]
-        res = ff.getFrames(allFilters)[1]
-        
-        for m_id in measurement_ids:
-            m = M.Measurement.objects.get(id=m_id)
-            
-            # Publish the charts
-            charts = m.findCharts()
-            for chart in charts:
-                olap = OLAP.objects.get(name=chart.olap)
-                data = ff.flattenFrame(res, olap.olapFilter)
-                data = chart.mapData(data)
-                ro.sendMessage(chart, data)
-    else:
-        print 'no image on frame.  skipping'
-        
-    return f.id
+    print 'Backfill done on %s' % frame_id
+    return frame_id
     
     
 
 @task()
-def execute_inspections(inspection_ids, gridfs_id):
+def execute_inspections(inspection_ids, gridfs_id, frame_meta):
     # Works like execute_inspection below, but takes multiple inspection ID's
     
     # If no inspection_ids, assume all inspections
@@ -129,13 +142,17 @@ def execute_inspections(inspection_ids, gridfs_id):
     fs = GridFS(db)
     image = Image(PIL.open(fs.get(gridfs_id)))
     
+    frame = M.Frame()
+    frame.image = image
+    frame.metadata = frame_meta
+    
     features = []
     
     for insp_id in inspection_ids:
         insp = M.Inspection.objects.get(id=insp_id)
         
         try:
-            features += insp.execute(image)
+            features += insp.execute(frame)
             print 'Finished inspection %s on image %s' % (insp_id, gridfs_id)
         except:
             print 'Inspection Failed'
@@ -144,22 +161,28 @@ def execute_inspections(inspection_ids, gridfs_id):
     return [ f.feature for f in features ]
 
 @task()
-def execute_inspection(inspection_id, gridfs_id):
+def execute_inspection(inspection_id, gridfs_id, frame_meta):
     """
     Run an inspection given an image's gridfs id, and the inspection id
     """    
     insp = M.Inspection.objects.get(id = inspection_id)
+    
     db = insp._get_db()
     fs = GridFS(db)
     image = Image(PIL.open(fs.get(gridfs_id)))
+    
+    frame = M.Frame()
+    frame.image = image
+    frame.metadata = frame_meta
+    
     try:
-        features = insp.execute(image)
+        features = insp.execute(frame)
     except:
         print "inspection failed"
         features = []
     
     print "Finished running inspection {} on image {}".format(inspection_id, gridfs_id)
-    return [f.feature for f in features]
+    return ([f.feature for f in features], inspection_id)
 
     
 @task()

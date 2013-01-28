@@ -6,28 +6,37 @@ module.exports = class frameViewer extends SubView
   className:"frameViewer"
   tagName:"div"
   template:template
-  
+    
   initialize: =>
     super()
+    #todo: make camera dependent?
     application.socket.on "message:frame/", @capEvent
     application.socket.emit 'subscribe', 'frame/'
+    @addCustomEvent("resize", => @setSize())
+    $(window).resize( => @setSize())
+
+  loaderToggle:(img)=>
+    @$el.find('.fillImage:visible').css("display", "none")  
+    ci = $(img.target)  
+    ci.css("display","inline-block")
+    @setSize(ci)
+
+  setSize:(ci=@$el.find(".fillImage:visible")) =>
+    ci.css("margin-top", ((@$el.find(".fillImageCont").height() / 2) - (ci.height() / 2) + "px"))    
 
   capEvent:(frame)=>
-    img = new Image()
-    img.src = frame.data.imgfile
-    $(img).load =>
-      @url = frame.data.imgfile
-      li = $(@imgs[@imgcurr])
-      @imgcurr=(@imgcurr+1)%@imglen
-      ci = $(@imgs[@imgcurr])
-      ci.attr('src',@url)
-      ci.css("display","inline-block")
-      li.css("display", "none")
-      #@$el.find('img').attr('src',@url)
+    @url = frame.data.imgfile
+    @imgcurr=(@imgcurr+1)%@imglen
+    ci = $(@imgs[@imgcurr])
+    ci.attr('src',@url)
+    return
     
   render:=>
     super()
     @imgs = @$el.find('img')
+    for o in @imgs
+      o.onload = @loaderToggle
+
     @imglen = @imgs.length
     @imgcurr = 0
     return @

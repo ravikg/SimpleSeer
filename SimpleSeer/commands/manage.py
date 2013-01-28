@@ -17,7 +17,6 @@ import shutil
 class ManageCommand(Command):
     "Simple management tasks that don't require SimpleSeer context"
     use_gevent = False
-    remote_seer = False
 
     def configure(self, options):
         self.options = options
@@ -191,13 +190,48 @@ def WatchCommand(ManageCommand):
         time.sleep(0.5)
 
 
-@ManageCommand.simple()
-def WorkerCommand(self):
-        import socket
-        worker_name = socket.gethostname() + '-' + str(time.time())
-        cmd = ['celery','worker','--config',"SimpleSeer.celeryconfig",'-n',worker_name]
-        print " ".join(cmd)
-        subprocess.call(cmd)
+class WorkerCommand(Command):
+    '''
+    This Starts a distributed worker object using the celery library.
+
+    Run from the the command line where you have a project created.
+
+    >>> simpleseer worker
+
+
+    The database the worker pool queue connects to is the same one used
+    in the default configuration file (simpleseer.cfg).  It stores the
+    data in the default collection 'celery'.
+
+    To issue commands to a worker, basically a task master, you run:
+
+    >>> simpleseer shell
+    >>> from SimpleSeer.command.worker import update_frame
+    >>> for frame in M.Frame.objects():
+          update_frame.delay(str(frame.id))
+    >>>
+
+    That will basically iterate through all the frames, if you want
+    to change it then pass the frame id you want to update.
+    
+    '''
+    use_gevent = False
+    
+    def __init__(self, subparser):
+        subparser.add_argument("--purge", help="clear out the task queue", action="store_true")
+
+    def run(self):
+        if self.options.purge:
+            cmd = ('celery', 'purge', '--config', 'SimpleSeer.celeryconfig')
+            subprocess.call(cmd)
+            print " ".join(cmd)
+            print "Task queue purged"
+        else:
+            import socket
+            worker_name = socket.gethostname() + '-' + str(time.time())
+            cmd = ['celery','worker','--config',"SimpleSeer.celeryconfig",'-n',worker_name]
+            print " ".join(cmd)
+            subprocess.call(cmd)
 
 @ManageCommand.simple()
 def BuildCommand(self):
