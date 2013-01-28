@@ -74,7 +74,6 @@ class Filter():
         #for p in pipeline:
         #    print '%s' % str(p)
         
-        #print collection
         # This is all done through mongo aggregation framework
         db = Frame._get_db()
         cmd = db.command('aggregate', collection, pipeline = pipeline)
