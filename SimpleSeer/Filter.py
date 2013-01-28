@@ -14,8 +14,7 @@ class Filter():
     
     names = {}
     
-    def getFrames(self, allFilters, boolean='and', skip=0, limit=float("inf"), sortinfo = {}, groupByField = ''):
-        
+    def getFrames(self, allFilters, boolean='and', skip=0, limit=float("inf"), sortinfo = {}, groupByField = '', collection='frame'):
         pipeline = []
         #frames = []
         #measurements = []
@@ -71,27 +70,12 @@ class Filter():
         #for p in pipeline:
         #    print '%s' % str(p)
         
+        #print collection
         # This is all done through mongo aggregation framework
         db = Frame._get_db()
-        cmd = db.command('aggregate', 'frame', pipeline = pipeline)
+        cmd = db.command('aggregate', collection, pipeline = pipeline)
         results = cmd['result']
         
-        
-        """
-        # Perform the skip/limit 
-        # Note doing this in python instead of mongo since need original query to give total count of relevant results
-        if skip < 0:
-            if abs(skip) - 1 > len(results):
-                results = results[skip:skip+limit]
-        elif skip < len(results):
-            if (skip + limit) > len(results):
-                results = results[skip:]
-            else:
-                results = results[skip:skip+limit]
-        else:
-            return 0, []
-        """
-                
         #return len(cmd['result']), results
         return -1, results    
         
@@ -131,40 +115,6 @@ class Filter():
         fields['id'] = '$_id'
         return [{'$project': fields}]
     
-    """
-    def filterFrames(self, frameQuery):
-        # Construct the filter based on fields in the Frame object
-        # Note that all timestamps are passed in as epoch milliseconds, but
-        # fromtimestamp() assumes they are in seconds.  Hence / 1000
- 
-        filters = {}
-        for f in frameQuery:    
-            if 'eq' in f:
-                if (type(f['eq']) == str or type(f['eq']) == unicode) and f['eq'].isdigit():
-                    f['eq'] = float(f['eq'])
-                    
-                if f['name'] == 'capturetime':
-                    f['eq'] = datetime.fromtimestamp(f['eq'] / 1000)
-                comp = f['eq']
-                
-            else:
-                comp = {}
-                if 'gt' in f and f['gt']:
-                    if f['name'] == 'capturetime':
-                        f['gt'] = datetime.fromtimestamp(f['gt'] / 1000)
-                    comp['$gt'] = f['gt']
-                if 'lt' in f and f['lt']:
-                    if f['name'] == 'capturetime':
-                        f['lt'] = datetime.fromtimestamp(f['lt'] / 1000)
-                    comp['$lt'] = f['lt']
-            if 'exists' in f:
-                comp = {'$exists': True}
-             
-            filters[f['name']] = comp
-        
-        return [{'$match': filters}]
-    """
-    
     def sort(self, sortinfo):
         # Sort based on specified parameters
         # Sorting may be done on fields inside the results or features
@@ -184,14 +134,12 @@ class Filter():
             parts.append({'$sort': {'capturetime': 1}})
         
         return parts
-    
 
     def rewindFields(self, field):
         # Handle the grouping when undoing the unwind operations
         # Also filters out unnecessary fields from embedded docs to keep results smaller
         
         proj = {}
-        #group = {}
         
         # Only keep those keys requested
         featKeys, resKeys = self.keyNamesHash()
@@ -205,22 +153,7 @@ class Filter():
             for f in useKeys[key]:
                 proj[field + '.' + f] = 1
         
-        #for key in Frame.filterFieldNames():
-            # Have to rename the id field since $group statements assume existence of _id as the group_by parameter
-        #    if key == 'id':
-        #        key = '_id'
-        #    proj[key] = 1
-            
-            #group[key] = {'$first': '$' + key}
-        
-        # re-groupt the (results | features)
-        #group[field] = {'$addToSet': '$' + field}
-            
-        #group['_id'] = '$_id'
-        # But a lot of stuff also wants an id instead of _id
-        #group['id'] = {'$first': '$_id'}
-
-        return proj #, group
+        return proj
     
     
     def conditional(self, filters, boolean):
@@ -271,9 +204,7 @@ class Filter():
                 
         return [{'$match': {'$' + boolean: allfilts}}]
         
-        
     def checkFilter(self, filterType, filterName, filterFormat):
-        
         pipeline = []
         fieldParts = filterName.split('.')
         
@@ -328,8 +259,6 @@ class Filter():
         
         return ret
         
-        
-    
     def toCSV(self, rawdata):
         import StringIO
         import csv
@@ -404,10 +333,8 @@ class Filter():
                 # log.info('No plugin found for %s, using default fields' % m.method)
                 resultKeys[m.name] = ['measurement_name', 'measurement_id', 'inspection_id', 'string', 'numeric', 'state', 'message']
         
-        
         return featureKeys, resultKeys
         
-
     def keyNamesList(self):
         featureKeys, resultKeys = self.keyNamesHash()
         
@@ -426,12 +353,6 @@ class Filter():
     
     @classmethod
     def unEmbed(self, frame):
-        #feats = frame['features']
-        #newFeats = []
-        #for f in feats:
-        #    newFeats.append(f['py/state'])
-        #frame['features'] = newFeats
-        
         results = frame['results']
         newRes = []
         for r in results:
@@ -457,11 +378,6 @@ class Filter():
             return name
     
     def flattenFrame(self, frames, filters):
-        
-        
-        
-        #featureKeys, resultKeys = self.keyNamesHash()
-        
         flatFrames = []
         for frame in frames:
             tmpFrame = {'id': frame['id']}
@@ -484,18 +400,6 @@ class Filter():
                             #key = 'numeric'
                             val = self.getField(res, nameParts) 
                             tmpFrame["%s.%s" % (filt['type'], key)] = val
-                """
-                elif nameParts[0] == 'features':
-                    rest = '.'.join(nameParts[1:])
-                    key = filt['type'] + '.' + rest
-                    for feat in frame.get('features', []):
-                        if res['featuretype'] == filt['type']:
-                            val = self.getField(feat, nameParts[1:]) 
-                            tmpFrame[key] = val
-                    
-                else:
-                    tmpFrame[filt['name']] = self.getField(frame, nameParts)
-                """
                     
             flatFrames.append(tmpFrame)
             
