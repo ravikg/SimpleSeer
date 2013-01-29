@@ -118,7 +118,7 @@ var UNDEFINED,
 	seriesTypes = {};
 
 // The Highcharts namespace
-win.Highcharts = win.Highcharts ? error(16, true) : {};
+win.Highcharts = {};
 
 /**
  * Extend an object with the members of another
@@ -1942,8 +1942,10 @@ SVGElement.prototype = {
 							}
 						}
 
-					} else if (wrapper.rotation && (key === 'x' || key === 'y')) {
-						doTransform = true;
+						if (wrapper.rotation) {
+							attr(element, 'transform', 'rotate(' + wrapper.rotation + ' ' + value + ' ' +
+								pInt(hash.y || attr(element, 'y')) + ')');
+						}
 
 					// apply gradients
 					} else if (key === 'fill') {
@@ -2024,20 +2026,9 @@ SVGElement.prototype = {
 						key = 'stroke-width';
 					}
 
-					// In Chrome/Win < 6 as well as Batik, the stroke attribute can't be set when the stroke-
-					// width is 0. #1369
-					if (key === 'stroke-width' || key === 'stroke') {
-						wrapper[key] = value;
-						// Only apply the stroke attribute if the stroke width is defined and larger than 0
-						if (wrapper.stroke && wrapper['stroke-width']) {
-							attr(element, 'stroke', wrapper.stroke);
-							attr(element, 'stroke-width', wrapper['stroke-width']);
-							wrapper.hasStroke = true;
-						} else if (key === 'stroke-width' && value === 0 && wrapper.hasStroke) {
-							element.removeAttribute('stroke');
-							wrapper.hasStroke = false;
-						}
-						skipAttr = true;
+					// Chrome/Win < 6 bug (http://code.google.com/p/chromium/issues/detail?id=15461), #1369
+					if (key === 'stroke-width' && value === 0 && (isWebKit || renderer.forExport)) {
+						value = 0.000001;
 					}
 
 					// symbols
@@ -2073,7 +2064,12 @@ SVGElement.prototype = {
 					// Record for animation and quick access without polling the DOM
 					wrapper[key] = value;
 					
-					
+					// Update transform
+					if (doTransform) {
+						wrapper.updateTransform();
+					}
+
+
 					if (key === 'text') {
 						// Delete bBox memo when the text changes
 						if (value !== wrapper.textStr) {
@@ -2089,12 +2085,6 @@ SVGElement.prototype = {
 
 				}
 
-			}
-
-			// Update transform. Do this outside the loop to prevent redundant updating for batch setting
-			// of attributes.
-			if (doTransform) {
-				wrapper.updateTransform();
 			}
 
 		}
@@ -3995,8 +3985,7 @@ SVGRenderer.prototype = {
 		 * box and reflect it in the border box.
 		 */
 		function updateBoxSize() {
-			var boxX,
-				boxY,
+			var boxY,
 				style = text.element.style;
 				
 			bBox = (width === undefined || height === undefined || wrapper.styles.textAlign) &&
@@ -4011,12 +4000,11 @@ SVGRenderer.prototype = {
 				
 				// create the border box if it is not already present
 				if (!box) {
-					boxX = mathRound(-alignFactor * padding);
 					boxY = baseline ? -baselineOffset : 0;
 				
 					wrapper.box = box = shape ?
-						renderer.symbol(shape, boxX, boxY, wrapper.width, wrapper.height) :
-						renderer.rect(boxX, boxY, wrapper.width, wrapper.height, 0, deferredAttr[STROKE_WIDTH]);
+						renderer.symbol(shape, -alignFactor * padding, boxY, wrapper.width, wrapper.height) :
+						renderer.rect(-alignFactor * padding, boxY, wrapper.width, wrapper.height, 0, deferredAttr[STROKE_WIDTH]);
 					box.add(wrapper);
 				}
 	
@@ -4166,7 +4154,7 @@ SVGRenderer.prototype = {
 		};
 		attrSetters.y = function (value) {
 			wrapperY = wrapper.y = mathRound(value);
-			wrapper.attr('translateY', wrapperY);
+			wrapper.attr('translateY', value);
 			return false;
 		};
 
@@ -4419,19 +4407,6 @@ var VMLElement = {
 								convertedPath[i] = 'x';
 							} else {
 								convertedPath[i] = value[i];
-
-								// When the start X and end X coordinates of an arc are too close,
-								// they are rounded to the same value above. In this case, substract 1 from the end X
-								// position. #760, #1371. 
-								if (value[i] === 'wa' || value[i] === 'at') {
-									if (convertedPath[i + 5] === convertedPath[i + 7]) {
-										convertedPath[i + 7] -= 1;
-									}
-									// Start and end Y (#1410)
-									if (convertedPath[i + 6] === convertedPath[i + 8]) {
-										convertedPath[i + 8] -= 1;
-									}
-								}
 							}
 
 						}
@@ -5203,15 +5178,23 @@ var VMLRendererExtension = { // inherit SVGRenderer
 			var start = options.start,
 				end = options.end,
 				radius = options.r || w || h,
-				innerRadius = options.innerR,
 				cosStart = mathCos(start),
 				sinStart = mathSin(start),
 				cosEnd = mathCos(end),
 				sinEnd = mathSin(end),
+				innerRadius = options.innerR,
+				circleCorrection = 0.08 / radius, // #760
+				innerCorrection = (innerRadius && 0.1 / innerRadius) || 0,
 				ret;
 
 			if (end - start === 0) { // no angle, don't show it.
 				return ['x'];
+
+			} else if (2 * mathPI - end + start < circleCorrection) { // full circle
+				// empirical correction found by trying out the limits for different radii
+				cosEnd = -circleCorrection;
+			} else if (end - start < innerCorrection) { // issue #186, another mysterious VML arc problem
+				cosEnd = mathCos(start + innerCorrection);
 			}
 
 			ret = [
@@ -6394,7 +6377,6 @@ Axis.prototype = {
 	
 		// Dictionary for stacks
 		axis.stacks = {};
-		axis._stacksTouched = 0;
 	
 		// Min and max in the data
 		//axis.dataMin = UNDEFINED,
@@ -6514,8 +6496,6 @@ Axis.prototype = {
 			stacks = axis.stacks,
 			posStack = [],
 			negStack = [],
-			stacksTouched = axis._stacksTouched = axis._stacksTouched + 1,
-			type,
 			i;
 		
 		axis.hasVisibleSeries = false;
@@ -6633,7 +6613,6 @@ Axis.prototype = {
 								stacks[key][x] = new StackItem(axis, axis.options.stackLabels, isNegative, x, stackOption, stacking);
 							}
 							stacks[key][x].setTotal(pointStack[x]);
-							stacks[key][x].touched = stacksTouched;
 						}
 						
 						// Handle non null values
@@ -6682,16 +6661,6 @@ Axis.prototype = {
 				}
 			}
 		});
-
-		// Destroy unused stacks (#1044)
-		for (type in stacks) {
-			for (i in stacks[type]) {
-				if (stacks[type][i].touched < stacksTouched) {
-					stacks[type][i].destroy();
-					delete stacks[type][i];
-				}
-			}
-		}
 		
 	},
 
@@ -7084,9 +7053,6 @@ Axis.prototype = {
 						pointPlacement = series.options.pointPlacement,
 						seriesClosestPointRange = series.closestPointRange;
 						
-					if (seriesPointRange > range) { // #1446
-						seriesPointRange = 0;
-					}
 					pointRange = mathMax(pointRange, seriesPointRange);
 					
 					// minPointOffset is the value padding to the left of the axis in order to make
@@ -7118,7 +7084,7 @@ Axis.prototype = {
 			axis.pointRangePadding = pointRangePadding;
 
 			// pointRange means the width reserved for each point, like in a column chart
-			axis.pointRange = mathMin(pointRange, range);
+			axis.pointRange = pointRange;
 
 			// closestPointRange means the closest distance between points. In columns
 			// it is mostly equal to pointRange, but in lines pointRange is 0 while closestPointRange
@@ -11456,8 +11422,7 @@ Point.prototype = {
 				low: 0,
 				close: 0,
 				percentage: 1, // 1: use the self name for repOptionKey
-				total: 1,
-				text: 1
+				total: 1
 			};
 		
 		// Backwards compatibility to y naming in early Highstock
@@ -11476,7 +11441,7 @@ Point.prototype = {
 				prop = parts[2];
 				
 				// Add some preformatting
-				if (obj === point && cfg.hasOwnProperty(prop) && prop !== 'text') {
+				if (obj === point && cfg.hasOwnProperty(prop)) {
 					repOptionKey = cfg[prop] ? prop : 'value';
 					replacement = (seriesTooltipOptions[repOptionKey + 'Prefix'] || '') + 
 						numberFormat(point[prop], pick(seriesTooltipOptions[repOptionKey + 'Decimals'], -1)) +
@@ -13077,7 +13042,6 @@ Series.prototype = {
 					attr,
 					name,
 					rotation,
-					connector = point.connector,
 					isNew = true;
 				
 				// Determine if each data label is enabled
@@ -13108,21 +13072,12 @@ Series.prototype = {
 					
 					// update existing label
 					if (dataLabel) {
-						
-						if (defined(str)) {
-							dataLabel
-								.attr({
-									text: str
-								});
-							isNew = false;
-						
-						} else { // #1437 - the label is shown conditionally
-							point.dataLabel = dataLabel = dataLabel.destroy();
-							if (connector) {
-								point.connector = connector.destroy();
-							}
-						}
-						
+						// vertically centered
+						dataLabel
+							.attr({
+								text: str
+							});
+						isNew = false;
 					// create new label
 					} else if (defined(str)) {
 						attr = {
@@ -13378,7 +13333,6 @@ Series.prototype = {
 	 */
 	plotGroup: function (prop, name, visibility, zIndex, parent) {
 		var group = this[prop],
-			isNew = !group,
 			chart = this.chart,
 			xAxis = this.xAxis,
 			yAxis = this.yAxis;
@@ -13393,10 +13347,10 @@ Series.prototype = {
 				.add(parent);
 		}
 		// Place it on first and subsequent (redraw) calls
-		group[isNew ? 'attr' : 'animate']({
-			translateX: xAxis ? xAxis.left : chart.plotLeft, 
-			translateY: yAxis ? yAxis.top : chart.plotTop
-		});
+		group.translate(
+			xAxis ? xAxis.left : chart.plotLeft, 
+			yAxis ? yAxis.top : chart.plotTop
+		);
 		
 		return group;
 		
@@ -14481,7 +14435,6 @@ var ScatterSeries = extendClass(Series, {
 	type: 'scatter',
 	sorted: false,
 	requireSorting: false,
-	noSharedTooltip: true,
 	/**
 	 * Extend the base Series' translate method by adding shape type and
 	 * arguments for the point trackers
