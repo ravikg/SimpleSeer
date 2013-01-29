@@ -18,7 +18,7 @@ module.exports = class FilterCollection extends Collection
     sorttype:false
     skip:0
     limit:20
-    query:[]
+    query:{}
   url:"/getFrames"
   mute:false
   clearOnFetch:true

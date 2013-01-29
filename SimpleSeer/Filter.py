@@ -40,7 +40,10 @@ class Filter():
             pipeline += self.groupBy(groupByField)
         
         # Apply the sort criteria
-        pipeline.append({'$match': self.conditional(allFilters['criteria'], allFilters['logic'])})
+        try:
+            pipeline.append({'$match': self.conditional(allFilters['criteria'], allFilters['logic'])})
+        except KeyError:
+            pass
         
         pipeline += self.initialFields(projResult = resCount, projFeat = featCount)
        
