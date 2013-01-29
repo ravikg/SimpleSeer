@@ -152,7 +152,7 @@ section#controls {
 }
 
 #statusBar {
-
+  padding: 5px 12px 9px 13px;
 }
 
 #statusBar .message {
