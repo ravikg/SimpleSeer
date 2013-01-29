@@ -22,9 +22,6 @@ class Filter():
         #measurements = []
         #features = []
        
-        if type(allFilters) == list or type(allFilters) == mongoengine.base.BaseList:
-            allFilters = {'logic': 'and', 'criteria': allFilters}
-        
         # Filter the data based on the filter parameters
         # Frame features are easy to filter, but measurements and features are embedded in the frame
         # so they need their own syntax to filter
