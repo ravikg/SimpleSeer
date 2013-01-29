@@ -173,13 +173,14 @@ module.exports = class FilterCollection extends Collection
     }
   ###
   alterFilters:() =>
-    _json = {logic:'and',criteria:[]}
+    criteria = []
+    _json = {}
     for o in @filters
       val = o.toJson()
       if val
-        #o.logic = "and"
-        console.log val
-        _json.criteria.push val
+        criteria.push val
+    if criteria.length > 0
+      _json = {logic:'and',criteria:criteria}
     @setParam 'query', _json
     return
   
@@ -225,9 +226,10 @@ module.exports = class FilterCollection extends Collection
     if !@clearOnFetch
       @add @_all, {silent: true}
       @_all = []
-    for o in @callbackStack['post']
+    for i,o of @callbackStack['post']
       if typeof o == 'function'
         o()
+    @callbackStack['post'] = []
     return
 
   globalRefresh:=>
