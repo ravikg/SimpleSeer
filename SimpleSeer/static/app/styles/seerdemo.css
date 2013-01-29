@@ -152,22 +152,21 @@ section#controls {
 }
 
 #statusBar {
-  padding: 5px 12px 9px 13px;
+  padding: 5px 0 7px;
 }
 
 #statusBar .message {
-  display: inline-block;
+  text-align: center;
   color: white;
   text-shadow: 0px 1px 0px black;
-  margin-left: 12px;
   margin-top: 1px;
   font-size: 12px;
 }
 
 .light {
   display: inline-block;
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   -moz-transition: background 300ms linear, box-shadow 300ms linear;
   -webkit-transition: background 300ms linear, box-shadow 300ms linear;  
