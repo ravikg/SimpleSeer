@@ -19,6 +19,10 @@ from . import util
 from .realtime import RealtimeNamespace, ChannelManager
 from .Session import Session
 from .Filter import Filter
+from flask import Flask, request, render_template, redirect, url_for, flash
+from flask.ext.login import (current_user, login_required,
+                              login_user, logout_user, confirm_login,
+                              fresh_login_required)
 
 log = logging.getLogger()
 
@@ -292,3 +296,64 @@ def settings():
 @route('/_status', methods=['GET', 'POST'])
 def status():
     return 'ok'
+
+@route('/_auth', methods=['GET','POST'])
+@login_required
+@util.jsonify
+def auth():
+    return ['authorized']
+
+
+@route('/login', methods=["GET", "POST"])
+def login():
+
+  try:
+    from .Web import USER_NAMES, USERS
+  except:
+    print 'login not setup'
+    return
+    
+  if request.method == "POST" and "username" in request.form:
+    username = request.form["username"]
+
+    if username in USER_NAMES:
+      password = request.form["password"]
+      if password == USERS[1].password:
+        
+        remember = request.form.get("remember", "no") == "yes"
+
+        if login_user(USER_NAMES[username], remember=remember):
+          flash("Logged in!")
+          return redirect(request.args.get("next") or url_for("index"))
+
+        else:
+          flash("Sorry, but you could not log in.")
+      else:
+        flash(u"Invalid Password")
+
+    else:
+      flash(u"Invalid username.")
+	
+  return render_template("login.html")
+
+
+
+@route("/reauth", methods=["GET", "POST"])
+@login_required
+def reauth():
+  if request.method == "POST":    
+    confirm_login()
+    flash(u"Reauthenticated.")
+    return redirect(request.args.get("next") or url_for("index"))
+
+  return render_template("reauth.html")
+
+
+@route("/logout")
+@login_required
+def logout():
+  logout_user()
+  flash("Logged out.")
+  return redirect(url_for("index"))
+
+  
