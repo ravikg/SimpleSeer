@@ -226,9 +226,10 @@ module.exports = class FilterCollection extends Collection
     if !@clearOnFetch
       @add @_all, {silent: true}
       @_all = []
-    for o in @callbackStack['post']
+    for i,o of @callbackStack['post']
       if typeof o == 'function'
         o()
+    @callbackStack['post'] = []
     return
 
   globalRefresh:=>

@@ -55,10 +55,8 @@ module.exports = class Series extends FilterCollection
 
   fetch: (args={}) =>
     @view.showMessage('loading','Loading...')
-    if !args.success?
-      args.success = @onSuccess
-    if !args.error?
-      args.error = @onError
+    args.success = @onSuccess
+    args.error = @onError
     args['total'] = true
     args['params'] = {skip:~@limit+1,limit:@limit}
     super(args)
@@ -75,6 +73,7 @@ module.exports = class Series extends FilterCollection
     $('.alert_error').remove()
   
   onError: =>
+    console.log 'error'
     @view.showMessage('error','Error retrieving data')
 
   _clean: (data) =>
@@ -163,7 +162,6 @@ module.exports = class Series extends FilterCollection
     
   
   receive: (data) =>
-    #console.dir data.data.m.data[0].d
     for o in data.data.m.data
       p = @_formatChartPoint o
       if @inStack(p)
