@@ -76,7 +76,7 @@ module.exports = class View extends Backbone.View
     @subviews = {}
 
   customEvent: (event) =>
-    @events[event]()?
+    @events[event]?()
     for name, subview of @subviews
       subview.customEvent(event)
     return
