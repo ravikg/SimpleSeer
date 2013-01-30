@@ -6,6 +6,7 @@
 SimpleSeerDateHelper = {
     dayInitials: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
     monthNames: ['January','February','March','April','May','June','July','August','September','October','November','December'],
+    monthAbbr: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sept','Oct','Nov','Dec'],
     monthDays: [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
     
     offsetMonth: function(date, span) {
@@ -15,8 +16,8 @@ SimpleSeerDateHelper = {
     },
     
     prettyDate: function(date) {
-        var str = [this.monthNames[date.getMonth()], " ", date.getDate(), ", ", date.getFullYear()];
-	return str.join("");
+        var str = [this.monthAbbr[date.getMonth()], " ", date.getDate(), ", ", date.getFullYear()];
+	    return str.join("");
     },
     
     prettyTime: function(d) {
@@ -27,7 +28,6 @@ SimpleSeerDateHelper = {
       var h = hh;
       
       if (h >= 12) { h = hh-12; dd = "pm" }
-      if (h == 0) { h = 12 }
       m = m < 10 ? ("0" + m) : m;
       s = s < 10 ? ("0" + s) : s;
       h = h < 10 ? ("0" + h) : h;
@@ -258,7 +258,13 @@ $.widget("ui.datetimerange", {
     },
     
     _setOption: function(key, value) {
-        $.Widget.prototype_setOption.apply(this, arguments);
+        var self = this;
+        $.Widget.prototype._setOption.apply(this, arguments);
+        if(key == "startDate") {
+            self.setStartDate(value);
+        } else if( key == "endDate") {
+            self.setEndDate(value);
+        }
     },
     
     _onUpdate: function() {
@@ -287,11 +293,13 @@ $.widget("ui.datetimerange", {
      */
     
     setStartDate: function(date) {
+        var options = this.options;
         options.startDate = date;
         this.updateCalendars();
     },
     
     setEndDate: function(date) {   
+        var options = this.options;
         options.endDate = date;
         this.updateCalendars();
     },
