@@ -101,8 +101,7 @@ module.exports = class Series extends FilterCollection
     if !@xAxis.type? or @xAxis.type == ""
       d.d[0] = @_counter++
     else if @xAxis.type == 'datetime'
-      d.d[0] = moment.utc( d.d[0] )
-      #d.d[0].subtract('ms', application.timeOffset)
+      d.d[0] = moment.utc(d.d[0])
     if @accumulate
       if @xAxis.type == 'datetime'
         _id = d.d[0].unix()
