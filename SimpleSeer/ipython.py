@@ -1,7 +1,7 @@
 
 def load_ipython_extension(ipython):
     from .Session import Session
-    from .realtime import ChannelManager
+    from .realtime import ChannelManager, Channel
     from . import models as M
     from SimpleCV import Image, ImageSet, Color
     import zmq
@@ -24,7 +24,8 @@ def load_ipython_extension(ipython):
             Dashboard = M.Dashboard,
             Color = Color,
             M=M,
-            cm=ChannelManager(zmq.Context.instance())),
+            cm=ChannelManager(zmq.Context.instance()),
+            Channel=Channel),
         interactive=True)
     ipython.prompt_manager.in_template="SimpleSeer:\\#> "
     ipython.prompt_manager.out_template="SimpleSeer:\\#: "

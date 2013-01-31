@@ -1,4 +1,4 @@
-import logging, warning
+import logging, warnings
 
 import zmq
 import gevent
@@ -122,7 +122,7 @@ class Channel(object):
         
     def publish(self, message):
         if type(message) != type(dict()):
-            warning.warn("Sending a {} message to channel {}, it's highly recommended you use a dict".format(type(message).__name__, self.channelname()
+            warnings.warn("Sending a {} message to channel {}, it's highly recommended you use a dict".format(type(message).__name__, self.channelname))
         self.manager.publish(self.channelname + "/", message)
     
     def listen(self):

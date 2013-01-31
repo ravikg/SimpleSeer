@@ -4,7 +4,7 @@ def load_ipython_extension(ipython):
     
     from .Session import Session
     from SimpleCV import Display, Image, ImageSet, Color
-    from .realtime import ChannelManager
+    from .realtime import ChannelManager, Channel
     from . import models as M
     import zmq
     
@@ -28,7 +28,8 @@ def load_ipython_extension(ipython):
             Dashboard= M.Dashboard,
             Color = Color,
             display=Display(displaytype="notebook"), 
-            cm=ChannelManager(zmq.Context.instance())),
+            cm=ChannelManager(zmq.Context.instance()),
+            Channel=Channel),
         interactive=True)
     print 'SimpleSeer ipython extension loaded ok'
 
