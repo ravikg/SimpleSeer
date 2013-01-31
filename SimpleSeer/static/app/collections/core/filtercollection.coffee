@@ -3,6 +3,14 @@ application = require 'application'
 #FramelistFrameView = require './framelistframe_view'
 #context = require '../models/core/context'
 
+###
+Simple Query:
+"query":{"logic":"and","criteria":[{"type":"left","eq":1,"name":"results.state"}]}
+
+Logical Query:
+"query":{"logic":"and","criteria":[{"type":"left","eq":1,"name":"results.state","logic":"and","criteria":[{"type":"left","eq":1,"name":"results.state"}]}]}
+###
+
 module.exports = class FilterCollection extends Collection
   _defaults:
     sortkey:false
@@ -10,7 +18,7 @@ module.exports = class FilterCollection extends Collection
     sorttype:false
     skip:0
     limit:20
-    query:[]
+    query:{}
   url:"/getFrames"
   mute:false
   clearOnFetch:true
@@ -134,12 +142,45 @@ module.exports = class FilterCollection extends Collection
     return
   
   # Sync filters
+  #"query":{"logic":"and","criteria":[{"type":"left","eq":1,"name":"results.state"}]}
+
+  ###
+  # select * where datetime = 123456789 and (results.left.state = 1 or results.right.state = 1) 
+    "query":{
+      "logic":"and",
+      "criteria":[
+        {
+          "type":"frame",
+          "eq":123456789,
+          "name":"dt"
+        },
+        {
+          "logic":"or",
+          "criteria":[
+            {          
+              "type":"left",
+              "eq":1,
+              "name":"results.state"
+            },
+            {          
+              "type":"right",
+              "eq":1,
+              "name":"results.state"
+            }
+          ]
+        }
+      ]
+    }
+  ###
   alterFilters:() =>
-    _json = []
+    criteria = []
+    _json = {}
     for o in @filters
       val = o.toJson()
       if val
-        _json.push val
+        criteria.push val
+    if criteria.length > 0
+      _json = {logic:'and',criteria:criteria}
     @setParam 'query', _json
     return
   
@@ -185,9 +226,10 @@ module.exports = class FilterCollection extends Collection
     if !@clearOnFetch
       @add @_all, {silent: true}
       @_all = []
-    for o in @callbackStack['post']
+    for i,o of @callbackStack['post']
       if typeof o == 'function'
         o()
+    @callbackStack['post'] = []
     return
 
   globalRefresh:=>

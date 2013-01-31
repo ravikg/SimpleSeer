@@ -508,7 +508,7 @@ html[xmlns] .clearfix {
 
   &.pushed { background-color: #ffeeee; } 
 
-  .header {
+  & > .header {
     z-index: 1029;
     position: absolute;
     top: 0;
@@ -587,7 +587,7 @@ html[xmlns] .clearfix {
   box-shadow: none;
   -webkit-transition: box-shadow 0ms;
   
-  .header {
+  & > .header {
     background: none;
     border-width: 0;
 
@@ -710,4 +710,14 @@ div.fillImageCont {
   height: 100%;
   text-align: center;
   background: #555;
+}
+
+.closeButton {
+  width: 13px;
+  height: 13px;
+  position: absolute;
+  top: 38px;
+  left: 211px;
+  background: url("/img/alert-close.png") no-repeat center center;
+  cursor: pointer;
 }

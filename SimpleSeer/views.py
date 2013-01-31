@@ -168,15 +168,11 @@ def getFrames(filter_params):
     skip = int(params.get('skip', 0))
     limit = int(params.get('limit', 20))
     
-    if 'sortinfo' in params:
-        sortinfo = params['sortinfo']
-    else:
-        sortinfo = {}
+    sortinfo = params.get('sortinfo', {})
         
     query = params['query']
     
     f = Filter()
-    #total_frames, frames = f.getFrames(f.negativeFilter(query), limit=limit, skip=skip, sortinfo=sortinfo)
     total_frames, frames = f.getFrames(query, limit=limit, skip=skip, sortinfo=sortinfo)
     
     retVal = dict(frames=frames, total_frames=total_frames)

@@ -3,13 +3,17 @@ application = require 'application'
 #context = require '../models/core/context'
 
 
+# transitions:  blind,bounce,clip,drop,explode,fade,fold,highlight,puff,pulsate,scale,shake,size,slide,transfer
+
+
 Backbone = if describe? then require('backbone') else window.Backbone
 
 # Base class for all views.
 module.exports = class View extends Backbone.View
   subviews: null
   events: {}
-  
+  firstRender:true
+    
   initialize: (options={}) =>
     super()
     if options.context?
@@ -22,10 +26,22 @@ module.exports = class View extends Backbone.View
   getRenderData: =>
     return
 
+  transition: (callback) =>
+    @$el.hide @effect.out['type'], @effect.out['options'], @effect.out['speed'], =>
+      callback()
+      @$el.show @effect.in['type'], @effect.in['options'], @effect.in['speed'], @effect['callback'] || => return
+
   render: =>
-    @$el.html @template @getRenderData()
-    @renderSubviews()
-    @afterRender()
+    callback = =>
+      @$el.html @template @getRenderData()
+      @renderSubviews()
+      @afterRender()
+      @firstRender = false
+
+    if @effect? and !@firstRender and @$el.is(":visible")
+      @transition(callback)
+    else
+      callback()
     this
 
   remove: =>
@@ -60,7 +76,7 @@ module.exports = class View extends Backbone.View
     @subviews = {}
 
   customEvent: (event) =>
-    @events[event]()?
+    @events[event]?()
     for name, subview of @subviews
       subview.customEvent(event)
     return
