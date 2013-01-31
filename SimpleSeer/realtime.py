@@ -120,10 +120,8 @@ class Channel(object):
         self.manager = ChannelManager()  #this is a borg, so 
         channelname = name
         
-    def publish(self, message):
-        if type(message) != type(dict()):
-            warnings.warn("Sending a {} message to channel {}, it's highly recommended you use a dict".format(type(message).__name__, self.channelname))
-        self.manager.publish(self.channelname + "/", message)
+    def publish(self, **kwargs):
+        self.manager.publish(self.channelname + "/", kwargs)
     
     def listen(self):
         if self.subsock == '':
