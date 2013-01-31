@@ -7,7 +7,7 @@
   font-size: 13px;
   font-family: sans-serif;
   box-shadow: rgba(0, 0, 0, 0.296875) 0px 5px 22px;
-  border: 1px solid rgba(0,0,0,.2)
+  border: 1px solid #777;
 }
 
 .ui-datetimerange .left,
@@ -122,8 +122,8 @@
 .ss-calendar tbody td {
   text-align: center;
   
-  border-left: 1px solid rgba(0,0,0,.1);
-  border-top: 1px solid rgba(0,0,0,.1);
+  border-left: 1px solid #ccc;
+  border-top: 1px solid #ccc;
 }
 
 .ss-calendar tbody td.date {
