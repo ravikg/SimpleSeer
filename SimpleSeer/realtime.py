@@ -1,4 +1,4 @@
-import logging
+import logging, warning
 
 import zmq
 import gevent
