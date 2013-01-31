@@ -88,7 +88,7 @@ class StillCamera(object):
 
     def __init__(self, name='default', crop=None, **cinfo):
         self.name = name
-        self.localtz = cinfo['timezone'] or 'UTC'
+        self.localtz = cinfo.get('timezone', 'UTC')
         self.crop = crop
         if 'virtual' in cinfo:
             cam = VirtualCamera(cinfo['source'], cinfo['virtual'])
