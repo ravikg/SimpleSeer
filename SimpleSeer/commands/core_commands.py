@@ -301,7 +301,7 @@ class ExportImagesCommand(Command):
         counter = 1
 
         for frame in frames:
-            file_name = self.options.dir + "/" + str(frame.id) + '.png'
+            file_name = self.options.dir + "/" + str(counter) + "_" + str(frame.id) + '.png'
             print 'Saving file (',counter,'of',len(frames),'):',file_name
             frame.image.save(file_name)
             counter += 1

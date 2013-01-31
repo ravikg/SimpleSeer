@@ -20,7 +20,7 @@
       {{#each row}}
         <tr>
         {{#each this}}
-          <td style="{{this.style}}">
+          <td style="{{this.style}}" title="{{this.tooltip}}">
             {{#if this.link}}<a href="{{this.link}}">{{/if}}
             {{this.text}}
             {{#if this.link}}</a>{{/if}}
