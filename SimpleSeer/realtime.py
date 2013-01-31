@@ -9,12 +9,6 @@ from socketio.namespace import BaseNamespace
 from .Session import Session
 from .base import jsonencode, jsondecode
 
-
-
-
-
-
-
 log = logging.getLogger(__name__)
 
 class ChannelManager(object):
@@ -128,7 +122,7 @@ class Channel(object):
         
     def publish(self, message):
         if type(message) != type(dict()):
-            warning.warn("Sending a {} message to channel {}, it's highly recommended you use a dict".format(type(message).__name__, self.channelname)
+            warning.warn("Sending a {} message to channel {}, it's highly recommended you use a dict".format(type(message).__name__, self.channelname()
         self.manager.publish(self.channelname + "/", message)
     
     def listen(self):
