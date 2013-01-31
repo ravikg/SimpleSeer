@@ -117,6 +117,7 @@ $.widget("ui.datetimerange", {
         var options = this.options;        
         var element = this.element;
         element.bind("focus", function(e, ui) { self.appear(e, ui); });
+        element.css("cursor", "pointer");
         
         this.window = $("<div></div>")
                         .hide()
