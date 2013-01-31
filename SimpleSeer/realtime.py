@@ -1,4 +1,4 @@
-import logging
+import logging, warnings
 
 import zmq
 import gevent
@@ -8,8 +8,6 @@ from socketio.namespace import BaseNamespace
 
 from .Session import Session
 from .base import jsonencode, jsondecode
-
-
 
 log = logging.getLogger(__name__)
 
@@ -111,3 +109,28 @@ class RealtimeNamespace(BaseNamespace):
             self.emit('message:' + name, dict(
                     channel=channel,
                     data=jsondecode(message)))
+
+#this is a little syntax sugar for debugging pubsub
+class Channel(object):
+    manager = ''
+    channelname = ''
+    subsock = ''
+    
+    def __init__(self, name):
+        self.manager = ChannelManager()  #this is a borg, so 
+        channelname = name
+        
+    def publish(self, message):
+        if type(message) != type(dict()):
+            warnings.warn("Sending a {} message to channel {}, it's highly recommended you use a dict".format(type(message).__name__, self.channelname))
+        self.manager.publish(self.channelname + "/", message)
+    
+    def listen(self):
+        if self.subsock == '':
+            self.subsock = self.manager.subscribe(self.channelname + "/")
+        
+        channel = self.subsock.recv()
+        message = self.subsock.recv()
+        
+        return jsondecode(message)
+        
