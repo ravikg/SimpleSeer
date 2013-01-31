@@ -163,7 +163,7 @@ class Core(object):
         new_frame_ids = []
         for frame in currentframes:
             new_frame_ids.append(frame.id)
-        self.publish('capture/', { "capture": 1, "frame_ids": new_frame_ids})
+
         return currentframes
     
     """
