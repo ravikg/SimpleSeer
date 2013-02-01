@@ -169,11 +169,11 @@ def getFrames(filter_params):
     limit = int(params.get('limit', 20))
     
     sortinfo = params.get('sortinfo', {})
-        
+    groupByField = params.get('groupByField',None)
     query = params['query']
     
     f = Filter()
-    total_frames, frames = f.getFrames(query, limit=limit, skip=skip, sortinfo=sortinfo)
+    total_frames, frames = f.getFrames(query, limit=limit, skip=skip, sortinfo=sortinfo, groupByField=groupByField)
     
     retVal = dict(frames=frames, total_frames=total_frames)
     

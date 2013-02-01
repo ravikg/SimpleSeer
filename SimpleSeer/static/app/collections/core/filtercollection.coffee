@@ -19,6 +19,7 @@ module.exports = class FilterCollection extends Collection
     skip:0
     limit:20
     query:{}
+    groupByField:false
   url:"/getFrames"
   subscribePath:"frame"
   mute:false
@@ -218,6 +219,9 @@ module.exports = class FilterCollection extends Collection
         type: @getParam 'sorttype', ''
         name: @getParam 'sortkey', 'capturetime_epoch'
         order: @getParam 'sortorder'
+    groupByField = @getParam('groupByField')
+    if groupByField
+      _json['groupByField'] = groupByField
     if addParams
       _json = _.extend _json, addParams
     return _json
