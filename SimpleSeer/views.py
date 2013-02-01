@@ -169,6 +169,9 @@ def getFrames(filter_params):
     limit = params.get('limit', None)
     if limit:
         limit = int(limit)
+    else:
+        log.info('No limit set.  Using 50k to prevent mongo errors')
+        limit = 50000
     
     sortinfo = params.get('sortinfo', {})
     groupByField = params.get('groupByField',None)
