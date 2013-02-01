@@ -3,6 +3,8 @@
 # Each deployment will extend this definition
 # to provide additional functionality.
 
+require 'lib/transitions'
+
 module.exports = SeerApplication =
   settings: {}
   menuItems: {}

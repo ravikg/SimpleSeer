@@ -1,5 +1,6 @@
 do ($ = jQuery) ->
-  $.effects.myEffect = (o, done=->) ->
+  $.effects.throbber = (o) ->
+    done = o.callback || =>
     modes = ['show','hide']
     # Create element
     el = $(@)
