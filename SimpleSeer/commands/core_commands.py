@@ -2,6 +2,7 @@ import time
 import gevent
 import os, subprocess
 from .base import Command
+from path import path
 
 
 class CoreCommand(Command):
@@ -282,6 +283,7 @@ class ExportImagesCommand(Command):
     def run(self):
         "Dump the images stored in the database to a local directory in standard image format"
         from SimpleSeer import models as M
+        from SimpleSeer.Session import Session
         import ast
         
         query = {}
@@ -295,16 +297,21 @@ class ExportImagesCommand(Command):
             number_of_images = int(number_of_images)
             frames = M.Frame.objects(**query).order_by("-capturetime").limit(number_of_images)
         else:
-            frames = M.Frame.objects(**query)
+            frames = M.Frame.objects(**query).order_by("-capturetime")
 
-        num_of_frames = len(frames)
-        counter = 1
-
-        for frame in frames:
-            file_name = self.options.dir + "/" + str(frame.id) + '.png'
-            print 'Saving file (',counter,'of',len(frames),'):',file_name
-            frame.image.save(file_name)
-            counter += 1
+        out_dir = path(self.options.dir)
+        framecount = len(frames)
+        digits = len(str(framecount))
+        database = Session().database
+        for counter, frame in enumerate(frames):
+            name = "__".join([database,
+                str(counter).zfill(digits),  #frame #
+                str(frame.capturetime)[:-5],  #time of capture 
+                #"__".join(["{}={}".format(k,v) for k,v in frame.metadata.items()]),  #metadata
+                frame.camera]) + ".jpg" #camera
+            file_name = str(out_dir / name)
+            print 'Saving file (',counter,'of',framecount,'):',file_name
+            frame.image.save(str(file_name))
 
 
 class MRRCommand(Command):
