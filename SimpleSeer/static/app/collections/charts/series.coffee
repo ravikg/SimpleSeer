@@ -54,7 +54,7 @@ module.exports = class Series extends FilterCollection
     return clean
 
   fetch: (args={}) =>
-    @view.showMessage('loading','Loading...')
+    @view.showMessage('loading','Loading')
     args.success = @onSuccess
     args.error = @onError
     args['total'] = true
