@@ -297,7 +297,6 @@ class ExportImagesCommand(Command):
             number_of_images = int(number_of_images)
             frames = M.Frame.objects(**query).order_by("-capturetime").limit(number_of_images)
         else:
-<<<<<<< HEAD
             frames = M.Frame.objects(**query).order_by("-capturetime")
 
         out_dir = path(self.options.dir)
