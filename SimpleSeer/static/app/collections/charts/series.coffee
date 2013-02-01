@@ -14,6 +14,7 @@ module.exports = class Series extends FilterCollection
     over:->
     click:->
     out:->
+  subscribePath:"Chart"
   
   initialize: (models, args={}) =>
     @_counter = 0
@@ -35,8 +36,8 @@ module.exports = class Series extends FilterCollection
     @setParam 'sortkey', 'capturetime_epoch'
     @setParam 'sortorder', 1
     args.realtime = true
-    if args.realtime
-      @subscribe()
+    #if args.realtime
+    #  @subscribe()
     @on("remove",@shiftChart)
     @fetch()
     return @
@@ -131,17 +132,6 @@ module.exports = class Series extends FilterCollection
     #    _point.marker.fillColor = @model.colormap[d.m[i]]
     return _point
 
-  subscribe: (channel=false) =>
-    if channel
-      application.socket.removeListener "message:Chart/#{@.name}/", @receive
-      @name = channel
-    #if application.debug
-      #console.info "series:  subscribing to channel "+"message:Chart/#{@.name}/"
-    if application.socket
-      application.socket.on "message:Chart/#{@.name}/", @receive
-      if !application.subscriptions["Chart/#{@.name}/"]
-        application.subscriptions["Chart/#{@.name}/"] = application.socket.emit 'subscribe', "Chart/#{@.name}/"
-  
   shiftStack: (silent=false)=>
     shifted = 0
     while @_needShift()
