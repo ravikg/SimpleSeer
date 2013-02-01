@@ -166,7 +166,9 @@ def getFrames(filter_params):
     params = jsondecode(nohtml)
     
     skip = int(params.get('skip', 0))
-    limit = int(params.get('limit', 20))
+    limit = params.get('limit', None)
+    if limit:
+        limit = int(limit)
     
     sortinfo = params.get('sortinfo', {})
     groupByField = params.get('groupByField',None)
