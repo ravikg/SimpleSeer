@@ -284,7 +284,10 @@ class ExportImagesCommand(Command):
         "Dump the images stored in the database to a local directory in standard image format"
         from SimpleSeer import models as M
         from SimpleSeer.Session import Session
+        from SimpleSeer.util import jsonencode
         import ast
+        import urllib2
+        
         
         query = {}
         if self.options.query:
@@ -307,7 +310,7 @@ class ExportImagesCommand(Command):
             name = "__".join([database,
                 str(counter).zfill(digits),  #frame #
                 str(frame.capturetime)[:-5],  #time of capture 
-                #"__".join(["{}={}".format(k,v) for k,v in frame.metadata.items()]),  #metadata
+                "__".join(["{}={}".format(k,urllib2.quote(jsonencode(v))) for k,v in frame.metadata.items()]),  #metadata
                 frame.camera]) + ".jpg" #camera
             file_name = str(out_dir / name)
             print 'Saving file (',counter,'of',framecount,'):',file_name
