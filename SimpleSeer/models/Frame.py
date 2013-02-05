@@ -185,6 +185,7 @@ class Frame(SimpleDoc, mongoengine.Document):
                 capturetime = timegm(self.capturetime.timetuple()),
                 capturetime_epoch = self.capturetime_epoch,
                 updatetime = timegm(self.updatetime.timetuple()),
+                localtz = self.localtz,
                 camera = self.camera,
                 results = self.results,
                 height = self.height,

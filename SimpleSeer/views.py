@@ -101,26 +101,55 @@ def getContext(name):
     
 @route('/plugins.js')
 def plugins():
-    result = []
-    for ptype, plugins in util.all_plugins().items():
-        for name, plugin in plugins.items():
-            #print plugin.__name__, name
-            if 'coffeescript' in dir(plugin):
-                for requirement, cs in plugin.coffeescript():
-                    #result.append('(function(plugin){')
-                    pluginType = requirement.split('/')[1]
-                    if True:
-                        result.append("window.require.define({{\"plugins/{0}/{1}\": function(exports, require, module) {{(function() {{".format(pluginType,name))
-                        try:
-                            result.append(coffeescript.compile(cs, True))
-                        except Exception, e:
-                            print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-                            print "COFFEE SCRIPT ERROR"
-                            print e
-                            print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-                        #result.append('}).call(require(%r), require("lib/plugin"));\n' % requirement)
-                        result.append("}).call(this);}});")
-    resp = make_response("\n".join(result), 200)
+
+    useCache = False
+    if os.path.exists('./cached.js'):
+        cacheTime = os.path.getmtime('./cached.js')
+        
+        useCache = True
+        for ptype, plugins in util.all_plugins().items():
+            for name, plugin in plugins.items():
+                stem = plugin.__name__.split('.')[-1]
+                plugin_path = __import__(plugin.__module__).__file__
+                s = plugin_path.split('/')
+                plugin_path = plugin_path[0:len(plugin_path)-len(s[-1])] #pull of the filename
+                plugin_path = plugin_path + "plugins/"+stem+"/cs/"+stem #add the plugin name
+                mpath = plugin_path+"Inspection.coffee"
+                if os.path.exists(mpath):
+                    plugTime = os.path.getmtime(mpath)
+                    if plugTime > cacheTime:
+                        useCache = False
+    
+    if not useCache:
+        result = []
+        for ptype, plugins in util.all_plugins().items():
+            for name, plugin in plugins.items():
+                #print plugin.__name__, name
+                if 'coffeescript' in dir(plugin):
+                    for requirement, cs in plugin.coffeescript():
+                        #result.append('(function(plugin){')
+                        pluginType = requirement.split('/')[1]
+                        if True:
+                            result.append("window.require.define({{\"plugins/{0}/{1}\": function(exports, require, module) {{(function() {{".format(pluginType,name))
+                            try:
+                                result.append(coffeescript.compile(cs, True))
+                            except Exception, e:
+                                print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+                                print "COFFEE SCRIPT ERROR"
+                                print e
+                                print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+                            #result.append('}).call(require(%r), require("lib/plugin"));\n' % requirement)
+                            result.append("}).call(this);}});")
+        js = "\n".join(result)
+        f = open('./cached.js', 'w')
+        log.info('Writing new javascript cache')
+        f.write(js)
+    else:
+        f = open('./cached.js', 'r')
+        log.info('Reading javascript from cache')
+        js = f.read()
+        
+    resp = make_response(js, 200)
     resp.headers['Content-Type'] = "text/javascript"
     return resp
 
