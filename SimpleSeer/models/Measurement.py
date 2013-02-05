@@ -169,6 +169,24 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
                             result.state = 1
                             if 'msg' in rule:
                                 messages.append(rule['msg'])
+                            elif 'msgfeat' in rule:
+                                field = rule['msgfeat']
+                                sub = ''
+                                if '.' in field: 
+                                    parts = field.split('.')
+                                    field = parts[0]
+                                    sub = parts[1]
+                                
+                                for feat in frame.features:
+                                    if field in dir(feat):
+                                        featMsg = feat[field]
+                                    elif field in feat['featuredata'].keys():
+                                        if sub:
+                                            featMsg = feat['featuredata'][field].get(sub, '')
+                                        else:
+                                            featMsg = feat['featuredata'].get(field, '')
+                                    if featMsg:
+                                        messages.append(featMsg)
                             else:
                                 messages.append("%s %s %s" % (self.label, rule['rule']['operator'], rule['rule']['value']))
                         
