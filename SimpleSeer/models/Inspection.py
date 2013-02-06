@@ -60,23 +60,23 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
     results = insp.execute()       
     
     """
-    name = mongoengine.StringField()
-    parent = mongoengine.ObjectIdField()
+    name = mongoengine.StringField(default='')
+    parent = mongoengine.ObjectIdField(default=None)
     
-    method = mongoengine.StringField()
+    method = mongoengine.StringField(default='')
     #TODO, validate that this method exists
-    camera = mongoengine.StringField()
+    camera = mongoengine.StringField(default='')
     #TODO validate that this camera exists
-    parameters = mongoengine.DictField()
+    parameters = mongoengine.DictField(default={})
     #TODO validate against function
-    filters = mongoengine.DictField()
+    filters = mongoengine.DictField(default={})
     #TODO validate against valid fields for the feature type
-    richattributes = mongoengine.DictField()
+    richattributes = mongoengine.DictField(default={})
     #TODO validate against attributes
-    morphs = mongoengine.ListField()
+    morphs = mongoengine.ListField(default=[])
     #list of dicts for morph operations
     #TODO validate agains morph operations
-    updatetime = mongoengine.DateTimeField()
+    updatetime = mongoengine.DateTimeField(default=None)
 
     meta = {
         'indexes': ['name']

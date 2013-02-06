@@ -13,7 +13,7 @@ class ContextSchema(fes.Schema):
     menuItems = fev.Set(if_empty=[], if_missing=[])
 
 class Context(SimpleDoc, mongoengine.Document):
-    name = mongoengine.StringField()
+    name = mongoengine.StringField(default='')
     menuItems = mongoengine.ListField(mongoengine.DictField())
 
     def __repr__(self):
