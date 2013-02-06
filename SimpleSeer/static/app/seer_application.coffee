@@ -3,11 +3,15 @@
 # Each deployment will extend this definition
 # to provide additional functionality.
 
+require 'lib/transitions'
+
 module.exports = SeerApplication =
   settings: {}
   menuItems: {}
   menuBars: {}
   context: {}
+  alertStack: [] 
+  inAnim: false
   
   # Set up the application and include the 
   # necessary modules. Configures the page
@@ -78,19 +82,31 @@ module.exports = SeerApplication =
       a = @context[name].fetch()
     return @context[name]
 
-  alert:(message, alert_type) ->
+  alert:(message, alert_type, pop=false) ->    
+    if @inAnim is true
+      @alertStack.push {message: message, alert_type: alert_type}
+      return
+
     switch alert_type
       when "clear"
-        $("#messages > .alert").fadeOut(400, -> $(@).remove())
+        @inAnim = true
+        $("#messages > .alert").fadeOut(400, (=>
+          @inAnim = false
+          $("#messages > .alert:hidden").remove()
+          stack = _.clone(@alertStack)
+          @alertStack = []
+          for alert in stack
+            @alert(alert.message, alert.alert_type)
+        ))
       when "redirect"
         window.SimpleSeer.router.navigate(message, true)
       else 
         if !message then return false
         _duplicate = false
 
-        console.group(new Date()); console.log(message); console.groupEnd();
-        $(".alert-#{alert_type}").each (e,v)->
-          if ($(v).data("message") == message) then _duplicate = true
+        #console.group(new Date()); console.log(message); console.groupEnd();
+        #$(".alert-#{alert_type}").each (e,v)->
+        #  if ($(v).data("message") == message) then _duplicate = true
         
         if _duplicate is false
           popup = $("<div style=\"display: none\">#{message}</div>")

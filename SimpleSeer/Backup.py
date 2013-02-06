@@ -1,4 +1,6 @@
 from yaml import load, dump
+from .base import jsonencode, jsondecode
+
 from datetime import datetime
 
 import models as M
@@ -17,32 +19,41 @@ class Backup:
         # By default saves to file names seer_export.json, overwriting previous file
         # Pass overwrite = False to append timestamp to file name (preventing overwrite of previous file)
     
-        exportable = ['Inspection', 'Measurement', 'Watcher', 'OLAP', 'Chart', 'Dashboard', 'Context']
+        exportable = [{'name': 'Inspection', 'sort': 'method'}, 
+                      {'name': 'Measurement', 'sort': 'method'}, 
+                      {'name': 'Watcher', 'sort': 'name'},
+                      {'name': 'OLAP', 'sort': 'name'}, 
+                      {'name': 'Chart', 'sort': 'name'}, 
+                      {'name': 'Dashboard', 'sort': 'name'},
+                      {'name': 'Context', 'sort': 'name'}]
         
         toExport = []
-        
-        for exportName in exportable:
+        for exportDef in exportable:
+            exportName = exportDef['name']
             objClass = M.__getattribute__(exportName)
-            for obj in objClass.objects:
-                
+            for obj in objClass.objects.order_by(exportDef['sort']):
                 okToExport = True
                 if (type(obj) == M.OLAP or type(obj) == M.Chart) and obj.transient:
                     # Don't export transient olap
                     okToExport = False
                     
                 if okToExport:
-                    objDict = obj.__dict__
-                    # yaml does not take kindly to mongoengine BaseLists in the _data
-                    # so convert them to lists
-                    if '_data' in objDict:
-                        for k, v in objDict['_data'].iteritems():
-                            if type(v) == mongoengine.base.BaseList:
-                                objDict['_data'][k] = list(v)
+                    # Encode to get rid of mongoengine types
+                    objDict = obj._data
+                    try:
+                        objDict.pop('updatetime')
+                    except:
+                        pass
+                    
+                    exportDict = {}
+                    for key, val in objDict.iteritems():
+                        if key == None:
+                            exportDict['id'] = str(val)
+                        elif key and val != getattr(objClass, key).default:
+                            exportDict[key] = jsonencode(val)
                         
-                    # yaml dump does not take kindly to mongoeninge docs, so just store the dict
-                    toExport.append({'type': exportName, 'obj': objDict})
-        
-        yaml = dump(toExport)
+                    toExport.append({'type': exportName, 'obj': exportDict})
+        yaml = dump(toExport, default_flow_style=False)
         
         ts = ''
         if not overwrite:
@@ -72,8 +83,11 @@ class Backup:
         from .models.MetaSchedule import MetaSchedule
         
         if clean:
+            log.info('Clear the olap cache')
+            M.Frame._get_db().olap_cache.remove()
+            
             log.info('Removing old features and results')
-            M.Frame._get_db().frame.update({}, {'results': [], 'features': []})
+            M.Frame._get_db().frame.update({}, {'$set': {'results': [], 'features': []}}, multi=True)
             M.Frame._get_db().metaschedule.remove()
            
             log.info('Stopping celery tasks')
@@ -110,35 +124,34 @@ class Backup:
         ms = MetaSchedule()
         log.info('Loading new metadata')
         for o in objs:
-            model = M.__getattribute__(o['type'])()
+            try:
+                model = M.__getattribute__(o['type']).objects.get(id=o['obj']['id'])
+                log.info('Updating %s' % model)
+            except:
+                model = M.__getattribute__(o['type'])()
+                model._data[None] = o['obj']['id']
+                log.info('Creating new %s' % o['type'])
             
-            for k, v in o['obj']['_data'].iteritems():
-                if k is not None and v is not None:
-                    model.__setattr__(k, v)
-            model.id = o['obj']['_data'][None]
-            
-            # Delete previous versions, based on overlapping names
-            prev = M.__getattribute__(o['type']).objects()
-            found = False
-            for p in prev:
-                if p == model:
-                    found = True
-                    log.info('Skipping existing %s: %s' % (o['type'], model.name))
-            
-            if not found:                    
-                log.info('Adding new  %s %s' % (o['type'], model.name))
-                # Enqueue items for backfill
-                if o['type'] == 'Measurement':
-                    if not skip:
+            for k, v in o['obj'].iteritems():
+                #v = jsondecode(v)
+                
+                # Enqueue items for backfill only if method changed or if clean
+                if k == 'method' and (jsondecode(v) != getattr(model, 'method') or clean) and not skip:
+                    if o['type'] == 'Measurement':
                         ms.enqueue_measurement(model.id)
-                    model.save(skipBackfill=True)
-                elif o['type'] == 'Inspection':
-                    if not skip:
+                    else:
                         ms.enqueue_inspection(model.id)
-                    model.save()
-                else:
-                    model.save()
-        
+                
+                if k != 'id':
+                    model.__setattr__(k, jsondecode(v))
+                
+            
+            # When saving make sure measurements dont re-run their backfill
+            if o['type'] == 'Measurement':
+                model.save(skipBackfill=True)
+            else:
+                model.save()
+    
         if not skip:
             log.info('Beginning backfill')
             ms.run()

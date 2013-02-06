@@ -18,13 +18,11 @@ class Filter():
     
     def getFrames(self, allFilters={}, skip=0, limit=float("inf"), sortinfo = {}, groupByField = '', collection='frame'):
         pipeline = []
-        #frames = []
-        #measurements = []
-        #features = []
-       
+        
         # Filter the data based on the filter parameters
         # Frame features are easy to filter, but measurements and features are embedded in the frame
         # so they need their own syntax to filter
+        
         resCount = 1
         featCount = 0
         #for f in allFilters:
@@ -335,10 +333,10 @@ class Filter():
                     resultKeys[m.name] = plugin.printFields()
                     resultKeys[m.name].append('measurement_name')
                 else:
-                    resultKeys[m.name] = ['measurement_name', 'measurement_id', 'inspection_id', 'string', 'numeric', 'state', 'message']
+                    resultKeys[m.name] = ['measurement_name', 'string', 'numeric', 'state', 'message']
             except ValueError:
                 # log.info('No plugin found for %s, using default fields' % m.method)
-                resultKeys[m.name] = ['measurement_name', 'measurement_id', 'inspection_id', 'string', 'numeric', 'state', 'message']
+                resultKeys[m.name] = ['measurement_name', 'string', 'numeric', 'state', 'message']
         
         return featureKeys, resultKeys
         

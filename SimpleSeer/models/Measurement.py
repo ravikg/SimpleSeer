@@ -49,19 +49,19 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
 
 
     """
-    name = mongoengine.StringField()
-    label = mongoengine.StringField()
-    labelkey = mongoengine.StringField()
-    method = mongoengine.StringField()
-    parameters = mongoengine.DictField()
-    units = mongoengine.StringField()
+    name = mongoengine.StringField(default='')
+    label = mongoengine.StringField(default='')
+    labelkey = mongoengine.StringField(default='')
+    method = mongoengine.StringField(default='')
+    parameters = mongoengine.DictField(default={})
+    units = mongoengine.StringField(default='px')
     fixdig = mongoengine.IntField(default=99)
-    inspection = mongoengine.ObjectIdField()
-    featurecriteria = mongoengine.DictField()
-    tolerances = mongoengine.ListField()
-    updatetime = mongoengine.DateTimeField()
-    conditions = mongoengine.ListField()
-    booleans = mongoengine.ListField()
+    inspection = mongoengine.ObjectIdField(default=None)
+    featurecriteria = mongoengine.DictField(default={})
+    tolerances = mongoengine.ListField(default=[])
+    updatetime = mongoengine.DateTimeField(default=None)
+    conditions = mongoengine.ListField(default=[])
+    booleans = mongoengine.ListField(default=[])
     executeorder = mongoengine.IntField(default=0)
     
     meta = {
@@ -169,6 +169,24 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
                             result.state = 1
                             if 'msg' in rule:
                                 messages.append(rule['msg'])
+                            elif 'msgfeat' in rule:
+                                field = rule['msgfeat']
+                                sub = ''
+                                if '.' in field: 
+                                    parts = field.split('.')
+                                    field = parts[0]
+                                    sub = parts[1]
+                                
+                                for feat in frame.features:
+                                    if field in dir(feat):
+                                        featMsg = feat[field]
+                                    elif field in feat['featuredata'].keys():
+                                        if sub:
+                                            featMsg = feat['featuredata'][field].get(sub, '')
+                                        else:
+                                            featMsg = feat['featuredata'].get(field, '')
+                                    if featMsg:
+                                        messages.append(featMsg)
                             else:
                                 messages.append("%s %s %s" % (self.label, rule['rule']['operator'], rule['rule']['value']))
                         

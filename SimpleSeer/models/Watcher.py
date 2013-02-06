@@ -32,8 +32,8 @@ class Watcher(SimpleDoc, WithPlugins, mongoengine.Document):
                     args=dict(message='Angle too large')) ])
     w.check()
     """
-    name = mongoengine.StringField()
-    condition = mongoengine.StringField()
+    name = mongoengine.StringField(default='')
+    condition = mongoengine.StringField(default='')
     handlers = mongoengine.ListField(mongoengine.EmbeddedDocumentField(Handler))
     handlers = mongoengine.ListField(mongoengine.StringField())#this might be a relation 
 

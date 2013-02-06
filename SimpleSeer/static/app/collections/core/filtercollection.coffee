@@ -19,7 +19,9 @@ module.exports = class FilterCollection extends Collection
     skip:0
     limit:20
     query:{}
+    groupByField:false
   url:"/getFrames"
+  subscribePath:"frame"
   mute:false
   clearOnFetch:true
   
@@ -95,6 +97,24 @@ module.exports = class FilterCollection extends Collection
   subCollection: (collection) =>
     @_boundCollections.push collection
 
+  subscribe: (channel,callback=@receive) =>
+    if channel?
+      if @name
+        namePath = @name + '/'
+      else
+        namePath = ''
+      application.socket.removeListener "message:#{@subscribePath}/#{namePath}", callback
+      @name = channel
+    #if application.debug
+      #console.info "series:  subscribing to channel "+"message:#{@subscribePath}/#{namePath}"
+    if application.socket
+      application.socket.on "message:#{@subscribePath}/#{namePath}", callback
+      if !application.subscriptions["#{@subscribePath}/#{namePath}"]
+        application.subscriptions["#{@subscribePath}/#{namePath}"] = application.socket.emit 'subscribe', "#{@subscribePath}/#{namePath}"
+
+  receive: (data) =>
+    console.log data
+    
   # Set sort param.  Bubble up through bound FiltersCollections
   setParam: (key,val) =>
     if key != "skip"
@@ -199,6 +219,9 @@ module.exports = class FilterCollection extends Collection
         type: @getParam 'sorttype', ''
         name: @getParam 'sortkey', 'capturetime_epoch'
         order: @getParam 'sortorder'
+    groupByField = @getParam('groupByField')
+    if groupByField
+      _json['groupByField'] = groupByField
     if addParams
       _json = _.extend _json, addParams
     return _json
