@@ -52,7 +52,6 @@ class Backup:
                         elif key and val != getattr(objClass, key).default:
                             exportDict[key] = jsonencode(val)
                         
-                    print exportDict
                     toExport.append({'type': exportName, 'obj': exportDict})
         yaml = dump(toExport, default_flow_style=False)
         
