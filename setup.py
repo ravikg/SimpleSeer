@@ -15,6 +15,7 @@ entry_points = '''
 simpleseer=SimpleSeer.template:SimpleSeerProjectTemplate
 '''
 
+entry_points += '[console_scripts]\nsimpleseer=SimpleSeer.main:main\n'
 
 with open(commands_ini) as fp:
     entry_points += fp.read()
