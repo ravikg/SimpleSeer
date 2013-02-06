@@ -60,14 +60,18 @@ def sio(path):
 @route('/')
 def index():
     files= ["javascripts/app.js","javascripts/vendor.js","stylesheets/app.css"]
-    settings = Session().get_config()
+    baseUrl = ''
     MD5Hashes = {}
+    settings = Session().get_config()
+    if settings.get('in_cdn',False):
+        baseUrl = "http://cdn.demo.sightmachine.com/"
     for f in files:
       fHandler = open("{0}/{1}".format(settings['web']['static']['/'],f), 'r')
       m = hashlib.md5()
       m.update(fHandler.read())
-      MD5Hashes[f] = dict(path=m.hexdigest(),type=f.rsplit(".")[1])
-    return render_template("index.html",MD5Hashes=MD5Hashes)
+      MD5Hashes[baseUrl+f] = dict(path=m.hexdigest(),type=f.rsplit(".")[1])
+      print MD5Hashes
+    return render_template("index.html",params = dict(MD5Hashes=MD5Hashes))
 
 @route('/reset', methods=['GET'])
 def reset():
