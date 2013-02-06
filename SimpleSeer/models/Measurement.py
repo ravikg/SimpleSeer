@@ -49,19 +49,19 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
 
 
     """
-    name = mongoengine.StringField()
-    label = mongoengine.StringField()
-    labelkey = mongoengine.StringField()
-    method = mongoengine.StringField()
-    parameters = mongoengine.DictField()
-    units = mongoengine.StringField()
+    name = mongoengine.StringField(default='')
+    label = mongoengine.StringField(default='')
+    labelkey = mongoengine.StringField(default='')
+    method = mongoengine.StringField(default='')
+    parameters = mongoengine.DictField(default={})
+    units = mongoengine.StringField(default='px')
     fixdig = mongoengine.IntField(default=99)
-    inspection = mongoengine.ObjectIdField()
-    featurecriteria = mongoengine.DictField()
-    tolerances = mongoengine.ListField()
-    updatetime = mongoengine.DateTimeField()
-    conditions = mongoengine.ListField()
-    booleans = mongoengine.ListField()
+    inspection = mongoengine.ObjectIdField(default=None)
+    featurecriteria = mongoengine.DictField(default={})
+    tolerances = mongoengine.ListField(default=[])
+    updatetime = mongoengine.DateTimeField(default=None)
+    conditions = mongoengine.ListField(default=[])
+    booleans = mongoengine.ListField(default=[])
     executeorder = mongoengine.IntField(default=0)
     
     meta = {
