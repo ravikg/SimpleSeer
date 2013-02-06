@@ -132,8 +132,8 @@ class Backup:
             for k, v in o['obj'].iteritems():
                 #v = jsondecode(v)
                 
-                # Enqueue items for backfill only if method changed
-                if k == 'method' and jsondecode(v) != getattr(model, 'method') and not skip:
+                # Enqueue items for backfill only if method changed or if clean
+                if k == 'method' and (jsondecode(v) != getattr(model, 'method') or clean) and not skip:
                     if o['type'] == 'Measurement':
                         ms.enqueue_measurement(model.id)
                     else:
