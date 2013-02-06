@@ -40,7 +40,10 @@ class Backup:
                 if okToExport:
                     # Encode to get rid of mongoengine types
                     objDict = obj._data
-                    objDict.pop('updatetime')
+                    try:
+                        objDict.pop('updatetime')
+                    except:
+                        pass
                     
                     exportDict = {}
                     for key, val in objDict.iteritems():
