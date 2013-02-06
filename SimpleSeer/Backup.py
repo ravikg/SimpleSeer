@@ -83,6 +83,9 @@ class Backup:
         from .models.MetaSchedule import MetaSchedule
         
         if clean:
+            log.info('Clear the olap cache')
+            M.Frame._get_db().olap_cache.remove()
+            
             log.info('Removing old features and results')
             M.Frame._get_db().frame.update({}, {'$set': {'results': [], 'features': []}}, multi=True)
             M.Frame._get_db().metaschedule.remove()
