@@ -1,6 +1,9 @@
 from yaml import load, dump
 from .base import jsonencode, jsondecode
 
+import os
+from socket import gethostname
+
 from datetime import datetime
 
 import models as M
@@ -40,7 +43,10 @@ class Backup:
                 if okToExport:
                     # Encode to get rid of mongoengine types
                     objDict = obj._data
-                    objDict.pop('updatetime')
+                    try:
+                        objDict.pop('updatetime')
+                    except:
+                        pass
                     
                     exportDict = {}
                     for key, val in objDict.iteritems():
@@ -49,7 +55,6 @@ class Backup:
                         elif key and val != getattr(objClass, key).default:
                             exportDict[key] = jsonencode(val)
                         
-                    print exportDict
                     toExport.append({'type': exportName, 'obj': exportDict})
         yaml = dump(toExport, default_flow_style=False)
         
@@ -81,6 +86,9 @@ class Backup:
         from .models.MetaSchedule import MetaSchedule
         
         if clean:
+            log.info('Clear the olap cache')
+            M.Frame._get_db().olap_cache.remove()
+            
             log.info('Removing old features and results')
             M.Frame._get_db().frame.update({}, {'$set': {'results': [], 'features': []}}, multi=True)
             M.Frame._get_db().metaschedule.remove()
@@ -114,7 +122,24 @@ class Backup:
             log.warn('Import failed: %s' % err.strerror)
             return
             
-        objs = load(yaml)        
+        objs = load(yaml)
+                
+        altMeta = gethostname() + '_seer_export.yaml'
+        if os.path.isfile(altMeta):
+            log.info('Overriding meta with %s' % altMeta)
+            altMetaList = load(open(altMeta))
+        
+            for alt in altMetaList:
+                # First, try to find a corresponding entry to update
+                found = False
+                for obj in objs:
+                    if alt['type'] == obj['type'] and alt['obj']['id'] == obj['obj']['id']:
+                        found = True
+                        obj['obj'].update(alt['obj'])
+                
+                # If no entry found, append the result
+                if not found:
+                    objs.append(alt)
         
         ms = MetaSchedule()
         log.info('Loading new metadata')
@@ -130,8 +155,8 @@ class Backup:
             for k, v in o['obj'].iteritems():
                 #v = jsondecode(v)
                 
-                # Enqueue items for backfill only if method changed
-                if k == 'method' and jsondecode(v) != getattr(model, 'method') and not skip:
+                # Enqueue items for backfill only if method changed or if clean
+                if k == 'method' and (jsondecode(v) != getattr(model, 'method') or clean) and not skip:
                     if o['type'] == 'Measurement':
                         ms.enqueue_measurement(model.id)
                     else:

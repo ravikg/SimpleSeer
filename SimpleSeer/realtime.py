@@ -118,7 +118,7 @@ class Channel(object):
     
     def __init__(self, name):
         self.manager = ChannelManager()  #this is a borg, so 
-        channelname = name
+        self.channelname = name
         
     def publish(self, **kwargs):
         self.manager.publish(self.channelname + "/", kwargs)

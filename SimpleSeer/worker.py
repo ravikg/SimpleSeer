@@ -104,7 +104,7 @@ def backfill_meta(frame_id, inspection_ids, measurement_ids):
             # Need the filter format for realtime publishing
             ro = RealtimeOLAP()
             ff = Filter()
-            allFilters = [{'type': 'frame', 'name': 'id', 'eq': frame_id}]
+            allFilters = {'logic': 'and', 'criteria': [{'type': 'frame', 'name': 'id', 'eq': frame_id}]}
             res = ff.getFrames(allFilters)[1]
             
             for m_id in measurement_ids:
