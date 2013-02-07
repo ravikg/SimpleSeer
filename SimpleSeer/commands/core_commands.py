@@ -46,7 +46,7 @@ def ControlsCommand(self):
 @Command.simple(use_gevent=True)
 def OlapCommand(self):
     try:
-        from SeerCloud.OLAPUtils import ScheduledOLAP, RealtimeOLAP
+        from SeerCloud.OLAPUtils import ScheduledOLAP, RealtimeOLAP, OLAPData
     except:
         print 'Error starting OLAP schedules.  This requires Seer Cloud'
         return 0
@@ -60,8 +60,12 @@ def OlapCommand(self):
         so = ScheduledOLAP()
         gevent.spawn_link_exception(so.runSked)
         
+        od = OLAPData()
+        gevent.spawn_link_exception(od.listen)
+        
         ro = RealtimeOLAP()
         ro.monitorRealtime()
+        
     except KeyboardInterrupt as e:
         print "Interrupted by user"
 
