@@ -308,10 +308,110 @@ class ExportImagesCommand(Command):
                 str(counter).zfill(digits),  #frame #
                 str(frame.capturetime)[:-5],  #time of capture 
                 #"__".join(["{}={}".format(k,v) for k,v in frame.metadata.items()]),  #metadata
+                #TODO, print this out if v isn't an iter
                 frame.camera]) + ".jpg" #camera
             file_name = str(out_dir / name)
             print 'Saving file (',counter,'of',framecount,'):',file_name
             frame.image.save(str(file_name))
+
+
+class ImportImagesCommand(Command):
+    
+    def __init__(self, subparser):
+        #subparser.add_argument("-w", "--watch", dest="watch", help="continue watching the directory", action="store_true", default=False)
+        subparser.add_argument("-s", "--schema", dest="schema", default="{database}__", nargs="?", help="Schema for filenames.  Special terms are {time} {camera}, otherwise data will get pushed into metadata.  Python named regex blocks (?P<NAME>.?) may also be used")
+        subparser.add_argument("-p", "--withpath", dest="withpath", default=False, nargs="?", action="store_true", help="Match schema on the full path (default to filename)")
+        subparser.add_argument("-d", "--dir", dest="dir", nargs="?", default=".", help="Directory to import/watch from")
+        subparser.add_argument("-r", "--recursive", dest="recursive", default=False, action="store_true")
+        subparser.add_argument("-f", "--files", dest="files", nargs="?", default="*.\[bmp|jpg|png\]", help="Glob descriptor to describe files to accept")
+        subparser.add_argument("-a", "--all", dest="new", nargs="?", default=False, action="store_true", help="Only import files written since the most recent Frame")
+        subparser.add_argument("-m", "--metadata", dest="metadata", default="", nargs="?", help="Additional metadata for frame (as a python dict)")
+    
+    
+    def import_frame(self, filename, metadata = {}, template = ""):
+        from dateutil import parser
+        import os.path
+        import SimpleSeer.models as M
+        
+        frame = M.Frame()
+        frame.metadata['filename'] = filename
+        if template:
+            to_match = filename
+            if not self.options.withpath:
+                to_match = os.path.basename(filename) 
+            match = re.match(template, to_match)
+            metadata.update(match.groupdict())
+        
+        if metadata.get("time", False):
+            timestring = metadata.pop('time')
+            try:
+                frame.capturetime = parser.parse(timestring)
+            except e:
+                frame.metadata['time'] = timestring
+        
+        if not frame.capturetime:
+            frame.capturetime = datetime.datetime.fromtimestamp(os.stat(filename).st_mtime)
+        
+        if metadata.get("camera", False):
+            frame.camera = metadata.pop('camera')
+        else:
+            frame.camera = "File"
+        
+        frame.metadata.update(metadata)
+        frame.image = Image(filename)
+        frame.save()
+        print "Imported {} at time {} for camera '{}' with attributes {}".format(filename, frame.capturetime, frame.camera, metadata)
+
+    def run(self):
+        import os
+        import fnmatch
+        import itertools
+        import os.path
+        from mongoengine import connection
+        import SimpleSeer.models as M
+        
+        M.Frame._get_db().frame.ensure_index("metadata.filename")
+        
+        lastimport = 0
+        if not self.options.all:
+            metadata_params = { ("metadata__{}".format(k), v) for k, v in metadata.items() if k != 'camera' }
+            if metadata.get('camera', False):
+                metadata_params['camera'] = metadata['camera']
+            lastframes = Frame.objects(metadata__filename__ne = "", **metadata_params).order_by(-createtime)
+            if len(lastframes):
+                lastimport = lastframes[0].capturetime.strftime('%s')
+        
+        metadata = {}
+        if self.options.metadata:
+            metadata = eval(self.options.metadata)
+        
+        def _expandTemplate(match):
+            m = match.group(0)
+            if m == '{time}':
+                return "(?P<time>.?)"
+            if m == '{camera}':
+                return "(?P<camera>\w+)"
+            else:
+                return "(?P<" + m[1:-1] + ">.?)"
+        
+        template = ''
+        if self.options.schema:
+            template = r.sub(self.options.schema, _expandTemplate)
+        
+        if self.options.recursive:
+            #this got a bit thick
+            #walk the tree, match on our "files" glob, if the mtime > lastimport
+            files = itertools.chain(
+                *[[a+fname for fname in fnmatch.filter(c, self.options.files) if os.path.getmtime(a+fname) > lastimport]
+                    for a, b, c in os.walk(self.options.dir)])
+        else:
+            files = glob.glob(os.path.join(self.options.dir, self.options.files))
+        
+        for f in files:
+            if len(Frame.objects(metadata__filename = f, **metadata)):
+                continue
+            
+            self.import_frame(f, metadata, template)
 
 
 
