@@ -99,7 +99,10 @@ module.exports = SeerApplication =
             @alert(alert.message, alert.alert_type)
         ))
       when "redirect"
-        window.SimpleSeer.router.navigate(message || window.location.hash, true)
+        if message is "@rebuild"
+          window.location.reload()
+        else 
+          window.SimpleSeer.router.navigate(message || window.location.hash, true)
       else 
         if !message then return false
         _duplicate = false
