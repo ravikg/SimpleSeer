@@ -3,6 +3,13 @@ import gevent
 import os, subprocess
 from .base import Command
 from path import path
+from dateutil import parser
+import os.path
+from datetime import datetime
+import fnmatch
+import itertools
+import warnings
+        
 
 
 class CoreCommand(Command):
@@ -326,13 +333,10 @@ class ImportImagesCommand(Command):
         subparser.add_argument("-f", "--files", dest="files", nargs="?", default="*.\[bmp|jpg|png\]", help="Glob descriptor to describe files to accept")
         subparser.add_argument("-a", "--all", dest="new", nargs="?", default=False, action="store_true", help="Only import files written since the most recent Frame")
         subparser.add_argument("-m", "--metadata", dest="metadata", default="", nargs="?", help="Additional metadata for frame (as a python dict)")
-    
+        subparser.add_argument("-t", "--timestring", dest="timestring", default="", nargs="?", help="Python strptime() expression to decode timestamp with")
     
     def import_frame(self, filename, metadata = {}, template = ""):
-        from dateutil import parser
-        import os.path
         import SimpleSeer.models as M
-        
         frame = M.Frame()
         frame.metadata['filename'] = filename
         if template:
@@ -345,14 +349,18 @@ class ImportImagesCommand(Command):
         if metadata.get("time", False):
             timestring = metadata.pop('time')
             try:
-                frame.capturetime = parser.parse(timestring)
+                if self.options.timestring:
+                    frame.capturetime = datetime.fromtimestamp(time.strptime(timestring, self.options.timestring))
+                else:
+                    frame.capturetime = parser.parse(timestring)
             except e:
+                warnings.warn(e)
                 frame.metadata['time'] = timestring
         
         if not frame.capturetime:
-            frame.capturetime = datetime.datetime.fromtimestamp(os.stat(filename).st_mtime)
+            frame.capturetime = datetime.fromtimestamp(os.stat(filename).st_mtime)
         
-        if metadata.get("camera", False):
+        if not metadata.get("camera", False):
             frame.camera = metadata.pop('camera')
         else:
             frame.camera = "File"
@@ -363,10 +371,6 @@ class ImportImagesCommand(Command):
         print "Imported {} at time {} for camera '{}' with attributes {}".format(filename, frame.capturetime, frame.camera, metadata)
 
     def run(self):
-        import os
-        import fnmatch
-        import itertools
-        import os.path
         from mongoengine import connection
         import SimpleSeer.models as M
         
@@ -409,11 +413,10 @@ class ImportImagesCommand(Command):
         
         for f in files:
             if len(Frame.objects(metadata__filename = f, **metadata)):
+                print "file {} already imported".format(f)
                 continue
             
             self.import_frame(f, metadata, template)
-
-
 
 class MRRCommand(Command):
     # Measurement repeatability and reproducability
