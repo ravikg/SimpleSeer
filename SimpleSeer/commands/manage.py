@@ -163,7 +163,9 @@ class WatchCommand(ManageCommand):
         local_observer.start()
             
         ss_builds = 0
+        anythingBuilt = False
         while True:
+            anythingBuilt = False
             ss_builds += len(seer_event_handler.eventqueue)
             try:
                 ss_builds += len(cloud_event_handler.eventqueue)
@@ -181,6 +183,7 @@ class WatchCommand(ManageCommand):
                     pass
                 local_event_handler.eventqueue = []
                 ss_builds = 0
+                anythingBuilt = True
             
             if len(local_event_handler.eventqueue):
                 time.sleep(0.2)
@@ -188,8 +191,10 @@ class WatchCommand(ManageCommand):
                     print "Updating " + cwd
                     print subprocess.check_output(['brunch', 'build'])
                 local_event_handler.eventqueue = []
-                if self.options.refresh != 0:
-                    Alert.redirect("@rebuild")
+                anythingBuilt = True
+            
+            if anythingBuilt is True and self.options.refresh != 0:
+                Alert.redirect("@rebuild")                
                     
             time.sleep(0.5)
 
