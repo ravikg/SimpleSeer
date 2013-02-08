@@ -31,7 +31,7 @@ module.exports = SeerApplication =
     # Set up the client name.
     $('#client-name').html(window.SimpleSeer.settings.ui_pagename || "")
 
-    if !@isMobile
+    if window.WebSocket?
       @socket = io.connect '/rt'
       #@.socket.on 'timeout', ->
       #@.socket.on 'connect', ->
