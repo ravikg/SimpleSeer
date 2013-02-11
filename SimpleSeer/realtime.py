@@ -44,19 +44,8 @@ class ChannelManager(object):
             self.pub_sock.send(jsonencode(message), copy = False)
             
 
-    def subscribe(self, name):
-        name=str(name)
-        sub_sock = self.context.socket(zmq.SUB)
-        sub_sock.connect(self.config.sub_uri)
-        sub_sock.setsockopt(zmq.SUBSCRIBE, name)
-        log.info('Subscribe to %s: %s', name, id(sub_sock))
-        channel = self._channels.setdefault(name, {})
-        channel[id(sub_sock)] = sub_sock
-        
-        # Send out list of all subscriptions
-        self.publish('subscriptions', self._channels)
-        
-        return sub_sockfrom time import sleep                                 
+    def subscribe(self, name, sleepTime = 0.1):
+        from time import sleep                                 
                                                                                 
         name=str(name)                                                          
         sub_sock = self.context.socket(zmq.SUB)                                 
@@ -68,6 +57,8 @@ class ChannelManager(object):
                                                                                 
         # Send out list of all subscriptions                                    
         self.publish('subscriptions', self._channels)                           
+        
+        sleep(sleepTime)
                                                                                 
         return sub_sock
 
