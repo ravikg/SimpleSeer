@@ -208,7 +208,7 @@ def ScrubCommand(self):
         
             self.log.info('Purged %d frame files', q_csr.count())
         else:
-            self.log.info('Backfill running.  Waiting to scrube')
+            self.log.info('Backfill running.  Waiting to scrub')
         time.sleep(retention["interval"])
 
 @Command.simple(use_gevent=False)
