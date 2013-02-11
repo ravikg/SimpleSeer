@@ -47,6 +47,10 @@ module.exports = SeerApplication =
     t = require 'views/core/modal'
     @modal = new t()
 
+    tc = require 'collections/tab_container'
+    tabs = new tc()
+    tabs.fetch()
+
     # Set up the timeout message dialog.
     $('#lost_connection').dialog
       autoOpen: false
