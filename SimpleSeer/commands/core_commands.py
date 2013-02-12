@@ -295,7 +295,10 @@ class ExportImagesCommand(Command):
         "Dump the images stored in the database to a local directory in standard image format"
         from SimpleSeer import models as M
         from SimpleSeer.Session import Session
+        from SimpleSeer.util import jsonencode
         import ast
+        import urllib2
+        
         
         query = {}
         if self.options.query:
