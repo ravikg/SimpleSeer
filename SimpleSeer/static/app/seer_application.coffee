@@ -31,7 +31,7 @@ module.exports = SeerApplication =
     # Set up the client name.
     $('#client-name').html(window.SimpleSeer.settings.ui_pagename || "")
 
-    if !@isMobile
+    if window.WebSocket?
       @socket = io.connect '/rt'
       #@.socket.on 'timeout', ->
       #@.socket.on 'connect', ->
@@ -99,7 +99,10 @@ module.exports = SeerApplication =
             @alert(alert.message, alert.alert_type)
         ))
       when "redirect"
-        window.SimpleSeer.router.navigate(message, true)
+        if message is "@rebuild"
+          window.location.reload()
+        else 
+          window.SimpleSeer.router.navigate(message || window.location.hash, true)
       else 
         if !message then return false
         _duplicate = false

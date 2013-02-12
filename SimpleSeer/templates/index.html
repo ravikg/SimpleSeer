@@ -6,11 +6,11 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="viewport" content="width=device-width">
+    <meta name="viewport" content="width=1200">
     <script type="text/javascript">
-      cacheHashes = {{MD5Hashes|tojson|safe}}
+      cacheHashes = {{params.MD5Hashes|tojson|safe}}
     </script>
-    {% for key, value in MD5Hashes.items() %}
+    {% for key, value in params.MD5Hashes.items() %}
       {%if value.type == "js"%}
     <script type="text/javascript" src="{{key}}?v={{value.path}}"></script>
       {%elif value.type == "css" %}
@@ -25,7 +25,6 @@
     <script type="text/javascript">require('initialize');</script>
     <title>{% block title %}Sight Machine{% endblock %}</title>
   </head>
-    
   <body> 
     {% block header %}
   <header>

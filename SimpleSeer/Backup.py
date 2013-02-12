@@ -1,6 +1,9 @@
 from yaml import load, dump
 from .base import jsonencode, jsondecode
 
+import os
+from socket import gethostname
+
 from datetime import datetime
 
 import models as M
@@ -119,7 +122,24 @@ class Backup:
             log.warn('Import failed: %s' % err.strerror)
             return
             
-        objs = load(yaml)        
+        objs = load(yaml)
+                
+        altMeta = gethostname() + '_seer_export.yaml'
+        if os.path.isfile(altMeta):
+            log.info('Overriding meta with %s' % altMeta)
+            altMetaList = load(open(altMeta))
+        
+            for alt in altMetaList:
+                # First, try to find a corresponding entry to update
+                found = False
+                for obj in objs:
+                    if alt['type'] == obj['type'] and alt['obj']['id'] == obj['obj']['id']:
+                        found = True
+                        obj['obj'].update(alt['obj'])
+                
+                # If no entry found, append the result
+                if not found:
+                    objs.append(alt)
         
         ms = MetaSchedule()
         log.info('Loading new metadata')
