@@ -151,6 +151,7 @@ Once that is installed you will need to install the following:
 		http://nodejs.org/dist/v0.8.18/x64/node-v0.8.18-x64.msi
 		http://miru.hk/archive/ZeroMQ-2.2.0~miru1.0-win64.exe
 		https://github.com/downloads/zeromq/pyzmq/pyzmq-2.2.0.win32-py2.7.msi
+		http://pandas.pydata.org/getpandas.html (get the version you need x32 or x64)
 
 
 Mongo on windows:
