@@ -105,6 +105,10 @@ class WebCommand(Command):
             self.log.info('Could not create indexes')
             
         web = WebServer(make_app())
+        
+        from SimpleSeer.Backup import Backup
+        Backup.importAll(None, False, True, True)
+        
         try:
             web.run_gevent_server()
         except KeyboardInterrupt as e:

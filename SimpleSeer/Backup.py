@@ -10,6 +10,7 @@ import models as M
 
 from .realtime import ChannelManager
 import mongoengine
+from bson import ObjectId
 
 import logging
 log = logging.getLogger(__name__)
@@ -98,7 +99,7 @@ class Backup:
             Export.exportAll()
 
     @classmethod
-    def importAll(self, fname=None, clean=False, skip=False):
+    def importAll(self, fname=None, clean=False, skip=False, checkOnly=False):
         from .models.MetaSchedule import MetaSchedule
         
         if clean:
@@ -123,13 +124,13 @@ class Backup:
             M.OLAP.objects.delete()
             M.Chart.objects.delete()
             M.Dashboard.objects.delete()
-        else:
+        elif not checkOnly:
             log.info('Preserving old metadata.  Any new results/features will be appended to existing results/features')
         
         if not fname:
             fname = 'seer_export.yaml'
             
-        log.info('Importing from %s' % fname)
+        log.info('Checking meta in file %s' % fname)
         try:
             f = open(fname, 'r')
             yaml = f.read()
@@ -158,15 +159,15 @@ class Backup:
                     objs.append(alt)
         
         ms = MetaSchedule()
-        log.info('Loading new metadata')
+        #log.info('Loading new metadata')
         for o in objs:
             try:
                 model = M.__getattribute__(o['type']).objects.get(id=o['obj']['id'])
-                log.info('Updating %s' % model)
+                #log.info('Updating %s' % model)
             except:
                 model = M.__getattribute__(o['type'])()
                 model._data[None] = o['obj']['id']
-                log.info('Creating new %s' % o['type'])
+                #log.info('Creating new %s' % o['type'])
             
             for k, v in o['obj'].iteritems():
                 # Enqueue items for backfill only if method changed or if clean
@@ -177,17 +178,37 @@ class Backup:
                         ms.enqueue_inspection(model.id)
                 
                 if k != 'id':
-                    model.__setattr__(k, v)
+                    if type(getattr(getattr(M, (o['type'])), k)) == mongoengine.base.ObjectIdField:
+                        model.__setattr__(k, ObjectId(v))
+                    else:
+                        model.__setattr__(k, v)
                 
             
-            # When saving make sure measurements dont re-run their backfill
-            if o['type'] == 'Measurement':
-                model.save(skipBackfill=True)
+            if not checkOnly:
+                # When saving make sure measurements dont re-run their backfill
+                if o['type'] == 'Measurement':
+                    model.save(skipBackfill=True)
+                else:
+                    model.save()
             else:
-                model.save()
+                same = False
+                for existing in M.__getattribute__(o['type']).objects:
+                    if model == existing:
+                        same = True
+                        
+                if same == False:
+                    log.warn('****************************************************************')
+                    log.warn('* WARNING: ')
+                    log.warn('* Metadata does not match current system')
+                    log.warn('* ' + model.__repr__())
+                    log.warn('* Exporting changes to meta will overwrite existing settings')
+                    log.warn('****************************************************************')
+                
+        
+                    
     
         if not skip:
             log.info('Beginning backfill')
             ms.run()
-        else:
+        elif not checkOnly:
             log.info('Skipping backfill')
