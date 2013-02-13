@@ -18,6 +18,19 @@ class Context(SimpleDoc, mongoengine.Document):
 
     def __repr__(self):
         return "[%s Object <%s> ]" % (self.__class__.__name__, self.name)
+        
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            # Note: ignoring name to test if this context is functionally equivalent to other inspection (name is irrelevant)
+            banlist = [None]
+            params = [ a for a in self.__dict__['_data'] if not a in banlist ]
+            
+            for p in params:
+                if self.__getattribute__(p) != other.__getattribute__(p):
+                    return False
+            return True            
+        else:
+            return False
           
     def save(self, *args, **kwargs):        
         # TODO: loop through all context and update like menu items where menuItem.unique == 0
