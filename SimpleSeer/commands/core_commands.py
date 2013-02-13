@@ -391,8 +391,6 @@ class ImportImagesCommand(Command):
     def run(self):
         import SimpleSeer.models as M
         
-        import pdb; pdb.set_trace()
-        
         M.Frame._get_db().frame.ensure_index("metadata.filename")
         
         lastimport = 0  #time of last import in epoch, default to epoch
