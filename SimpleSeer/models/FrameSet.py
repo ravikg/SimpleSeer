@@ -62,9 +62,6 @@ class FrameSet(SimpleDoc, mongoengine.Document):
         if saveCams:
             self.saveCams = saveCams
         
-        epoch_ms = timegm(self.capturetime.timetuple()) * 1000 + self.capturetime.microsecond / 1000
-        self.capturetime_epoch = epoch_ms
-        
         for req in inspNames:
             self.reqInspections.append(Inspection.objects.get(name=req).id)
 
