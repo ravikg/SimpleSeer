@@ -1,5 +1,5 @@
 from yaml import load, dump
-from .base import jsonencode, jsondecode
+#from .base import jsonencode, jsondecode
 
 import os
 from socket import gethostname
@@ -53,7 +53,7 @@ class Backup:
                         if key == None:
                             exportDict['id'] = str(val)
                         elif key and val != getattr(objClass, key).default:
-                            exportDict[key] = jsonencode(val)
+                            exportDict[key] = Backup.toPythonType(val)
                         
                     toExport.append({'type': exportName, 'obj': exportDict})
         yaml = dump(toExport, default_flow_style=False)
@@ -67,6 +67,22 @@ class Backup:
         f = open(filename, 'w')
         f.write(yaml)
         f.close()
+        
+    @classmethod
+    def toPythonType(self, obj):
+        from bson import ObjectId
+        
+        # Convert various unicode, mongoengine, and other formats into basic python types
+        if type(obj) == unicode:
+            return str(obj)
+        elif type(obj) == ObjectId:
+            return str(obj)
+        elif type(obj) == dict:
+            return { str(key): Backup.toPythonType(val) for key, val in obj.iteritems() }    
+        elif type(obj) == list:
+            return [ Backup.toPythonType(val) for val in obj ]
+        else:
+            return obj
         
     @classmethod
     def listen(self):
@@ -153,17 +169,15 @@ class Backup:
                 log.info('Creating new %s' % o['type'])
             
             for k, v in o['obj'].iteritems():
-                #v = jsondecode(v)
-                
                 # Enqueue items for backfill only if method changed or if clean
-                if k == 'method' and (jsondecode(v) != getattr(model, 'method') or clean) and not skip:
+                if k == 'method' and (v != getattr(model, 'method') or clean) and not skip:
                     if o['type'] == 'Measurement':
                         ms.enqueue_measurement(model.id)
                     else:
                         ms.enqueue_inspection(model.id)
                 
                 if k != 'id':
-                    model.__setattr__(k, jsondecode(v))
+                    model.__setattr__(k, v)
                 
             
             # When saving make sure measurements dont re-run their backfill
