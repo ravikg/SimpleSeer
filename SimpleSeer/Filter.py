@@ -103,6 +103,7 @@ class Filter():
         
         # And we always need the features and results
         
+        """
         if projFeat:
             p = self.rewindFields('features')
             fields.update(p)
@@ -111,7 +112,8 @@ class Filter():
             p = self.rewindFields('results')
             fields.update(p)
             del fields['results']
-            
+        """
+        
         # Always want the 'id' field, which sometimes comes through as _id
         fields['id'] = '$_id'
         return [{'$project': fields}]
