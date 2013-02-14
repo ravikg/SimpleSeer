@@ -124,6 +124,7 @@ class Backup:
             M.OLAP.objects.delete()
             M.Chart.objects.delete()
             M.Dashboard.objects.delete()
+            M.Context.objects.delete()
         elif not checkOnly:
             log.info('Preserving old metadata.  Any new results/features will be appended to existing results/features')
         
