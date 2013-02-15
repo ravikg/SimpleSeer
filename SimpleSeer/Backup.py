@@ -1,5 +1,5 @@
 from yaml import load, dump
-from .base import jsonencode, jsondecode
+#from .base import jsonencode, jsondecode
 
 import os
 from socket import gethostname
@@ -10,6 +10,7 @@ import models as M
 
 from .realtime import ChannelManager
 import mongoengine
+from bson import ObjectId
 
 import logging
 log = logging.getLogger(__name__)
@@ -53,7 +54,7 @@ class Backup:
                         if key == None:
                             exportDict['id'] = str(val)
                         elif key and val != getattr(objClass, key).default:
-                            exportDict[key] = jsonencode(val)
+                            exportDict[key] = Backup.toPythonType(val)
                         
                     toExport.append({'type': exportName, 'obj': exportDict})
         yaml = dump(toExport, default_flow_style=False)
@@ -69,6 +70,22 @@ class Backup:
         f.close()
         
     @classmethod
+    def toPythonType(self, obj):
+        from bson import ObjectId
+        
+        # Convert various unicode, mongoengine, and other formats into basic python types
+        if type(obj) == unicode:
+            return str(obj)
+        elif type(obj) == ObjectId:
+            return str(obj)
+        elif type(obj) == dict:
+            return { str(key): Backup.toPythonType(val) for key, val in obj.iteritems() }    
+        elif type(obj) == list:
+            return [ Backup.toPythonType(val) for val in obj ]
+        else:
+            return obj
+        
+    @classmethod
     def listen(self):
         
         log.info('Subscribing to meta/ channel for updates')
@@ -82,7 +99,7 @@ class Backup:
             Export.exportAll()
 
     @classmethod
-    def importAll(self, fname=None, clean=False, skip=False):
+    def importAll(self, fname=None, clean=False, skip=False, checkOnly=False):
         from .models.MetaSchedule import MetaSchedule
         
         if clean:
@@ -107,13 +124,14 @@ class Backup:
             M.OLAP.objects.delete()
             M.Chart.objects.delete()
             M.Dashboard.objects.delete()
-        else:
+            M.Context.objects.delete()
+        elif not checkOnly:
             log.info('Preserving old metadata.  Any new results/features will be appended to existing results/features')
         
         if not fname:
             fname = 'seer_export.yaml'
             
-        log.info('Importing from %s' % fname)
+        log.info('Checking meta in file %s' % fname)
         try:
             f = open(fname, 'r')
             yaml = f.read()
@@ -142,38 +160,56 @@ class Backup:
                     objs.append(alt)
         
         ms = MetaSchedule()
-        log.info('Loading new metadata')
+        #log.info('Loading new metadata')
         for o in objs:
             try:
                 model = M.__getattribute__(o['type']).objects.get(id=o['obj']['id'])
-                log.info('Updating %s' % model)
+                #log.info('Updating %s' % model)
             except:
                 model = M.__getattribute__(o['type'])()
                 model._data[None] = o['obj']['id']
-                log.info('Creating new %s' % o['type'])
+                #log.info('Creating new %s' % o['type'])
             
             for k, v in o['obj'].iteritems():
-                #v = jsondecode(v)
-                
                 # Enqueue items for backfill only if method changed or if clean
-                if k == 'method' and (jsondecode(v) != getattr(model, 'method') or clean) and not skip:
+                if k == 'method' and (v != getattr(model, 'method') or clean) and not skip:
                     if o['type'] == 'Measurement':
                         ms.enqueue_measurement(model.id)
                     else:
                         ms.enqueue_inspection(model.id)
                 
                 if k != 'id':
-                    model.__setattr__(k, jsondecode(v))
+                    if type(getattr(getattr(M, (o['type'])), k)) == mongoengine.base.ObjectIdField:
+                        model.__setattr__(k, ObjectId(v))
+                    else:
+                        model.__setattr__(k, v)
                 
             
-            # When saving make sure measurements dont re-run their backfill
-            if o['type'] == 'Measurement':
-                model.save(skipBackfill=True)
+            if not checkOnly:
+                # When saving make sure measurements dont re-run their backfill
+                if o['type'] == 'Measurement':
+                    model.save(skipBackfill=True)
+                else:
+                    model.save()
             else:
-                model.save()
+                same = False
+                for existing in M.__getattribute__(o['type']).objects:
+                    if model == existing:
+                        same = True
+                        
+                if same == False:
+                    log.warn('****************************************************************')
+                    log.warn('* WARNING: ')
+                    log.warn('* Metadata does not match current system')
+                    log.warn('* ' + model.__repr__())
+                    log.warn('* Exporting changes to meta will overwrite existing settings')
+                    log.warn('****************************************************************')
+                
+        
+                    
     
         if not skip:
             log.info('Beginning backfill')
             ms.run()
-        else:
+        elif not checkOnly:
             log.info('Skipping backfill')

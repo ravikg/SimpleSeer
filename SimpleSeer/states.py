@@ -7,7 +7,6 @@ from worker import ping_worker, execute_inspection
 import zmq
 import gevent
 
-from guppy import hpy
 
 from . import models as M
 from . import util
@@ -327,6 +326,7 @@ class Core(object):
             cam.set_rate(rate_in_hz)
 
     def tick(self):
+        #~ from guppy import hpy
         self._handle_events()
         self._clock.tick()
             
@@ -334,7 +334,7 @@ class Core(object):
             self._mem_prof_ticker += 1
             if self._mem_prof_ticker == int(self.config.memprofile):
                 self._mem_prof_ticker = 0
-                self.log.info(hpy().heap())
+                #~ self.log.info(hpy().heap())
             
     def _handle_events(self):
         while True:

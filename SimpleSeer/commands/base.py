@@ -2,7 +2,6 @@ import time
 import threading
 
 import gevent
-import guppy
 import os.path
 import warnings
 
@@ -63,6 +62,7 @@ class Command(object):
 
     def _start_profile_heap(self):
         def profiler():
+            import guppy
             while True:
                 h = guppy.hpy()
                 print h.heap()

@@ -2,6 +2,7 @@ numpy==1.6.1
 PIL==1.1.7
 pygame==1.9.1release
 pyparsing==1.5.2
+watchdog=0.6.0
 ipython==0.13.1
 matplotlib==1.2.0
 mongoengine==0.7.9

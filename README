@@ -136,22 +136,37 @@ explains how to manually install it.
 
 
 
-Optional Libraries
-============
-ZBAR
-This is a simplecv optional library that performs barcode reading.
+Windows
+--------------------------------------
+Sadly installing SimpleSeer on windows is a bit more of a manually process.
+You will need to have SimpleCV installed for it to run, please follow the
+instructions here:
 
-See:
-	http://pypi.python.org/pypi/zbar	
-Or:
-	sudo easy_install zbar 
-============
-TESSERACT
-This is a simplecv optional library that performs optical character recogntion (OCR). 
-Make sure to install the tesseract libraries and required python bindings
+		https://github.com/ingenuitas/SimpleCV#windows-7vista
 
-See:
-http://code.google.com/p/python-tesseract/wiki/HowToCompilePythonTesseract
+Once that is installed you will need to install the following:
 
+		http://pypi.python.org/packages/2.7/g/gevent/gevent-0.13.8.win32-py2.7.msi
+		http://git-scm.com/download/win
+		http://nodejs.org/dist/v0.8.18/x64/node-v0.8.18-x64.msi
+		http://miru.hk/archive/ZeroMQ-2.2.0~miru1.0-win64.exe
+		https://github.com/downloads/zeromq/pyzmq/pyzmq-2.2.0.win32-py2.7.msi
+		http://pandas.pydata.org/getpandas.html (get the version you need x32 or x64)
+
+
+Mongo on windows:
+======================================
+You will need to download mongo for windows:
+
+		http://downloads.mongodb.org/win32/mongodb-win32-x86_64-2.2.3.zip
+
+And then follow the insructions at:
+
+		http://docs.mongodb.org/manual/tutorial/install-mongodb-on-windows/
 	
-	
+
+You should be good to run basic SimpleSeer tasks. Some libraries may
+have been added since this README has been updated and may require manually
+installing libraries.
+
+

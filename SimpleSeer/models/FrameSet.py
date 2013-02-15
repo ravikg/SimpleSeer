@@ -30,12 +30,12 @@ class FrameSet(SimpleDoc, mongoengine.Document):
     capturetime_epoch = mongoengine.IntField(default = 0)
     updatetime = mongoengine.DateTimeField()
     localtz = mongoengine.StringField(default='UTC')
-    features = mongoengine.ListField(mongoengine.EmbeddedDocumentField(FrameFeature))
-    results = mongoengine.ListField(mongoengine.EmbeddedDocumentField(ResultEmbed))
-    metadata = mongoengine.DictField()
-    frames = mongoengine.ListField()
-    reqInspections = mongoengine.ListField()
-    saveCams = mongoengine.ListField()
+    features = mongoengine.ListField(mongoengine.EmbeddedDocumentField(FrameFeature), default=[])
+    results = mongoengine.ListField(mongoengine.EmbeddedDocumentField(ResultEmbed), default=[])
+    metadata = mongoengine.DictField(default={})
+    frames = mongoengine.ListField(default=[])
+    reqInspections = mongoengine.ListField(default=[])
+    saveCams = mongoengine.ListField(default=[])
 
     meta = {
         'indexes': ["capturetime", "-capturetime", 
@@ -62,18 +62,8 @@ class FrameSet(SimpleDoc, mongoengine.Document):
         if saveCams:
             self.saveCams = saveCams
         
-        self.capturetime = self.updatetime = datetime.utcnow()
-        epoch_ms = timegm(self.capturetime.timetuple()) * 1000 + self.capturetime.microsecond / 1000
-        self.capturetime_epoch = epoch_ms
-        self.localtz = 'UTC'
-        self.features = []
-        self.results = []
-
         for req in inspNames:
             self.reqInspections.append(Inspection.objects.get(name=req).id)
-
-        for fid in self.frames:
-            self._frames.append(Frame.objects.get(id=fid))
 
     def add(self, frame):
         if self.metadata:
