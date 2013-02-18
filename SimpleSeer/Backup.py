@@ -29,7 +29,8 @@ class Backup:
                       {'name': 'OLAP', 'sort': 'name'}, 
                       {'name': 'Chart', 'sort': 'name'}, 
                       {'name': 'Dashboard', 'sort': 'name'},
-                      {'name': 'Context', 'sort': 'name'}]
+                      {'name': 'Context', 'sort': 'name'},
+                      {'name': 'TabContainer', 'sort': 'name'}]
         
         toExport = []
         for exportDef in exportable:
