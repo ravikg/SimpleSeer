@@ -1,8 +1,0 @@
-if False:
-    from base import *
-    from Session import Session
-    from SimpleSeer import SimpleSeer 
-    from Inspection import Inspection
-    from Measurement import Measurement
-    from Frame import Frame
-
