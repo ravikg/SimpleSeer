@@ -47,9 +47,6 @@ module.exports = SeerApplication =
     t = require 'views/core/modal'
     @modal = new t()
 
-    tc = require 'collections/tab_container'
-    tabs = new tc()
-    tabs.fetch()
 
     # Set up the timeout message dialog.
     $('#lost_connection').dialog
@@ -58,6 +55,17 @@ module.exports = SeerApplication =
       buttons:
         Ok: ->
           $( this ).dialog( "close" )
+
+  _preinitialize: ->
+    tc = require 'collections/tab_container'
+    @tabs = new tc()
+    @tabs.fetch()
+  
+  route: (route, name=false, callback= =>) ->
+    console.log route,name,callback
+    for r in Backbone.history.handlers
+      console.log r
+    @router.route route, name, callback
 
 
   # Sends an alert window to the client
