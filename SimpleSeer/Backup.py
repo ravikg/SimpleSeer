@@ -28,7 +28,7 @@ class Backup:
                       {'name': 'Watcher', 'sort': 'name'},
                       {'name': 'OLAP', 'sort': 'name'}, 
                       {'name': 'Chart', 'sort': 'name'}, 
-                      {'name': 'Dashboard', 'sort': 'name'},
+                      {'name': 'Dashboard', 'sort': 'id'},
                       {'name': 'Context', 'sort': 'name'},
                       {'name': 'TabContainer', 'sort': 'name'}]
         
