@@ -1,0 +1,33 @@
+<div id="records-list">
+  {{#each records}}
+  <div class="record-list-item">
+    <div class="body">
+      <div class="block">
+      	 {{#if attributes.imgfile }}
+           <img src="/imgfile/{{attributes.imgfile}}">
+         {{else}}
+           <img src="#">
+         {{/if}}
+      </div>
+      <div class="block">
+      	<ul>
+        {{#key_value attributes}}
+          {{#not_in this needle=this.key haystack=../../blackList.fields }}
+          <li>{{this.key}}:<span>{{this.value}}</span></li>
+          {{/not_in}}
+        {{/key_value}}
+        </ul>
+      </div>
+      <div class="block">
+        <ul>
+        {{#key_value attributes.metadata}}
+          {{#not_in this needle=this.key haystack=../../blackList.metadata }}
+            <li>{{this.key}}:<span>{{this.value}}</span></li>
+          {{/not_in}}
+        {{/key_value}}
+        </ul>
+      </div>
+    </div>
+  </div>
+  {{/each}}
+</div>

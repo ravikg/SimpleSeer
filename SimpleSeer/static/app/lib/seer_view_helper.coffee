@@ -143,3 +143,9 @@ Handlebars.registerHelper "key_value", (obj, fn) ->
       value: obj[k]
     )
   retVal
+  
+Handlebars.registerHelper "not_in", (context, options) ->
+  if options.hash.needle in options.hash.haystack
+    options.inverse context
+  else
+    options.fn context
