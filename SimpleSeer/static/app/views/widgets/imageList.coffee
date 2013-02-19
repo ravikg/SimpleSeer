@@ -15,7 +15,7 @@ module.exports = class imageList extends SubView
       if @options.parent.options.widget.blackList.metadata
         @blackList.metadata = @options.parent.options.widget.blackList.metadata
     bindFilter = application.context[@options.parent.dashboard.options.parent.options.context].filtercollection
-    @filtercollection = new FilterCollection([],{bindFilter:bindFilter,model:Frame})
+    @filtercollection = new FilterCollection([],{bindFilter:bindFilter,model:Frame,clearOnFetch:false})
     @filtercollection.on "reset", @addObjs
     super()
 
@@ -28,7 +28,15 @@ module.exports = class imageList extends SubView
           $('#views').addClass('wide')
           $('#content').addClass('wide')
     @filtercollection.subscribe('',@receive)
+    $('#slides').on 'scroll', @loadMore
     return @
+
+  loadMore: (evt)=>
+    if ($('#slides').scrollTop() >=  $('#main').height() - $(document).height() + 104) && !application.isLoading() && @$el.is(":visible")
+      if @filtercollection.lastavail == 20 
+        @$el.find('#loading_message').fadeIn('fast')
+        @filtercollection.setParam('skip', (@filtercollection.getParam('skip') + @filtercollection._defaults.limit))
+        @filtercollection.fetch({forceRefresh:true})
     
   addObjs: =>
     @render()
