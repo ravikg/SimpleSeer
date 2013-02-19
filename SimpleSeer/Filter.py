@@ -84,7 +84,13 @@ class Filter():
         proj = []
        
         # Have to unwind results so they get reconstructed as a single array when re-grouping
-        proj.append({'$unwind': '$results'})
+        # But need to make sure results exists so it doesn't just get clobbered
+        
+        
+        if Frame._get_db().frame.find({'results': []}).count() != Frame.objects.count():
+            proj.append({'$unwind': '$results'})
+
+
         grpField = grp['groupby']
        
         grpFns = {'id': 'first', 'metadata': 'first', 'capturetime': 'first', 'capturetime_epoch': 'first', 'results': 'first'}
