@@ -207,7 +207,7 @@ def getFrames(filter_params):
         limit = 50000
     
     sortinfo = params.get('sortinfo', {})
-    groupByField = params.get('groupByField',None)
+    groupByField = params.get('groupByField',{})
     query = params['query']
     
     f = Filter()
