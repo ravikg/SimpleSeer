@@ -16,7 +16,7 @@ class Filter():
     
     names = {}
     
-    def getFrames(self, allFilters={}, skip=0, limit=float("inf"), sortinfo = {}, groupByField = '', collection='frame'):
+    def getFrames(self, allFilters={}, skip=0, limit=float("inf"), sortinfo = {}, groupByField = {}, collection='frame'):
         pipeline = []
         
         # Filter the data based on the filter parameters
@@ -80,14 +80,29 @@ class Filter():
         #return len(cmd['result']), results
         return -1, results    
         
-    def groupBy(self, groupByField):
-       proj = []
+    def groupBy(self, grp):
+        proj = []
        
-       # Have to unwind results so they get reconstructed as a single array when re-grouping
-       proj.append({'$unwind': '$results'})
-       proj.append({'$group': {'_id': '$' + groupByField, 'id': {'$first': '$id'}, 'metadata': {'$first': '$metadata'}, 'capturetime': {'$first': '$capturetime'}, 'capturetime_epoch': {'$first': '$capturetime_epoch'}, 'localtz': {'$first': '$localtz'}, 'results': {'$addToSet': '$results'}}})
+        # Have to unwind results so they get reconstructed as a single array when re-grouping
+        proj.append({'$unwind': '$results'})
+        grpField = grp['groupby']
+       
+        grpFns = {'id': 'first', 'metadata': 'first', 'capturetime': 'first', 'capturetime_epoch': 'first', 'results': 'first'}
+        grpFns.update(grp['groupfns'])
+       
+        final = {'_id': '$' + grpField}
+        for key, val in grpFns.iteritems():
+            if val == 'list':
+                final[key] = {'$addToSet': '$' + key}
+            elif val == 'size':
+                final[key] = {'$sum': 1}
+            else:
+                final[key] = {'$' + val: '$' + key}
+            
+        proj.append({'$group': final})
+        #proj.append({'$group': {'_id': '$' + grpField, 'id': {'$first': '$id'}, 'metadata': {'$first': '$metadata'}, 'capturetime': {'$first': '$capturetime'}, 'capturetime_epoch': {'$first': '$capturetime_epoch'}, 'localtz': {'$first': '$localtz'}, 'results': {'$addToSet': '$results'}}})
  
-       return proj
+        return proj
         
     def initialFields(self, projResult = False, projFeat = False):
         # This is a pre-filter of the relevant fields
