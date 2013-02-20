@@ -101,7 +101,6 @@ module.exports = class FilterCollection extends Collection
     @_boundCollections.push collection
 
   subscribe: (channel,callback=@receive) =>
-    console.log 'hit'
     if channel?
       if @name
         namePath = @name + '/'

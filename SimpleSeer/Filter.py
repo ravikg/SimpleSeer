@@ -34,7 +34,7 @@ class Filter():
         # Need to initialize the fields for the query.  Do this sparingly, as mongo has major memory limitations
         #pipeline += self.initialFields(projResult = resCount, projFeat = featCount)
        
-        if groupByField: 
+        if groupByField and groupByField['groupby']: 
             pipeline += self.groupBy(groupByField)
         
         # Apply the sort criteria
