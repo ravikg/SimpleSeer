@@ -224,10 +224,7 @@ module.exports = class FilterCollection extends Collection
         order: @getParam 'sortorder'
         
     if @getParam('groupby')
-      _json['groupByField'] = 
-        groupby: @getParam('groupby')
-        groupfns: @getParam('groupfns')
-    
+      _json['groupByField'] = {groupby: @getParam('groupby'), groupfns: @getParam('groupfns')}
     #if groupByField
     #  _json['groupByField'] = groupByField
     if addParams
