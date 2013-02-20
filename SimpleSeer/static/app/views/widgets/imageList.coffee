@@ -27,7 +27,7 @@ module.exports = class imageList extends SubView
           $('#views-contain').addClass('wide scroll')
           $('#views').addClass('wide')
           $('#content').addClass('wide')
-    @filtercollection.subscribe('',@receive)
+    @filtercollection.subscribe('frame',@receive)
     $('#slides').on 'scroll', @loadMore
     return @
 
@@ -39,6 +39,11 @@ module.exports = class imageList extends SubView
         @filtercollection.fetch({forceRefresh:true})
     
   addObjs: =>
+    @render()
+    
+  receive: (data) =>
+    console.dir data.data
+    @filtercollection.add data.data
     @render()
     
   getRenderData: =>
