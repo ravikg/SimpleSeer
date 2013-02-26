@@ -3,6 +3,7 @@
 # Each deployment will extend this definition
 # to provide additional functionality.
 
+require 'lib/view_helper'
 require 'lib/transitions'
 
 module.exports = SeerApplication =
@@ -47,8 +48,14 @@ module.exports = SeerApplication =
     t = require 'views/core/modal'
     @modal = new t()
 
+    
+    $("#slides").infiniteScroll
+      onScroll:(per) =>
+        @activeTab.trigger 'scroll', per
+      onPage: =>
+        @activeTab.trigger 'page'
 
-    # Set up the timeout message dialog.
+        # Set up the timeout message dialog.
     $('#lost_connection').dialog
       autoOpen: false
       modal: true

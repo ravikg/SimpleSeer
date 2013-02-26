@@ -20,14 +20,14 @@
 				var wrapperHeight = self.find("." + defaults.wrapper).height();
 
 				if( selfScroll == 0 ) { percent = 0; }
-				else if( wrapperHeight - selfHeight <= selfScroll ) { percent = 100; }
 				else { percent = (selfScroll) / (wrapperHeight - selfHeight); percent = Math.ceil(percent * 100); }
 				
-				if( percent == 100 ) {
-					trigger();
-				} else {
-					defaults.onScroll(percent);
+
+				if( wrapperHeight - selfHeight <= selfScroll ) {
+					trigger();				
 				}
+
+				defaults.onScroll(percent);
 			});
 		});
 	}
