@@ -182,7 +182,7 @@ class Frame(SimpleDoc, mongoengine.Document):
                 skip = False
             realtime.ChannelManager().publish('frame/', dict(
                 id = str(self.id),
-                capturetime = timegm(self.capturetime.timetuple()),
+                capturetime = self.capturetime,
                 capturetime_epoch = self.capturetime_epoch,
                 updatetime = timegm(self.updatetime.timetuple()),
                 localtz = self.localtz,

@@ -92,6 +92,8 @@ class FrameSet(SimpleDoc, mongoengine.Document):
         return True
         
     def save(self, *args, **kwargs):
+        from SimpleSeer.realtime import ChannelManager
+        
         for f in self._frames:
             if self.saveCams and not f.camera in self.saveCams:
                 f.skipOLAP = True            
@@ -108,6 +110,7 @@ class FrameSet(SimpleDoc, mongoengine.Document):
         
         super(FrameSet, self).save(*args, **kwargs) 
         
+        ChannelManager().publish('frame_set/', self)
             
     def __repr__(self):
         return "FrameSet of %s frames" % len(self.frames)
