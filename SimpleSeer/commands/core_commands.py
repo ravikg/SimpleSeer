@@ -344,9 +344,9 @@ class ImportImagesCommand(Command):
     
     def __init__(self, subparser):
         #subparser.add_argument("-w", "--watch", dest="watch", help="continue watching the directory", action="store_true", default=False)
+        subparser.add_argument("dir", nargs=1, help="Directory to import/watch from")
         subparser.add_argument("-s", "--schema", dest="schema", default="{database}__{count}__{time}__{camera}", nargs="?", help="Schema for filenames.  Special terms are {time} {camera}, otherwise data will get pushed into metadata.  Python named regex blocks (?P<NAME>.?) may also be used")
         subparser.add_argument("-p", "--withpath", dest="withpath", default=False, action="store_true", help="Match schema on the full path (default to filename)")
-        subparser.add_argument("-d", "--dir", dest="dir", nargs="?", default=".", help="Directory to import/watch from")
         subparser.add_argument("-r", "--recursive", dest="recursive", default=False, action="store_true")
         subparser.add_argument("-f", "--files", dest="files", nargs="?", default="*[bmp|jpg|png]", help="Glob descriptor to describe files to accept")
         subparser.add_argument("-n", "--new", dest="new", default=False, action="store_true", help="Only import files written since the most recent Frame")
@@ -438,9 +438,9 @@ class ImportImagesCommand(Command):
             #walk the tree, match on our "files" glob, if the mtime > lastimport
             files = itertools.chain(
                 *[[os.path.join(a, fname) for fname in fnmatch.filter(c, self.options.files) if os.path.getmtime(os.path.join(a, fname)) > lastimport]
-                    for a, b, c in os.walk(self.options.dir)])
+                    for a, b, c in os.walk(self.options.dir[0])])
         else:
-            files = [ f for f in glob.glob(os.path.join(self.options.dir, self.options.files)) if os.path.getmtime(f) > lastimport ]
+            files = [ f for f in glob.glob(os.path.join(self.options.dir[0], self.options.files)) if os.path.getmtime(f) > lastimport ]
         
         for f in files:
             if len(M.Frame.objects(metadata__filename = f, **metadata_params)):
