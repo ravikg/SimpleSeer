@@ -418,7 +418,7 @@ class ImportImagesCommand(Command):
             if m == '{time}':
                 return "(?P<time>.*?)"
             if m == '{camera}':
-                return "(?P<camera>\w+)"
+                return "(?P<camera>.*?)"
             else:
                 return "(?P<" + m[1:-1] + ">.*?)"
         
