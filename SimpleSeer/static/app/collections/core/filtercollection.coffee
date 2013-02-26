@@ -60,13 +60,14 @@ module.exports = class FilterCollection extends Collection
 
     super(models,params)
     
-    # bindFilter:
-    #   an instance of FilterCollection that when changed, bubbles the filter
+    # ###bindFilter:
+    #   An instance of FilterCollection that when changed, bubbles the filter
     #   up through all bound filters.
-    #   example: Creating a FilterCollection with mute on, then creating
-    #            5 other FilterCollections bound to the initial instance.
-    #            when you change the initial FilterCollection, all others
-    #            refresh with filter settings
+    #   example:
+    #   > Creating a FilterCollection with mute on, then creating
+    #   > 5 other FilterCollections bound to the initial instance.
+    #   > when you change the initial FilterCollection, all others
+    #   > refresh with filter settings
     if params.bindFilter
       params.bindFilter.subCollection @
       @bindFilter = params.bindFilter
@@ -256,7 +257,7 @@ module.exports = class FilterCollection extends Collection
       @_all = []
     for i,o of @callbackStack['post']
       if typeof o == 'function'
-        o()
+        o()        
     @callbackStack['post'] = []
     return
 
@@ -267,6 +268,7 @@ module.exports = class FilterCollection extends Collection
     @raw = response
 
   fetch: (params={}) =>
+    @preFetch()
     if params.forceRefresh
       @models = []
     total = params.total || false
@@ -276,7 +278,6 @@ module.exports = class FilterCollection extends Collection
     if !@mute
       @_all = @models
       @callbackStack['pre'].push params.before
-      @preFetch()
       @callbackStack['post'].push params.success
       params.success = @postFetch
       if @url != _url or params.force
