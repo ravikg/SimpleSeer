@@ -11,6 +11,8 @@ Logical Query:
 "query":{"logic":"and","criteria":[{"type":"left","eq":1,"name":"results.state","logic":"and","criteria":[{"type":"left","eq":1,"name":"results.state"}]}]}
 ###
 
+#groupfns: list, first, last, max, min, avg, sum
+
 module.exports = class FilterCollection extends Collection
   _defaults:
     sortkey:false
@@ -19,7 +21,8 @@ module.exports = class FilterCollection extends Collection
     skip:0
     limit:20
     query:{}
-    groupByField:false
+    groupby:false
+    groupfns:{}
   url:"/getFrames"
   subscribePath:"frame"
   mute:false
@@ -219,9 +222,11 @@ module.exports = class FilterCollection extends Collection
         type: @getParam 'sorttype', ''
         name: @getParam 'sortkey', 'capturetime_epoch'
         order: @getParam 'sortorder'
-    groupByField = @getParam('groupByField')
-    if groupByField
-      _json['groupByField'] = groupByField
+        
+    if @getParam('groupby')
+      _json['groupByField'] = {groupby: @getParam('groupby'), groupfns: @getParam('groupfns')}
+    #if groupByField
+    #  _json['groupByField'] = groupByField
     if addParams
       _json = _.extend _json, addParams
     return _json

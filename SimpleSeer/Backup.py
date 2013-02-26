@@ -28,8 +28,9 @@ class Backup:
                       {'name': 'Watcher', 'sort': 'name'},
                       {'name': 'OLAP', 'sort': 'name'}, 
                       {'name': 'Chart', 'sort': 'name'}, 
-                      {'name': 'Dashboard', 'sort': 'name'},
-                      {'name': 'Context', 'sort': 'name'}]
+                      {'name': 'Dashboard', 'sort': 'id'},
+                      {'name': 'Context', 'sort': 'name'},
+                      {'name': 'TabContainer', 'sort': 'name'}]
         
         toExport = []
         for exportDef in exportable:
@@ -124,6 +125,7 @@ class Backup:
             M.OLAP.objects.delete()
             M.Chart.objects.delete()
             M.Dashboard.objects.delete()
+            M.Context.objects.delete()
         elif not checkOnly:
             log.info('Preserving old metadata.  Any new results/features will be appended to existing results/features')
         

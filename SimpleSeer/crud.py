@@ -44,6 +44,8 @@ def register(app):
         handlers.append(ModelHandler(M.Dashboard, M.DashboardSchema, 'dashboard', '/dashboard'))
     if 'Chart' in dir(M):
         handlers.append(ModelHandler(M.Chart, M.ChartSchema, 'chart', '/chart'))
+    if 'TabContainer' in dir(M):
+        handlers.append(ModelHandler(M.TabContainer, M.TabContainer, 'tabcontainer', '/tabcontainer'))
         
     for h in handlers:
         flask_rest.RESTResource(

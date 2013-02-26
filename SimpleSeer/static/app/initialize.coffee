@@ -18,6 +18,7 @@ $ ->
         application.cloud.initialize()
     catch error
       #cloud not available
+    application._preinitialize()
     application.initialize()
     Backbone.history.start()
     # Freeze the object

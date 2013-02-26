@@ -141,6 +141,8 @@ module.exports = class Series extends FilterCollection
 
   _needShift: (offset=0)=>
     #TODO: remove against, grab from filter
+    if @models.length == 0
+      return false
     against = new moment().subtract('days',5000)
     if @xAxis.type == "datetime"
       if @.at(0) && @.at(0).attributes.x < against

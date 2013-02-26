@@ -37,6 +37,5 @@ setup(name="SimpleSeer",
   zip_safe = False,
   requires=[],
   package_data  = { },
-  scripts=['scripts/simpleseer'],
   data_files=[ ('/etc/',['etc/simpleseer.cfg']) ],
   entry_points=entry_points)

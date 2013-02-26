@@ -16,7 +16,7 @@ class Filter():
     
     names = {}
     
-    def getFrames(self, allFilters={}, skip=0, limit=float("inf"), sortinfo = {}, groupByField = '', collection='frame'):
+    def getFrames(self, allFilters={}, skip=0, limit=float("inf"), sortinfo = {}, groupByField = {}, collection='frame'):
         pipeline = []
         
         # Filter the data based on the filter parameters
@@ -34,7 +34,7 @@ class Filter():
         # Need to initialize the fields for the query.  Do this sparingly, as mongo has major memory limitations
         #pipeline += self.initialFields(projResult = resCount, projFeat = featCount)
        
-        if groupByField: 
+        if groupByField and groupByField['groupby']: 
             pipeline += self.groupBy(groupByField)
         
         # Apply the sort criteria
@@ -80,14 +80,35 @@ class Filter():
         #return len(cmd['result']), results
         return -1, results    
         
-    def groupBy(self, groupByField):
-       proj = []
+    def groupBy(self, grp):
+        proj = []
        
-       # Have to unwind results so they get reconstructed as a single array when re-grouping
-       proj.append({'$unwind': '$results'})
-       proj.append({'$group': {'_id': '$' + groupByField, 'id': {'$first': '$id'}, 'metadata': {'$first': '$metadata'}, 'capturetime': {'$first': '$capturetime'}, 'capturetime_epoch': {'$first': '$capturetime_epoch'}, 'localtz': {'$first': '$localtz'}, 'results': {'$addToSet': '$results'}}})
+        # Have to unwind results so they get reconstructed as a single array when re-grouping
+        # But need to make sure results exists so it doesn't just get clobbered
+        
+        
+        if Frame._get_db().frame.find({'results': []}).count() != Frame.objects.count():
+            proj.append({'$unwind': '$results'})
+
+
+        grpField = grp['groupby']
+       
+        grpFns = {'id': 'first', 'metadata': 'first', 'capturetime': 'first', 'capturetime_epoch': 'first', 'results': 'first'}
+        grpFns.update(grp['groupfns'])
+       
+        final = {'_id': '$' + grpField}
+        for key, val in grpFns.iteritems():
+            if val == 'list':
+                final[key] = {'$addToSet': '$' + key}
+            elif val == 'size':
+                final[key] = {'$sum': 1}
+            else:
+                final[key] = {'$' + val: '$' + key}
+            
+        proj.append({'$group': final})
+        #proj.append({'$group': {'_id': '$' + grpField, 'id': {'$first': '$id'}, 'metadata': {'$first': '$metadata'}, 'capturetime': {'$first': '$capturetime'}, 'capturetime_epoch': {'$first': '$capturetime_epoch'}, 'localtz': {'$first': '$localtz'}, 'results': {'$addToSet': '$results'}}})
  
-       return proj
+        return proj
         
     def initialFields(self, projResult = False, projFeat = False):
         # This is a pre-filter of the relevant fields
@@ -103,6 +124,7 @@ class Filter():
         
         # And we always need the features and results
         
+        """
         if projFeat:
             p = self.rewindFields('features')
             fields.update(p)
@@ -111,7 +133,8 @@ class Filter():
             p = self.rewindFields('results')
             fields.update(p)
             del fields['results']
-            
+        """
+        
         # Always want the 'id' field, which sometimes comes through as _id
         fields['id'] = '$_id'
         return [{'$project': fields}]
