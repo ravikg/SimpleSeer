@@ -343,6 +343,11 @@ class ImportImagesCommand(Command):
     
     
     def __init__(self, subparser):
+        import SimpleSeer.models as M
+        
+        M.Inspection.register_plugins('seer.plugins.inspection')
+        M.Measurement.register_plugins('seer.plugins.measurement')
+        
         #subparser.add_argument("-w", "--watch", dest="watch", help="continue watching the directory", action="store_true", default=False)
         subparser.add_argument("dir", nargs=1, help="Directory to import/watch from")
         subparser.add_argument("-s", "--schema", dest="schema", default="{database}__{count}__{time}__{camera}", nargs="?", help="Schema for filenames.  Special terms are {time} {camera}, otherwise data will get pushed into metadata.  Python named regex blocks (?P<NAME>.?) may also be used")
@@ -366,6 +371,7 @@ class ImportImagesCommand(Command):
         frame.metadata['filename'] = filename
         frame.metadata['mtime'] = os.path.getmtime(filename)
         if template:
+            print filename
             to_match = filename
             if not self.options.withpath:
                 to_match = os.path.basename(filename) 
@@ -393,6 +399,15 @@ class ImportImagesCommand(Command):
         
         frame.metadata.update(metadata)
         frame.image = Image(filename)
+        
+        for inspection in M.Inspection.objects:
+            if not inspection.parent:
+                if not inspection.camera or inspection.camera == frame.camera: 
+                    features = inspection.execute(frame)
+                    frame.features += features
+                    for m in inspection.measurements:
+                        m.execute(frame, features)
+        
         frame.save()
         print "Imported {} at time {} for camera '{}' with attributes {}".format(filename, frame.capturetime, frame.camera, metadata)
 
