@@ -78,6 +78,21 @@ module.exports = class View extends Backbone.View
     for name, subview of @subviews
       subview.render()
 
+  # Adds a subview to the current view.
+  #
+  # -get rendered when the parent view is rendered
+  # -get destroyed when parent view is destroyed
+  # -can have subviews of their own
+  # -all actions are recursive to children
+  #
+  # Arguments:
+  # -`name`: The name for the subview.  This is used as the key in `@view.subViews`
+  # -`viewClass`: The view library.  This should be the result of a something such as `viewClass = require 'views/my_view'`
+  # -`selector`: A reference to the element the subView will be rendered.  Valid values are `#my-div-id` or a DOM node reference.  Anything valid in the following statement: `$(selector).html`.  When the widget is rendered, it destroys all content within selector.
+  # -`options`:
+  #     -`append`: a string reference to an DOM element ID.  If append is passed in, instead of the widget destroying all content inside of `selector` it appends a div with the id of `append` into the `selector`.  This way multiple subviews can be in the same container.
+  #     - Any other items passed in will be available in the subview as `@options.myItem` where `myItem` is the key of options here.
+
   addSubview: (name, viewClass, selector, options) =>
     options = options or {}
     _.extend options,
