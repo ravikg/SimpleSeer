@@ -10,7 +10,7 @@
   height: auto;
   border: 1px solid #1B1C1E;
   border-radius: 2px;
-  background: url("../img/MT_999999.png") repeat;
+  background: #999ca4;
   box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.4);
 
   &.showing {
@@ -47,7 +47,7 @@
     float: left;
     width: @paneWidth - 2px;
     height: 21px;
-    box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.4)/*, inset 0px -1px 0px #2D2F32*/;
+    box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.2), inset 0px -1px 0px rgba(0,0,0,.4);
     background: url("../img/MT_666666.png") repeat;
 
     .context {
@@ -85,10 +85,10 @@
 
         &.active {
           cursor: default;
-          padding: 3px 11px 0px 10px;
+          padding: 4px 12px 0px 9px;
           background:
             /*url("../img/arrow_expand_v.png") no-repeat 5px 8px,*/
-            url("../img/MT_999999.png") repeat;  
+            #999ca4;  
         }
 
         &.blue {
