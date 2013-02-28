@@ -1,5 +1,5 @@
 body {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
   font-size: 13px;
   line-height: 18px;
   color: #000;
@@ -15,7 +15,7 @@ input[type=text], input[type=number], textarea {
   border: 1px solid #ddd;
   border-top-color: #cecece;  
   
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
   font-size: 11px;
   font-weight: normal;
 }
@@ -242,7 +242,7 @@ select{
   }
 }
 
-a { font-size: 13px; color: #08C; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+a { font-size: 13px; color: #08C; font-family: Helvetica, Arial, sans-serif; }
 
 .modal-body{
     height: 100%;
@@ -371,6 +371,17 @@ a { font-size: 13px; color: #08C; font-family: "Helvetica Neue", Helvetica, Aria
 	box-shadow: rgba(0, 0, 0, 0.296875) 0px 5px 15px;
 }
 
+.chzn-container {
+  margin-top: 1px;
+  margin-bottom: -5px;
+  margin-left: -5px;
+  font-size: 13px;
+  position: relative;
+  display: inline-block;
+  zoom: 1;
+  *display: inline;
+}
+
 /**
  * End jQuery Hacks
  */
@@ -495,6 +506,10 @@ html[xmlns] .clearfix {
   box-sizing: border-box;
   -moz-box-sizing: border-box;
   padding: 8px;
+
+  &:only-child {
+    padding: 0px;
+  }
 }
 
 .widget {
@@ -522,22 +537,23 @@ html[xmlns] .clearfix {
       display: inline-block;
       font-weight: bold;
       font-size: 18px;
-      line-height: 32px;
+      line-height: 31px;
       height: 31px;
       color: #ffffff;
       background: #2D2E31;
-      padding: 0px 9px;
+      padding: 0px 9px 0 8px;
     }
 
     .toggle {
+      font-size: 17px;
       margin-left: -4px;
       vertical-align: top;
       display: inline-block;
       width: 17px;
       text-align: center;
       height: 31px;
-      line-height: 27px;
-      background: url("../img/MT_666666.png") repeat;
+      line-height: 29px;
+      background: #777;
       color: #222;
       border: 1px solid #1A1B1C;
       border-width: 0px 1px;
