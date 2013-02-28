@@ -1,0 +1,24 @@
+<!DOCTYPE html>  <html> <head>   <title>dashboard.coffee</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>            <div id="jump_to">         Jump To &hellip;         <div id="jump_wrapper">           <div id="jump_page">                                           <a class="source" href="OLAP.html">                 OLAP.coffee               </a>                                           <a class="source" href="dashboard.html">                 dashboard.coffee               </a>                                           <a class="source" href="frame.html">                 frame.coffee               </a>                                           <a class="source" href="frameset.html">                 frameset.coffee               </a>                                           <a class="source" href="inspection.html">                 inspection.coffee               </a>                                           <a class="source" href="measurement.html">                 measurement.coffee               </a>                                           <a class="source" href="model.html">                 model.coffee               </a>                        </div>         </div>       </div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               dashboard.coffee             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre><span class="nv">Model = </span><span class="nx">require</span> <span class="s">&quot;./model&quot;</span>
+<span class="nv">application = </span><span class="nx">require</span> <span class="s">&#39;application&#39;</span>
+<span class="nv">dashboardWidget = </span><span class="nx">require</span> <span class="s">&#39;views/core/dashboardWidget&#39;</span>
+
+<span class="nv">module.exports = </span><span class="k">class</span> <span class="nx">Dashboard</span> <span class="k">extends</span> <span class="nx">Model</span>
+  <span class="nv">urlRoot: </span><span class="nf">-&gt;</span> <span class="s">&quot;/api/dashboard&quot;</span>
+  <span class="nv">loaded: </span><span class="kc">false</span>
+  
+  <span class="nv">initialize: </span><span class="o">=&gt;</span>
+    <span class="k">if</span> <span class="nx">@attributes</span><span class="p">.</span><span class="nx">view</span>
+      <span class="vi">@view = </span><span class="nx">@attributes</span><span class="p">.</span><span class="nx">view</span>
+      <span class="k">delete</span> <span class="nx">@attributes</span><span class="p">.</span><span class="nx">view</span>
+    <span class="k">super</span><span class="p">()</span>
+
+
+  <span class="nv">loadElements: </span><span class="o">=&gt;</span>
+    <span class="k">if</span> <span class="nx">@view</span>
+      <span class="nx">@view</span><span class="p">.</span><span class="nx">clearSubviews</span><span class="p">()</span>
+      <span class="k">for</span> <span class="nx">widget</span> <span class="k">in</span> <span class="nx">@attributes</span><span class="p">.</span><span class="nx">widgets</span>
+        <span class="nv">vi = </span><span class="nx">@view</span><span class="p">.</span><span class="nx">addSubview</span> <span class="s">&quot;widget_&quot;</span><span class="o">+</span><span class="nx">widget</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nx">dashboardWidget</span><span class="p">,</span> <span class="s">&#39;#widget_grid&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">append</span><span class="o">:</span><span class="s">&quot;widget_&quot;</span><span class="o">+</span><span class="nx">widget</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span><span class="nx">widget</span><span class="o">:</span><span class="nx">widget</span><span class="p">}</span>
+        <span class="nx">vi</span><span class="p">.</span><span class="nx">render</span><span class="p">()</span>
+      <span class="vi">@loaded = </span><span class="kc">true</span>
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 

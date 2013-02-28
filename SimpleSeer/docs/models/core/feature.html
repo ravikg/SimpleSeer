@@ -1,0 +1,60 @@
+<!DOCTYPE html>  <html> <head>   <title>feature.coffee</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               feature.coffee             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre><span class="nv">Model = </span><span class="nx">require</span> <span class="s">&quot;models/model&quot;</span>
+
+
+<span class="nv">module.exports = </span><span class="k">class</span> <span class="nx">Feature</span> <span class="k">extends</span> <span class="nx">Model</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>initialize: =>
+ @data = {}
+ console.log @
+ super</p>             </td>             <td class="code">               <div class="highlight"><pre>  
+  <span class="nv">addTrait: </span><span class="nf">(trait) =&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>@data[trait.measurement_name] = trait.numeric</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">@attributes</span><span class="p">[</span><span class="nx">trait</span><span class="p">.</span><span class="nx">measurement_name</span><span class="p">]</span> <span class="o">=</span> <span class="nx">trait</span><span class="p">.</span><span class="nx">numeric</span>
+  
+  <span class="nv">represent: </span><span class="o">=&gt;</span>
+    <span class="nv">plugin = </span><span class="nx">@getPluginMethod</span><span class="p">(</span><span class="nx">@</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s">&quot;featuretype&quot;</span><span class="p">),</span> <span class="s">&#39;represent&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nx">plugin</span><span class="o">?</span>
+      <span class="k">return</span> <span class="nx">plugin</span><span class="p">()</span>
+    <span class="nx">@</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s">&quot;featuretype&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot; at (&quot;</span> <span class="o">+</span> <span class="nx">@</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;,&quot;</span> <span class="o">+</span> <span class="nx">@</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s">&quot;y&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;)&quot;</span>
+    
+  <span class="nv">tableOk: </span><span class="o">=&gt;</span>
+    <span class="nv">plugin = </span><span class="nx">@getPluginMethod</span><span class="p">(</span><span class="nx">@</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s">&quot;featuretype&quot;</span><span class="p">),</span> <span class="s">&#39;tableOk&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nx">plugin</span><span class="o">?</span>
+      <span class="k">return</span> <span class="nx">plugin</span><span class="p">()</span>
+  
+  <span class="nv">tableHeader: </span><span class="o">=&gt;</span>
+    <span class="nv">plugin = </span><span class="nx">@getPluginMethod</span><span class="p">(</span><span class="nx">@</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s">&quot;featuretype&quot;</span><span class="p">),</span> <span class="s">&#39;tableHeader&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nx">plugin</span><span class="o">?</span>
+      <span class="k">return</span> <span class="nx">plugin</span><span class="p">()</span>
+  
+  <span class="nv">tableData: </span><span class="o">=&gt;</span>
+    <span class="nv">plugin = </span><span class="nx">@getPluginMethod</span><span class="p">(</span><span class="nx">@</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s">&quot;featuretype&quot;</span><span class="p">),</span> <span class="s">&#39;tableData&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nx">plugin</span><span class="o">?</span>
+      <span class="k">return</span> <span class="nx">plugin</span><span class="p">()</span>
+      
+  <span class="nv">name: </span><span class="o">=&gt;</span>
+    <span class="nv">plugin = </span><span class="nx">@getPluginMethod</span><span class="p">(</span><span class="nx">@</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s">&quot;featuretype&quot;</span><span class="p">),</span> <span class="s">&#39;name&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nx">plugin</span><span class="o">?</span>
+      <span class="k">return</span> <span class="nx">plugin</span><span class="p">()</span>
+    <span class="k">return</span> <span class="nx">@</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s">&quot;featuretype&quot;</span><span class="p">).</span><span class="nx">replace</span><span class="p">(</span><span class="s">&quot;Feature&quot;</span><span class="p">,</span><span class="s">&quot;&quot;</span><span class="p">)</span>
+    
+  <span class="nv">plural: </span><span class="o">=&gt;</span>
+    <span class="nv">plugin = </span><span class="nx">@getPluginMethod</span><span class="p">(</span><span class="nx">@</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s">&quot;featuretype&quot;</span><span class="p">),</span> <span class="s">&#39;plural&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nx">plugin</span><span class="o">?</span>
+      <span class="k">return</span> <span class="nx">plugin</span><span class="p">()</span>
+    <span class="k">return</span> <span class="nx">@name</span><span class="p">()</span> <span class="o">+</span> <span class="s">&quot;s&quot;</span>
+  
+  <span class="nv">icon: </span><span class="o">=&gt;</span>
+    <span class="nv">plugin = </span><span class="nx">@getPluginMethod</span><span class="p">(</span><span class="nx">@</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s">&quot;featuretype&quot;</span><span class="p">),</span> <span class="s">&#39;icon&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nx">plugin</span><span class="o">?</span>
+      <span class="k">return</span> <span class="nx">plugin</span><span class="p">()</span>
+    <span class="k">return</span> <span class="s">&quot;&quot;</span>
+  
+  <span class="nv">render: </span><span class="nf">(pjs) =&gt;</span>
+    <span class="nv">plugin = </span><span class="nx">@getPluginMethod</span><span class="p">(</span><span class="nx">@</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s">&quot;featuretype&quot;</span><span class="p">),</span> <span class="s">&#39;render&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nx">plugin</span><span class="o">?</span>
+      <span class="k">return</span> <span class="nx">plugin</span><span class="p">(</span><span class="nx">pjs</span><span class="p">)</span>
+    <span class="nx">pjs</span><span class="p">.</span><span class="nx">stroke</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">180</span>
+    <span class="nx">pjs</span><span class="p">.</span><span class="nx">strokeWeight</span> <span class="mi">3</span>
+    <span class="nx">pjs</span><span class="p">.</span><span class="nx">noFill</span><span class="p">()</span>
+    <span class="nx">pjs</span><span class="p">.</span><span class="nx">rect</span> <span class="nx">@</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span><span class="o">-</span><span class="nx">@</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s">&#39;width&#39;</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="nx">@</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s">&#39;y&#39;</span><span class="p">)</span><span class="o">-</span><span class="nx">@</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s">&#39;height&#39;</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="nx">@</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s">&#39;width&#39;</span><span class="p">),</span><span class="nx">@</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s">&#39;height&#39;</span><span class="p">)</span>
+    
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 
