@@ -98,8 +98,8 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
             return []
         
         # Pull the frame metadata into the inspection's metadata
-        self.parameters.metadata = frame.metadata
         
+        self.parameters['metadata'] = frame.metadata
         #execute the morphs?
         
         #recursion stopper so we don't accidentally end up in any loops
