@@ -5,7 +5,7 @@
 application = require 'application'
 
 module.exports = class View extends Backbone.View
-  subviews: null
+  subviews: {}
   events: {}
   firstRender:true
 

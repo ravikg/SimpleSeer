@@ -1,5 +1,11 @@
 <div class="inspection-map">
 	{{#each maps}}
-	<img id="{{this.name}}-cam" class="map-figure {{this.pass}}">
+	<img src="{{this.thumbnail}}" data-map="{{this.name}}" id="{{this.name}}-cam" class="map-figure {{this.pass}}">
 	{{/each}}
+</div>
+
+<div class="canvas-map">
+	<div class="padder">
+		<div class="graphic"></div>
+	</div>
 </div>
