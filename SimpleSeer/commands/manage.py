@@ -98,7 +98,7 @@ class DeployCommand(ManageCommand):
         print "Reloading supervisord"
         subprocess.check_output(['supervisorctl', 'reload'])
 
-class DocsCommand(ManageCommand):
+class GenerateDocsCommand(ManageCommand):
     def __init__(self, subparser):
        pass
 
