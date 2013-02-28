@@ -4,7 +4,6 @@ SubView = require 'views/core/subview'
 FilterCollection = require "collections/core/filtercollection"
 Frame = require "models/frame"
 
-
 module.exports = class imageList extends SubView
   template:template
     
@@ -35,15 +34,15 @@ module.exports = class imageList extends SubView
     return
     
   addObjs: =>
+  addObjs: =>
     @render()
     
   receive: (data) =>
     console.dir data.data
     @filtercollection.add data.data
     @render()
-  
 
-  
   getRenderData: =>
     'blackList': @blackList
     'records': @filtercollection.models
+
