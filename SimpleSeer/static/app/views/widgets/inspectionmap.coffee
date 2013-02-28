@@ -73,6 +73,11 @@ module.exports = class inspectionMap extends SubView
       @closeFigure()
       return
 
+
+    ## TODO: Close all other previews. Should use
+    ## some kind of event bubbling
+    @closeAllFigures()
+
     @lastMap = map
     @markup.setImage @mapThumbnails[map].full, size
     @$el.find(".graphic").width(size[0]).height(size[1])
@@ -86,11 +91,17 @@ module.exports = class inspectionMap extends SubView
       @$el.find(".canvas-map").show("slide", {direction: "up", duration: 300})
       @expanded = true
 
-  closeFigure: =>
+  closeFigure:(speed=300) =>
     parent = @$el.parents(".record-list-item")
-    @$el.find(".canvas-map").hide("slide", {direction: "up", duration: 300})
+    @$el.find(".canvas-map").hide("slide", {direction: "up", duration: speed})
     @expanded = false
     parent.removeClass("expanded")
+
+  closeAllFigures: =>
+    _.each @options.parent.subviews, (view) =>
+      unless view is @
+        if view instanceof inspectionMap and view.expanded is true
+          view.closeFigure(0)
 
   mergeCamera: =>   
     _.each @model.attributes.results, (result, id) =>
