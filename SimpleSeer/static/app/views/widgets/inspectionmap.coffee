@@ -73,11 +73,7 @@ module.exports = class inspectionMap extends SubView
       @closeFigure()
       return
 
-
-    ## TODO: Close all other previews. Should use
-    ## some kind of event bubbling
     @closeAllFigures()
-
     @lastMap = map
     @markup.setImage @mapThumbnails[map].full, size
     @$el.find(".graphic").width(size[0]).height(size[1])
