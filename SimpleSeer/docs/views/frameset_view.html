@@ -1,0 +1,33 @@
+<!DOCTYPE html>  <html> <head>   <title>frameset_view.coffee</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>            <div id="jump_to">         Jump To &hellip;         <div id="jump_wrapper">           <div id="jump_page">                                           <a class="source" href="frame.html">                 frame.coffee               </a>                                           <a class="source" href="frameset_view.html">                 frameset_view.coffee               </a>                                           <a class="source" href="home_view.html">                 home_view.coffee               </a>                        </div>         </div>       </div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               frameset_view.coffee             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre><span class="nv">View = </span><span class="nx">require</span> <span class="s">&#39;./view&#39;</span>
+
+<span class="nv">template = </span><span class="nx">require</span> <span class="s">&#39;./templates/frameset&#39;</span>
+<span class="nv">view_helper = </span><span class="nx">require</span> <span class="s">&#39;../lib/view_helper&#39;</span>
+<span class="nv">application = </span><span class="nx">require</span> <span class="s">&#39;../application&#39;</span>
+
+<span class="nv">module.exports = </span><span class="k">class</span> <span class="nx">FrameSet</span> <span class="k">extends</span> <span class="nx">View</span>
+  <span class="nv">template: </span><span class="nx">template</span>
+  <span class="nv">tagName: </span><span class="s">&#39;div&#39;</span>
+  
+  <span class="nv">initialize: </span><span class="o">=&gt;</span>
+    <span class="nx">$</span><span class="p">(</span><span class="s">&#39;#frame-set-container&#39;</span><span class="p">).</span><span class="nx">html</span> <span class="nx">@</span><span class="p">.</span><span class="nx">$el</span>
+  
+  <span class="nv">events:</span></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>"mouseover .thumbnail": "hoverThumb"
+"mouseout .thumbnail": "hoverThumb"</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="s">&quot;click .close-button&quot;</span><span class="o">:</span> <span class="s">&quot;closeThumb&quot;</span>
+  
+  <span class="nv">hoverThumb: </span><span class="nf">(target) =&gt;</span>
+    <span class="k">if</span> <span class="o">!</span><span class="nx">$</span><span class="p">(</span><span class="nx">target</span><span class="p">.</span><span class="nx">relatedTarget</span><span class="p">).</span><span class="nx">hasClass</span> <span class="s">&#39;close-button&#39;</span>
+      <span class="nx">$</span><span class="p">(</span><span class="nx">target</span><span class="p">.</span><span class="nx">target</span><span class="p">).</span><span class="nx">find</span><span class="p">(</span><span class="s">&#39;.close-button&#39;</span><span class="p">).</span><span class="nx">toggleClass</span> <span class="s">&#39;hidden&#39;</span>
+    <span class="k">return</span>
+  
+  <span class="nv">closeThumb: </span><span class="nf">(target) =&gt;</span>
+    <span class="nv">imageid = </span><span class="nx">target</span><span class="p">.</span><span class="nx">delegateTarget</span><span class="p">.</span><span class="nx">id</span>
+    <span class="nx">application</span><span class="p">.</span><span class="nx">framesets</span><span class="p">.</span><span class="nx">_byId</span><span class="p">[</span><span class="nx">@</span><span class="p">.</span><span class="nx">id</span><span class="p">].</span><span class="nx">removeFrame</span><span class="p">(</span><span class="nx">target</span><span class="p">.</span><span class="nx">currentTarget</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span>
+  
+  <span class="nv">getRenderData: </span><span class="o">=&gt;</span>
+    <span class="nx">@</span><span class="p">.</span><span class="nx">options</span>
+    
+  <span class="nv">render: </span><span class="o">=&gt;</span>
+    <span class="k">super</span><span class="p">()</span></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>console.log @.$el
+$('#frame-set-container').html @.$el</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">this</span>
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 

@@ -1,0 +1,162 @@
+<!DOCTYPE html>  <html> <head>   <title>series.coffee</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               series.coffee             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>               <p>Collection = require "../collection"</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">FilterCollection = </span><span class="nx">require</span> <span class="s">&quot;collections/core/filtercollection&quot;</span>
+<span class="nv">application = </span><span class="nx">require</span> <span class="s">&#39;application&#39;</span>
+<span class="nv">module.exports = </span><span class="k">class</span> <span class="nx">Series</span> <span class="k">extends</span> <span class="nx">FilterCollection</span>
+  <span class="nv">url: </span><span class="s">&quot;&quot;</span>
+  <span class="nv">redraw: </span><span class="kc">false</span>
+  <span class="nx">xAxis</span><span class="o">:</span><span class="p">{}</span>
+  <span class="nx">yAxis</span><span class="o">:</span><span class="p">{}</span>
+  <span class="nx">data</span><span class="o">:</span><span class="p">[]</span>
+  <span class="nv">marker:</span>
+    <span class="nv">enabled: </span><span class="kc">true</span>
+    <span class="nv">radius: </span><span class="mi">2</span>
+  <span class="nv">pointEvents:</span>
+    <span class="nx">over</span><span class="o">:</span><span class="nf">-&gt;</span>
+    <span class="nx">click</span><span class="o">:</span><span class="nf">-&gt;</span>
+    <span class="nx">out</span><span class="o">:</span><span class="nf">-&gt;</span>
+  <span class="nx">subscribePath</span><span class="o">:</span><span class="s">&quot;Chart&quot;</span>
+  
+  <span class="nv">initialize: </span><span class="nf">(models, args={}) =&gt;</span>
+    <span class="vi">@_counter = </span><span class="mi">0</span>
+    <span class="vi">@filterRoot = </span><span class="s">&quot;Chart&quot;</span>
+    <span class="vi">@name = </span><span class="nx">args</span><span class="p">.</span><span class="nx">name</span> <span class="o">||</span> <span class="s">&#39;&#39;</span>
+    <span class="vi">@id = </span><span class="nx">args</span><span class="p">.</span><span class="nx">id</span>
+    <span class="k">if</span> <span class="nx">args</span><span class="p">.</span><span class="nx">url</span>
+      <span class="nv">_url = </span><span class="nx">args</span><span class="p">.</span><span class="nx">url</span>
+    <span class="k">else</span>
+      <span class="nv">_url = </span><span class="s">&quot;/chart/data/&quot;</span>
+    <span class="nv">args.url = </span><span class="nx">_url</span><span class="o">+</span><span class="nx">@id</span>
+    <span class="vi">@color = </span><span class="nx">args</span><span class="p">.</span><span class="nx">color</span> <span class="o">||</span> <span class="s">&#39;blue&#39;</span></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>Bind view to collection so we know where our widgets live</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">if</span> <span class="nx">args</span><span class="p">.</span><span class="nx">view</span><span class="o">?</span>
+      <span class="vi">@view = </span><span class="nx">args</span><span class="p">.</span><span class="nx">view</span>
+    <span class="vi">@accumulate = </span><span class="nx">args</span><span class="p">.</span><span class="nx">accumlate</span> <span class="o">||</span> <span class="kc">false</span>
+    <span class="vi">@xAxis.type = </span><span class="nx">args</span><span class="p">.</span><span class="nx">xtype</span>
+    <span class="k">super</span><span class="p">(</span><span class="nx">models</span><span class="p">,</span> <span class="nx">args</span><span class="p">)</span>
+    <span class="nx">@setParam</span> <span class="s">&#39;sortkey&#39;</span><span class="p">,</span> <span class="s">&#39;capturetime_epoch&#39;</span>
+    <span class="nx">@setParam</span> <span class="s">&#39;sortorder&#39;</span><span class="p">,</span> <span class="mi">1</span>
+    <span class="nv">args.realtime = </span><span class="kc">true</span></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>if args.realtime
+ @subscribe()</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">@</span><span class="kc">on</span><span class="p">(</span><span class="s">&quot;remove&quot;</span><span class="p">,</span><span class="nx">@shiftChart</span><span class="p">)</span>
+    <span class="nx">@fetch</span><span class="p">()</span>
+    <span class="k">return</span> <span class="nx">@</span>
+
+  <span class="nv">comparator: </span><span class="nf">(point,point2) =&gt;</span>
+    <span class="k">if</span> <span class="nx">point2</span><span class="p">.</span><span class="nx">attributes</span><span class="p">.</span><span class="nx">x</span><span class="p">.</span><span class="nx">unix</span><span class="p">()</span> <span class="o">&gt;</span> <span class="nx">point</span><span class="p">.</span><span class="nx">attributes</span><span class="p">.</span><span class="nx">x</span><span class="p">.</span><span class="nx">unix</span><span class="p">()</span>
+      <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">else</span>
+      <span class="k">return</span> <span class="mi">1</span>
+
+  <span class="nv">parse: </span><span class="nf">(response) =&gt;</span>
+    <span class="k">super</span><span class="p">(</span><span class="nx">response</span><span class="p">)</span>
+    <span class="nx">@subscribe</span><span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">chart</span><span class="p">)</span>
+    <span class="nv">clean = </span><span class="nx">@_clean</span> <span class="nx">response</span><span class="p">.</span><span class="nx">data</span>
+    <span class="k">return</span> <span class="nx">clean</span>
+
+  <span class="nv">fetch: </span><span class="nf">(args={}) =&gt;</span>
+    <span class="nx">@view</span><span class="p">.</span><span class="nx">showMessage</span><span class="p">(</span><span class="s">&#39;loading&#39;</span><span class="p">,</span><span class="s">&#39;Loading&#39;</span><span class="p">)</span>
+    <span class="nv">args.success = </span><span class="nx">@onSuccess</span>
+    <span class="nv">args.error = </span><span class="nx">@onError</span>
+    <span class="nx">args</span><span class="p">[</span><span class="s">&#39;total&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">true</span>
+    <span class="nx">args</span><span class="p">[</span><span class="s">&#39;params&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">skip</span><span class="o">:~</span><span class="nx">@limit</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="nx">limit</span><span class="o">:</span><span class="nx">@limit</span><span class="p">}</span>
+    <span class="k">super</span><span class="p">(</span><span class="nx">args</span><span class="p">)</span>
+
+  <span class="nv">onSuccess: </span><span class="nf">(obj, rawJson) =&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>TODO: make a better bubble up callback system than this hackery:</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">if</span> <span class="nx">@view</span><span class="p">.</span><span class="nx">options</span><span class="p">.</span><span class="nx">parent</span><span class="p">.</span><span class="nx">rawCallback</span><span class="o">?</span>
+      <span class="nx">@view</span><span class="p">.</span><span class="nx">options</span><span class="p">.</span><span class="nx">parent</span><span class="p">.</span><span class="nx">rawCallback</span><span class="p">(</span><span class="nx">@raw</span><span class="p">)</span>
+    <span class="vi">@view.hasData = </span><span class="kc">false</span>
+    <span class="nx">@_drawData</span><span class="p">()</span>
+    <span class="nx">@view</span><span class="p">.</span><span class="nx">hideMessage</span><span class="p">()</span>
+    <span class="k">if</span> <span class="o">!</span><span class="nx">@view</span><span class="p">.</span><span class="nx">hasData</span>
+      <span class="nx">@view</span><span class="p">.</span><span class="nx">showMessage</span><span class="p">(</span><span class="s">&#39;error&#39;</span><span class="p">,</span><span class="s">&#39;No data to display&#39;</span><span class="p">)</span>
+    <span class="nx">$</span><span class="p">(</span><span class="s">&#39;.alert_error&#39;</span><span class="p">).</span><span class="nx">remove</span><span class="p">()</span>
+  
+  <span class="nv">onError: </span><span class="o">=&gt;</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s">&#39;error&#39;</span>
+    <span class="nx">@view</span><span class="p">.</span><span class="nx">showMessage</span><span class="p">(</span><span class="s">&#39;error&#39;</span><span class="p">,</span><span class="s">&#39;Error retrieving data&#39;</span><span class="p">)</span>
+
+  <span class="nv">_clean: </span><span class="nf">(data) =&gt;</span>
+    <span class="nv">refined = </span><span class="p">[]</span>
+    <span class="k">for</span> <span class="nx">d</span> <span class="k">in</span> <span class="nx">data</span>
+      <span class="nv">point = </span><span class="nx">@_formatChartPoint</span> <span class="nx">d</span>
+      <span class="k">if</span> <span class="nx">point</span><span class="p">.</span><span class="nx">attributes</span> <span class="o">!=</span> <span class="p">{}</span>
+        <span class="nx">refined</span><span class="p">.</span><span class="nx">push</span> <span class="nx">point</span>
+    <span class="k">return</span> <span class="nx">refined</span>
+
+  <span class="nv">_drawData: </span><span class="o">=&gt;</span>
+    <span class="nv">points = </span><span class="p">[]</span>
+    <span class="k">for</span> <span class="nx">p</span> <span class="k">in</span> <span class="nx">@models</span>
+      <span class="nx">points</span><span class="p">.</span><span class="nx">push</span> <span class="nx">p</span><span class="p">.</span><span class="nx">attributes</span>
+    <span class="nx">@view</span><span class="p">.</span><span class="nx">setData</span> <span class="nx">points</span><span class="p">,</span> <span class="nx">@id</span>
+    <span class="k">if</span> <span class="nx">points</span><span class="p">.</span><span class="nx">length</span>
+      <span class="vi">@view.hasData = </span><span class="kc">true</span>
+    <span class="nx">@shiftStack</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span>
+    <span class="k">return</span>
+  
+  <span class="nv">_formatChartPoint: </span><span class="nf">(d) =&gt;</span>
+    <span class="k">if</span> <span class="o">!</span><span class="nx">@accumulate</span>
+      <span class="nv">cp = </span><span class="nx">@view</span><span class="p">.</span><span class="nx">clickPoint</span>
+      <span class="nv">mo = </span><span class="nx">@view</span><span class="p">.</span><span class="nx">overPoint</span>
+    <span class="k">if</span> <span class="o">!</span><span class="nx">@xAxis</span><span class="p">.</span><span class="nx">type</span><span class="o">?</span> <span class="o">or</span> <span class="nx">@xAxis</span><span class="p">.</span><span class="nx">type</span> <span class="o">==</span> <span class="s">&quot;&quot;</span>
+      <span class="nx">d</span><span class="p">.</span><span class="nx">d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="nx">@_counter</span><span class="o">++</span>
+    <span class="k">else</span> <span class="k">if</span> <span class="nx">@xAxis</span><span class="p">.</span><span class="nx">type</span> <span class="o">==</span> <span class="s">&#39;datetime&#39;</span>
+      <span class="nx">d</span><span class="p">.</span><span class="nx">d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="nx">moment</span><span class="p">.</span><span class="nx">utc</span><span class="p">(</span><span class="nx">d</span><span class="p">.</span><span class="nx">d</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="nx">@accumulate</span>
+      <span class="k">if</span> <span class="nx">@xAxis</span><span class="p">.</span><span class="nx">type</span> <span class="o">==</span> <span class="s">&#39;datetime&#39;</span>
+        <span class="nv">_id = </span><span class="nx">d</span><span class="p">.</span><span class="nx">d</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">unix</span><span class="p">()</span>
+      <span class="k">else</span>
+        <span class="nv">_id = </span><span class="nx">d</span><span class="p">.</span><span class="nx">d</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">else</span>
+      <span class="nv">_id = </span><span class="nx">d</span><span class="p">.</span><span class="nx">m</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="nv">_point =</span>
+      <span class="nx">marker</span><span class="o">:</span><span class="p">{}</span>
+      <span class="nx">y</span><span class="o">:</span><span class="nx">d</span><span class="p">.</span><span class="nx">d</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+      <span class="nx">x</span><span class="o">:</span><span class="nx">d</span><span class="p">.</span><span class="nx">d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+      <span class="nx">raw</span><span class="o">:</span><span class="nx">d</span><span class="p">.</span><span class="nx">d</span>
+      <span class="nx">id</span><span class="o">:</span><span class="nx">_id</span>
+      <span class="nv">events:</span>
+        <span class="nv">mouseOver: </span><span class="nx">@pointEvents</span><span class="p">.</span><span class="nx">over</span>
+        <span class="nv">click: </span><span class="nx">@pointEvents</span><span class="p">.</span><span class="nx">click</span>
+    <span class="k">if</span> <span class="nx">d</span><span class="p">.</span><span class="nx">d</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">2</span></pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p>remove y</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="nv">y = </span><span class="nx">d</span><span class="p">.</span><span class="nx">d</span><span class="p">.</span><span class="nx">shift</span><span class="p">()</span>
+      <span class="nv">_point.multipoint = </span><span class="p">[]</span>
+      <span class="k">for</span> <span class="nx">p</span> <span class="k">in</span> <span class="nx">d</span><span class="p">.</span><span class="nx">d</span>
+        <span class="nx">_point</span><span class="p">.</span><span class="nx">multipoint</span><span class="p">.</span><span class="nx">push</span> <span class="nx">@_formatChartPoint</span> <span class="p">{</span><span class="nx">d</span><span class="o">:</span><span class="p">[</span><span class="nx">y</span><span class="p">,</span><span class="nx">p</span><span class="p">],</span><span class="nx">m</span><span class="o">:</span><span class="nx">d</span><span class="p">.</span><span class="nx">m</span><span class="p">}</span>
+        </pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-6">&#182;</a>               </div>               <p>for i,s of @model.metaMap
+ if s == 'string' &amp;&amp; @model.colormap
+   _point.marker.fillColor = @model.colormap[d.m[i]]</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">return</span> <span class="nx">_point</span>
+
+  <span class="nv">shiftStack: </span><span class="nf">(silent=false)=&gt;</span>
+    <span class="nv">shifted = </span><span class="mi">0</span>
+    <span class="k">while</span> <span class="nx">@_needShift</span><span class="p">()</span>
+      <span class="nv">foo = </span><span class="nx">@shift</span> <span class="p">{</span><span class="nx">silent</span><span class="o">:</span><span class="nx">silent</span><span class="p">}</span>
+      <span class="nx">shifted</span><span class="o">++</span>
+    <span class="k">return</span> <span class="nx">shifted</span>
+
+  <span class="nv">_needShift: </span><span class="nf">(offset=0)=&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-7">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-7">&#182;</a>               </div>               <p>TODO: remove against, grab from filter</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">if</span> <span class="nx">@models</span><span class="p">.</span><span class="nx">length</span> <span class="o">==</span> <span class="mi">0</span>
+      <span class="k">return</span> <span class="kc">false</span>
+    <span class="nv">against = </span><span class="k">new</span> <span class="nx">moment</span><span class="p">().</span><span class="nx">subtract</span><span class="p">(</span><span class="s">&#39;days&#39;</span><span class="p">,</span><span class="mi">5000</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nx">@xAxis</span><span class="p">.</span><span class="nx">type</span> <span class="o">==</span> <span class="s">&quot;datetime&quot;</span>
+      <span class="k">if</span> <span class="nx">@</span><span class="p">.</span><span class="nx">at</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">@</span><span class="p">.</span><span class="nx">at</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="nx">attributes</span><span class="p">.</span><span class="nx">x</span> <span class="o">&lt;</span> <span class="nx">against</span>
+        <span class="k">return</span> <span class="kc">true</span>
+    <span class="k">if</span> <span class="nx">@models</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="nx">@view</span><span class="p">.</span><span class="nx">maxPointSize</span> <span class="o">&gt;=</span> <span class="nx">offset</span>
+      <span class="k">return</span> <span class="kc">true</span>
+    <span class="k">return</span> <span class="kc">false</span>
+    
+  
+  <span class="nv">receive: </span><span class="nf">(data) =&gt;</span>
+    <span class="k">for</span> <span class="nx">o</span> <span class="k">in</span> <span class="nx">data</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">m</span><span class="p">.</span><span class="nx">data</span>
+      <span class="nv">p = </span><span class="nx">@_formatChartPoint</span> <span class="nx">o</span>
+      <span class="k">if</span> <span class="nx">@inStack</span><span class="p">(</span><span class="nx">p</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nx">@accumulate</span>
+          <span class="nx">@remove</span> <span class="nx">p</span><span class="p">.</span><span class="nx">x</span><span class="p">.</span><span class="nx">unix</span><span class="p">(),</span> <span class="p">{</span><span class="nv">silent: </span><span class="kc">true</span><span class="p">}</span>
+        <span class="nx">@add</span> <span class="nx">p</span><span class="p">,</span> <span class="p">{</span><span class="nv">silent: </span><span class="kc">true</span><span class="p">}</span>
+        <span class="nx">@_drawData</span><span class="p">()</span>
+        <span class="vi">@view.hasData = </span><span class="kc">true</span>
+    <span class="k">if</span> <span class="nx">@view</span><span class="p">.</span><span class="nx">hasData</span> <span class="o">&amp;&amp;</span> <span class="nx">@view</span><span class="p">.</span><span class="nx">hasMessage</span>
+      <span class="nx">@view</span><span class="p">.</span><span class="nx">hideMessage</span><span class="p">()</span>
+    <span class="k">return</span>
+    
+  <span class="nx">inStack</span><span class="o">:</span><span class="nf">(point) =&gt;</span>
+    <span class="k">if</span> <span class="nx">@length</span> <span class="o">==</span> <span class="mi">0</span>
+      <span class="k">return</span> <span class="kc">true</span>
+    <span class="k">return</span> <span class="nx">point</span><span class="p">.</span><span class="nx">x</span> <span class="o">&gt;=</span> <span class="nx">@at</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="nx">get</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">)</span> <span class="o">or</span> <span class="nx">@_needShift</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    
+  <span class="nv">shiftChart: </span><span class="o">=&gt;</span>
+    <span class="nx">@view</span><span class="p">.</span><span class="nx">shiftPoint</span> <span class="nx">@id</span><span class="p">,</span> <span class="kc">false</span>    
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 

@@ -98,6 +98,22 @@ class DeployCommand(ManageCommand):
         print "Reloading supervisord"
         subprocess.check_output(['supervisorctl', 'reload'])
 
+class GenerateDocsCommand(ManageCommand):
+    def __init__(self, subparser):
+       pass
+
+    def run(self):
+        libs = ['SimpleSeer', 'SeerCloud']
+        for i in libs:
+            coffeePath = path(pkg_resources.resource_filename(i, 'static/app'))
+            docPath = path(pkg_resources.resource_filename(i, 'docs'))
+            for root, subFolders, files in os.walk(coffeePath):
+                _dp = root.replace(coffeePath,docPath)
+                if not os.path.exists(_dp):
+                    os.makedirs(_dp)
+                print subprocess.check_output(['docco', "{}/*.coffee".format(root,),'--output',_dp])
+
+
 class WatchCommand(ManageCommand):
     def __init__(self, subparser):
         subparser.add_argument("--refresh", help="send refresh signal to simpleseer on build", default=0)
