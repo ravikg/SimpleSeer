@@ -11,11 +11,11 @@ module.exports = class markupImage extends SubView
   # Applied to the container that this
   # widget is initialized on.
   className:"widget-markupImage"
+  template: template
   
   # Define some working variables.
-  pjs: ''
-  template: template
-  img: ''
+  pjs: null
+  img: null
   size: [0,0]
 
   initialize:(options) =>
