@@ -93,7 +93,7 @@ class Filter():
 
         grpField = grp['groupby']
        
-        grpFns = {'id': 'first', 'metadata': 'first', 'capturetime': 'first', 'capturetime_epoch': 'first', 'results': 'first'}
+        grpFns = {'id': 'first', 'metadata': 'first', 'capturetime': 'first', 'capturetime_epoch': 'first', 'results': 'first', 'localtz': 'first'}
         grpFns.update(grp['groupfns'])
        
         final = {'_id': '$' + grpField}
@@ -412,6 +412,7 @@ class Filter():
             tmpFrame['capturetime_epoch'] = frame['capturetime_epoch']
             tmpFrame['capturetime'] = frame['capturetime']
             tmpFrame['localtz'] = frame['localtz']
+            tmpFrame['camera'] = frame.get('camera', '')
         
             for filt in filters:
                 #import pdb; pdb.set_trace()
