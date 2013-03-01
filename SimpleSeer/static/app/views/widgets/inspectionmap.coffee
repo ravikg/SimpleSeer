@@ -60,8 +60,8 @@ module.exports = class inspectionMap extends SubView
 
   renderResult:(pjs, result, size) =>
     box = @stringToList result.camera.location, size
-    pjs.fill(if result.string is "PASS" then 0x8800aa00 else 0x88aa0000)
-    pjs.stroke(if result.string is "PASS" then 0x8800ff00 else 0x88ff0000)
+    pjs.fill(if result.string is "0" then 0x8800aa00 else 0x88aa0000)
+    pjs.stroke(if result.string is "0" then 0x8800ff00 else 0x88ff0000)
     pjs.rect(box[0], box[1], box[2], box[3])
 
   expandFigure:(e) =>
@@ -82,14 +82,26 @@ module.exports = class inspectionMap extends SubView
     _.each insps, (result) =>
       @renderResult(@markup.pjs, result, size)
 
+    @moveAndShowTriangle($(e.target).position().left + $(e.target).width()/2 - 5)
     if @expanded is false
       parent.addClass("expanded")
       @$el.find(".canvas-map").show("slide", {direction: "up", duration: 300})
       @expanded = true
 
+  moveAndShowTriangle:(left) =>
+    tri = @$el.find(".arrow")
+    tri.css
+      "left": "#{left}px"
+      "display": "block"
+
+  hideTriangle: =>
+    tri = @$el.find(".arrow")
+    tri.css "display": "none"
+
   closeFigure:(speed=300) =>
     parent = @$el.parents(".record-list-item")
     @$el.find(".canvas-map").hide("slide", {direction: "up", duration: speed})
+    @hideTriangle()
     @expanded = false
     parent.removeClass("expanded")
 
@@ -101,7 +113,7 @@ module.exports = class inspectionMap extends SubView
 
   mergeCamera: =>   
     _.each @model.attributes.results, (result, id) =>
-      cam = SimpleSeer.settings.cameras[id]
+      cam = _.findWhere(SimpleSeer.settings.cameras, {name: result.inspection_name})
       @model.attributes.results[id].map = cam.map
       @model.attributes.results[id].camera = cam
 
@@ -110,7 +122,7 @@ module.exports = class inspectionMap extends SubView
     final = []; maps = []; fails = {}
     _.each @model.attributes.results, (result) =>
       maps.push result.camera.map
-      if result.string is "FAIL"
+      if result.string is "1"
         fails[result.camera.map] = 1
     _.each _.uniq(maps), (map) =>
       pf = (if fails[map] == 1 then "fail" else "pass")
