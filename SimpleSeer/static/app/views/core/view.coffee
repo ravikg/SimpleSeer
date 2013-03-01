@@ -103,8 +103,6 @@ module.exports = class View extends Backbone.View
   # Recursively destroys subviews.  This is done automatically in `@remove`
   clearSubviews: =>
     for name, subview of @subviews
-      if subview.clearSubviews
-        subview.clearSubviews()
       subview.remove()
       subview.unbind()
     @subviews = {}
