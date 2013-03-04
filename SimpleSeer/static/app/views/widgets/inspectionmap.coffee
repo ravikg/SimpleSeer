@@ -113,7 +113,10 @@ module.exports = class inspectionMap extends SubView
 		@moveAndShowTriangle($(e.target).position().left + $(e.target).width()/2 - 5)
 		if @expanded is false
 			parent.addClass("expanded")
-			@$el.find(".canvas-map").show("slide", {direction: "up", duration: 200})
+			cm = @$el.find(".canvas-map")
+			cw = $(cm.prev()).width()
+			cm.css("width", "#{cw}px")
+			  .show("slide", {direction: "up", duration: 200}, => cm.css("width", "100%"))
 			@expanded = true
 
 	moveAndShowTriangle:(left) =>
@@ -128,7 +131,10 @@ module.exports = class inspectionMap extends SubView
 
 	closeFigure:(speed=200) =>
 		parent = @$el.parents(".record-list-item")
-		@$el.find(".canvas-map").hide("slide", {direction: "up", duration: speed})
+		cm = @$el.find(".canvas-map")
+		cw = $(cm.prev()).width()
+		cm.css("width", "#{cw}px")
+		  .hide("slide", {direction: "up", duration: speed}, => cm.css("width", "100%"))		
 		@hideTriangle()
 		@expanded = false
 		parent.removeClass("expanded")
