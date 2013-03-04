@@ -259,6 +259,7 @@ module.exports = class FilterCollection extends Collection
       if typeof o == 'function'
         o()        
     @callbackStack['post'] = []
+    @trigger 'reset', @models
     return
 
   globalRefresh:=>
@@ -268,6 +269,11 @@ module.exports = class FilterCollection extends Collection
     @raw = response
 
   fetch: (params={}) =>
+    if params.filtered and @clearOnFetch == false
+      @clearOnFetch = true
+      @callbackStack['post'].push => @clearOnFetch = false
+
+    params['silent'] = true
     @preFetch()
     if params.forceRefresh
       @models = []
