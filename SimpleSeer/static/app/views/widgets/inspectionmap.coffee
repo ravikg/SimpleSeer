@@ -61,7 +61,7 @@ module.exports = class inspectionMap extends SubView
 			coords = camera.coords
 			if _x > coords[0] and _x < (coords[0]+coords[2]) and _y > coords[2] and _y < (coords[1]+coords[3])
 				vin = $(event.target).parents(".im-block").attr("data-vin")
-				application.router.navigate "#stats/Inspection_History/#{vin}/#{camera.name}", true
+				application.router.navigate encodeURI("#stats/Inspection_History/#{vin}/#{camera.name}"), true
 				return
 
 	mouseCheck: (event) =>
