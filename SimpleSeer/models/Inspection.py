@@ -109,8 +109,12 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
         method_ref = self.get_plugin(self.method)
         #get the ROI function that we want
         #note that we should validate/roi method
- 
+        
+        startexectime = datetime.now()
         featureset = method_ref(frame.image)
+        execdelta = datetime.now() - startexectime
+        
+        exectime = float(execdelta.seconds) + execdelta.microseconds / 1000000.0
         
         if not featureset:
             return []
@@ -123,6 +127,7 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
             for feat in featureset:
                 ff = FrameFeature()
                 ff.setFeature(feat)
+                ff.exectime = exectime
                 frameFeatSet.append(ff)
     
         if "skip" in self.parameters or "limit" in self.parameters:

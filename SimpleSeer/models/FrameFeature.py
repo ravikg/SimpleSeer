@@ -36,6 +36,7 @@ class FrameFeature(SimpleEmbeddedDoc, mongoengine.EmbeddedDocument):
     featuretype = mongoengine.StringField()
     featuredata = mongoengine.DictField()  #this holds any type-specific feature data
     featureversion = mongoengine.FloatField(default = 0.0)
+    exectime = mongoengine.FloatField(default = 0.0)
     featurepickle_b64 = mongoengine.StringField() #a pickle of the feature, for rendering out
     _featurebuffer = ''
     #this is incredibly sloppy, really -- but we're going to get away with it
