@@ -52,15 +52,12 @@ module.exports = class inspectionMap extends SubView
     for camera in application.settings.cameras
       @maths[camera.map].push @stringToList(camera.location,@mapThumbnails[camera.map].size)
 
-
   mouseCheck: (event) =>
     os = $(event.target).offset()
     _x = Math.round(event.pageX-os.left)
     _y = Math.round(event.pageY-os.top)
-    #console.log _x,_y
-    @markup.pjs.rect _x,_y,1,1
     for coords in @maths[@lastMap]
-      if _x > coords[0] and _x < (coords[0]+coords[1]) and _y > coords[2] and _y < (coords[2]+coords[3])
+      if _x > coords[0] and _x < (coords[0]+coords[2]) and _y > coords[2] and _y < (coords[1]+coords[3])
         console.log 'in'
         
   stringToList:(str, size) =>
@@ -71,6 +68,7 @@ module.exports = class inspectionMap extends SubView
     list[1] *= size[1]
     list[2] *= size[0]
     list[3] *= size[1]
+    list = _.map(list, ((e) -> return Math.round(e)))
     return list
 
   renderResult:(pjs, result, size) =>
