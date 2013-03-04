@@ -44,10 +44,25 @@ module.exports = class inspectionMap extends SubView
   events: =>
     "click .map-figure": "expandFigure"
     "click .canvas-map": "closeFigure"
+    "mousemove canvas": "mouseCheck"
 
   initialize: =>
     @markup = @addSubview "markup", markupImage, ".canvas-map .graphic"
+    @maths = {'driver':[],'back':[],'passenger':[]}
+    for camera in application.settings.cameras
+      @maths[camera.map].push @stringToList(camera.location,@mapThumbnails[camera.map].size)
 
+
+  mouseCheck: (event) =>
+    os = $(event.target).offset()
+    _x = Math.round(event.pageX-os.left)
+    _y = Math.round(event.pageY-os.top)
+    #console.log _x,_y
+    @markup.pjs.rect _x,_y,1,1
+    for coords in @maths[@lastMap]
+      if _x > coords[0] and _x < (coords[0]+coords[1]) and _y > coords[2] and _y < (coords[2]+coords[3])
+        console.log 'in'
+        
   stringToList:(str, size) =>
     list = str.split(/\,\s*/)
     list[2] -= list[0]
