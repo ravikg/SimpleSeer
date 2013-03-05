@@ -23,29 +23,20 @@ SimpleSeerDateHelper = {
     prettyTime: function(d) {
       var hh = d.getHours();
       var m = d.getMinutes();
-      var s = d.getSeconds();
-      var dd = "am";
       var h = hh;
+      var s = '00';
       
-      if (h >= 12) { h = hh-12; dd = "pm" }
       m = m < 10 ? ("0" + m) : m;
-      s = s < 10 ? ("0" + s) : s;
       h = h < 10 ? ("0" + h) : h;
   
-      return [h, m, s].join(":") + " " + dd;
+      return [h, m, s].join(":");
     },
     
     flushtime: function(timeString) {
         timeString = timeString.toLowerCase();
         
-        var amPm = this.isAmPm(timeString);
         var extension = "";
       
-        if( amPm == true ) {
-            extension  = this.isAmPm(timeString, true);
-            timeString = timeString.replace(/\s*am/g, "");
-            timeString = timeString.replace(/\s*pm/g, "");
-        }
       
         timeString = timeString.split(":");
         if( timeString.length == 2 ) { timeString.push("00"); }
@@ -53,29 +44,8 @@ SimpleSeerDateHelper = {
         return timeString.join(":") + extension;
     },
     
-    isAmPm: function(str, flag) {
-      var isAm = str.toLowerCase().indexOf("am") > 0;
-      var isPm = str.toLowerCase().indexOf("pm") > 0;
-      
-      if( flag ) { return (isAm ? " am" : "") || (isPm ? " pm" : "") }
-      else { return isAm || isPm }
-    },
-    
-      universalizeTime: function(str) {
-        if( this.isAmPm(str) === false ) return str;
-        
-        var extension = this.isAmPm(str, true);
-        str = str.replace(extension, "");
-        
-        if( extension === " pm" ) {
-            var temp = str.split(":");
-            temp[0] = Number(temp[0]);
-            temp[0] = (temp[0] == 12 ? temp[0] : temp[0] + 12);
-            temp = temp.join(":");
-            str = temp;
-        }
-        
-        return str;
+    universalizeTime: function(str) {      
+      return str;
     }
 }
 
@@ -178,6 +148,8 @@ $.widget("ui.datetimerange", {
 
         $(".ss-calendar .date").live("click", function() {
             var eleDate = new Date($(this).attr("data-date"));
+
+            console.log(eleDate);
             
             if( self._inChange == false ) {
                 self._inChange = true;
@@ -204,6 +176,14 @@ $.widget("ui.datetimerange", {
         
         $(".ss-time-from, .ss-time-to").blur(function() {
            $(this).attr("value", SimpleSeerDateHelper.flushtime($(this).attr("value")));
+        });
+
+        $('.ss-time-from').timepicker({
+            showPeriodLabels: false,
+        });
+
+        $('.ss-time-to').timepicker({
+            showPeriodLabels: false,
         });
                 
         goBackMonth.click(function() {
