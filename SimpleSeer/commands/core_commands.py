@@ -362,7 +362,6 @@ class ImportImagesCommand(Command):
         import SimpleSeer.models as M
         from SimpleCV import Image
         import copy
-        
 
         
         metadata = copy.deepcopy(metadata) #make a copy of metadata so we can add/munge
@@ -383,6 +382,9 @@ class ImportImagesCommand(Command):
             try:
                 if self.options.timestring:
                     frame.capturetime = datetime.fromtimestamp(time.strptime(timestring, self.options.timestring))
+                elif self.options.timeregex:
+                    _ts = re.sub(self.options.timeregex['match'],self.options.timeregex['replace'],timestring)
+                    frame.capturetime = parser.parse(_ts)
                 else:
                     frame.capturetime = parser.parse(timestring)
             except Exception as e:
