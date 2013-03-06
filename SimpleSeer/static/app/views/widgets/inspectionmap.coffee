@@ -88,8 +88,9 @@ module.exports = class inspectionMap extends SubView
 
 	renderResult:(pjs, result, size) =>
 		box = @stringToList result.camera.location, size
-		pjs.stroke(if result.string is "0" then 0x8800aa00 else 0x88aa0000)
-		pjs.fill(if result.string is "0" then 0x8800ff00 else 0x88ff0000)
+		pjs.stroke(if result.string is "0" then 0xFF00AA00 else 0xFFAA0000)
+		pjs.fill(if result.string is "0" then 0x8800FF00 else 0x88FF0000)
+		pjs.strokeWeight 3
 		pjs.rect(box[0], box[1], box[2], box[3])
 
 	expandFigure:(e) =>
