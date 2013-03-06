@@ -154,6 +154,11 @@ class Frame(SimpleDoc, mongoengine.Document):
         self.save_image()
         
         epoch_ms = timegm(self.capturetime.timetuple()) * 1000 + self.capturetime.microsecond / 1000
+        # Mongo will automatically fix the datetime but not the epoch
+        if self.capturetime.tzinfo:
+            diff = self.capturetime.tzinfo.utcoffset(self.capturetime)
+            tzoffset = (-1 * diff.days * 86400) - diff.seconds
+            epoch_ms += (tzoffset * 1000)
         if self.capturetime_epoch != epoch_ms:
             self.capturetime_epoch = epoch_ms
         
