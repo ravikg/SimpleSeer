@@ -148,8 +148,6 @@ $.widget("ui.datetimerange", {
 
         $(".ss-calendar .date").live("click", function() {
             var eleDate = new Date($(this).attr("data-date"));
-
-            console.log(eleDate);
             
             if( self._inChange == false ) {
                 self._inChange = true;
