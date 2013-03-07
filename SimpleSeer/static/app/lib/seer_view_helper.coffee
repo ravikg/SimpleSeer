@@ -149,3 +149,12 @@ Handlebars.registerHelper "not_in", (context, options) ->
     options.inverse context
   else
     options.fn context
+    
+Handlebars.registerHelper "localize_dt", (epoch, options) ->
+  dt = moment.utc(epoch)
+  if options.hash.format?
+    f = options.hash.format
+  else
+    f = "MM-DD-YYYY"
+  dt.local()
+  return new Handlebars.SafeString dt.format(f)
