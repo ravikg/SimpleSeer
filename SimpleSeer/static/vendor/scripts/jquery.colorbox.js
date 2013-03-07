@@ -29,6 +29,7 @@
 		title: false,
 		rel: false,
 		opacity: 0.9,
+		rotation: 0,
 		preloading: true,
 		className: false,
 		
@@ -897,6 +898,12 @@
 						percent = (photo.height - settings.mh) / photo.height;
 						setResize();
 					}
+				}
+
+				if (settings.rotation) {
+					var rotationValue = settings.rotation;
+					var previousStyle = $(photo).attr("style");
+					$(photo).attr("style", previousStyle + "transform:rotate("+rotationValue+");-ms-transform:rotate("+rotationValue+");-moz-transform:rotate("+rotationValue+");-webkit-transform:rotate("+rotationValue+");-o-transform:rotate("+rotationValue+");")
 				}
 				
 				if (settings.h) {
