@@ -16,6 +16,8 @@ module.exports = class Table extends SubView
   sortKey:'id'
   sortDirection:'desc'
   cof:false
+  editable:true
+  editableList:{}
 
   events :=>
     "click th" : "thSort"
@@ -23,11 +25,14 @@ module.exports = class Table extends SubView
   initialize: =>
     @rows = []
     super()
+
+    # Setting up our initial conditions, options, variables etc
     if !@options.page?
       @options.page = "inf"
     else
       @cof = true
 
+    # Columns
     if !@options.tableCols?
       @tableCols = [
         key: "id"
@@ -35,9 +40,11 @@ module.exports = class Table extends SubView
       ,
         key: "camera"
         title: "Camera"
+        editable: true
       ,
         key: "capturetime"
         title: "Capture Time"
+        editable: false
       ]
     else
       @tableCols = @options.tableCols
@@ -52,6 +59,9 @@ module.exports = class Table extends SubView
       else 
         @sortDirection = 'desc'
 
+    if @options.editable? and @options.editable
+      @editable = @options.editable
+
     # Get the collection
     @collection = new Collection([],{model:Frame,clearOnFetch:@cof})
     if @sortKey == 'capturetime'
@@ -62,6 +72,7 @@ module.exports = class Table extends SubView
     @collection.fetch
       success:@updateData
 
+    # Pick how we want to paginate this bad boy
     if @options.page == "inf"
       @on "page", @infinitePage
     else
@@ -75,11 +86,40 @@ module.exports = class Table extends SubView
     rows:@rows
     pageButtons:@options.page == "page"
 
+  isEditable: (key) =>
+    edit = 0
+    $.each @tableCols, (k, v) ->
+      if v.key == key
+        if v.editable? and v.editable
+          edit++
+    if edit
+      return true
+    else 
+      return false
+
+  # Render the cell
+  renderCell: (value, key) =>
+    if @editable
+      if @isEditable(key)
+        args = {
+          placeholder: value
+          type: 'text'
+          value: value
+          class: key
+        }
+        html = "<input "
+        $.each args, (k, v) =>
+          html += k + '="' + v + '" '
+        html += "/>"
+        value = html
+    return value
+
   # Render the row
   renderRow:(row) =>
     values = []
-    $.each @tableCols, (k, v) ->
-      r = {'class' : v.key, 'value' : row[v.key]}
+    $.each @tableCols, (k, v) =>
+      value = @renderCell(row[v.key], v.key)
+      r = {'class' : v.key, 'value' : value}
       values.push r
 
     return {id:row.id, values:values}
