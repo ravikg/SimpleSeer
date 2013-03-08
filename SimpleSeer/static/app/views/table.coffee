@@ -28,18 +28,13 @@ module.exports = class Table extends SubView
     else
       @cof = true
 
-    # Hardcoded columns names
-    # @TODO - Move this into the database
-    @tableCols = [
-      key: "id"
-      title: "ID"
-    ,
-      key: "camera"
-      title: "Camera"
-    ,
-      key: "capturetime"
-      title: "Capture Times"
-    ]
+    if !@options.tableCols?
+      @tableCols = [
+        key: "id"
+        title: "ID"
+      ]
+    else
+      @tableCols = @options.tableCols
 
     # Get the collection
     @collection = new Collection([],{model:Frame,clearOnFetch:@cof})
