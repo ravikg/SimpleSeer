@@ -98,7 +98,10 @@ module.exports = class Table extends SubView
       return false
 
   # Render the cell
-  renderCell: (value, key) =>
+  renderCell: (value, key) =>    
+    # Special cases go here? Human readable, etc.
+
+    # Process the cell for an editable field
     if @editable
       if @isEditable(key)
         args = {
