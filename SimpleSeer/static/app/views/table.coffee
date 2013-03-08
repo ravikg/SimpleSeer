@@ -13,7 +13,7 @@ module.exports = class Table extends SubView
   direction:-1
   insertDirection: -1
   renderComplete:false
-  sortKey:'capturetime'
+  sortKey:'id'
   sortDirection:'desc'
   cof:false
 
@@ -35,6 +35,16 @@ module.exports = class Table extends SubView
       ]
     else
       @tableCols = @options.tableCols
+
+    if @options.sortKey? and @options.sortKey
+      @sortKey = @options.sortKey
+
+    if @options.sortDirection? and @options.sortDirection
+      @direction = @options.sortDirection
+      if @direction == 1
+        @sortDirection = 'asc'
+      else 
+        @sortDirection = 'desc'
 
     # Get the collection
     @collection = new Collection([],{model:Frame,clearOnFetch:@cof})
