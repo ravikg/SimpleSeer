@@ -85,6 +85,7 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
         #TODO more advanced filtering options here
 
         values = []
+        hasToleranceFunction = False
         if hasattr(featureset[0], self.method):
             values = [getattr(f, self.method) for f in featureset] 
         elif featureset[0].featuredata.has_key(self.method):
@@ -98,6 +99,7 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
                 return []
             
             values = function_ref(frame, featureset)
+            hasToleranceFunction = hasattr(function_ref, 'tolerance')
         
         if self.booleans:
             values = self.testBooleans(values, self.booleans, frame.results)
@@ -107,7 +109,11 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
             values = [ v for v, c in zip(values, conds) if c ]
         
         results = self.toResults(frame, values)
-        results = self.tolerance(frame, results)
+        
+        if hasToleranceFunction:
+            results = function_ref.tolerance(frame, results)
+        else:
+            results = self.tolerance(frame, results)
         
         return results
     
