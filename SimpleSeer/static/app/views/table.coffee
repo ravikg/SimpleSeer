@@ -32,6 +32,12 @@ module.exports = class Table extends SubView
       @tableCols = [
         key: "id"
         title: "ID"
+      ,
+        key: "camera"
+        title: "Camera"
+      ,
+        key: "capturetime"
+        title: "Capture Time"
       ]
     else
       @tableCols = @options.tableCols
