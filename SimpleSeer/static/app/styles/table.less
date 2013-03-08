@@ -1,0 +1,64 @@
+table.table {
+  width: 100%;
+
+  th, td {
+    padding: 4px;
+  }
+
+  thead {
+    th {
+      color: #000000;
+      background: #FFFFFF;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+
+      .dir {
+        float: right;
+        width: 15px;
+        height: 15px;
+      }
+
+      .dir.desc {
+        background: url("/img/asc.gif") 50% 50% no-repeat;
+      }
+
+      .dir.asc {
+        background: url("/img/desc.gif") 50% 50% no-repeat;
+      }
+
+    }
+
+    .ph {
+      position: fixed;
+      top: 30px;
+      visibility: hidden;
+    }
+
+  }
+}
+
+table.table-striped {
+  tbody > tr:nth-child(odd) > td, 
+  tbody > tr:nth-child(odd) > th {
+    background-color: #F9F9F9;
+  }
+}
+
+table.table-bordered {
+  border: 1px solid #333333;
+
+  thead {
+    border: 1px solid #CCCCCC;
+
+    th {
+      border: 1px solid #CCCCCC;
+    }
+  }
+
+  tbody {
+    td {
+      border: 1px solid #CCCCCC;
+    }
+  }
+}
