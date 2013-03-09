@@ -5,6 +5,7 @@ import sys
 import pkg_resources
 import subprocess
 import time
+import re
 from path import path
 from SimpleSeer.Session import Session
 from SimpleSeer.models import Alert
@@ -64,6 +65,8 @@ class BackupCommand(ManageCommand):
 
 class DeployCommand(ManageCommand):
     "Deploy an instance"
+    supervisor_link = "/etc/supervisor/conf.d/simpleseer.conf"
+    
     def __init__(self, subparser):
         subparser.add_argument("directory", help="Target", default = os.path.realpath(os.getcwd()), nargs = '?')
 
@@ -72,15 +75,13 @@ class DeployCommand(ManageCommand):
         if os.path.lexists(link):
             os.remove(link)
             
-        supervisor_link = "/etc/supervisor/conf.d/simpleseer.conf"
+        supervisor_link = self.supervisor_link
         if os.path.lexists(supervisor_link):
             os.remove(supervisor_link)
             
         print "Linking %s to %s" % (self.options.directory, link)
         os.symlink(self.options.directory, link)
         
-        
-
         hostname = gethostname()
         hostname_supervisor_filename = hostname + "_supervisor.conf"
         src_host_specific_supervisor = path(self.options.directory) / 'etc' / hostname_supervisor_filename
@@ -97,6 +98,122 @@ class DeployCommand(ManageCommand):
         
         print "Reloading supervisord"
         subprocess.check_output(['supervisorctl', 'reload'])
+
+
+class ServiceCommand(ManageCommand):
+    
+    
+    def __init__(self, subparser):
+        subparser.add_argument("verb", help="what you want to do with services: [list,add,remove]")
+        subparser.add_argument("service", help="command you want to run with supervisor", default = "", nargs = '?')
+        subparser.add_argument("args", help="arguments to the command", default = "", nargs = '?')
+
+        subparser.add_argument("--logsize", help="maximum size for the service log file to attain eg 200MB, 2G", default="200MB", nargs="?")
+        subparser.add_argument("--noautostart", help="don't start up automatically with supervisord", default=False, action="store_true")
+
+
+    def _get_group(self, service):
+        if service in ['mongodb', 'broker']:
+            return 'subsystem'
+        else:
+            return 'seer'
+
+    def run(self):
+        if not self.options.verb in ['list', 'deploy', 'remove']:
+            self.options.verb = 'list'
+        
+        if not os.path.exists(DeployCommand.supervisor_link):
+            print "You need to run 'simpleseer deploy' before you can manage services"
+            return
+        
+        import ConfigParser
+        cp = ConfigParser.RawConfigParser()
+        cp.read(DeployCommand.supervisor_link)
+        
+        need_write = False
+        
+        if self.options.verb == 'list':
+            print "simpleseer services installed:"
+            for program in [k for k in cp.sections() if re.match("program", k)]:
+                print "\t{} autostart={} log size={}".format(program, dict(cp.items(program)).get('autostart', "False"), dict(cp.items(program)).get('stdout_logfile_maxbytes', "N/A"))
+            
+            print "\nsimpleseer service groups:"
+            for group in [k for k in cp.sections() if re.match("group", k)]:
+                print "\t{} programs={}".format(group, cp.get(group, 'programs'))
+        
+        section = "program:" + self.options.service
+        group = "group:" + self._get_group(self.options.service)
+        
+        if self.options.verb == 'deploy':
+            if not self.options.service:
+                print 'you must specify a service to deploy'
+                return
+            
+            template = dict(
+                process_name = "%(program_name)s",
+                priority = "30",
+                redirect_stderr = "True",
+                directory = "/etc/simpleseer",
+                stdout_logfile = "/var/log/simpleseer.{}.log".format(self.options.service),
+                startsecs = "5",
+            )
+            
+            if cp.has_section(section):
+                print "updating service {}".format(self.options.service)
+                template = dict(cp.items(section))
+            else:
+                cp.add_section(section)
+            
+            section_options = template
+            section_options['command'] = "/usr/local/bin/simpleseer -c /etc/simpleseer -l /etc/simpleseer/simpleseer-logging.cfg {} {}".format(self.options.service, self.options.arguments)
+            section_options['autostart'] = str(not self.options.noautostart)
+            section_options['stdout_logfile_maxbytes'] = self.options.logsize
+            
+            for k, v in section_options.items():
+                cp.set(section, k, v)
+            
+            old_group_value = cp.get(group, "programs")
+            group_list = [programs for programs in old_value.split(",") if programs != self.options.service]
+            group_list.append(self.options.service)
+            new_group_value = ",".join(group_list)
+            cp.set(group, "programs", new_group_value)
+            
+            need_write = True
+            
+            
+        if self.options.verb == 'remove':
+            if not self.options.service:
+                print "you must specify a service to remove"
+                return
+            
+            
+            if not cp.has_section(section):
+                print "no service {} is installed, so can't do anything"
+                return
+            
+            cp.remove_section(section)
+            print "removed {} from services".format(section)
+            
+            
+            old_group_value = cp.get(group, "programs")
+            new_group_value = ",".join([programs for programs in old_value.split(",") if programs != self.options.service])
+            cp.set(group, "programs", new_group_value)
+            print "removed {} from {}".format(self.options.service, group)
+            
+            
+            need_write = True
+        
+        if need_write:
+            conf_file = "etc/" + gethostname() + "_supervisor.conf"
+            
+            print "writing config to {}".format(conf_file)
+            conf = open(conf_file, 'w')
+            cp.write(conf)
+            conf.close()
+            print "\nrun 'simpleseer deploy' as root to restart services and update symlink"
+            
+            
+    
 
 class GenerateDocsCommand(ManageCommand):
     def __init__(self, subparser):
