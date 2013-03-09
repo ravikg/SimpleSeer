@@ -20,6 +20,12 @@ module.exports = class View extends Backbone.View
       application.loadContext(options.context)
     @subviews = {}
 
+  focus: =>
+    if !@$el.is(":visible")
+      @$el.show()
+    if @options.context
+      application.context[@options.context].activate()
+
   # Override in child class.  Returns template handlebars function
   template: =>
     return
@@ -55,6 +61,7 @@ module.exports = class View extends Backbone.View
     callback = =>
       @$el.html @template @getRenderData()
       @renderSubviews()
+      @focus()
       @afterRender()
       @firstRender = false
 
