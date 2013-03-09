@@ -165,7 +165,7 @@ class ServiceCommand(ManageCommand):
                 cp.add_section(section)
             
             section_options = template
-            section_options['command'] = "/usr/local/bin/simpleseer -c /etc/simpleseer -l /etc/simpleseer/simpleseer-logging.cfg {} {}".format(self.options.service, self.options.arguments)
+            section_options['command'] = "/usr/local/bin/simpleseer -c /etc/simpleseer -l /etc/simpleseer/simpleseer-logging.cfg {} {}".format(self.options.service, self.options.args)
             section_options['autostart'] = str(not self.options.noautostart)
             section_options['stdout_logfile_maxbytes'] = self.options.logsize
             
@@ -173,7 +173,7 @@ class ServiceCommand(ManageCommand):
                 cp.set(section, k, v)
             
             old_group_value = cp.get(group, "programs")
-            group_list = [programs for programs in old_value.split(",") if programs != self.options.service]
+            group_list = [programs for programs in old_group_value.split(",") if programs != self.options.service]
             group_list.append(self.options.service)
             new_group_value = ",".join(group_list)
             cp.set(group, "programs", new_group_value)
@@ -196,7 +196,7 @@ class ServiceCommand(ManageCommand):
             
             
             old_group_value = cp.get(group, "programs")
-            new_group_value = ",".join([programs for programs in old_value.split(",") if programs != self.options.service])
+            new_group_value = ",".join([programs for programs in old_group_value.split(",") if programs != self.options.service])
             cp.set(group, "programs", new_group_value)
             print "removed {} from {}".format(self.options.service, group)
             
