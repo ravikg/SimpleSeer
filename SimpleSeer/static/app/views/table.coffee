@@ -6,6 +6,7 @@ Collection = require "collections/table"
 Frame = require "models/frame"
 
 # Standardized Table View
+# @TODO: Fix the sorting issue -- collection set array is in reverse order
 
 module.exports = class Table extends SubView
   template:template
@@ -21,6 +22,7 @@ module.exports = class Table extends SubView
 
   events :=>
     "click th" : "thSort"
+    "change table.table input" : "changeCell"
 
   initialize: =>
     @rows = []
@@ -41,10 +43,26 @@ module.exports = class Table extends SubView
         key: "camera"
         title: "Camera"
         editable: true
+        nullVal: '#'
       ,
         key: "capturetime"
         title: "Capture Time"
         editable: false
+      ,
+        key: "metadata-extra"
+        title: "Extra"
+        editable: true
+        subcols: [
+          key: 'metadata-extra-min'
+          title: "Min"
+          editable: true
+          nullVal: '---'
+        ,
+          key: 'metadata-extra-max'
+          title: "Max"
+          editable: true
+          nullVal: ''
+        ]
       ]
     else
       @tableCols = @options.tableCols
@@ -86,9 +104,9 @@ module.exports = class Table extends SubView
     rows:@rows
     pageButtons:@options.page == "page"
 
-  isEditable: (key) =>
+  isEditable: (cols, key) =>
     edit = 0
-    $.each @tableCols, (k, v) ->
+    $.each cols, (k, v) ->
       if v.key == key
         if v.editable? and v.editable
           edit++
@@ -97,31 +115,109 @@ module.exports = class Table extends SubView
     else 
       return false
 
+  subCols: (key) =>
+    subCols = undefined
+    $.each @tableCols, (k, v) ->
+      if v.key == key
+        if v.subcols
+          subCols = v.subcols
+    return subCols
+
   # Render the cell
   renderCell: (value, key) =>    
     # Special cases go here? Human readable, etc.
+    parentKey = key
 
     # Process the cell for an editable field
     if @editable
-      if @isEditable(key)
-        args = {
-          placeholder: value
-          type: 'text'
-          value: value
-          class: key
-        }
-        html = "<input "
-        $.each args, (k, v) =>
-          html += k + '="' + v + '" '
-        html += "/>"
-        value = html
+      if @isEditable(@tableCols, key)
+        subcols = @subCols(key)
+        if subcols
+          html = '<div class="subCols">'
+          $.each subcols, (k, v) =>
+            key = v.key
+            path = key.split('-')
+            val = ''
+            if value? and value and value[path[2]]? and value[path[2]]
+              val = value[path[2]]
+            if !val
+              if v.nullVal? and v.nullVal
+                placeholder = v.nullVal
+              else
+                placeholder = ''
+            if @isEditable(subcols, key)
+              args = {
+                placeholder: placeholder
+                type: 'text'
+                name: parentKey + '-' + path[2]
+                value: val
+                class: parentKey + '-' + path[2]
+              }
+              html += '<div class="subCol"><label for="' + parentKey + '-' + path[2] + '">' + v.title + '</label>'
+              html += "<input "
+              $.each args, (k, v) =>
+                html += k + '="' + v + '" '
+              html += "/></div>"
+            else
+              html += '<div class="' + parentKey + '.' + key + '">' + val + '</div>';
+
+          html += '</div>';
+          value = html
+        else 
+          # @TODO: Pull nullval into scope here
+          args = {
+            placeholder: value
+            type: 'text'
+            value: value
+            class: key
+          }
+          html = "<input "
+          $.each args, (k, v) =>
+            html += k + '="' + v + '" '
+          html += "/>"
+          value = html
+
     return value
+
+  changeCell: (e) =>
+    target = $(e.target)
+    id = target.parents('tr').attr('id')
+    key = target.attr('class')
+    value = target.val();
+    if id and key and value
+      frame = @collection.get(id)
+      o = key.split('-')
+      if o.length > 1
+        p = frame.get(o[0])
+        if !p[o[1]]?
+          p[o[1]] = {}
+        p[o[1]][o[2]] = value
+        @saveCell(frame, p, p[0])
+      else
+        obj = {}
+        obj[key] = value
+        @saveCell(frame, obj)
+
+  saveCell: (frame, obj, key = '') =>
+    if key
+      frame.save {key:obj}
+    else
+      frame.save obj
 
   # Render the row
   renderRow:(row) =>
     values = []
     $.each @tableCols, (k, v) =>
-      value = @renderCell(row[v.key], v.key)
+      path = v.key.split('-')
+      if path.length > 1
+        r = row.get(path[0])
+        key = v.key
+        val = r[path[1]]
+      else
+        key = v.key
+        val = row.get(path[0])
+
+      value = @renderCell(val, key)
       r = {'class' : v.key, 'value' : value}
       values.push r
 
@@ -200,7 +296,7 @@ module.exports = class Table extends SubView
     # Iterate through the collection list
     @rows = []
     _.each @collection.models, (model) =>
-      @insertRow(model.attributes, @insertDirection)
+      @insertRow(model, @insertDirection)
 
     # Initialize persistant headers
     @initializeHeaders()
@@ -216,7 +312,7 @@ module.exports = class Table extends SubView
   appendData: =>
     @rows = []
     _.each @collection.models, (model) =>
-      @insertRow(model.attributes, @insertDirection)
+      @insertRow(model, @insertDirection)
 
     @render()
 
