@@ -22,10 +22,10 @@ module.exports = class SubView extends View
     # Use `append` when creating a subview to append subview to an html element
     if @options.append
       if !@options.parent.$('#'+@options.append).length
-        @options.parent.$(@options.selector).append('<'+tagName+' class="'+className+'" id="'+@options.append+'" '+tags+'/>')
+        $(@options.selector).append('<'+tagName+' class="'+className+'" id="'+@options.append+'" '+tags+'/>')
       @setElement @options.parent.$ '#'+@options.append
     else
-      foo = @setElement @options.parent.$ @options.selector
+      foo = @setElement $ @options.selector
     super
     @
 

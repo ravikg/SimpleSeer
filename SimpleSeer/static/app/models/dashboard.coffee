@@ -17,7 +17,7 @@ module.exports = class Dashboard extends Model
     if @view
       @view.clearSubviews()
       for widget in @attributes.widgets
-        vi = @view.addSubview "widget_"+widget.id, dashboardWidget, '#widget_grid', {append:"widget_"+widget.id,widget:widget}
+        vi = @view.addSubview "widget_"+widget.id, dashboardWidget, @view.$el.find("#widget_grid").get(), {append:"widget_"+widget.id,widget:widget}
         vi.render()
       @loaded = true
 
