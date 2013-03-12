@@ -29,8 +29,8 @@ module.exports = class ImageCanvas extends SubView
 		@canvas = @$("canvas")
 		@image = @$("img")
 		@image.load =>
-			@image.attr("data-w", @image.width())
-			@image.attr("data-h", @image.height())
+			@image.attr("data-w", @image.get(0).width)
+			@image.attr("data-h", @image.get(0).height)
 			@loaded = true
 			@image.show()
 			@afterLoad()
@@ -67,10 +67,9 @@ module.exports = class ImageCanvas extends SubView
 		wider = (w > box.width)
 		taller = (h > box.height)
 		if(wider or taller)
-			if (w - box.width > h - box.height)
-				@_scaleFactor = box.width / w
-			else
-				@_scaleFactor = box.height / h
+			scaleW = box.width / w
+			scaleH = box.height / h
+			@_scaleFactor = Math.min(scaleH, scaleW)
 			@image.width(w * @_scaleFactor)
 			@image.height(h * @_scaleFactor)	
 
