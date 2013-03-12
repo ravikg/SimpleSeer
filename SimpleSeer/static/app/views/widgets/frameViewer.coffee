@@ -22,7 +22,7 @@ module.exports = class frameViewer extends SubView
   loaderToggle:(img)=>
     @$el.find('.fillImage:visible').css("display", "none")
     ci = $(img.target)
-    ci.css("display","block")
+    ci.css("display","inline-block")
     @setSize(ci)
 
   setSize:(ci=@$el.find(".fillImage")) =>
@@ -43,7 +43,6 @@ module.exports = class frameViewer extends SubView
     @imgs = @$el.find('img')
     for o in @imgs
       o.onload = @loaderToggle
-
     @imglen = @imgs.length
     @imgcurr = 0
     return @
