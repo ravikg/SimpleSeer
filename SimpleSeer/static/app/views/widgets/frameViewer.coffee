@@ -22,10 +22,10 @@ module.exports = class frameViewer extends SubView
   loaderToggle:(img)=>
     @$el.find('.fillImage:visible').css("display", "none")
     ci = $(img.target)
-    ci.css("display","inline-block")
+    ci.css("display","block")
     @setSize(ci)
 
-  setSize:(ci=@$el.find(".fillImage:visible")) =>
+  setSize:(ci=@$el.find(".fillImage")) =>
     ci.css("margin-top", ((@$el.find(".fillImageCont").height() / 2) - (ci.height() / 2) + "px"))    
 
   receive:(frame)=>
