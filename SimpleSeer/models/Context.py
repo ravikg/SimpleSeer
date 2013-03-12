@@ -16,7 +16,7 @@ class ContextSchema(fes.Schema):
 class Context(SimpleDoc, mongoengine.Document):
     name = mongoengine.StringField(default='')
     options = mongoengine.DictField(default={})
-    menuItems = mongoengine.ListField(mongoengine.DictField(),default={})
+    menuItems = mongoengine.ListField(mongoengine.DictField(),default=())
 
     def __repr__(self):
         return "%s Object <%s>" % (self.__class__.__name__, self.name)
