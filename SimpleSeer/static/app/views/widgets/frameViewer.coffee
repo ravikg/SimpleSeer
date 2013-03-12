@@ -36,7 +36,7 @@ module.exports = class frameViewer extends SubView
     @imgcurr=(@imgcurr+1)%@imglen
     ci = $(@imgs[@imgcurr])
     ci.attr('src',@url)
-    return
+    return @frame
     
   render:=>
     super()
