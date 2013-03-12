@@ -18,28 +18,36 @@ module.exports = class ImageCanvas extends SubView
 	getRenderData: =>
 		image: @options.image
 
+	afterLoad: =>
+		@_scale()
+		@_align()
+		@_markup(@options.engine)
+
 	afterRender: =>
 		@canvas = @$("canvas")
 		@image = @$("img")
 		@image.load =>
 			@image.show()
-			@_scale()
-			@_align()
-			@_markup(@options.engine)
+			@afterLoad()
 
-	# The padding method is called when
+	# The align method is called when
 	# the widget is given a padding option.
 	# Padding is used to push the image 
 	# away from the edges of the canvas to
 	# prevent any clipping of the markup.
 	_align: =>
 		[w, h] = [@image.width(), @image.height()]
-		left = (@options.width - w) / 2
-		top = (@options.height - h) / 2
+		left = Math.floor((@options.width - w) / 2)
+		top = Math.floor((@options.height - h) / 2)
+
 
 		@image.css
 			"left": "#{left}px"
 			"top": "#{top}px"
+
+		@canvas.css
+			"left": "#{left - @options.padding}px"
+			"top": "#{top - @options.padding}px"
 
 	# The scale method is called when
 	# the canvas and image need to be
@@ -49,18 +57,20 @@ module.exports = class ImageCanvas extends SubView
 		box =
 			width: @options.width - @options.padding * 2,
 			height: @options.height - @options.padding * 2
-		
+
 		# Check if we need to scale down the image itself.
 		wider = (w > box.width)
 		taller = (h > box.height)
-		console.log w, h, box
 		if(wider or taller)
 			if (w - box.width > h - box.height)
 				@_scaleFactor = box.width / w
 			else
 				@_scaleFactor = box.height / h
 			@image.width(w * @_scaleFactor)
-			@image.height(h * @_scaleFactor)			
+			@image.height(h * @_scaleFactor)	
+
+		@canvas.width @image.width() + @options.padding * 2
+		@canvas.height @image.height() + @options.padding * 2		
 
 	# The markup method is called each
 	# time the view is rendered. It draws
@@ -68,13 +78,18 @@ module.exports = class ImageCanvas extends SubView
 	# default.
 	_markup:(engine = =>) =>
 		[w, h] = [@canvas.width(), @canvas.height()]
+		[w1, h1] = [@image.width(), @image.height()]
 		@processing = new Processing(@canvas.get(0))
 		@processing.size w, h
 		@processing.background 0, 0
-		engine(@processing, @options)
+		engine(@processing, @options, [w1, h1])
 
-	width:() =>
+	width:(value) =>
+		if value? then @options.width = value
+		@afterLoad()
 		return @options.width
 
-	height:() =>
+	height:(value) =>
+		if value? then @options.height = value
+		@afterLoad()
 		return @options.height		
