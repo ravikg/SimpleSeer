@@ -14,19 +14,24 @@ module.exports = class ImageCanvas extends SubView
 	image: {}
 	processing: {}
 	_scaleFactor: 1
+	loaded: false
 
 	getRenderData: =>
 		image: @options.image
 
 	afterLoad: =>
-		@_scale()
-		@_align()
-		@_markup(@options.engine)
+		if @loaded
+			@_scale()
+			@_align()
+			@_markup(@options.engine)
 
 	afterRender: =>
 		@canvas = @$("canvas")
 		@image = @$("img")
 		@image.load =>
+			@image.attr("data-w", @image.width())
+			@image.attr("data-h", @image.height())
+			@loaded = true
 			@image.show()
 			@afterLoad()
 
@@ -53,7 +58,7 @@ module.exports = class ImageCanvas extends SubView
 	# the canvas and image need to be
 	# sized to the parent container.
 	_scale: =>
-		[w, h] = [@image.width(), @image.height()]
+		[w, h] = [@image.attr("data-w"), @image.attr("data-h")]
 		box =
 			width: @options.width - @options.padding * 2,
 			height: @options.height - @options.padding * 2
@@ -92,4 +97,4 @@ module.exports = class ImageCanvas extends SubView
 	height:(value) =>
 		if value? then @options.height = value
 		@afterLoad()
-		return @options.height		
+		return @options.height
