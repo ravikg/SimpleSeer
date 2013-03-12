@@ -11,12 +11,12 @@ from SimpleSeer.models.base import SimpleDoc
 class ContextSchema(fes.Schema):
     name = fev.UnicodeString(not_empty=True)
     options = V.JSON(if_empty={}, if_missing={})
-    menuItems = fev.Set(if_empty=[], if_missing=[])
+    menuItems = fev.Set(if_empty={}, if_missing={})
 
 class Context(SimpleDoc, mongoengine.Document):
     name = mongoengine.StringField(default='')
-    options = mongoengine.DictField()
-    menuItems = mongoengine.ListField(mongoengine.DictField())
+    options = mongoengine.DictField(default={})
+    menuItems = mongoengine.ListField(mongoengine.DictField(),default={})
 
     def __repr__(self):
         return "%s Object <%s>" % (self.__class__.__name__, self.name)
