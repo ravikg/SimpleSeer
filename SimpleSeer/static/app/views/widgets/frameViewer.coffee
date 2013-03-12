@@ -25,7 +25,7 @@ module.exports = class frameViewer extends SubView
     ci.css("display","inline-block")
     @setSize(ci)
 
-  setSize:(ci=@$el.find(".fillImage")) =>
+  setSize:(ci=@$el.find(".fillImage:visible")) =>
     ci.css("margin-top", ((@$el.find(".fillImageCont").height() / 2) - (ci.height() / 2) + "px"))    
 
   receive:(frame)=>
