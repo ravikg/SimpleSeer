@@ -70,6 +70,11 @@ module.exports = class ImageCanvas extends SubView
 		[w, h] = [@canvas.width(), @canvas.height()]
 		@processing = new Processing(@canvas.get(0))
 		@processing.size w, h
-		#@processing.scale @_scaleFactor
 		@processing.background 0, 0
 		engine(@processing, @options)
+
+	width:() =>
+		return @options.width
+
+	height:() =>
+		return @options.height		
