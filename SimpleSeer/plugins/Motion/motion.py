@@ -56,10 +56,13 @@ plugin this, MotionFeature:MotionFeature
 '''
 
   def __call__(self, image):
-    if M.Frame.objects.count() > 1:
-      #TODO, find the index of the named camera
-      #lastframe = SS.lastframes[-2][0]
-      lastframe = M.Frame.objects.order_by('-capturetime')[1]
+    if self.inspection.camera:
+        frames = M.Frame.objects(camera = self.inspection.camera).order_by('-capturetime')
+    else:
+        frames = M.Frame.objects.order_by('-capturetime')
+    
+    if frames.count() > 1:
+      lastframe = frames[1]
       lastimage = lastframe.image
     else:
       return None
