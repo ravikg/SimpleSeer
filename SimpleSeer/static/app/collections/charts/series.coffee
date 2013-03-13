@@ -159,8 +159,8 @@ module.exports = class Series extends FilterCollection
         if @accumulate
           @remove p.x.unix(), {silent: true}
         @add p, {silent: true}
-        @_drawData()
         @view.hasData = true
+    @_drawData()
     if @view.hasData && @view.hasMessage
       @view.hideMessage()
     return
