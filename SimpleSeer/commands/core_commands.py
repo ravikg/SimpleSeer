@@ -64,11 +64,11 @@ def OlapCommand(self):
         Inspection.register_plugins('seer.plugins.inspection')
         Measurement.register_plugins('seer.plugins.measurement')
 
-        so = ScheduledOLAP()
-        gevent.spawn_link_exception(so.runSked)
-        
         od = OLAPData()
         gevent.spawn_link_exception(od.listen)
+        
+        so = ScheduledOLAP()
+        gevent.spawn_link_exception(so.runSked)
         
         ro = RealtimeOLAP()
         ro.monitorRealtime()
