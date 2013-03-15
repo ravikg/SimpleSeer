@@ -12,7 +12,7 @@ module.exports = class ImageCanvas extends SubView
 	template: Template
 	canvas: {}
 	image: {}
-	processing: {}
+	processing: undefined
 	_scaleFactor: 1
 	loaded: false
 
@@ -35,6 +35,10 @@ module.exports = class ImageCanvas extends SubView
 			@image.show()
 			@afterLoad()
 
+	_process: =>
+		if !@processing?
+			@processing = new Processing(@canvas.get(0))		
+
 	# The align method is called when
 	# the widget is given a padding option.
 	# Padding is used to push the image 
@@ -44,7 +48,6 @@ module.exports = class ImageCanvas extends SubView
 		[w, h] = [@image.width(), @image.height()]
 		left = Math.floor((@options.width - w) / 2)
 		top = Math.floor((@options.height - h) / 2)
-
 
 		@image.css
 			"left": "#{left}px"
@@ -83,7 +86,7 @@ module.exports = class ImageCanvas extends SubView
 	_markup:(engine = =>) =>
 		[w, h] = [@canvas.width(), @canvas.height()]
 		[w1, h1] = [@image.width(), @image.height()]
-		@processing = new Processing(@canvas.get(0))
+		@_process()
 		@processing.size w, h
 		@processing.background 0, 0
 		engine(@processing, @options, [w1, h1])
