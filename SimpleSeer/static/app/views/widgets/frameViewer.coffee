@@ -40,7 +40,8 @@ module.exports = class frameViewer extends SubView
       @frame = frame
     if @options.camera? and frame.get("camera") != @options.camera
       return
-    @url = @frame.get('imgfile')
+    @url = "/grid/thumbnail_file/"+@frame.get("id")
+    #@url = @frame.get('imgfile')
     @imgcurr=(@imgcurr+1)%@imglen
     ci = $(@imgs[@imgcurr])
     ci.attr('src',@url)
