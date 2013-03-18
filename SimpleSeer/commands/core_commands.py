@@ -205,7 +205,7 @@ def ScrubCommand(self):
                 f.imgfile.delete()
                 f.imgfile = None
         
-                if retention['purge']:
+                if retention.get('purge',False):
                     f.delete()
                 else:
                     f.save(False)
