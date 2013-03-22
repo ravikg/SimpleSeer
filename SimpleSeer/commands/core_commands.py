@@ -235,13 +235,27 @@ def ShellCommand(self):
       
     subprocess.call(cmd, stderr=subprocess.STDOUT)
 
-@Command.simple(use_gevent=True)
-def NotebookCommand(self):
+
+class NotebookCommand(Command):
     'Run the ipython notebook server'
-    import subprocess
-    subprocess.call(["ipython", "notebook",
-            '--port', '5050',
-            '--ext', 'SimpleSeer.notebook', '--pylab', 'inline'], stderr=subprocess.STDOUT)
+    
+    def __init__(self, subparser):
+        subparser.add_argument("--port", help="port defaults to 5050", default="5050")
+        subparser.add_argument("--ip", help="the IP, defaults to 127.0.0.1", default="127.0.0.1")
+        subparser.add_argument("--notebook-dir", help="the notebook directory, defaults to ./notebooks", default="notebooks")
+
+        
+    def run(self):
+        import subprocess
+        import os, os.path
+        if not os.path.exists(self.options.notebook_dir):
+            os.makedirs(self.options.notebook_dir)
+        
+        subprocess.call(["ipython", "notebook",
+                '--port', self.options.port,
+                '--ip', self.options.ip,
+                '--notebook-dir', self.options.notebook_dir,
+                '--ext', 'SimpleSeer.notebook', '--pylab', 'inline'], stderr=subprocess.STDOUT)
 
 
         
