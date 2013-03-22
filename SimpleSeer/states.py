@@ -45,6 +45,7 @@ class Core(object):
         self.video_cameras = []
         self.log = logging.getLogger(__name__)
         self._mem_prof_ticker = 0
+        self.timetable = {}
     
         for cinfo in config.cameras:
             cam = StillCamera(**cinfo)
@@ -201,14 +202,25 @@ class Core(object):
         
         frame.features = []
         frame.results = []
-       
+        
+        frame.capturetime_epoch = int(frame.capturetime.strftime("%s"))*1000
         for inspection in M.Inspection.objects:
-            if not inspection.parent:
-                if not inspection.camera or inspection.camera == frame.camera: 
-                    features = inspection.execute(frame)
-                    frame.features += features
-                    for m in inspection.measurements:
-                        m.execute(frame, features)
+            _iid = "{}-{}".format(inspection.id,frame.camera)
+            if inspection.parent:
+                continue
+            if inspection.camera and inspection.camera != frame.camera:
+                continue
+            if inspection.parameters.get('interval',0) > (frame.capturetime_epoch - self.timetable.get(_iid,0)):
+                continue
+            features = inspection.execute(frame)
+            self.timetable[_iid] = frame.capturetime_epoch
+            frame.features += features
+            for m in inspection.measurements:
+                _mid = "{}-{}".format(m.id,frame.camera)
+                if m.parameters.get('interval',0) > (frame.capturetime_epoch - self.timetable.get(_mid,0)):
+                    continue
+                m.execute(frame, features)
+                self.timetable[_mid] = frame.capturetime_epoch
         
     def process_async(self, frame):
         frame.features = []
