@@ -1,78 +1,83 @@
-import logging, warnings
-
-import zmq
-import gevent
-import gevent.coros
+from pika import BlockingConnection, ConnectionParameters, BasicProperties
 
 from socketio.namespace import BaseNamespace
 
 from .Session import Session
 from .base import jsonencode, jsondecode
 
+import logging
 log = logging.getLogger(__name__)
 
 class ChannelManager(object):
-    __shared_state = { "initialized": False }
-
+    
     def __init__(self, context=None):
-        '''Yeah, it's a borg'''
-        self.__dict__ = self.__shared_state
-        if self.initialized: return
-        self.initialized = True
-        self._channels = {}
-        self.config = Session()
-        self._lock = gevent.coros.RLock()
-        self.context = context or zmq.Context.instance()
-        self.pub_sock = self.context.socket(zmq.PUB)
-        self.pub_sock.connect(self.config.pub_uri)
-
+        self._config = Session()
+        self._response = {}
+        self._connection = BlockingConnection(ConnectionParameters(host=self._config.rabbitmq))
+        
     def __repr__(self):
-        l = [ '<ChannelManager>' ]
-        for name, channel in self._channels.items():
-            l.append('  <Channel %s>' % name)
-            for qs in channel:
-                l.append('    %r' % qs)
-        return '\n'.join(l)
-
-    def publish(self, channel, message):
-        '''Publish a JSON message over the channel. Note that while it would be
-        nice to use a compact and fast encoding like BSON, these messages need to
-        get relayed down to the browser, which is expecting JSON.
-        '''
-        with self._lock:
-            self.pub_sock.send(channel, zmq.SNDMORE, copy = False)
-            self.pub_sock.send(jsonencode(message), copy = False)
-            
-
-    def subscribe(self, name, sleepTime = 0.1):
-        from time import sleep                                 
-                                                                                
-        name=str(name)                                                          
-        sub_sock = self.context.socket(zmq.SUB)                                 
-        sub_sock.connect(self.config.sub_uri)                                   
-        sub_sock.setsockopt(zmq.SUBSCRIBE, name)                                
-        log.info('Subscribe to %s: %s', name, id(sub_sock))                     
-        channel = self._channels.setdefault(name, {})                           
-        channel[id(sub_sock)] = sub_sock                                        
-                                                                                
-        # Send out list of all subscriptions                                    
-        self.publish('subscriptions', self._channels)                           
+        return '<ChannelManager>' 
         
-        sleep(sleepTime)
-                                                                                
-        return sub_sock
+    def __del__(self):
+        self._connection.close()
 
-    def unsubscribe(self, name, sub_sock):
-        log.info('Unsubscribe to %s: %s', name, id(sub_sock))
-        channel = self._channels.get(name, None)
-        if channel is None: return
-        channel.pop(id(sub_sock), None)
-        if not channel:
-            self._channels.pop(name, None)
+    def publish(self, exchange, message):
+        channel = self._connection.channel()
+        channel.exchange_declare(exchange=exchange, exchange_type='fanout')
+        channel.basic_publish(exchange=exchange, routing_key='', body=message)
+        print 'Sent on %s' % exchange
         
-        # Send out list of all subscriptions
-        self.publish('subscriptions', self._channels)
+    def subscribe(self, exchange, callback):
+        log.info('Subscribe to %s' % exchange)                     
+        channel = self._connection.channel()
+        
+        channel.exchange_declare(exchange=exchange, exchange_type='fanout')
+        result = channel.queue_declare(exclusive=True)
+        queue_name = result.method.queue
+        
+        channel.queue_bind(exchange=exchange, queue=queue_name)
+        channel.basic_consume(callback, queue=queue_name, no_ack=True)
+        channel.start_consuming()
+        
+    def rpcSendRequest(self, workQueue, request):
+        from random import choice
+        
+        corrid = ''.join([ choice('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ') for i in range(20) ])
+        self._response[corrid] = None
+        
+        
+        def on_response(ch, method, props, body):
+            if corrid == props.correlation_id:
+                self._response[corrid] = body
+                
+        channel = self._connection.channel()
+        result = channel.queue_declare(exclusive=True)
+        callback_queue = result.method.queue
+        
+        channel.basic_consume(on_response, no_ack=True, queue=callback_queue)
+        channel.basic_publish(exchange='', routing_key=workQueue, body=request, properties=BasicProperties(reply_to=callback_queue, correlation_id=corrid, content_type='application/json'))
+        
+        while self._response[corrid] is None:
+            self._connection.process_data_events()
+            #print 'response is %s' % response
             
+        return self._response.pop(corrid)
+    
+    def rpcRecvRequest(self, workQueue, callback):
+        
+        def on_request(ch, method, props, body):
+            response = callback(body)
+            
+            ch.basic_publish(exchange='', routing_key=props.reply_to, body=response, properties=BasicProperties(correlation_id=props.correlation_id))
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+        
+        channel = self._connection.channel()
+        channel.queue_declare(queue=workQueue)
+            
+        channel.basic_qos(prefetch_count=1)
+        channel.basic_consume(on_request, queue=workQueue)
+        log.info('RPC worker waiting on %s' % workQueue)
+        channel.start_consuming()
             
 class RealtimeNamespace(BaseNamespace):
 
