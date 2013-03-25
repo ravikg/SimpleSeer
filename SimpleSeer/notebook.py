@@ -12,7 +12,6 @@ def load_ipython_extension(ipython):
     
     load_plugins()
     
-    
     s = Session(".")
     ipython.push(
         dict(
@@ -28,7 +27,7 @@ def load_ipython_extension(ipython):
             Dashboard= M.Dashboard,
             Color = Color,
             display=Display(displaytype="notebook"), 
-            cm=ChannelManager(zmq.Context.instance()),
+            cm=ChannelManager(),
             Channel=Channel),
         interactive=True)
     print 'SimpleSeer ipython extension loaded ok'

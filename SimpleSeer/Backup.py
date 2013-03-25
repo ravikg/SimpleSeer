@@ -89,16 +89,14 @@ class Backup:
     @classmethod
     def listen(self):
         
-        log.info('Subscribing to meta/ channel for updates')
-        
-        cm = ChannelManager()
-        sock = cm.subscribe('meta/')
-        
-        while True:
-            cname = sock.recv()
-            log.info('Update from %s, exporting metadata' % cname)
-            Export.exportAll()
+        def export(msg):
+            log.info('Updating meta')
+            Backup.exportAll()
 
+        log.info('Subscribing to meta/ channel for updates')
+        cm = ChannelManager()
+        cm.subscribe('meta/', export)
+        
     @classmethod
     def importAll(self, fname=None, clean=False, skip=False, checkOnly=False):
         from .models.MetaSchedule import MetaSchedule

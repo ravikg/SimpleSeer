@@ -1,48 +1,48 @@
 Collection = require "collections/collection"
 application = require 'application'
-#FramelistFrameView = require './framelistframe_view'
-#context = require '../models/core/context'
-
-###
-Simple Query:
-"query":{"logic":"and","criteria":[{"type":"left","eq":1,"name":"results.state"}]}
-
-Logical Query:
-"query":{"logic":"and","criteria":[{"type":"left","eq":1,"name":"results.state","logic":"and","criteria":[{"type":"left","eq":1,"name":"results.state"}]}]}
-###
-
-#groupfns: list, first, last, max, min, avg, sum
 
 module.exports = class FilterCollection extends Collection
+# \_defaults acts as the default values for the `FilterCollection`.  They are copied in to the `_sortParams` and manipulated from there.
+# The `_sortParams` values are to be set or get using the `getParam` or `setParam` functions.  You can also reset them at any time with the `resetParam` function
+#
+# - __sortkey: (*string*)__ the key of the column to sort by (example: `"capturetime_epoch"` or `"results.numeric"`)
+# - __sorttype: (*string*)__ matches measurement name to search by (example `"motion"` or `"blob"`)
+# - __sortorder: (*int*)__ valid values are -1 or 1. -1 sets the sort to desc, 1 sorts to asc
+# - __skip: (*int*)__ number of records to skip (used for pagination)
+# - __limit: (*int*)__ number of records to return (used for limiting result sets and pagination)
+# - __query: (*obj*)__ query params for mongoengine.  Typically only used by the filters, but here are some examples:
+#   - *Simple Query:* `{"logic":"and","criteria":[{"type":"left","eq":1,"name":"results.state"}]}`
+#   - *Logical Query:* `{"logic":"and","criteria":[{"type":"left","eq":1,"name":"results.state","logic":"and","criteria":[{"type":"left","eq":1,"name":"results.state"}]}]}`
+# - __groupby: (*string*)__ the column which you want to group your data by (example: `"capturetime_epoch"` or `"results.numeric"`)
+# - __groupfns: (*string*)__ the function you want to group your data by
+#   - *Functions:* `list`, `first`, `last`, `max`, `min`, `avg`, `sum`
   _defaults:
     sortkey:false
-    sortorder:-1
     sorttype:false
+    sortorder:-1
     skip:0
     limit:20
     query:{}
     groupby:false
     groupfns:{}
+  # `url` is the path to the restful filter object
   url:"/getFrames"
+  # `subscribePath` is the channel the `subscribe` method (websocket/pubsub) uses to listen for events 
   subscribePath:"frame"
+  # if `mute` is true, altering the query params will not fire a request to the server.  This is typically used for parent level filtercollections that have other filtercollection bound to it  
   mute:false
+  # if clearOnFetch is true, the filtercollection will clear its models list for every request (page by page, or changing filters).
+  # if clearOnFetch is false, the filtercollection will retain its models list, and add newly fetched values on to its stack (endless scroll pagination)
   clearOnFetch:true
   
-  
+  #initialize / constructor
   initialize: (models,params) =>
-    #if params.context?
-      #@context = new context({name:params.context})
-      #@context.fetch()
-      #  success: () =>
-      #    for menuItem of @context.get('menuItems')
-      #      f = 1
-
     # Create callback stack for functions to be called before and after a fetch
     @callbackStack = {}
     @callbackStack['post'] = []
     @callbackStack['pre'] = []
 
-    # The mute param: use if filter collection is a parent and does not contain data
+    # [The mute param](#section-5 "jump to mute examples")
     if params.mute?
       @mute = params.mute
     
@@ -88,19 +88,14 @@ module.exports = class FilterCollection extends Collection
     if !application.settings.ui_filters_framemetadata?
       application.settings.ui_filters_framemetadata = []
 
-    # Render filter widgets
-    if params.view
-      @view = params.view
-      i = 0
-      for o in application.settings.ui_filters_framemetadata
-        #@filters.push @view.addSubview o.type+"_"+o.field_name, @loadFilter(o.format), '#filter_form', {params:o,collection:@,append:"filter_" + i}
-        i+=1
     return @
 
   # Add sub collection
   subCollection: (collection) =>
     @_boundCollections.push collection
 
+  # subscrbe to channel on pubsub
+  # TODO: finish this up
   subscribe: (channel,callback=@receive) =>
     if channel?
       if @name
@@ -115,7 +110,7 @@ module.exports = class FilterCollection extends Collection
       application.socket.on "message:#{@subscribePath}/#{namePath}", callback
       if !application.subscriptions["#{@subscribePath}/#{namePath}"]
         application.subscriptions["#{@subscribePath}/#{namePath}"] = application.socket.emit 'subscribe', "#{@subscribePath}/#{namePath}"
-
+  #trigger fired when receiving data on the pubsub subscription.
   receive: (data) =>
     console.log data
     
@@ -165,37 +160,7 @@ module.exports = class FilterCollection extends Collection
         @setParam('sorttype', sorttype)
     return
   
-  # Sync filters
-  #"query":{"logic":"and","criteria":[{"type":"left","eq":1,"name":"results.state"}]}
-
-  ###
-  # select * where datetime = 123456789 and (results.left.state = 1 or results.right.state = 1) 
-    "query":{
-      "logic":"and",
-      "criteria":[
-        {
-          "type":"frame",
-          "eq":123456789,
-          "name":"dt"
-        },
-        {
-          "logic":"or",
-          "criteria":[
-            {          
-              "type":"left",
-              "eq":1,
-              "name":"results.state"
-            },
-            {          
-              "type":"right",
-              "eq":1,
-              "name":"results.state"
-            }
-          ]
-        }
-      ]
-    }
-  ###
+  # builds a query based on all bound filter widgets
   alterFilters:() =>
     criteria = []
     _json = {}
@@ -208,6 +173,7 @@ module.exports = class FilterCollection extends Collection
     @setParam 'query', _json
     return
   
+  #returns prepared object for query  
   getSettings: (total=false, addParams) =>
     if total
       skip = 0
@@ -226,20 +192,18 @@ module.exports = class FilterCollection extends Collection
         
     if @getParam('groupby')
       _json['groupByField'] = {groupby: @getParam('groupby'), groupfns: @getParam('groupfns')}
-    #if groupByField
-    #  _json['groupByField'] = groupByField
     if addParams
       _json = _.extend _json, addParams
     return _json
-    
+  
+  # gets url with full db query  
+  # TODO: map .error to params.error
   getUrl: (total=false, addParams, dataSet=false)=>
-    #todo: map .error to params.error
-    #if @bindFilter
-    #  dataSet = @bindFilter.getSettings(total, addParams)
     if !dataSet
       dataSet = @getSettings(total, addParams)
     "/"+JSON.stringify dataSet
 
+  # trigger fired before the fetch method makes request to server 
   preFetch:()=>
     application.modal.show()
     if !@clearOnFetch
@@ -250,6 +214,7 @@ module.exports = class FilterCollection extends Collection
     @callbackStack['pre'] = []
     return
   
+  # trigger fired after the fetch method makes request to server 
   postFetch:()=>
     application.modal.onSuccess()
     if !@clearOnFetch
@@ -262,12 +227,18 @@ module.exports = class FilterCollection extends Collection
     @trigger 'reset', @models
     return
 
+  # refreshes the collection from the server
   globalRefresh:=>
     @fetch({force:true})
 
   setRaw: (response) =>
     @raw = response
 
+  # fetches data from the server
+  # params can have `before` or `success` methods passed in.
+  #
+  # - __before__: fires before the fetch makes request to server
+  # - __success__: fires after the fetch makes request to server
   fetch: (params={}) =>
     if params.filtered and @clearOnFetch == false
       @clearOnFetch = true
@@ -292,6 +263,7 @@ module.exports = class FilterCollection extends Collection
       else if params.success
         params.success()
   
+  # parses data returned by `fetch`.  (after `preFetch` and `fetch`, but before `postFetch`)
   parse: (response) =>
     @totalavail = response.total_frames
     @lastavail = response.frames?.length || 0
