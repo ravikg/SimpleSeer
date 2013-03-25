@@ -191,6 +191,7 @@ def frames():
 def getFrames(filter_params):
     from .base import jsondecode
     from HTMLParser import HTMLParser
+    from SeerCloud.OLAPUtils import OLAPFactory
     
     # filter_params should be in the form of a json encoded dicts
     # that probably was also html encoded 
@@ -212,8 +213,9 @@ def getFrames(filter_params):
     
     f = Filter()
     total_frames, frames = f.getFrames(query, limit=limit, skip=skip, sortinfo=sortinfo, groupByField=groupByField)
+    #frames = OLAPFactory.filterToOLAP(query, limit=limit, skip=skip, sortinfo=sortinfo)
+    retVal = dict(frames=frames, total_frames=-1)
     
-    retVal = dict(frames=frames, total_frames=total_frames)
     
     if retVal:
         return retVal
