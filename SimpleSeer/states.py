@@ -7,11 +7,12 @@ from worker import ping_worker, execute_inspection
 import zmq
 import gevent
 
-
 from . import models as M
 from . import util
 from .base import jsondecode, jsonencode
 from .camera import StillCamera, VideoCamera
+
+from realtime import ChannelManager
 
 import logging
 
@@ -45,6 +46,7 @@ class Core(object):
         self.video_cameras = []
         self.log = logging.getLogger(__name__)
         self._mem_prof_ticker = 0
+        self._channel_manager = ChannelManager(shareConnection=False)
         self.timetable = {}
     
         for cinfo in config.cameras:
@@ -100,29 +102,40 @@ class Core(object):
         self.watchers = w
 
     def start_socket_communication(self):
-        '''Listens to ALL messages and trigger()s on them'''
-        context = zmq.Context.instance()
         # Setup subscriber
-        sub_sock = context.socket(zmq.SUB)
-        sub_sock.connect(self._config.sub_uri)
-        sub_sock.setsockopt(zmq.SUBSCRIBE, '')
+        def callback(msg):
+            raw = msg.body
+            try:
+                trig = jsondecode(raw)
+                self._trigger(trig['state'], trig['data'])
+            except:
+                pass
+                
         def g_listener():
-            while True:
-                name = sub_sock.recv()
-                raw_data = sub_sock.recv()
-                try:
-                    data = jsondecode(raw_data)
-                except:
-                    continue
-                self.trigger(name, data)
+            self._channel_manager.subscribe('core/', callback)
+            
+        self.log.info('starting communications on core/')
         gevent.spawn_link_exception(g_listener)
-        # Setup publisher
-        self._pub_sock = context.socket(zmq.PUB)
-        self._pub_sock.connect(self._config.pub_uri)
 
+    def subscribe(self, name):
+        # Create thread that listens for event specified by name
+        # If message received, trigger that event 
+        
+        def callback(msg):
+            raw = msg.body
+            try:
+                data = jsondecode(raw)
+                self.trigger(name, data)
+            except:
+                pass
+        
+        def listener():
+            self._channel_manager.subscribe(name, callback)
+        
+        gevent.spawn_link_exception(listener)
+    
     def publish(self, name, data):
-        self._pub_sock.send(name, zmq.SNDMORE)
-        self._pub_sock.send(jsonencode(data))
+        self._channel_manager.publish(name, data)
 
     def get_image(self, width, index, camera):
         frame = self.lastframes[index][camera]
