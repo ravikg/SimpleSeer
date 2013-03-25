@@ -53,6 +53,7 @@ def ControlsCommand(self):
 def OlapCommand(self):
     try:
         from SeerCloud.OLAPUtils import ScheduledOLAP, RealtimeOLAP, OLAPData
+        from SeerCloud.backfill import MetaSchedule
     except:
         print 'Error starting OLAP schedules.  This requires Seer Cloud'
         return 0
@@ -63,11 +64,18 @@ def OlapCommand(self):
         Inspection.register_plugins('seer.plugins.inspection')
         Measurement.register_plugins('seer.plugins.measurement')
 
+        # The olap cache manager
         od = OLAPData()
         gevent.spawn_link_exception(od.listen)
         
+        # Schedule olaps (olaps with stats)
         so = ScheduledOLAP()
         gevent.spawn_link_exception(so.runSked)
+        
+        # Backfill listener
+        ms = MetaSchedule()
+        gevent.spawn_link_exception(ms.run)
+        gevent.spawn_link_exception(ms.listen)
         
         ro = RealtimeOLAP()
         ro.monitorRealtime()
