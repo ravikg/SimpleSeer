@@ -36,7 +36,6 @@ class CoreCommand(Command):
             raise Exception("State machine " + self.options.program + " not found!")
             
         try:
-            core.start_socket_communication()
             core.run()
         except KeyboardInterrupt as e:
             print "Interupted by user"
@@ -172,20 +171,6 @@ def OPCCommand(self):
         self.log.info('Publishing data to PUB/SUB OPC channel')
         ChannelManager().publish('opc/', data)
         counter = tagcounter
-
-
-@Command.simple(use_gevent=True)
-def BrokerCommand(self):
-    'Run the message broker'
-    from SimpleSeer.broker import PubSubBroker
-    from SimpleSeer import models as M
-    try:
-        psb = PubSubBroker(self.session.pub_uri, self.session.sub_uri)
-        psb.start()
-        psb.join()
-    except KeyboardInterrupt as e:
-        print "Interrupted by user"
-
 
 @Command.simple(use_gevent=False)
 def ScrubCommand(self):
