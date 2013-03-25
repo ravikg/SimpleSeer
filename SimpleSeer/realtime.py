@@ -51,10 +51,13 @@ class ChannelManager(object):
         
         channel.queue_bind(exchange=exchange, queue=queue_name)
         channel.basic_consume(callback=callback, queue=queue_name)
-            
-        while True:
-            channel.wait()
         
+        try:    
+            while True:
+                channel.wait()
+        except:
+            channel.close()
+    
     def rpcSendRequest(self, workQueue, request):
         from random import choice
         
@@ -69,14 +72,14 @@ class ChannelManager(object):
         
         def on_response(msg):
             if corrid == msg.properties['correlation_id']:
-                self._response[corrid] = msg.body
+                self._response[corrid] = jsondecode(msg.body)
                 
         channel = conn.channel()
         (callback_queue, msgs, consumers) = channel.queue_declare(exclusive=True)
         
         channel.basic_consume(callback=on_response, no_ack=True, queue=callback_queue)
         
-        msg = amqp.Message(request)
+        msg = amqp.Message(jsonencode(request))
         msg.properties['correlation_id'] = corrid
         msg.properties['reply_to'] = callback_queue
         
@@ -96,7 +99,7 @@ class ChannelManager(object):
                     
         def on_request(msg):
             res = callback(msg.body)
-            resMsg = amqp.Message(res)
+            resMsg = amqp.Message(jsonencode(res))
             resMsg.properties['correlation_id'] = msg.properties['correlation_id']
             
             msg.channel.basic_publish(resMsg, exchange='', routing_key=msg.properties['reply_to'])
@@ -111,6 +114,27 @@ class ChannelManager(object):
         log.info('RPC worker waiting on %s' % workQueue)
         while True:
             channel.wait()
+        
+    def exchangeExists(self, name):    
+        exists = True
+        inUse = False
+        
+        if not self._shareConnection:
+            conn = amqp.Connection(host=self._config.rabbitmq)
+        else:
+            conn = self._connection
+        
+        channel = conn.channel()
+        
+        try:
+            channel.exchange_delete(exchange=name, if_unused=True)
+        except Exception as e:
+            if e[0] == 404:
+                exists = False
+            if e[0] == 406:
+                inUse = True
+            
+        return exists and inUse
             
 class RealtimeNamespace(BaseNamespace):
 

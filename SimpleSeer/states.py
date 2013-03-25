@@ -117,8 +117,25 @@ class Core(object):
         self.log.info('starting communications on core/')
         gevent.spawn_link_exception(g_listener)
 
+    def subscribe(self, name):
+        # Create thread that listens for event specified by name
+        # If message received, trigger that event 
+        
+        def callback(msg):
+            raw = msg.body
+            try:
+                data = jsondecode(raw)
+                self.trigger(name, data)
+            except:
+                pass
+        
+        def listener():
+            self._channel_manager.subscribe(name, callback)
+        
+        gevent.spawn_link_exception(listener)
+    
     def publish(self, name, data):
-        self._channel_manager.publish('core/', {'state': name, 'data': data})
+        self._channel_manager.publish(name, data)
 
     def get_image(self, width, index, camera):
         frame = self.lastframes[index][camera]
