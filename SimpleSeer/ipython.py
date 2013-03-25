@@ -24,7 +24,7 @@ def load_ipython_extension(ipython):
             Dashboard = M.Dashboard,
             Color = Color,
             M=M,
-            cm=ChannelManager(zmq.Context.instance()),
+            cm=ChannelManager(),
             Channel=Channel),
         interactive=True)
     ipython.prompt_manager.in_template="SimpleSeer:\\#> "

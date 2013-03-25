@@ -229,7 +229,7 @@ class GenerateDocsCommand(ManageCommand):
                 if not os.path.exists(_dp):
                     os.makedirs(_dp)
                 try:
-                    print subprocess.check_output(['docco', "{}/*.coffee".format(root,),'--output',_dp])
+                    print subprocess.check_output(['docco', "{}/*.coffee".format(root,),'--layout linear', '--output',_dp])
                 except:
                     print "Error running docco.  You may need to do the following:"
                     print "sudo npm install -g docco"

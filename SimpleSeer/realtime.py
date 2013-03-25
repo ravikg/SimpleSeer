@@ -1,84 +1,146 @@
-import logging, warnings
-
-import zmq
-import gevent
-import gevent.coros
+#from pika import BlockingConnection, ConnectionParameters, BasicProperties
+from amqplib import client_0_8 as amqp
 
 from socketio.namespace import BaseNamespace
+import gevent
 
 from .Session import Session
 from .base import jsonencode, jsondecode
 
+import logging
 log = logging.getLogger(__name__)
 
 class ChannelManager(object):
-    __shared_state = { "initialized": False }
-
-    def __init__(self, context=None):
-        '''Yeah, it's a borg'''
-        self.__dict__ = self.__shared_state
-        if self.initialized: return
-        self.initialized = True
-        self._channels = {}
-        self.config = Session()
-        self._lock = gevent.coros.RLock()
-        self.context = context or zmq.Context.instance()
-        self.pub_sock = self.context.socket(zmq.PUB)
-        self.pub_sock.connect(self.config.pub_uri)
-
+    
+    def __init__(self, shareConnection=True):
+        self._init = True
+        self._config = Session()
+        self._response = {}
+        
+        # Greenlets don't like shared connections
+        self._shareConnection = shareConnection
+        if shareConnection:
+            self._connection = amqp.Connection(host=self._config.rabbitmq)
+            
     def __repr__(self):
-        l = [ '<ChannelManager>' ]
-        for name, channel in self._channels.items():
-            l.append('  <Channel %s>' % name)
-            for qs in channel:
-                l.append('    %r' % qs)
-        return '\n'.join(l)
-
-    def publish(self, channel, message):
-        '''Publish a JSON message over the channel. Note that while it would be
-        nice to use a compact and fast encoding like BSON, these messages need to
-        get relayed down to the browser, which is expecting JSON.
-        '''
-        with self._lock:
-            self.pub_sock.send(channel, zmq.SNDMORE, copy = False)
-            self.pub_sock.send(jsonencode(message), copy = False)
-            
-
-    def subscribe(self, name, sleepTime = 0.1):
-        from time import sleep                                 
-                                                                                
-        name=str(name)                                                          
-        sub_sock = self.context.socket(zmq.SUB)                                 
-        sub_sock.connect(self.config.sub_uri)                                   
-        sub_sock.setsockopt(zmq.SUBSCRIBE, name)                                
-        log.info('Subscribe to %s: %s', name, id(sub_sock))                     
-        channel = self._channels.setdefault(name, {})                           
-        channel[id(sub_sock)] = sub_sock                                        
-                                                                                
-        # Send out list of all subscriptions                                    
-        self.publish('subscriptions', self._channels)                           
+        return '<ChannelManager>' 
         
-        sleep(sleepTime)
-                                                                                
-        return sub_sock
-
-    def unsubscribe(self, name, sub_sock):
-        log.info('Unsubscribe to %s: %s', name, id(sub_sock))
-        channel = self._channels.get(name, None)
-        if channel is None: return
-        channel.pop(id(sub_sock), None)
-        if not channel:
-            self._channels.pop(name, None)
+    def publish(self, exchange, message):
+        if not self._shareConnection:
+            conn = amqp.Connection(host=self._config.rabbitmq)
+        else:
+            conn = self._connection
+        channel = conn.channel()
+        channel.exchange_declare(exchange=exchange, type='fanout')
+        msg = amqp.Message(jsonencode(message))
         
-        # Send out list of all subscriptions
-        self.publish('subscriptions', self._channels)
+        channel.basic_publish(msg, exchange=exchange, routing_key='')
+        channel.close()
+        
+    def subscribe(self, exchange, callback):
+        log.info('Subscribe to %s' % exchange)                     
+        if not self._shareConnection:
+            conn = amqp.Connection(host=self._config.rabbitmq)
+        else:
+            conn = self._connection        
+        
+        channel = conn.channel()
+        
+        channel.exchange_declare(exchange=exchange, type='fanout')
+        (queue_name, msgs, consumers) = channel.queue_declare(exclusive=True)
+        
+        channel.queue_bind(exchange=exchange, queue=queue_name)
+        channel.basic_consume(callback=callback, queue=queue_name)
+        
+        try:    
+            while True:
+                channel.wait()
+        except:
+            channel.close()
+    
+    def rpcSendRequest(self, workQueue, request):
+        from random import choice
+        
+        if not self._shareConnection:
+            conn = amqp.Connection(host=self._config.rabbitmq)
+        else:
+            conn = self._connection
+        
+        corrid = ''.join([ choice('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ') for i in range(20) ])
+        self._response[corrid] = None
+        
+        
+        def on_response(msg):
+            if corrid == msg.properties['correlation_id']:
+                self._response[corrid] = jsondecode(msg.body)
+                
+        channel = conn.channel()
+        (callback_queue, msgs, consumers) = channel.queue_declare(exclusive=True)
+        
+        channel.basic_consume(callback=on_response, no_ack=True, queue=callback_queue)
+        
+        msg = amqp.Message(jsonencode(request))
+        msg.properties['correlation_id'] = corrid
+        msg.properties['reply_to'] = callback_queue
+        
+        channel.basic_publish(msg, exchange='', routing_key=workQueue)
+        
+        while self._response[corrid] is None:
+            channel.wait()
+            log.info('RPC request on %s' % workQueue)
             
+        return self._response.pop(corrid)
+    
+    def rpcRecvRequest(self, workQueue, callback):
+        if not self._shareConnection:
+            conn = amqp.Connection(host=self._config.rabbitmq)
+        else:
+            conn = self._connection
+                    
+        def on_request(msg):
+            res = callback(msg.body)
+            resMsg = amqp.Message(jsonencode(res))
+            resMsg.properties['correlation_id'] = msg.properties['correlation_id']
+            
+            msg.channel.basic_publish(resMsg, exchange='', routing_key=msg.properties['reply_to'])
+            msg.channel.basic_ack(delivery_tag=msg.delivery_tag)
+        
+        channel = conn.channel()
+        channel.queue_declare(queue=workQueue)
+            
+        channel.basic_qos(prefetch_size=0, prefetch_count=1, a_global=False)
+        channel.basic_consume(callback=on_request, queue=workQueue)
+        
+        log.info('RPC worker waiting on %s' % workQueue)
+        while True:
+            channel.wait()
+        
+    def exchangeExists(self, name):    
+        exists = True
+        inUse = False
+        
+        if not self._shareConnection:
+            conn = amqp.Connection(host=self._config.rabbitmq)
+        else:
+            conn = self._connection
+        
+        channel = conn.channel()
+        
+        try:
+            channel.exchange_delete(exchange=name, if_unused=True)
+        except Exception as e:
+            if e[0] == 404:
+                exists = False
+            if e[0] == 406:
+                inUse = True
+            
+        return exists and inUse
             
 class RealtimeNamespace(BaseNamespace):
 
     def initialize(self):
-        self._channels = {}  # _channels[name] = (socket, greenlet)
-        self._channel_manager = ChannelManager()
+        self._channels = {}  # _channels[exchange] = greenlet
+        self._channel_manager = ChannelManager(shareConnection=False)
 
     def disconnect(self, *args, **kwargs):
         for name in self._channels.keys():
@@ -96,23 +158,33 @@ class RealtimeNamespace(BaseNamespace):
         self._channel_manager.publish(str(name), jsondict)
 
     def _subscribe(self, name):
-        socket = self._channel_manager.subscribe(name)
-        greenlet = gevent.spawn_link_exception(self._relay, name, socket)
-        self._channels[name] = (socket, greenlet)
+        #self._channel_manager.subscribe(name)
+        #greenlet = gevent.spawn_link_exception(self._relay, name, socket)
+        greenlet = gevent.spawn_link_exception(self._relay, name)
+        self._channels[name] = greenlet
         
     def _unsubscribe(self, name):
         if name not in self._channels: return
-        socket, greenlet = self._channels.pop(name)
+        greenlet = self._channels.pop(name)
         greenlet.kill()
-        self._channel_manager.unsubscribe(name, socket)
+        #self._channel_manager.unsubscribe(name, socket)
 
-    def _relay(self, name, socket):
-        while True:
-            channel = socket.recv() # discard the envelope
-            message = socket.recv()
-            self.emit('message:' + name, dict(
-                    channel=channel,
-                    data=jsondecode(message)))
+    #def _relay(self, name, socket):
+    def _relay(self, exchange):
+        
+        def callback(msg):
+            self.emit('message:' + exchange, dict(
+                    channel=exchange,
+                    data=jsondecode(msg.body)))
+        
+        self._channel_manager.subscribe(exchange, callback) 
+                    
+        #while True:
+        #    channel = socket.recv() # discard the envelope
+        #    message = socket.recv()
+        #    self.emit('message:' + name, dict(
+        #            channel=channel,
+        #            data=jsondecode(message)))
 
 #this is a little syntax sugar for debugging pubsub
 class Channel(object):
@@ -121,7 +193,7 @@ class Channel(object):
     subsock = ''
     
     def __init__(self, name):
-        self.manager = ChannelManager()  #this is a borg, so 
+        self.manager = ChannelManager(shareConnection=False)  #this is a borg, so 
         self.channelname = name
         
     def publish(self, **kwargs):
