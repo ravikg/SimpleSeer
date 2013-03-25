@@ -232,9 +232,15 @@ class Core(object):
         inspections = list(M.Inspection.objects)
         #allocate each inspection to a celery task
         for inspection in M.Inspection.objects:
-            if not inspection.parent:
-                if not inspection.camera or inspection.camera == frame.camera: 
-                    results_async.append(execute_inspection.delay(inspection.id, frame.imgfile.grid_id, frame.metadata))
+            _iid = "{}-{}".format(inspection.id,frame.camera)
+            if inspection.parent:
+                continue
+            if inspection.camera and inspection.camera != frame.camera:
+                continue
+            if inspection.parameters.get('interval',0) > (frame.capturetime_epoch - self.timetable.get(_iid,0)):
+                continue
+            self.timetable[_iid] = frame.capturetime_epoch
+            results_async.append(execute_inspection.delay(inspection.id, frame.imgfile.grid_id, frame.metadata))
         
         return results_async
         
