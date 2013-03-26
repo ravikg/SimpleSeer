@@ -169,7 +169,7 @@ class Backup:
             
             for k, v in o['obj'].iteritems():
                 # Enqueue items for backfill only if method changed or if clean
-                if k == 'method' and (v != getattr(model, 'method') or clean) and not skip:
+                if k == 'method' and (v != getattr(model, 'method') or clean) and not skip and M.Frame.objects.count():
                     if o['type'] == 'Measurement':
                         ChannelManager().rpcSendRequest('backfill/', {'type': 'measurement', 'id': model.id})
                     else:
@@ -205,7 +205,7 @@ class Backup:
         
                     
     
-        if not skip:
+        if not skip and M.Frame.objects.count():
             log.info('Backfill run in olap process.  Make sure olap and worker are running.')
         elif not checkOnly:
             log.info('Skipping backfill')
