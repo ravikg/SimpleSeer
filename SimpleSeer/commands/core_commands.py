@@ -193,6 +193,7 @@ def ScrubCommand(self):
             q_csr = M.Frame.objects(imgfile__ne = None)
             q_csr = q_csr.order_by('-capturetime')
             q_csr = q_csr.skip(retention['maxframes'])
+            numframes = q_csr.count()
             for f in q_csr:
                 # clean out the fs.files and .chunks
                 f.imgfile.delete()
@@ -210,7 +211,7 @@ def ScrubCommand(self):
             if 'fs.chunks' in db.collection_names():
                 db.command({'compact': 'fs.chunks'})
         
-            self.log.info('Purged %d frame files', q_csr.count())
+            self.log.info('Purged %d frame files', numframes)
         else:
             self.log.info('Backfill running.  Waiting to scrub')
         time.sleep(retention["interval"])
