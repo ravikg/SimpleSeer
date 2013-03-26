@@ -245,15 +245,18 @@ class Core(object):
         results_async = []
         inspections = list(M.Inspection.objects)
         #allocate each inspection to a celery task
+
+        # all times are in seconds, not ms
+        ct_epoch = int(frame.capturetime.strftime("%s"))
         for inspection in M.Inspection.objects:
             _iid = "{}-{}".format(inspection.id,frame.camera)
             if inspection.parent:
                 continue
             if inspection.camera and inspection.camera != frame.camera:
                 continue
-            if inspection.parameters.get('interval',0) > (frame.capturetime_epoch - self.timetable.get(_iid,0)):
+            if inspection.parameters.get('interval',0) > (ct_epoch - self.timetable.get(_iid,0)):
                 continue
-            self.timetable[_iid] = frame.capturetime_epoch
+            self.timetable[_iid] = ct_epoch
             results_async.append(execute_inspection.delay(inspection.id, frame.imgfile.grid_id, frame.metadata))
         
         return results_async
@@ -262,6 +265,7 @@ class Core(object):
         
         #note that async results refer to Celery results, and not Frame results
         results_complete = []
+        ct_epoch = int(frame.capturetime.strftime("%s"))
         while not len(results_complete) == len(results_async):
             new_ready_results = []
             for index, r in enumerate(results_async):
@@ -284,7 +288,11 @@ class Core(object):
                 frame.features += features
                 #import pdb;pdb.set_trace()
                 for m in insp.measurements:
+                    _mid = "{}-{}".format(m.id,frame.camera)
+                    if m.parameters.get('interval',0) > (ct_epoch - self.timetable.get(_mid,0)):
+                        continue
                     m.execute(frame, features)
+                    self.timetable[_mid] = ct_epoch
             
             results_complete += new_ready_results
             time.sleep(0.2)
