@@ -21,7 +21,7 @@ class MotionTrend(base.MeasurementPlugin):
     
     def __call__(self, frame, featureset):
         meas = self.measurement
-        timeframe = meas.parameters.get("timeframe", 0)
+        timewindow = meas.parameters.get("timewindow", 0)
         motionthreshhold = meas.parameters.get("motionthreshhold", 0)
         
         frameset = Frame.objects(capturetime__gt = frame.capturetime - timedelta(0, timewindow),
