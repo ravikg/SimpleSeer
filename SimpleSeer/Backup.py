@@ -99,7 +99,6 @@ class Backup:
         
     @classmethod
     def importAll(self, fname=None, clean=False, skip=False, checkOnly=False):
-        from .models.MetaSchedule import MetaSchedule
         
         if clean:
             log.info('Clear the olap cache')
@@ -158,7 +157,6 @@ class Backup:
                 if not found:
                     objs.append(alt)
         
-        ms = MetaSchedule()
         #log.info('Loading new metadata')
         for o in objs:
             try:
@@ -173,9 +171,9 @@ class Backup:
                 # Enqueue items for backfill only if method changed or if clean
                 if k == 'method' and (v != getattr(model, 'method') or clean) and not skip:
                     if o['type'] == 'Measurement':
-                        ms.enqueue_measurement(model.id)
+                        ChannelManager().rpcSendRequest('backfill/', {'type': 'measurement', 'id': model.id})
                     else:
-                        ms.enqueue_inspection(model.id)
+                        ChannelManager().rpcSendRequest('backfill/', {'type': 'inspection', 'id': model.id})
                 
                 if k != 'id':
                     if type(getattr(getattr(M, (o['type'])), k)) == mongoengine.base.ObjectIdField:
@@ -208,7 +206,6 @@ class Backup:
                     
     
         if not skip:
-            log.info('Beginning backfill')
-            ms.run()
+            log.info('Backfill run in olap process.  Make sure olap and worker are running.')
         elif not checkOnly:
             log.info('Skipping backfill')
