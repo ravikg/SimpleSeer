@@ -216,24 +216,25 @@ class Core(object):
         frame.features = []
         frame.results = []
         
-        frame.capturetime_epoch = int(frame.capturetime.strftime("%s"))*1000
+        # all times are in seconds, not ms
+        ct_epoch = int(frame.capturetime.strftime("%s"))
         for inspection in M.Inspection.objects:
             _iid = "{}-{}".format(inspection.id,frame.camera)
             if inspection.parent:
                 continue
             if inspection.camera and inspection.camera != frame.camera:
                 continue
-            if inspection.parameters.get('interval',0) > (frame.capturetime_epoch - self.timetable.get(_iid,0)):
+            if inspection.parameters.get('interval',0) > (ct_epoch - self.timetable.get(_iid,0)):
                 continue
             features = inspection.execute(frame)
-            self.timetable[_iid] = frame.capturetime_epoch
+            self.timetable[_iid] = ct_epoch
             frame.features += features
             for m in inspection.measurements:
                 _mid = "{}-{}".format(m.id,frame.camera)
-                if m.parameters.get('interval',0) > (frame.capturetime_epoch - self.timetable.get(_mid,0)):
+                if m.parameters.get('interval',0) > (ct_epoch - self.timetable.get(_mid,0)):
                     continue
                 m.execute(frame, features)
-                self.timetable[_mid] = frame.capturetime_epoch
+                self.timetable[_mid] = ct_epoch
         
     def process_async(self, frame):
         frame.features = []

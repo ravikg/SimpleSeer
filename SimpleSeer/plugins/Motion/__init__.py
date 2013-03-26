@@ -1,1 +1,1 @@
-from .motion import Motion
+from .motion import Motion, MotionTrend
