@@ -158,8 +158,6 @@ class RealtimeNamespace(BaseNamespace):
         self._channel_manager.publish(str(name), jsondict)
 
     def _subscribe(self, name):
-        #self._channel_manager.subscribe(name)
-        #greenlet = gevent.spawn_link_exception(self._relay, name, socket)
         greenlet = gevent.spawn_link_exception(self._relay, name)
         self._channels[name] = greenlet
         
@@ -167,9 +165,7 @@ class RealtimeNamespace(BaseNamespace):
         if name not in self._channels: return
         greenlet = self._channels.pop(name)
         greenlet.kill()
-        #self._channel_manager.unsubscribe(name, socket)
-
-    #def _relay(self, name, socket):
+    
     def _relay(self, exchange):
         
         def callback(msg):
@@ -179,32 +175,22 @@ class RealtimeNamespace(BaseNamespace):
         
         self._channel_manager.subscribe(exchange, callback) 
                     
-        #while True:
-        #    channel = socket.recv() # discard the envelope
-        #    message = socket.recv()
-        #    self.emit('message:' + name, dict(
-        #            channel=channel,
-        #            data=jsondecode(message)))
-
 #this is a little syntax sugar for debugging pubsub
-class Channel(object):
-    manager = ''
-    channelname = ''
-    subsock = ''
+class Channel():
+    manager = None
+    channelname = None
     
     def __init__(self, name):
-        self.manager = ChannelManager(shareConnection=False)  #this is a borg, so 
+        self.manager = ChannelManager(shareConnection=False)
         self.channelname = name
         
     def publish(self, **kwargs):
         self.manager.publish(self.channelname + "/", kwargs)
     
     def listen(self):
-        if self.subsock == '':
-            self.subsock = self.manager.subscribe(self.channelname + "/")
         
-        channel = self.subsock.recv()
-        message = self.subsock.recv()
+        def callback(msg):
+            print jsondecode(msg.body)
         
-        return jsondecode(message)
+        self.manager.subscribe(self.channelname + "/", callback)
         

@@ -14,6 +14,8 @@ from . import util
 from .Session import Session
 from path import path
 
+import pkg_resources
+    
 
 DEBUG = True
 
@@ -34,14 +36,12 @@ def make_app():
     views.route.register_routes(app)
     crud.register(app)
     
-    if 'SeerCloud' in sys.modules:
-        checkCloud(app)
+    for ep in pkg_resources.iter_entry_points('seer.views'):
+        print ep.__dict__
+        mod = __import__(ep.module_name, globals(), locals(), [ep.name])
+        getattr(mod, ep.attrs[0]).register_web(app)
     
     return app
-
-def checkCloud(app):
-    from SeerCloud.views import CloudViews
-    CloudViews.register_web(app)
         
 
 class WebServer(object):
