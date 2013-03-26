@@ -33,20 +33,6 @@ def ping_worker(number):
     print "ping worker with number {}".format(number)
     return number + 1
     
-
-"""
-@task()
-def backfill_tolerances(measurement_ids, frame_id):
-    f = M.Frame.objects.get(id = frame_id)
-    
-    results = []
-    for m_id in measurement_ids: 
-        m = M.Measurement.objects.get(id = m_id)
-        results += m.tolerance(f, f.results)
-    
-    return (f.id, results)
-"""  
-
 @task()
 def backfill_meta(frame_id, inspection_ids, measurement_ids):
     from SeerCloud.OLAPUtils import RealtimeOLAP
