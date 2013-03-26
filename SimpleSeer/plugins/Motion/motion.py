@@ -49,7 +49,7 @@ class MotionTrend(base.MeasurementPlugin):
             motion = [feature for feature in frame.features if feature.featuretype == "MotionFeature"]
             
             if len(motion) and motion[0].feature.movement < motionthreshhold:
-                print motion[0].feature.movement, motionthreshhold
+                #print motion[0].feature.movement, motionthreshhold
                 trend[0]+=1
             else:
                 break
