@@ -59,17 +59,7 @@ def index():
       m.update(fHandler.read())
       MD5Hashes[baseUrl+f] = dict(path=m.hexdigest(),type=f.rsplit(".")[1])
       print MD5Hashes
-    return render_template("index.html",params = dict(MD5Hashes=MD5Hashes))
-
-@route('/reset', methods=['GET'])
-def reset():
-    from .Backup import Backup
-    log.info('about to run cleanup')
-    M.Frame._get_db().metaschedule.remove()
-    Backup.importAll(clean=True)
-    log.info('cleanup done')
-    return 'Meta objects removed.  Frames being cleaned in background'
-    
+    return render_template("index.html",params = dict(MD5Hashes=MD5Hashes))    
 
 @route('/log/<type>', methods=['POST'])
 def jsLogger(type):
