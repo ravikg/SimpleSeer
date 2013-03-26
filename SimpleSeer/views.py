@@ -38,18 +38,6 @@ class route(object):
         for func, path, kwargs in cls.routes:
             app.route(path, **kwargs)(func)
 
-def fromJson(string):
-    from .base import jsondecode
-    from HTMLParser import HTMLParser
-    
-    # filter_params should be in the form of a json encoded dicts
-    # that probably was also html encoded 
-    p = HTMLParser()
-    string = str(p.unescape(string))
-    string = jsondecode(string)
-    return string
-
-
 @route('/socket.io/<path:path>')
 def sio(path):
     socketio_manage(
@@ -71,17 +59,7 @@ def index():
       m.update(fHandler.read())
       MD5Hashes[baseUrl+f] = dict(path=m.hexdigest(),type=f.rsplit(".")[1])
       print MD5Hashes
-    return render_template("index.html",params = dict(MD5Hashes=MD5Hashes))
-
-@route('/reset', methods=['GET'])
-def reset():
-    from .Backup import Backup
-    log.info('about to run cleanup')
-    M.Frame._get_db().metaschedule.remove()
-    Backup.importAll(clean=True)
-    log.info('cleanup done')
-    return 'Meta objects removed.  Frames being cleaned in background'
-    
+    return render_template("index.html",params = dict(MD5Hashes=MD5Hashes))    
 
 @route('/log/<type>', methods=['POST'])
 def jsLogger(type):
