@@ -3,6 +3,8 @@ import numpy as np
 import SimpleCV
 from SimpleSeer import models as M
 from SimpleSeer import util
+from SimpleSeer.models import Frame
+from datetime import timedelta
 
 from SimpleSeer.plugins import base
 
@@ -21,8 +23,17 @@ class MotionTrend(base.MeasurementPlugin):
     
     def __call__(self, frame, featureset):
         meas = self.measurement
-        timewindow = meas.parameters.get("timewindow", 0)
-        motionthreshhold = meas.parameters.get("motionthreshhold", 0)
+        minframes = 2
+        timewindow = meas.parameters.get("timewindow", 60)
+        motionthreshhold = meas.parameters.get("motionthreshhold", 5)
+        
+        #import pdb; pdb.set_trace();
+        
+        # if movement of current frame is less than motionthreshhold, just exit.  We'll catch it on the flip side.
+        for feature in featureset:
+            if feature.featuretype == "MotionFeature" and feature.feature.movement < motionthreshhold:
+                return []
+            
         
         frameset = Frame.objects(capturetime__gt = frame.capturetime - timedelta(0, timewindow),
            capturetime__lt = frame.capturetime, 
@@ -31,7 +42,18 @@ class MotionTrend(base.MeasurementPlugin):
         if len(frameset) < minframes:
             return []
         
-        frameset = list(frameset) #load into memory
+        frameset = reversed(frameset) #load into memory
+        
+        trend = [0]
+        for frame in frameset:
+            motion = [feature for feature in frame.features if feature.featuretype == "MotionFeature"]
+            
+            if len(motion) and motion[0].feature.movement < motionthreshhold:
+                trend[0]+=1
+            else:
+                break
+        return trend
+            
 
 
 
