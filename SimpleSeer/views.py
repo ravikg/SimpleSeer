@@ -38,18 +38,6 @@ class route(object):
         for func, path, kwargs in cls.routes:
             app.route(path, **kwargs)(func)
 
-def fromJson(string):
-    from .base import jsondecode
-    from HTMLParser import HTMLParser
-    
-    # filter_params should be in the form of a json encoded dicts
-    # that probably was also html encoded 
-    p = HTMLParser()
-    string = str(p.unescape(string))
-    string = jsondecode(string)
-    return string
-
-
 @route('/socket.io/<path:path>')
 def sio(path):
     socketio_manage(
