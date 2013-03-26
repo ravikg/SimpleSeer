@@ -54,6 +54,7 @@ module.exports = class frameViewer extends SubView
       o.onload = @loaderToggle
     @imglen = @imgs.length
     @imgcurr = 0
+    application.modal.onSuccess()
     return @
   
   getRenderData: =>
