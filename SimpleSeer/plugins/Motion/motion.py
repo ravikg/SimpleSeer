@@ -26,13 +26,14 @@ class MotionTrend(base.MeasurementPlugin):
         minframes = 2
         timewindow = meas.parameters.get("timewindow", 60)
         motionthreshhold = meas.parameters.get("motionthreshhold", 5)
+        trend = [0]
         
         #import pdb; pdb.set_trace();
         
         # if movement of current frame is less than motionthreshhold, just exit.  We'll catch it on the flip side.
         for feature in featureset:
-            if feature.featuretype == "MotionFeature" and feature.feature.movement < motionthreshhold:
-                return []
+            if feature.featuretype == "MotionFeature" and feature.feature.movement > motionthreshhold:
+                return trend
             
         
         frameset = Frame.objects(capturetime__gt = frame.capturetime - timedelta(0, timewindow),
@@ -40,15 +41,15 @@ class MotionTrend(base.MeasurementPlugin):
            camera = frame.camera
            ).order_by("capturetime")
         if len(frameset) < minframes:
-            return []
+            return trend
         
         frameset = reversed(frameset) #load into memory
         
-        trend = [0]
         for frame in frameset:
             motion = [feature for feature in frame.features if feature.featuretype == "MotionFeature"]
             
             if len(motion) and motion[0].feature.movement < motionthreshhold:
+                #print motion[0].feature.movement, motionthreshhold
                 trend[0]+=1
             else:
                 break
