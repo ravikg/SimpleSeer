@@ -8,10 +8,13 @@ module.exports = class frameViewer extends SubView
   tagName:"div"
   template:template
   realtime:true
+  useThumb: false
     
   initialize: =>
     @url = ''
     super()
+    if @options.usethumb?
+      @useThumb = @options.usethumb
     #todo: make camera dependent?
     if @realtime == true
       @subscribe()
@@ -40,8 +43,7 @@ module.exports = class frameViewer extends SubView
       @frame = frame
     if @options.camera? and frame.get("camera") != @options.camera
       return
-    @url = "/grid/thumbnail_file/"+@frame.get("id")
-    #@url = @frame.get('imgfile')
+    @url = "/grid/#{if @useThumb then "thumbnail_file" else "imgfile"}/#{@frame.get("id")}"
     @imgcurr=(@imgcurr+1)%@imglen
     ci = $(@imgs[@imgcurr])
     ci.attr('src',@url)
@@ -63,3 +65,6 @@ module.exports = class frameViewer extends SubView
   onUpdate: (frame) =>
     @frame = frame
     @render()
+
+  reflow: =>
+    @setSize()
