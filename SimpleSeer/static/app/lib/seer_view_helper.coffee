@@ -158,3 +158,7 @@ Handlebars.registerHelper "localize_dt", (epoch, options) ->
     f = "MM-DD-YYYY"
   dt.local()
   return new Handlebars.SafeString dt.format(f)
+
+Handlebars.registerHelper "log", (value) ->
+  console.log value
+  return new Handlebars.SafeString ""
