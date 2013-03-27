@@ -37,7 +37,6 @@ def make_app():
     crud.register(app)
     
     for ep in pkg_resources.iter_entry_points('seer.views'):
-        print ep.__dict__
         mod = __import__(ep.module_name, globals(), locals(), [ep.name])
         getattr(mod, ep.attrs[0]).register_web(app)
     

@@ -67,7 +67,7 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
     #TODO, validate that this method exists
     camera = mongoengine.StringField(default='')
     #TODO validate that this camera exists
-    # use (int) parameters['interval'] to run Inspection every N milliseconds
+    # use (int) parameters['interval'] to run Inspection every N seconds
     parameters = mongoengine.DictField(default={})
     #TODO validate against function
     filters = mongoengine.DictField(default={})

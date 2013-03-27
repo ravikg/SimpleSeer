@@ -3,6 +3,8 @@ import numpy as np
 import SimpleCV
 from SimpleSeer import models as M
 from SimpleSeer import util
+from SimpleSeer.models import Frame
+from datetime import timedelta
 
 from SimpleSeer.plugins import base
 
@@ -17,11 +19,52 @@ meas.save()
 
 """
 
+class MotionTrend(base.MeasurementPlugin):
+    
+    def __call__(self, frame, featureset):
+        meas = self.measurement
+        minframes = 2
+        timewindow = meas.parameters.get("timewindow", 60)
+        motionthreshhold = meas.parameters.get("motionthreshhold", 5)
+        trend = [0]
+        
+        #import pdb; pdb.set_trace();
+        
+        # if movement of current frame is less than motionthreshhold, just exit.  We'll catch it on the flip side.
+        for feature in featureset:
+            if feature.featuretype == "MotionFeature" and feature.feature.movement > motionthreshhold:
+                return trend
+            
+        
+        frameset = Frame.objects(capturetime__gt = frame.capturetime - timedelta(0, timewindow),
+           capturetime__lt = frame.capturetime, 
+           camera = frame.camera
+           ).order_by("capturetime")
+        if len(frameset) < minframes:
+            return trend
+        
+        frameset = reversed(frameset) #load into memory
+        
+        for frame in frameset:
+            motion = [feature for feature in frame.features if feature.featuretype == "MotionFeature"]
+            
+            if len(motion) and motion[0].feature.movement < motionthreshhold:
+                #print motion[0].feature.movement, motionthreshhold
+                trend[0]+=1
+            else:
+                break
+        return trend
+            
+
+
+
+
 class MotionFeature(SimpleCV.Feature):
   movement = 0.0
 
   def __init__(self, image, mval, compared_with=None, top = 0, left = 0, right = -1, bottom = -1):
-    #TODO, if parameters are given, crop on both images
+    #TODO, if parameters are given, crop on both images    
+
     self.image = image
     self.movement = mval
     self.compared = compared_with

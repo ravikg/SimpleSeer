@@ -53,7 +53,7 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
     label = mongoengine.StringField(default='')
     labelkey = mongoengine.StringField(default='')
     method = mongoengine.StringField(default='')
-    # use (int) parameters['interval'] to run Measurement every N milliseconds
+    # use (int) parameters['interval'] to run Measurement every N seconds
     parameters = mongoengine.DictField(default={})
     units = mongoengine.StringField(default='px')
     fixdig = mongoengine.IntField(default=99)
