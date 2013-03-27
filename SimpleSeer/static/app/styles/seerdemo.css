@@ -140,6 +140,10 @@ section#content .full-screen-page {
   box-shadow:  0px 1px 0px #420, 0px -1px 0 #520, 0 0 22px rgba(255, 68, 0,.7)
 }
 
+input#code-input[disabled=disabled] {
+  color: #777 !important;
+}
+
 #code-submit {
   position: absolute;
   left: 593px;
