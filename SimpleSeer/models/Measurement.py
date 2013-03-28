@@ -253,7 +253,8 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
                 inspection_id=self.inspection,
                 inspection_name=inspection.name,
                 measurement_id=self.id,
-                measurement_name=self.name)
+                measurement_name=self.name,
+                measurement_label=self.label)
             for i, v in enumerate(values) ]
         frame.results.extend(results)
         return results

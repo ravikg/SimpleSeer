@@ -160,5 +160,5 @@ Handlebars.registerHelper "localize_dt", (epoch, options) ->
   return new Handlebars.SafeString dt.format(f)
 
 Handlebars.registerHelper "log", (value) ->
-  console.log value
+  console.log "Log: ", value
   return new Handlebars.SafeString ""
