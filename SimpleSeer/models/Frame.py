@@ -148,6 +148,9 @@ class Frame(SimpleDoc, mongoengine.Document):
             self.width, self.height, self.camera, capturetime)
         
     def save(self, *args, **kwargs):
+        from SeerCloud.models.inspectionhistory import InspectionHistory
+        from .Inspection import Inspection
+        
         #TODO: sometimes we want a frame with no image data, basically at this
         #point we're trusting that if that were the case we won't call .image
 
@@ -175,6 +178,12 @@ class Frame(SimpleDoc, mongoengine.Document):
             newFrame = True
 
         super(Frame, self).save(*args, **kwargs)
+
+        for i in Inspection.objects:
+            ih = InspectionHistory()
+            ih.fromFrame(i, self)
+            # Note: save will check if frame has new features that need to be saved
+            ih.save()
         
         # Once everything else is saved, publish result
         # Do not place any other save actions after this line or realtime objects will miss data
