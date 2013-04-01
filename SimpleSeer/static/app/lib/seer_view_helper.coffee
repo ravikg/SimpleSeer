@@ -160,5 +160,31 @@ Handlebars.registerHelper "localize_dt", (epoch, options) ->
   return new Handlebars.SafeString dt.format(f)
 
 Handlebars.registerHelper "log", (value) ->
-  console.log "Log: ", value
+  console.log "Handlebars Log: ", value
   return new Handlebars.SafeString ""
+
+Handlebars.registerHelper "resultlist", (results) ->
+  tpl = ""
+  if results.length is 0
+    tpl += "<div data-use=\"no-results\" class=\"centered\">Part Failed: No Results</div>"
+  else 
+    for result in results
+      value = result.numeric or ""
+      unless value is undefined 
+        label = result.measurement_label    
+        unit = if result.unit is "deg" then "&deg;" else " (#{result.unit})"
+        if value is "" then unit = ""
+        tpl += "<div class=\"elastic interactive\">#{label}:<span>#{value}#{unit}</span></div>"
+  return new Handlebars.SafeString tpl
+
+Handlebars.registerHelper "metalist", (results, template) ->
+  tpl = ""
+  for key in template
+    label = key
+    value = results[key] or ""
+    tpl += "<div class=\"elastic spacedown\">#{label}:<span>#{value}</span></div>"
+  return new Handlebars.SafeString tpl
+
+Handlebars.registerHelper "capturetime", (time) ->
+  str = new moment(parseInt(time)).format("M/D/YYYY h:mm a")
+  return new Handlebars.SafeString str
