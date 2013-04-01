@@ -18,5 +18,6 @@ mongo:
 
 database: ${project}
 
+rabbitmq: localhost
 pub_uri: ipc:///tmp/${project}-pub
 sub_uri: ipc:///tmp/${project}-sub
