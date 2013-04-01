@@ -177,23 +177,25 @@ class Frame(SimpleDoc, mongoengine.Document):
         if not self.id:
             newFrame = True
 
+        publish = True
+        if 'publish' in kwargs:
+            publish = kwargs.pop('publish')
+        
         super(Frame, self).save(*args, **kwargs)
 
         for i in Inspection.objects:
-            ih = InspectionHistory()
-            ih.fromFrame(i, self)
-            # Note: save will check if frame has new features that need to be saved
-            ih.save()
+            if i.camera == self.camera:
+                ih = InspectionHistory()
+                ih.fromFrame(i, self)
+                # Note: ih.save will check if frame has new features that need to be saved
+                ih.save()
         
         # Once everything else is saved, publish result
         # Do not place any other save actions after this line or realtime objects will miss data
         # Only publish to frame/ channel if this is a new frame (not a re-saved frame from a backfill)
-        if newFrame:
+        
+        if newFrame and publish:
             #send the frame without features, and some other stuff
-            if hasattr(self, 'skipOLAP'):
-                skip = True
-            else:
-                skip = False
             realtime.ChannelManager().publish('frame/', dict(
                 id = str(self.id),
                 capturetime = self.capturetime,
@@ -209,8 +211,7 @@ class Frame(SimpleDoc, mongoengine.Document):
                 imgfile = "/grid/imgfile/" + str(self.id),
                 thumbnail_file = "/grid/thumbnail_file/" + str(self.id),
                 metadata = self.metadata,
-                notes = self.notes,
-                skipOLAP = skip)
+                notes = self.notes)
             )
         
         
