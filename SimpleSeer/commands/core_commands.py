@@ -182,6 +182,8 @@ def OPCCommand(self):
 
 @Command.simple(use_gevent=False)
 def ScrubCommand(self):
+    from SimpleSeer.realtime import ChannelManager
+    
     'Run the frame scrubber'
     from SimpleSeer import models as M
     retention = self.session.retention
@@ -203,6 +205,10 @@ def ScrubCommand(self):
                     f.delete()
                 else:
                     f.save(False)
+        
+            # Rebuild the cache
+            res = ChannelManager().rpcSendRequest('olap_req/', {'action': 'rebuild'})
+        
             # This line of code needed to solve fragmentation bug in mongo
             # Can run very slow when run on large collections
             db = M.Frame._get_db()
