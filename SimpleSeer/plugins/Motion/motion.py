@@ -19,6 +19,16 @@ meas.save()
 
 """
 
+"""
+Counts frames with motion less than threshold in latest valley.
+ie:  in the following frames separated by threshold, the plugin would return 4
+
+    +-------+  +----+
+    |       |  |    |
+----+       +--+    -----
+
+"""
+
 class MotionTrend(base.MeasurementPlugin):
     
     def __call__(self, frame, featureset):
@@ -35,14 +45,13 @@ class MotionTrend(base.MeasurementPlugin):
             if feature.featuretype == "MotionFeature" and feature.feature.movement > motionthreshhold:
                 return trend
             
-        
-        frameset = Frame.objects(capturetime__gt = frame.capturetime - timedelta(0, timewindow),
+        frameset = Frame.objects(capturetime__gt = frame.capturetime - timedelta(seconds=timewindow),
            capturetime__lt = frame.capturetime, 
            camera = frame.camera
            ).order_by("capturetime")
         if len(frameset) < minframes:
             return trend
-        
+        print len(frameset)
         frameset = reversed(frameset) #load into memory
         
         for frame in frameset:

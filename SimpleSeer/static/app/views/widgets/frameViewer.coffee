@@ -41,7 +41,7 @@ module.exports = class frameViewer extends SubView
       @frame = new Frame frame.data
     else
       @frame = frame
-    if @options.camera? and frame.get("camera") != @options.camera
+    if @options.camera? and @frame.get("camera") != @options.camera
       return
     @url = "/grid/#{if @useThumb then "thumbnail_file" else "imgfile"}/#{@frame.get("id")}"
     @imgcurr=(@imgcurr+1)%@imglen
