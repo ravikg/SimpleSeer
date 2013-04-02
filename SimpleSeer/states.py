@@ -16,6 +16,20 @@ from realtime import ChannelManager
 
 import logging
 
+def nextInInterval(frame, field, interval):
+    currentValue = 0
+    try:
+        currentValue = getattr(frame, field)
+    except:
+        currentValue = frame.metadata[field]
+        field = 'metadata__' + field
+    
+    roundValue = currentValue - (currentValue % interval)
+    kwargs = {'%s__gte' % field: roundValue, '%s__lt' % field: currentValue, 'camera': frame.camera}
+    if M.Frame.objects(**kwargs).count() == 0:
+        return True
+    return False
+
 
 class Core(object):
     '''Implements the core functionality of SimpleSeer
@@ -47,7 +61,6 @@ class Core(object):
         self.log = logging.getLogger(__name__)
         self._mem_prof_ticker = 0
         self._channel_manager = ChannelManager(shareConnection=False)
-        self.timetable = {}
     
         for cinfo in config.cameras:
             cam = StillCamera(**cinfo)
@@ -208,6 +221,7 @@ class Core(object):
                 watcher.check(frame.results)
     """
     
+    
     def process(self, frame):
         if self._worker_enabled:
             async_results = self.process_async(frame)
@@ -219,23 +233,22 @@ class Core(object):
         # all times are in seconds, not ms
         ct_epoch = int(frame.capturetime.strftime("%s"))
         for inspection in M.Inspection.objects:
-            _iid = "{}-{}".format(inspection.id,frame.camera)
             if inspection.parent:
                 continue
             if inspection.camera and inspection.camera != frame.camera:
                 continue
-            if inspection.parameters.get('interval',0) > (ct_epoch - self.timetable.get(_iid,0)):
+            if 'interval' in inspection.parameters and not nextInInterval(frame, inspection.parameters['intervalField'], inspection.parameters['interval']):
                 continue
+            
             features = inspection.execute(frame)
-            self.timetable[_iid] = ct_epoch
             frame.features += features
+            
             for m in inspection.measurements:
-                _mid = "{}-{}".format(m.id,frame.camera)
-                if m.parameters.get('interval',0) > (ct_epoch - self.timetable.get(_mid,0)):
+                if 'interval' in m.parameters and not nextInInterval(frame, m.parameters['intervalField'], m.parameters['interval']):
                     continue
+            
                 m.execute(frame, features)
-                self.timetable[_mid] = ct_epoch
-        
+            
     def process_async(self, frame):
         frame.features = []
         frame.results = []
@@ -247,16 +260,13 @@ class Core(object):
         #allocate each inspection to a celery task
 
         # all times are in seconds, not ms
-        ct_epoch = int(frame.capturetime.strftime("%s"))
         for inspection in M.Inspection.objects:
-            _iid = "{}-{}".format(inspection.id,frame.camera)
             if inspection.parent:
                 continue
             if inspection.camera and inspection.camera != frame.camera:
                 continue
-            if inspection.parameters.get('interval',0) > (ct_epoch - self.timetable.get(_iid,0)):
+            if 'interval' in inspection.parameters and not nextInInterval(frame, inspection.parameters['intervalField'], inspection.parameters['interval']):
                 continue
-            self.timetable[_iid] = ct_epoch
             results_async.append(execute_inspection.delay(inspection.id, frame.imgfile.grid_id, frame.metadata))
         
         return results_async
@@ -288,12 +298,10 @@ class Core(object):
                 frame.features += features
                 #import pdb;pdb.set_trace()
                 for m in insp.measurements:
-                    _mid = "{}-{}".format(m.id,frame.camera)
-                    if m.parameters.get('interval',0) > (ct_epoch - self.timetable.get(_mid,0)):
+                    if 'interval' in m.parameters and not nextInInterval(frame, m.parameters['intervalField'], m.parameters['interval']):
                         continue
                     m.execute(frame, features)
-                    self.timetable[_mid] = ct_epoch
-            
+                    
             results_complete += new_ready_results
             time.sleep(0.2)
                 

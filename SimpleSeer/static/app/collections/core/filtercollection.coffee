@@ -218,7 +218,11 @@ module.exports = class FilterCollection extends Collection
   postFetch:()=>
     application.modal.onSuccess()
     if !@clearOnFetch
-      @add @_all, {silent: true}
+    if @getParam 'sortorder' == -1
+      at = 0
+    else
+      at = (@models.length -1)
+    @add @_all, {at:at ,silent: true}
       @_all = []
     for i,o of @callbackStack['post']
       if typeof o == 'function'
@@ -268,4 +272,6 @@ module.exports = class FilterCollection extends Collection
     @totalavail = response.total_frames
     @lastavail = response.frames?.length || 0
     @setRaw (response)
+    if @getParam 'sortorder' == -1
+      response.frames = reverse response.frames
     return response.frames
