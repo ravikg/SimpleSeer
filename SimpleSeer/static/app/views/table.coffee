@@ -21,15 +21,13 @@ module.exports = class Table extends SubView
   editable:true
   editableList:{}
   header:undefined
+  limit:50
 
   events :=>
     "click th" : "thSort"
     "change table.table input" : "changeCell"
 
-  initialize: =>
-    @rows = []
-    super()
-
+  getOptions: =>
     # Setting up our initial conditions, options, variables, columns etc
     if !@options.page?
       @options.page = "inf"
@@ -67,6 +65,14 @@ module.exports = class Table extends SubView
       @_model = require "models/frame"
       @_url = "api/frame"
 
+    # Pick how we want to paginate this bad boy
+    #if @options.page == "inf"
+    #  @on "page", @infinitePage
+    #else
+    #  @on "page", @infinitePage
+    # @TODO: Initialize the html pagination
+
+  getCollection: =>
     @collection = new @_collection([],{model:@_model,clearOnFetch:@cof,url:@_url})
 
     if !@options.collection_model
@@ -79,11 +85,12 @@ module.exports = class Table extends SubView
     @collection.fetch
       success:@updateData
 
-    # Pick how we want to paginate this bad boy
-    if @options.page == "inf"
-      @on "page", @infinitePage
-    else
-      # @TODO: Initialize the html pagination
+  initialize: =>
+    @rows = []
+    super()
+
+    @getOptions()
+    @getCollection()
 
     return
 
@@ -283,8 +290,10 @@ module.exports = class Table extends SubView
 
   # Completed collection fetch, render the table content
   updateData: =>
-    # Iterate through the collection list
+    if @clearOnFetch
+      @$el.find('table.table tbody').html('')
 
+    # Iterate through the collection list
     data = @formatData(@collection.models)
 
     @rows = []
@@ -300,7 +309,7 @@ module.exports = class Table extends SubView
   # Paginate
   paginate: =>
     # @TODO: Change this so it always references @$el
-    $('#slides').infiniteScroll({onPage: => @nextPage})
+    @$el.infiniteScroll({onPage: => @infinitePage})
 
   appendData: =>
     @rows = []
@@ -310,14 +319,16 @@ module.exports = class Table extends SubView
     @render()
 
   infinitePage: =>
-    if @collection.lastavail == 20 
-      @collection.setParam('skip', (@collection.getParam('skip') + @collection._defaults.limit))
+    console.log "Hell there"
+    if @collection.lastavail >= @limit
+      @collection.setParam('skip', (@collection.getParam('skip') + @limit))
       @collection.fetch success:@appendData
     return
 
   afterRender: =>
     # Add sort css
     @$el.find('th.' + @sortKey).attr('direction', @sortDirection).append('<span class="dir ' + @sortDirection + '"></span>')
+    @$el.infiniteScroll({onPage: => @infinitePage})
     return
 
   # Render!
