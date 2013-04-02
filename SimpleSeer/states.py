@@ -114,34 +114,14 @@ class Core(object):
         self.measurements = m
         self.watchers = w
 
-    def start_socket_communication(self):
-        # Setup subscriber
-        def callback(msg):
-            raw = msg.body
-            try:
-                trig = jsondecode(raw)
-                self._trigger(trig['state'], trig['data'])
-            except:
-                pass
-                
-        def g_listener():
-            self._channel_manager.subscribe('core/', callback)
-            
-        self.log.info('starting communications on core/')
-        gevent.spawn_link_exception(g_listener)
-
     def subscribe(self, name):
         # Create thread that listens for event specified by name
         # If message received, trigger that event 
         
         def callback(msg):
-            raw = msg.body
-            try:
-                data = jsondecode(raw)
-                self.trigger(name, data)
-            except:
-                pass
-        
+            data = jsondecode(msg.body)
+            self.trigger(name, data)
+            
         def listener():
             self._channel_manager.subscribe(name, callback)
         
@@ -348,6 +328,7 @@ class Core(object):
 
     def on(self, state_name, event_name):
         state = self.state(state_name)
+        self.subscribe(event_name)
         return state.on(event_name)
 
     def run(self, audit=False):
