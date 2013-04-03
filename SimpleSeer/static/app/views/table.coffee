@@ -3,7 +3,8 @@ application = require 'application'
 template = require './templates/table'
 rowTemplate = require './templates/row'
 Collection = require "collections/table"
-Frame = require "models/frame"
+#Frame = require "models/frame"
+#Measurement = require "models/measurement"
 
 # Standardized Table View
 # @TODO: Fix the sorting issue -- collection set array is in reverse order
@@ -19,53 +20,19 @@ module.exports = class Table extends SubView
   cof:false
   editable:true
   editableList:{}
+  header:undefined
+  limit:50
 
   events :=>
     "click th" : "thSort"
     "change table.table input" : "changeCell"
 
-  initialize: =>
-    @rows = []
-    super()
-
-    # Setting up our initial conditions, options, variables etc
+  getOptions: =>
+    # Setting up our initial conditions, options, variables, columns etc
     if !@options.page?
       @options.page = "inf"
     else
       @cof = true
-
-    # Columns
-    if !@options.tableCols?
-      @tableCols = [
-        key: "id"
-        title: "ID"
-      ,
-        key: "camera"
-        title: "Camera"
-        editable: true
-        nullVal: '#'
-      ,
-        key: "capturetime"
-        title: "Capture Time"
-        editable: false
-      ,
-        key: "metadata-extra"
-        title: "Extra"
-        editable: true
-        subcols: [
-          key: 'metadata-extra-min'
-          title: "Min"
-          editable: true
-          nullVal: '---'
-        ,
-          key: 'metadata-extra-max'
-          title: "Max"
-          editable: true
-          nullVal: ''
-        ]
-      ]
-    else
-      @tableCols = @options.tableCols
 
     if @options.sortKey? and @options.sortKey
       @sortKey = @options.sortKey
@@ -80,26 +47,56 @@ module.exports = class Table extends SubView
     if @options.editable? and @options.editable
       @editable = @options.editable
 
-    # Get the collection
-    @collection = new Collection([],{model:Frame,clearOnFetch:@cof})
-    if @sortKey == 'capturetime'
-      @collection.setParam 'sortkey', 'capturetime_epoch'
+    if !@options.tableCols?
+      @tableCols = [
+        key: "id"
+        title: "ID"
+      ]
     else
-      @collection.setParam 'sortkey', @sortKey
-    @collection.setParam 'sortorder', @direction
+      @tableCols = @options.tableCols
+
+    # Get the collection
+    if @options.collection_model
+      @_collection = require "collections/" + @options.collection_model + "s"
+      @_model = require "models/" + @options.collection_model
+      @_url = "api/"+@options.collection_model
+    else
+      @_collection = require "collections/table"
+      @_model = require "models/frame"
+      @_url = "api/frame"
+
+    # Pick how we want to paginate this bad boy
+    #if @options.page == "inf"
+    #  @on "page", @infinitePage
+    #else
+    #  @on "page", @infinitePage
+    # @TODO: Initialize the html pagination
+
+  getCollection: =>
+    @collection = new @_collection([],{model:@_model,clearOnFetch:@cof,url:@_url})
+
+    if !@options.collection_model
+      if @sortKey == 'capturetime'
+        @collection.setParam 'sortkey', 'capturetime_epoch'
+      else
+        @collection.setParam 'sortkey', @sortKey
+      @collection.setParam 'sortorder', @direction
+
     @collection.fetch
       success:@updateData
 
-    # Pick how we want to paginate this bad boy
-    if @options.page == "inf"
-      @on "page", @infinitePage
-    else
-      # @TODO: Initialize the html pagination
+  initialize: =>
+    @rows = []
+    super()
+
+    @getOptions()
+    @getCollection()
 
     return
 
   # Render the empty table with given @tableCols
   getRenderData: =>
+    header:@header
     cols:@tableCols
     rows:@rows
     pageButtons:@options.page == "page"
@@ -140,11 +137,7 @@ module.exports = class Table extends SubView
             val = ''
             if value? and value and value[path[2]]? and value[path[2]]
               val = value[path[2]]
-            if !val
-              if v.nullVal? and v.nullVal
-                placeholder = v.nullVal
-              else
-                placeholder = ''
+            placeholder = v.title
             if @isEditable(subcols, key)
               args = {
                 placeholder: placeholder
@@ -153,7 +146,7 @@ module.exports = class Table extends SubView
                 value: val
                 class: parentKey + '-' + path[2]
               }
-              html += '<div class="subCol"><label for="' + parentKey + '-' + path[2] + '">' + v.title + '</label>'
+              html += '<div class="subCol">'
               html += "<input "
               $.each args, (k, v) =>
                 html += k + '="' + v + '" '
@@ -180,7 +173,8 @@ module.exports = class Table extends SubView
     return value
 
   changeCell: (e) =>
-    target = $(e.target)
+    console.log "Saved cell"
+    '''target = $(e.target)
     id = target.parents('tr').attr('id')
     key = target.attr('class')
     value = target.val();
@@ -196,7 +190,7 @@ module.exports = class Table extends SubView
       else
         obj = {}
         obj[key] = value
-        @saveCell(frame, obj)
+        @saveCell(frame, obj)'''
 
   saveCell: (frame, obj, key = '') =>
     if key
@@ -291,11 +285,19 @@ module.exports = class Table extends SubView
     else
       ph.css("visibility", "hidden")
 
+  formatData: (data) =>
+    return data
+
   # Completed collection fetch, render the table content
   updateData: =>
+    if @clearOnFetch
+      @$el.find('table.table tbody').html('')
+
     # Iterate through the collection list
+    data = @formatData(@collection.models)
+
     @rows = []
-    _.each @collection.models, (model) =>
+    _.each data, (model) =>
       @insertRow(model, @insertDirection)
 
     # Initialize persistant headers
@@ -307,7 +309,7 @@ module.exports = class Table extends SubView
   # Paginate
   paginate: =>
     # @TODO: Change this so it always references @$el
-    $('#slides').infiniteScroll({onPage: => @nextPage})
+    @$el.infiniteScroll({onPage: => @infinitePage})
 
   appendData: =>
     @rows = []
@@ -317,14 +319,16 @@ module.exports = class Table extends SubView
     @render()
 
   infinitePage: =>
-    if @collection.lastavail == 20 
-      @collection.setParam('skip', (@collection.getParam('skip') + @collection._defaults.limit))
+    console.log "Hell there"
+    if @collection.lastavail >= @limit
+      @collection.setParam('skip', (@collection.getParam('skip') + @limit))
       @collection.fetch success:@appendData
     return
 
   afterRender: =>
     # Add sort css
     @$el.find('th.' + @sortKey).attr('direction', @sortDirection).append('<span class="dir ' + @sortDirection + '"></span>')
+    @$el.infiniteScroll({onPage: => @infinitePage})
     return
 
   # Render!
