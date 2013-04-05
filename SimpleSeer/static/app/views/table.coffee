@@ -22,17 +22,17 @@ module.exports = class Table extends SubView
   editableList:{}
   header:undefined
   limit:50
+  headersInit:false
 
   events :=>
     "click th" : "thSort"
     "change table.table input" : "changeCell"
 
+  onPage: =>
+    @infinitePage()
+
   getOptions: =>
     # Setting up our initial conditions, options, variables, columns etc
-    if !@options.page?
-      @options.page = "inf"
-    else
-      @cof = true
 
     if @options.sortKey? and @options.sortKey
       @sortKey = @options.sortKey
@@ -290,8 +290,8 @@ module.exports = class Table extends SubView
 
   # Completed collection fetch, render the table content
   updateData: =>
-    if @clearOnFetch
-      @$el.find('table.table tbody').html('')
+    console.log "updatedata"
+    @$el.find('table.table tbody').html('')
 
     # Iterate through the collection list
     data = @formatData(@collection.models)
@@ -301,7 +301,9 @@ module.exports = class Table extends SubView
       @insertRow(model, @insertDirection)
 
     # Initialize persistant headers
-    @initializeHeaders()
+    if !@headersInit
+      @initializeHeaders()
+      @headersInit = true
 
     @render()
     return
@@ -311,18 +313,17 @@ module.exports = class Table extends SubView
     # @TODO: Change this so it always references @$el
     @$el.infiniteScroll({onPage: => @infinitePage})
 
-  appendData: =>
-    @rows = []
-    _.each @collection.models, (model) =>
-      @insertRow(model, @insertDirection)
-
-    @render()
+  #appendData: =>
+  #  console.log "appenddata"
+  #  @rows = []
+  #  _.each @collection.models, (model) =>
+  #    @insertRow(model, @insertDirection)
+  #  @render()
 
   infinitePage: =>
-    console.log "Hell there"
     if @collection.lastavail >= @limit
       @collection.setParam('skip', (@collection.getParam('skip') + @limit))
-      @collection.fetch success:@appendData
+      @collection.fetch()
     return
 
   afterRender: =>
