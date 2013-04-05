@@ -221,7 +221,7 @@ module.exports = class FilterCollection extends Collection
       if @getParam 'sortorder' == -1
         at = 0
       else
-        at = (@models.length - 1)
+        at = (@models.length)
       @add @_all, {at:at ,silent: true}
       @_all = []
     for i,o of @callbackStack['post']
