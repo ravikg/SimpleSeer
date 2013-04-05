@@ -8,10 +8,10 @@ module.exports = class View extends Backbone.View
   subviews: {}
   events: {}
   firstRender:true
-
     
   initialize: (options={}) =>
     super()
+
     if options.context?
       # Load any context attached to view  
       # For further details, see:  
@@ -19,6 +19,13 @@ module.exports = class View extends Backbone.View
       # _SimpleSeer/_ `seer_application`
       application.loadContext(options.context)
     @subviews = {}
+
+  _setScroll: =>
+    @$el.infiniteScroll
+      onScroll:(per) =>
+        @trigger 'scroll', per
+      onPage: =>
+        @trigger 'page'
 
   focus: =>
     if !@$el.is(":visible")
@@ -65,6 +72,12 @@ module.exports = class View extends Backbone.View
 
   # Renders view using effects if defined 
   render: =>
+    if @firstRender  && (@onScroll? || @onPage?)
+      @_setScroll()
+      if @onScroll?
+        @on "scroll", @onScroll
+      if @onPage?
+        @on "page", @onPage
     callback = =>
       @$el.html @template @getRenderData()
       @renderSubviews()

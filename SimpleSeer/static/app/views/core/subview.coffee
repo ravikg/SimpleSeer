@@ -35,3 +35,9 @@ module.exports = class SubView extends View
     for i,o of @subviews
       o._pageTrigger()
     return
+
+  _scrollTrigger: =>
+    @trigger 'scroll'
+    for i,o of @subviews
+      o._scrollTrigger()
+    return
