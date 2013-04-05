@@ -13,7 +13,6 @@ class ResultEmbed(SimpleEmbeddedDoc, mongoengine.EmbeddedDocument):
     inspection_name = mongoengine.StringField()
     measurement_id = mongoengine.ObjectIdField()
     measurement_name = mongoengine.StringField()
-    measurement_label = mongoengine.StringField()
     state = mongoengine.IntField()
     message = mongoengine.StringField()
 
@@ -32,7 +31,6 @@ class ResultEmbed(SimpleEmbeddedDoc, mongoengine.EmbeddedDocument):
             result.inspection_name = self.inspection_name
             result.measurement_id = self.measurement_id
             result.measurement_name = self.measurement_name
-            result.measurement_label = self.measurement_label
         return result, created
 
 
