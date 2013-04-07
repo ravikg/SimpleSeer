@@ -86,7 +86,7 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
         hasToleranceFunction = False
         if len(featureset) and hasattr(featureset[0], self.method):
             values = [getattr(f, self.method) for f in featureset]
-        elif len(featureset) featureset[0].featuredata.has_key(self.method):
+        elif len(featureset) and featureset[0].featuredata.has_key(self.method):
             values = [f.featuredata[self.method] for f in featureset]
         else:
             function_ref = ""
