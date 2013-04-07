@@ -73,9 +73,6 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
         featureset = self.findFeatureset(features)
         #this will catch nested features
 
-        if not len(featureset):
-            return []
-
         if self.featurecriteria.has_key("index"):
             i = int(self.featurecriteria['index'])
 
@@ -87,16 +84,15 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
 
         values = []
         hasToleranceFunction = False
-        if hasattr(featureset[0], self.method):
+        if len(featureset) and hasattr(featureset[0], self.method):
             values = [getattr(f, self.method) for f in featureset]
-        elif featureset[0].featuredata.has_key(self.method):
+        elif len(featureset) featureset[0].featuredata.has_key(self.method):
             values = [f.featuredata[self.method] for f in featureset]
         else:
             function_ref = ""
             try:
                 function_ref = self.get_plugin(self.method)
             except ValueError:
-                print "Can't fetch measurement plugin " + self.method
                 return []
 
             values = function_ref(frame, featureset)
