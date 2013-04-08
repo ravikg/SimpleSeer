@@ -102,14 +102,19 @@ module.exports = class FilterCollection extends Collection
         namePath = @name + '/'
       else
         namePath = ''
+      #console.info "removing listener: message:#{@subscribePath}/#{namePath}"
       application.socket.removeListener "message:#{@subscribePath}/#{namePath}", callback
       @name = channel
+      namePath = @name + '/'
     #if application.debug
       #console.info "series:  subscribing to channel "+"message:#{@subscribePath}/#{namePath}"
     if application.socket
       application.socket.on "message:#{@subscribePath}/#{namePath}", callback
+      #console.info "binding to: message:#{@subscribePath}/#{namePath}"
       if !application.subscriptions["#{@subscribePath}/#{namePath}"]
+        #console.info "subscribing to: #{@subscribePath}/#{namePath}"
         application.subscriptions["#{@subscribePath}/#{namePath}"] = application.socket.emit 'subscribe', "#{@subscribePath}/#{namePath}"
+    #console.log "------------------------------------------------------------------"
   #trigger fired when receiving data on the pubsub subscription.
   receive: (data) =>
     console.log data
