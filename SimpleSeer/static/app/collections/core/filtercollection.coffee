@@ -247,7 +247,21 @@ module.exports = class FilterCollection extends Collection
 
   # refreshes the collection from the server
   globalRefresh:=>
-    @fetch({force:true,filtered:true,modal:false})
+    _skip = @getParam('skip')
+    callback = =>
+    if _skip > 0
+      _limit = @getParam('limit')
+      #console.log "temp setting from: ",_skip,_limit
+      limit = _limit + _skip
+      #console.log "to: ",0,limit
+      @setParam('skip',0)
+      @setParam('limit',limit)
+      callback = =>
+        #console.log "resetting: ",_skip,_limit
+        @setParam('skip',_skip)
+        @setParam('limit',_limit)
+      
+    @fetch({force:true,filtered:true,modal:false,success:callback})
 
   setRaw: (response) =>
     @raw = response
