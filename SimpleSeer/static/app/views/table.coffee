@@ -290,7 +290,7 @@ module.exports = class Table extends SubView
 
   # Completed collection fetch, render the table content
   updateData: =>
-    console.log "updatedata"
+    #console.log "updatedata"
     @$el.find('table.table tbody').html('')
 
     # Iterate through the collection list

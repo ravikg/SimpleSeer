@@ -106,6 +106,8 @@ module.exports = class FilterCollection extends Collection
       application.socket.removeListener "message:#{@subscribePath}/#{namePath}", callback
       @name = channel
       namePath = @name + '/'
+    else
+      namePath = ''
     #if application.debug
       #console.info "series:  subscribing to channel "+"message:#{@subscribePath}/#{namePath}"
     if application.socket
@@ -117,6 +119,12 @@ module.exports = class FilterCollection extends Collection
     #console.log "------------------------------------------------------------------"
   #trigger fired when receiving data on the pubsub subscription.
   receive: (data) =>
+    _obj = new @model data.data
+    if @getParam 'sortorder' == -1
+      at = 0
+    else
+      at = (@models.length)
+    @add _obj, {at:at ,silent: false}
     console.log data
     
   # Set sort param.  Bubble up through bound FiltersCollections
