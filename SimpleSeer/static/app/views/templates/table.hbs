@@ -5,7 +5,7 @@
   <thead>
     <tr class="sh"> <!-- Static Header -->
       {{#each cols}}
-        <th class="{{this.key}}">{{this.title}}</th>
+        <th class="{{this.key}}">{{this.title}}{{#if this.sortable}}<span class="dir empty"></span>{{/if}}</th>
       {{/each}}
     </tr>
     <tr class="ph"> <!-- Persistant Header -->

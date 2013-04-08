@@ -328,7 +328,8 @@ module.exports = class Table extends SubView
 
   afterRender: =>
     # Add sort css
-    @$el.find('th.' + @sortKey).attr('direction', @sortDirection).append('<span class="dir ' + @sortDirection + '"></span>')
+    @$el.find('th.' + @sortKey).attr('direction', @sortDirection)
+    @$el.find('th.' + @sortKey + ' span.dir').removeClass().addClass('dir ' + @sortDirection)
     @$el.infiniteScroll({onPage: => @infinitePage})
     return
 
