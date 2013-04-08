@@ -290,7 +290,6 @@ module.exports = class Table extends SubView
 
   # Completed collection fetch, render the table content
   updateData: =>
-    #console.log "updatedata"
     @$el.find('table.table tbody').html('')
 
     # Iterate through the collection list
@@ -328,7 +327,8 @@ module.exports = class Table extends SubView
 
   afterRender: =>
     # Add sort css
-    @$el.find('th.' + @sortKey).attr('direction', @sortDirection).append('<span class="dir ' + @sortDirection + '"></span>')
+    @$el.find('th.' + @sortKey).attr('direction', @sortDirection)
+    @$el.find('th.' + @sortKey + ' span.dir').removeClass().addClass('dir ' + @sortDirection)
     @$el.infiniteScroll({onPage: => @infinitePage})
     return
 

@@ -97,7 +97,7 @@ module.exports = class FilterCollection extends Collection
   # subscrbe to channel on pubsub
   # TODO: finish this up
   subscribe: (channel,callback=@receive) =>
-    if channel?
+    if channel
       if @name
         namePath = @name + '/'
       else
@@ -124,8 +124,8 @@ module.exports = class FilterCollection extends Collection
       at = 0
     else
       at = (@models.length)
-    @add _obj, {at:at ,silent: false}
-    console.log data
+    @add _obj, {at:at}
+    return _obj
     
   # Set sort param.  Bubble up through bound FiltersCollections
   setParam: (key,val) =>
@@ -217,8 +217,9 @@ module.exports = class FilterCollection extends Collection
     "/"+JSON.stringify dataSet
 
   # trigger fired before the fetch method makes request to server 
-  preFetch:()=>
-    application.modal.show()
+  preFetch:(params)=>
+    if params.modal
+      application.modal.show(params.modal)
     if !@clearOnFetch
       @_all = @models
     for o in @callbackStack['pre']
@@ -246,7 +247,7 @@ module.exports = class FilterCollection extends Collection
 
   # refreshes the collection from the server
   globalRefresh:=>
-    @fetch({force:true})
+    @fetch({force:true,filtered:true,modal:false})
 
   setRaw: (response) =>
     @raw = response
@@ -257,12 +258,14 @@ module.exports = class FilterCollection extends Collection
   # - __before__: fires before the fetch makes request to server
   # - __success__: fires after the fetch makes request to server
   fetch: (params={}) =>
+    if !params.modal?
+      params.modal = {message:'<p class="large center">Loading<p>',throbber:true}
     if params.filtered and @clearOnFetch == false
       @clearOnFetch = true
       @callbackStack['post'].push => @clearOnFetch = false
 
     params['silent'] = true
-    @preFetch()
+    @preFetch(params)
     if params.forceRefresh
       @models = []
     total = params.total || false
