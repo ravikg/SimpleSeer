@@ -238,8 +238,10 @@ module.exports = class Table extends SubView
     
   thSort:(e) =>
     # Click events for sorting
-    key = $(e.target).attr('class')
-    direction = $(e.target).attr('direction')
+
+    key = $(e.currentTarget).attr('class')
+    direction = $(e.currentTarget).attr('direction')
+    
     unless direction
       direction = 'desc'
 
