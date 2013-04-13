@@ -70,7 +70,7 @@ class MongoEngineBaseListHandler(jsonpickle.handlers.BaseHandler):
     
 def mebaselist_handle(obj):
         ret = []
-        j = Pickler(True, 100)
+        j = Pickler(False, 100)
         return [j.flatten(i) for i in obj]
         
 class MongoEngineBaseDictHandler(jsonpickle.handlers.BaseHandler):
@@ -91,7 +91,7 @@ class NumpyIntHandler(jsonpickle.handlers.BaseHandler):
     
 class FrameFeatureHandler(jsonpickle.handlers.BaseHandler):
     def flatten(self, obj, data = {}):
-        j = Pickler(True, 100)
+        j = Pickler(False, 100)
 
         for k in obj.__getstate__().keys():
             data[k] = j.flatten(obj[k])
