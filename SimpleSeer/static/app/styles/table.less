@@ -51,7 +51,6 @@
     &:last-child { border-bottom: none; }
     &:nth-child(odd) { background: #fff; }
     &:nth-child(even) { background: #fff; }
-    &:hover { background: #eee; color: #000; }
   }
 
   .th, .td {
@@ -94,10 +93,10 @@
     color: #484848;
     text-shadow: 0px 1px 0px #FFF;
     font-weight: bold;
-    cursor: pointer;
 
     &:last-child { border-right: none; }
     &.sortable {
+      cursor: pointer;
       padding: 3px 21px 2px 7px;
       background-image: url("/img/empty-arrow.png");
       background-repeat: no-repeat;
