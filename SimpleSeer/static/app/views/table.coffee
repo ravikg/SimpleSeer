@@ -151,9 +151,13 @@ module.exports = class Table extends SubView
     ###
 
   # Render the cell
-  renderCell: (value, key) =>
+  renderCell: (raw, key) =>
+    value =
+      html: ""
+      raw: raw
     # Special cases go here? Human readable, etc.
     parentKey = key
+    v = raw
 
     # Process the cell for an editable field
     if @editable
@@ -165,15 +169,15 @@ module.exports = class Table extends SubView
             key = v.key
             path = key.split('-')
             val = ''
-            if value? and value and value[path[2]]? and value[path[2]]
-              val = value[path[2]]
+            if v? and v and v[path[2]]? and v[path[2]]
+              val = v[path[2]]
             placeholder = v.title
             if @isEditable(subcols, key)
               args = {
                 placeholder: placeholder
                 type: 'text'
                 name: parentKey + '-' + path[2]
-                value: val
+                v: val
                 class: parentKey + '-' + path[2]
               }
               html += '<div class="subCol">'
@@ -185,21 +189,22 @@ module.exports = class Table extends SubView
               html += '<div class="' + parentKey + '.' + key + '">' + val + '</div>';
 
           html += '</div>';
-          value = html
+          v = html
         else
           # @TODO: Pull nullval into scope here
           args = {
-            placeholder: value
+            placeholder: v
             type: 'text'
-            value: value
+            v: v
             class: key
           }
           html = "<input "
           $.each args, (k, v) =>
             html += k + '="' + v + '" '
           html += "/>"
-          value = html
+          v = html
 
+    value['html'] = if v then v else raw
     return value
 
   changeCell: (e) =>
@@ -225,10 +230,7 @@ module.exports = class Table extends SubView
     ###
 
   saveCell: (frame, obj, key = '') =>
-    if key
-      frame.save {key:obj}
-    else
-      frame.save obj
+    frame.save if key then {key: obj} else obj
 
   # Render the row
   renderRow:(row) =>
