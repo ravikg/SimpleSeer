@@ -22,7 +22,6 @@ module.exports = class Table extends SubView
   editableList:{}
   header:undefined
   limit:50
-  headersInit:false
   tbody: {}
   thead: {}
   content: {}
@@ -39,25 +38,18 @@ module.exports = class Table extends SubView
 
   getOptions: =>
     # Setting up our initial conditions, options, variables, columns etc
-
     if @options.sortKey? and @options.sortKey
       @sortKey = @options.sortKey
-
     if @options.sortDirection? and @options.sortDirection
       @direction = @options.sortDirection
       if @direction == 1
         @sortDirection = 'asc'
       else
         @sortDirection = 'desc'
-
     if @options.editable? and @options.editable
       @editable = @options.editable
-
     if !@options.tableCols?
-      @tableCols = [
-        key: "id"
-        title: "ID"
-      ]
+      @tableCols = [key: "id", title: "ID"]
     else
       @tableCols = @options.tableCols
 
@@ -71,23 +63,14 @@ module.exports = class Table extends SubView
       @_model = require "models/frame"
       @_url = "api/frame"
 
-    # Pick how we want to paginate this bad boy
-    #if @options.page == "inf"
-    #  @on "page", @infinitePage
-    #else
-    #  @on "page", @infinitePage
-    # @TODO: Initialize the html pagination
-
   getCollection: =>
     @collection = new @_collection([],{model:@_model,clearOnFetch:@cof,url:@_url})
-
     if !@options.collection_model
       if @sortKey == 'capturetime'
         @collection.setParam 'sortkey', 'capturetime_epoch'
       else
         @collection.setParam 'sortkey', @sortKey
       @collection.setParam 'sortorder', @direction
-
     @collection.fetch
       success:@updateData
 
@@ -100,10 +83,10 @@ module.exports = class Table extends SubView
 
   # Render the empty table with given @tableCols
   getRenderData: =>
-    header:@header
-    cols:@tableCols
-    rows:@rows
-    pageButtons:@options.page == "page"
+    header: @header
+    cols: @tableCols
+    rows: @rows
+    pageButtons: @options.page == "page"
 
   isEditable: (cols, key) =>
     edit = 0
@@ -111,10 +94,7 @@ module.exports = class Table extends SubView
       if v.key == key
         if v.editable? and v.editable
           edit++
-    if edit
-      return true
-    else
-      return false
+    return (if edit then true else false)
 
   subCols: (key) =>
     subCols = undefined
@@ -231,7 +211,7 @@ module.exports = class Table extends SubView
         @saveCell(frame, obj)'''
     ###
 
-  saveCell: (frame, obj, key = '') =>
+  saveCell:(frame, obj, key = '') =>
     frame.save if key then {key: obj} else obj
 
   renderRow:(row) =>
@@ -249,7 +229,7 @@ module.exports = class Table extends SubView
 
     return {id: row.id, values: values}
 
-  insertRow: (row, insertDirection = 1) =>
+  insertRow:(row, insertDirection = 1) =>
     markup = @rowTemplate @renderRow(row)
     if insertDirection is -1
       @rows.unshift(markup)
