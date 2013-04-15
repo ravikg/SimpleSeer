@@ -194,3 +194,19 @@ class Channel():
         
         self.manager.subscribe(self.channelname + "/", callback)
         
+# A logging handler that sends messages via pubsub
+class PubSubHandler(logging.Handler):
+    
+    _channel = None
+    _cm = None
+    
+    def __init__(self, channel='logging/'):
+        super(PubSubHandler, self).__init__()
+        self._channel = channel
+        
+        # This might be running in a greenlet, so do not share connection
+        self._cm = ChannelManager(shareConnection=False)
+        
+    def emit(self, msg):
+        self._cm.publish(self._channel, {'ts': msg.created, 'file': msg.filename, 'level': msg.levelname, 'msg': msg.message})
+         
