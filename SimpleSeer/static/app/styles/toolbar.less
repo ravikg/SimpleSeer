@@ -5,21 +5,22 @@
   background: url("../img/MT_666666.png") repeat;
   box-shadow: 1px 0px 0px #000;
   z-index: 1;
-  position: relative;  
+  position: relative;
+  -webkit-transition: width 100ms ease-out;
 
   #toolbar-toggle {
-    height: 21px; 
+    height: 21px;
     cursor: pointer;
     border-top: 1px solid #404040;
     border-bottom: 1px solid black;
     background:
       url("../img/arrow_expand_h_rev.png") no-repeat center center,
       url("../img/MT_222222.png") repeat;
-  }   
+  }
 
   .toolset {
     .set {
-      background: #999ca4; 
+      background: #999ca4;
       border-top: 1px solid #B9BCC3;
       border-bottom: 1px solid #2c2d30;
 
@@ -37,8 +38,8 @@
       &.red {
         border-top-color: #CB3500;
         box-shadow: inset 0px 4px 0px #952500;
-      }        
-     
+      }
+
 
       &:first-child { border-top: 1px solid transparent; }
       &:last-child { border-bottom: 1px solid #2D2F32; margin-bottom: 0px; }
@@ -54,7 +55,7 @@
 
         &:first-child { border-top: none; }
         &:last-child { border-bottom: none; }
-        
+
         .shortcut {
           position: absolute;
           top: 0; left: 0;
@@ -68,23 +69,23 @@
           background: transparent no-repeat center center;
 
           img { cursor: pointer; }
-        }          
-      }      
-    }   
+        }
+      }
+    }
   }
 }
 
 #toolbar.expanded {
   width: 237px;
-  overflow-y: auto;
-  overflow-x: hidden;  
+  overflow-y: hidden;
+  overflow-x: hidden;
 
   #toolbar-toggle {
     background:
       url("../img/arrow_expand_h.png") no-repeat 225px center,
-      url("../img/MT_222222.png") repeat;  
+      url("../img/MT_222222.png") repeat;
   }
-  
+
   .toolset {
     .set {
       border-top: none;
@@ -99,10 +100,10 @@
         border-color: transparent;
 
         .shortcut { display: none; }
-      }      
+      }
     }
   }
-  
+
   .controlPane {
     display: block;
     left: 0px;
@@ -112,7 +113,7 @@
     border: none;
     border-radius: 0px;
     box-shadow: none;
-    
+
     &:before { background: none; }
   }
 }
