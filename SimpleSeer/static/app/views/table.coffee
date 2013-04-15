@@ -234,70 +234,42 @@ module.exports = class Table extends SubView
   saveCell: (frame, obj, key = '') =>
     frame.save if key then {key: obj} else obj
 
-  # Render the row
   renderRow:(row) =>
     values = []
     $.each @tableCols, (k, v) =>
-      path = v.key.split('-')
+      path = v.key.split '-'
+      key = v.key
       if path.length > 1
-        r = row.get(path[0])
-        key = v.key
+        r = row.get path[0]
         val = r[path[1]]
       else
-        key = v.key
-        val = row.get(path[0])
-
+        val = row.get path[0]
       value = @renderCell(val, key)
-      r = {'class' : v.key, 'value' : value}
-      values.push r
+      values.push {'class' : v.key, 'value' : value}
 
-    return {id:row.id, values:values}
+    return {id: row.id, values: values}
 
-  # Insert a new row
   insertRow: (row, insertDirection = 1) =>
+    markup = @rowTemplate @renderRow(row)
     if insertDirection is -1
-      @rows.unshift @rowTemplate @renderRow(row)
+      @rows.unshift(markup)
     else
-      @rows.push @rowTemplate @renderRow(row)
-    return "Insert row"
-
-  # Initialize persistant headers
-  initializeHeaders: =>
-    sh = @$el.find('.thead .tr.sh')
-    offset = sh.offset()
-
-    ph = @$el.find('.thead .tr.ph')
-    ph.css('width', sh.css('width'))
-
-    # @TODO: Change this so it always references @$el
-    $('#slides').scroll(@updateHeaders)
+      @rows.push(markup)
 
   sortByColumn:(e, set) =>
-    # Click events for sorting
-
     key = $(e.currentTarget).data('key')
-    direction = $(e.currentTarget).attr('direction')
-
-    unless direction
-      direction = 'desc'
-
+    direction = $(e.currentTarget).attr('direction') || "desc"
     if !set
-      if key == "capturetime"
-        @collection.setParam 'sortkey', 'capturetime_epoch'
-      else
-        @collection.setParam 'sortkey', key
-
+      @collection.setParam 'sortkey', if key is "capturetime" then 'capturetime_epoch' else key
     @sortKey = key
-
     if direction == "asc"
-        @collection.setParam 'sortorder', -1
-        @sortDirection = 'desc'
-        @direction = -1
+      @collection.setParam 'sortorder', -1
+      @sortDirection = 'desc'
+      @direction = -1
     else
-        @collection.setParam 'sortorder', 1
-        @sortDirection = 'asc'
-        @direction = 1
-
+      @collection.setParam 'sortorder', 1
+      @sortDirection = 'asc'
+      @direction = 1
     @cof = true
     @collection.fetch
       filtered:true
@@ -306,38 +278,18 @@ module.exports = class Table extends SubView
   formatData: (data) =>
     return data
 
-  # Completed collection fetch, render the table content
   updateData: =>
-    @$el.find('.table .tbody').html('')
-
-    # Iterate through the collection list
-    data = @formatData(@collection.models)
-
+    @tbody.html("")
     @rows = []
+    data = @formatData(@collection.models)
     _.each data, (model) =>
       @insertRow(model, @insertDirection)
-
-    # Initialize persistant headers
-    if !@headersInit
-      @initializeHeaders()
-      @headersInit = true
-
     @render()
-    return
-
-  #appendData: =>
-  #  console.log "appenddata"
-  #  @rows = []
-  #  _.each @collection.models, (model) =>
-  #    @insertRow(model, @insertDirection)
-  #  @render()
 
   infinitePage: =>
-    console.log "page"
     if @collection.lastavail >= @limit
       @collection.setParam('skip', (@collection.getParam('skip') + @limit))
       @collection.fetch()
-    return
 
   afterRender: =>
     $(window).resize( _.debounce @packTable, 100 )
@@ -346,7 +298,6 @@ module.exports = class Table extends SubView
       .addClass("sort-#{@sortDirection}")
       .attr('direction', @sortDirection)
     @tbody = @$(".tbody").infiniteScroll
-      wrapper: "tscroll",
       onScroll: => @pollShadow(),
       onPage: => @infinitePage()
     @thead = @$(".thead")
