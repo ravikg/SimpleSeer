@@ -20,8 +20,8 @@ module.exports = class View extends Backbone.View
       application.loadContext(options.context)
     @subviews = {}
 
-  _setScroll: =>
-    @$el.infiniteScroll
+  _setScroll: (el=@$el) =>
+    el.infiniteScroll
       onScroll:(per) =>
         @trigger 'scroll', per
       onPage: =>
@@ -72,17 +72,20 @@ module.exports = class View extends Backbone.View
 
   # Renders view using effects if defined 
   render: =>
-    if @firstRender  && (@onScroll? || @onPage?)
-      @_setScroll()
-      if @onScroll?
-        @on "scroll", @onScroll
-      if @onPage?
-        @on "page", @onPage
     callback = =>
       @$el.html @template @getRenderData()
       @renderSubviews()
       @focus()
       @afterRender()
+      if @firstRender  && (@onScroll? || @onPage?)
+        _ele = @$el.find(@scrollElement)
+        if _ele.length == 0
+          _ele = @$el
+        @_setScroll(_ele)
+        if @onScroll?
+          @on "scroll", @onScroll
+        if @onPage?
+          @on "page", @onPage
       @firstRender = false
 
     if @effect? and !@firstRender and @$el.is(":visible")
