@@ -28,6 +28,7 @@ module.exports = class Table extends SubView
   content: {}
   scrollThreshold: 4
   widthCache: {}
+  lastY: 0
 
   events :=>
     "click .th" : "sortByColumn"
@@ -324,11 +325,6 @@ module.exports = class Table extends SubView
     @render()
     return
 
-  # Paginate
-  paginate: =>
-    # @TODO: Change this so it always references @$el
-    @$el.infiniteScroll({onPage: => @infinitePage})
-
   #appendData: =>
   #  console.log "appenddata"
   #  @rows = []
@@ -337,32 +333,37 @@ module.exports = class Table extends SubView
   #  @render()
 
   infinitePage: =>
+    console.log "page"
     if @collection.lastavail >= @limit
       @collection.setParam('skip', (@collection.getParam('skip') + @limit))
       @collection.fetch()
     return
 
   afterRender: =>
-    #@$el.infiniteScroll({ onPage: => @infinitePage })
-    throttlePack = _.debounce @packTable, 100
-    $(window).resize(throttlePack)
+    $(window).resize( _.debounce @packTable, 100 )
     @$el.find(".th[data-key=#{@sortKey}]")
-      .removeClass("sort-asc sort-desc").addClass("sort-#{@sortDirection}")
+      .removeClass("sort-asc sort-desc")
+      .addClass("sort-#{@sortDirection}")
       .attr('direction', @sortDirection)
-    @tbody = @$(".tbody").scroll(@pollShadow)
+    @tbody = @$(".tbody").infiniteScroll
+      wrapper: "tscroll",
+      onScroll: => @pollShadow(),
+      onPage: => @infinitePage()
     @thead = @$(".thead")
     @content = @tbody.find(".tscroll")
     @packTable()
+    @tbody.scrollTop(@lastY) if @lastY
 
   reflow: =>
     @packTable()
 
   pollShadow: =>
+    @lastY = top = @tbody.scrollTop()
     @thead.removeClass("shadow")
-    @thead.addClass("shadow") if @tbody.scrollTop() > 0
+    @thead.addClass("shadow") if top > 0
 
   getScrollbar: =>
-    distance = @tbody.width() - @content.width()
+    distance = @tbody.width() - @content.width().top
     return (if distance > @scrollThreshold then distance else 0)
 
   getCellStats:(index, colData) =>
