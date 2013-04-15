@@ -50,7 +50,6 @@ module.exports = class Series extends FilterCollection
 
   parse: (response) =>
     super(response)
-    #console.info 'Chart: ',response.chart
     @subscribe(response.chart)
     clean = @_clean response.data
     return clean
