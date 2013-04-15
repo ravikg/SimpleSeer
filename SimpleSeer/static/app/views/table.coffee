@@ -365,9 +365,7 @@ module.exports = class Table extends SubView
   afterRender: =>
     #@$el.infiniteScroll({ onPage: => @infinitePage })
     $(window).resize(@packTable)
-    @$el.find(".th[data-key=#{@sortKey}")
-      .removeClass("sort-asc sort-desc").addClass("sort-#{@sortDirection}")
-      .attr('direction', @sortDirection)
+    @$el.find(".th[data-key=#{@sortKey}]").removeClass("sort-asc sort-desc").addClass("sort-#{@sortDirection}").attr('direction', @sortDirection)
     @tbody = @$(".tbody").scroll(@pollShadow)
     @thead = @$(".thead")
     @content = @tbody.find(".tscroll")
@@ -410,9 +408,11 @@ module.exports = class Table extends SubView
     cachedColumns = []
     cellCount = $(@tbody.find(".tr")[0]).find(".td").length
     unless colCount is cellCount
-      message  = "Table: Column count in headers (#{colCount}) "
-      message += "different than in cells (#{cellCount})."
-      throw new Error message
+      message  = "Warning: Column count in headers (#{colCount}) "
+      message += "different than in cells (#{cellCount}). "
+      message += "Cannot pack table."
+      console.log message
+      return false
     for i in [0..colCount]
       cachedHeaders[i] = @thead.find(".th:nth-child(" + (i + 1) + ")")
       cachedColumns[i] = @tbody.find(".tr .td:nth-child(" + (i + 1) + ")")
@@ -426,14 +426,14 @@ module.exports = class Table extends SubView
       td = cachedColumns[i].css("width", largest)
       newCols.push $(td[0]).outerWidth()
     sum = _.reduce(newCols, (a, b) -> a + b)
-    selfWidth = @tbody.width()
+    selfWidth = @content.width()
     if sum >= selfWidth - @getScrollbar()
       gaps = []
-      distance = sum - selfWidth + @getScrollbar() - 1
+      distance = sum - selfWidth + @getScrollbar() - 2
       _.each _.zip(colWidths, avgWidths), ((item) -> gaps.push item[0] - item[1])
       totalGap = _.reduce(gaps, (a, b) -> a + b)
       if totalGap is 0
-        rolling = _.map(gaps, -> distance / colWidths.length)
+        rolling = _.map(gaps, -> distance / colCount)
       else
         rolling = _.map(gaps, (item) -> Math.ceil distance * (item / totalGap))
         rollsum = _.reduce(rolling, (a, b) -> a + b)
@@ -442,8 +442,8 @@ module.exports = class Table extends SubView
         cachedHeaders[i].css "width", largest - rolling[i]
         cachedColumns[i].css "width", largest - rolling[i]
     else
-      distance = selfWidth - sum - @getScrollbar()
-      bonus = Math.floor(distance / colWidths.length)
+      distance = selfWidth - sum
+      bonus = Math.floor(distance / colCount)
       for i in [0..colCount]
         largest = colWidths[i]
         cachedHeaders[i].css "width", largest + bonus
