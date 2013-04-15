@@ -10,30 +10,34 @@ Collection = require "collections/table"
 # @TODO: Fix the sorting issue -- collection set array is in reverse order
 
 module.exports = class Table extends SubView
-  template:template
-  rowTemplate:rowTemplate
-  direction:-1
-  insertDirection: -1
-  renderComplete:false
-  sortKey:'id'
-  sortDirection:'desc'
-  cof:false
-  editable:true
-  editableList:{}
-  header:undefined
-  limit:50
+  template: template
+  rowTemplate: rowTemplate
   tbody: {}
   thead: {}
   content: {}
-  scrollThreshold: 4
   widthCache: {}
+  editableList:{}
+  sortKey: 'id'
+  sortDirection: 'desc'
+  cof: false
+  editable: true
+  renderComplete: false
   lastY: 0
+  limit: 50
+  direction: -1
+  insertDirection: -1
+  scrollThreshold: 4
+  header: undefined
+  scrollElement: ".tbody"
 
   events :=>
     "click .th" : "sortByColumn"
     "change .tbody input" : "changeCell"
 
-  onPage: =>
+  onScroll: (per) =>
+    @pollShadow()
+
+  onPage: () =>
     @infinitePage()
 
   getOptions: =>
@@ -277,13 +281,11 @@ module.exports = class Table extends SubView
       .removeClass("sort-asc sort-desc")
       .addClass("sort-#{@sortDirection}")
       .attr('direction', @sortDirection)
-    @tbody = @$(".tbody").infiniteScroll
-      onScroll: => @pollShadow(),
-      onPage: => @infinitePage()
     @thead = @$(".thead")
+    @tbody = @$(".tbody")
     @content = @tbody.find(".tscroll")
-    @packTable()
     @tbody.scrollTop(@lastY) if @lastY
+    @packTable()
 
   reflow: =>
     @packTable()
