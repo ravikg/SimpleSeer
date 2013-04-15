@@ -46,7 +46,9 @@
   }
 
   .tr {
+    height: 26px;
     color: #333;
+    white-space: nowrap;
     border-bottom: 1px solid #c0c0c0;
     &:last-child { border-bottom: none; }
     &:nth-child(odd) { background: #fff; }
@@ -59,10 +61,11 @@
     box-sizing: border-box;
     margin: 0;
     border-right: 1px solid #888;
-    line-height: 19px;
+    line-height: 17px;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
+    vertical-align: top;
   }
 
   .td {
@@ -83,6 +86,10 @@
       font: 13px Helvetica;
       outline: none;
       border: 0px;
+    }
+
+    span {
+      white-space: nowrap
     }
   }
 

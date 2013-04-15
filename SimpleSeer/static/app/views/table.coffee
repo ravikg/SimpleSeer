@@ -302,29 +302,6 @@ module.exports = class Table extends SubView
       filtered:true
       success: @updateData
 
-
-  updateHeaders: =>
-    sh = @$el.find('.thead tr.sh')
-    ph = @$el.find('.thead tr.ph')
-
-    # @TODO: Change this so it always references @$el
-    if @dashboard? and @dashboard.locked and @dashboard.subviews.length == 1
-      scrollTop = @$el.scrollTop()
-    else
-      scrollTop = $('#slides').scrollTop()
-
-    offset = sh.offset()
-
-    $.each @tableCols, (k, v) ->
-      th = '.th.' + v.key
-      width = sh.find(th).width() + 10
-      ph.find(th).css('width', width)
-
-    if (scrollTop > offset.top)
-      ph.css("visibility", "visible")
-    else
-      ph.css("visibility", "hidden")
-
   formatData: (data) =>
     return data
 
@@ -391,7 +368,7 @@ module.exports = class Table extends SubView
     if( @widthCache[index] ) then return @widthCache[index]
     largest = 0
     length = 0
-    count = colData.length
+    count = colData.length - 1
     for i in [0..count]
       width   = $($(colData[i]).find("span"), @tbody).outerWidth() + 15
       largest = width if width > largest
@@ -418,23 +395,23 @@ module.exports = class Table extends SubView
       message += "Cannot pack table."
       console.log message
       return false
-    for i in [0..colCount]
+    for i in [0..colCount-1]
       cachedHeaders[i] = @thead.find(".th:nth-child(" + (i + 1) + ")")
       cachedColumns[i] = @tbody.find(".tr .td:nth-child(" + (i + 1) + ")")
-    for i in [0..colCount]
+    for i in [0..colCount-1]
       stats = @getCellStats(i, cachedColumns[i])
       colWidths.push stats.largest
       avgWidths.push stats.average
-    for i in [0..colCount]
+    for i in [0..colCount-1]
       largest = colWidths[i]
       th = cachedHeaders[i].css("width", largest)
       td = cachedColumns[i].css("width", largest)
       newCols.push $(td[0]).outerWidth()
     sum = _.reduce(newCols, (a, b) -> a + b)
     selfWidth = @content.width()
-    if sum >= selfWidth - @getScrollbar()
+    if sum >= selfWidth
       gaps = []
-      distance = sum - selfWidth + @getScrollbar() - 2
+      distance = sum - selfWidth - 2
       _.each _.zip(colWidths, avgWidths), ((item) -> gaps.push item[0] - item[1])
       totalGap = _.reduce(gaps, (a, b) -> a + b)
       if totalGap is 0
@@ -442,17 +419,25 @@ module.exports = class Table extends SubView
       else
         rolling = _.map(gaps, (item) -> Math.ceil distance * (item / totalGap))
         rollsum = _.reduce(rolling, (a, b) -> a + b)
-      for i in [0..colCount]
+      for i in [0..colCount-1]
         largest = colWidths[i]
         cachedHeaders[i].css "width", largest - rolling[i]
         cachedColumns[i].css "width", largest - rolling[i]
     else
       distance = selfWidth - sum
       bonus = Math.floor(distance / colCount)
-      for i in [0..colCount]
+      for i in [0..colCount-1]
         largest = colWidths[i]
         cachedHeaders[i].css "width", largest + bonus
         cachedColumns[i].css "width", largest + bonus
+    lastCell = $(@tbody.find(".tr")[0]).find(".td:last-child")
+    lastCellWidth = lastCell.outerWidth()
+    lastCellEnd = lastCellWidth + lastCell.position().left
+    distance = selfWidth - lastCellEnd
+    unless distance is 0
+      newWidth = lastCellWidth + distance
+      cachedHeaders[colCount-1].css "width", newWidth
+      cachedColumns[colCount-1].css "width", newWidth
 
   render: =>
     t = super()
