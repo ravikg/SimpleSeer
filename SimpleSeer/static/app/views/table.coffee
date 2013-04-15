@@ -30,7 +30,7 @@ module.exports = class Table extends SubView
   widthCache: {}
 
   events :=>
-    "click .th" : "thSort"
+    "click .th" : "sortByColumn"
     "change .tbody input" : "changeCell"
 
   onPage: =>
@@ -271,19 +271,20 @@ module.exports = class Table extends SubView
     # @TODO: Change this so it always references @$el
     $('#slides').scroll(@updateHeaders)
 
-  thSort:(e) =>
+  sortByColumn:(e, set) =>
     # Click events for sorting
 
-    key = $(e.currentTarget).attr('class')
+    key = $(e.currentTarget).data('key')
     direction = $(e.currentTarget).attr('direction')
 
     unless direction
       direction = 'desc'
 
-    if key == "capturetime"
-      @collection.setParam 'sortkey', 'capturetime_epoch'
-    else
-      @collection.setParam 'sortkey', key
+    if !set
+      if key == "capturetime"
+        @collection.setParam 'sortkey', 'capturetime_epoch'
+      else
+        @collection.setParam 'sortkey', key
 
     @sortKey = key
 
@@ -296,9 +297,11 @@ module.exports = class Table extends SubView
         @sortDirection = 'asc'
         @direction = 1
 
+    @cof = true
     @collection.fetch
       filtered:true
       success: @updateData
+
 
   updateHeaders: =>
     sh = @$el.find('.thead tr.sh')
@@ -365,7 +368,9 @@ module.exports = class Table extends SubView
   afterRender: =>
     #@$el.infiniteScroll({ onPage: => @infinitePage })
     $(window).resize(@packTable)
-    @$el.find(".th[data-key=#{@sortKey}]").removeClass("sort-asc sort-desc").addClass("sort-#{@sortDirection}").attr('direction', @sortDirection)
+    @$el.find(".th[data-key=#{@sortKey}]")
+      .removeClass("sort-asc sort-desc").addClass("sort-#{@sortDirection}")
+      .attr('direction', @sortDirection)
     @tbody = @$(".tbody").scroll(@pollShadow)
     @thead = @$(".thead")
     @content = @tbody.find(".tscroll")

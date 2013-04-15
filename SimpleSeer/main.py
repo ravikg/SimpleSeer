@@ -23,7 +23,7 @@ class MyArgumentParser(argparse.ArgumentParser):
         
 def main():
     parser = MyArgumentParser()
-    parser.add_argument('-l', '--logging', dest='logging', default='')
+    parser.add_argument('-l', '--logging', dest='logging', default='simpleseer-logging.cfg')
     parser.add_argument(
         '-c', '--config', dest='config', default='.')
     parser.add_argument('-p', '--profile', action='store_true')
