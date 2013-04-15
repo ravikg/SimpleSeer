@@ -384,7 +384,7 @@ class Filter():
         results = frame['results']
         newRes = []
         for r in results:
-            newRes.append(r['py/state'])
+            newRes.append(r)
         frame['results'] = newRes
         
         return frame
