@@ -344,7 +344,8 @@ module.exports = class Table extends SubView
 
   afterRender: =>
     #@$el.infiniteScroll({ onPage: => @infinitePage })
-    $(window).resize(@packTable)
+    throttlePack = _.debounce @packTable, 100
+    $(window).resize(throttlePack)
     @$el.find(".th[data-key=#{@sortKey}]")
       .removeClass("sort-asc sort-desc").addClass("sort-#{@sortDirection}")
       .attr('direction', @sortDirection)
@@ -390,10 +391,6 @@ module.exports = class Table extends SubView
     cachedColumns = []
     cellCount = $(@tbody.find(".tr")[0]).find(".td").length
     unless colCount is cellCount
-      message  = "Warning: Column count in headers (#{colCount}) "
-      message += "different than in cells (#{cellCount}). "
-      message += "Cannot pack table."
-      console.log message
       return false
     for i in [0..colCount-1]
       cachedHeaders[i] = @thead.find(".th:nth-child(" + (i + 1) + ")")
