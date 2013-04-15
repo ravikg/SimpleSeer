@@ -1,5 +1,5 @@
 <tr id="{{id}}">
   {{#each values}}
-    <td class="{{this.class}}" {{#if this.title}}title="{{this.title}}"{{/if}}>{{{this.value}}}</td>
+    <td class="{{this.class}}" {{#if this.title}}title="{{this.title}}"{{/if}}>{{{this.value.html}}}</td>
   {{/each}}
 </tr>
