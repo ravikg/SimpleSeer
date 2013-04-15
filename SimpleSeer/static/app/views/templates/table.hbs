@@ -1,7 +1,7 @@
 <div class="table">
   <div class="thead">
     {{#each cols}}
-      <div class="th {{#if this.sortable}}sortable{{/if}}" data-key="{{this.key}}">
+      <div class="th {{#if this.sortable}}sortable{{/if}}" title="{{this.title}}" data-key="{{this.key}}">
         {{this.title}}
       </div>
     {{/each}}
