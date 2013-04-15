@@ -23,10 +23,15 @@ module.exports = class Table extends SubView
   header:undefined
   limit:50
   headersInit:false
+  tbody: {}
+  thead: {}
+  content: {}
+  scrollThreshold: 4
+  widthCache: {}
 
   events :=>
-    "click th" : "thSort"
-    "change table.table input" : "changeCell"
+    "click .th" : "thSort"
+    "change .tbody input" : "changeCell"
 
   onPage: =>
     @infinitePage()
@@ -41,7 +46,7 @@ module.exports = class Table extends SubView
       @direction = @options.sortDirection
       if @direction == 1
         @sortDirection = 'asc'
-      else 
+      else
         @sortDirection = 'desc'
 
     if @options.editable? and @options.editable
@@ -86,12 +91,10 @@ module.exports = class Table extends SubView
       success:@updateData
 
   initialize: =>
-    @rows = []
     super()
-
+    @rows = []
     @getOptions()
     @getCollection()
-
     return
 
   # Render the empty table with given @tableCols
@@ -109,7 +112,7 @@ module.exports = class Table extends SubView
           edit++
     if edit
       return true
-    else 
+    else
       return false
 
   subCols: (key) =>
@@ -120,12 +123,39 @@ module.exports = class Table extends SubView
           subCols = v.subcols
     return subCols
 
+  editableCell: =>
+    ###
+       $(".td").dblclick ->
+        handleReset = (e, key) ->
+          if key and e.which is 27
+            self = $(this).parent().removeClass("edit")
+            ret = $(this).attr("value")
+            span = $("<span/>").attr("title", ret).html(ret)
+            self.html("").append(span).attr "title", ret
+          else if (key and e.which is 13) or not key
+            self = $(this).parent().removeClass("edit")
+            ret = $(this).get(0).value
+            span = $("<span/>").attr("title", ret).html(ret)
+            self.html("").append(span).attr "title", ret
+        return false  if editableTable is false
+        self = $(this).addClass("edit")
+        text = self.get(0).firstChild.innerHTML
+        input = $("<input>").attr("type", "text").attr("value", text)
+        input.blur (e) ->
+          handleReset.call this, e, false
+
+        input.keyup (e) ->
+          handleReset.call this, e, true
+
+        self.html("").append input
+        input.focus()
+    ###
+
   # Render the cell
-  renderCell: (raw, key) =>    
+  renderCell: (raw, key) =>
     value =
       html: ""
       raw: raw
-
     # Special cases go here? Human readable, etc.
     parentKey = key
     v = raw
@@ -161,7 +191,7 @@ module.exports = class Table extends SubView
 
           html += '</div>';
           v = html
-        else 
+        else
           # @TODO: Pull nullval into scope here
           args = {
             placeholder: v
@@ -175,16 +205,11 @@ module.exports = class Table extends SubView
           html += "/>"
           v = html
 
-    if v
-      value['html'] = v
-    else 
-      value['html'] = raw
-
-    console.log value
-
+    value['html'] = if v then v else raw
     return value
 
   changeCell: (e) =>
+    ###
     console.log "Saved cell"
     '''target = $(e.target)
     id = target.parents('tr').attr('id')
@@ -203,12 +228,10 @@ module.exports = class Table extends SubView
         obj = {}
         obj[key] = value
         @saveCell(frame, obj)'''
+    ###
 
   saveCell: (frame, obj, key = '') =>
-    if key
-      frame.save {key:obj}
-    else
-      frame.save obj
+    frame.save if key then {key: obj} else obj
 
   # Render the row
   renderRow:(row) =>
@@ -231,7 +254,7 @@ module.exports = class Table extends SubView
 
   # Insert a new row
   insertRow: (row, insertDirection = 1) =>
-    if insertDirection == -1
+    if insertDirection is -1
       @rows.unshift @rowTemplate @renderRow(row)
     else
       @rows.push @rowTemplate @renderRow(row)
@@ -239,21 +262,21 @@ module.exports = class Table extends SubView
 
   # Initialize persistant headers
   initializeHeaders: =>
-    sh = @$el.find('thead tr.sh')
+    sh = @$el.find('.thead .tr.sh')
     offset = sh.offset()
 
-    ph = @$el.find('thead tr.ph')
+    ph = @$el.find('.thead .tr.ph')
     ph.css('width', sh.css('width'))
-    
+
     # @TODO: Change this so it always references @$el
     $('#slides').scroll(@updateHeaders)
-    
+
   thSort:(e) =>
     # Click events for sorting
 
     key = $(e.currentTarget).attr('class')
     direction = $(e.currentTarget).attr('direction')
-    
+
     unless direction
       direction = 'desc'
 
@@ -261,14 +284,14 @@ module.exports = class Table extends SubView
       @collection.setParam 'sortkey', 'capturetime_epoch'
     else
       @collection.setParam 'sortkey', key
-      
+
     @sortKey = key
 
     if direction == "asc"
         @collection.setParam 'sortorder', -1
         @sortDirection = 'desc'
         @direction = -1
-    else 
+    else
         @collection.setParam 'sortorder', 1
         @sortDirection = 'asc'
         @direction = 1
@@ -278,19 +301,19 @@ module.exports = class Table extends SubView
       success: @updateData
 
   updateHeaders: =>
-    sh = @$el.find('thead tr.sh')
-    ph = @$el.find('thead tr.ph')
+    sh = @$el.find('.thead tr.sh')
+    ph = @$el.find('.thead tr.ph')
 
     # @TODO: Change this so it always references @$el
     if @dashboard? and @dashboard.locked and @dashboard.subviews.length == 1
       scrollTop = @$el.scrollTop()
-    else 
+    else
       scrollTop = $('#slides').scrollTop()
 
     offset = sh.offset()
-    
+
     $.each @tableCols, (k, v) ->
-      th = 'th.' + v.key
+      th = '.th.' + v.key
       width = sh.find(th).width() + 10
       ph.find(th).css('width', width)
 
@@ -304,7 +327,7 @@ module.exports = class Table extends SubView
 
   # Completed collection fetch, render the table content
   updateData: =>
-    @$el.find('table.table tbody').html('')
+    @$el.find('.table .tbody').html('')
 
     # Iterate through the collection list
     data = @formatData(@collection.models)
@@ -340,13 +363,92 @@ module.exports = class Table extends SubView
     return
 
   afterRender: =>
-    # Add sort css
-    @$el.find('th.' + @sortKey).attr('direction', @sortDirection)
-    @$el.find('th.' + @sortKey + ' span.dir').removeClass().addClass('dir ' + @sortDirection)
-    @$el.infiniteScroll({onPage: => @infinitePage})
-    return
+    #@$el.infiniteScroll({ onPage: => @infinitePage })
+    $(window).resize(@packTable)
+    @$el.find(".th[data-key=#{@sortKey}")
+      .removeClass("sort-asc sort-desc").addClass("sort-#{@sortDirection}")
+      .attr('direction', @sortDirection)
+    @tbody = @$(".tbody").scroll(@pollShadow)
+    @thead = @$(".thead")
+    @content = @tbody.find(".tscroll")
+    @packTable()
 
-  # Render!
+  reflow: =>
+    @packTable()
+
+  pollShadow: =>
+    @thead.removeClass("shadow")
+    @thead.addClass("shadow") if @tbody.scrollTop() > 0
+
+  getScrollbar: =>
+    distance = @tbody.width() - @content.width()
+    return (if distance > @scrollThreshold then distance else 0)
+
+  getCellStats:(index, colData) =>
+    if( @widthCache[index] ) then return @widthCache[index]
+    largest = 0
+    length = 0
+    count = colData.length
+    for i in [0..count]
+      width   = $($(colData[i]).find("span"), @tbody).outerWidth() + 15
+      largest = width if width > largest
+      length += width
+    avg = Math.floor(length / count)
+    @widthCache[index] =
+      largest: largest
+      average: avg
+    return @widthCache[index]
+
+  packTable: =>
+    cellGroups = @tbody.find(".cell-group + .cell-group")
+    colCount = @thead.find(".th").length
+    colWidths = []
+    newCols = []
+    avgWidths = []
+    packedReduction = 0
+    cachedHeaders = []
+    cachedColumns = []
+    cellCount = $(@tbody.find(".tr")[0]).find(".td").length
+    unless colCount is cellCount
+      message  = "Table: Column count in headers (#{colCount}) "
+      message += "different than in cells (#{cellCount})."
+      throw new Error message
+    for i in [0..colCount]
+      cachedHeaders[i] = @thead.find(".th:nth-child(" + (i + 1) + ")")
+      cachedColumns[i] = @tbody.find(".tr .td:nth-child(" + (i + 1) + ")")
+    for i in [0..colCount]
+      stats = @getCellStats(i, cachedColumns[i])
+      colWidths.push stats.largest
+      avgWidths.push stats.average
+    for i in [0..colCount]
+      largest = colWidths[i]
+      th = cachedHeaders[i].css("width", largest)
+      td = cachedColumns[i].css("width", largest)
+      newCols.push $(td[0]).outerWidth()
+    sum = _.reduce(newCols, (a, b) -> a + b)
+    selfWidth = @tbody.width()
+    if sum >= selfWidth - @getScrollbar()
+      gaps = []
+      distance = sum - selfWidth + @getScrollbar() - 1
+      _.each _.zip(colWidths, avgWidths), ((item) -> gaps.push item[0] - item[1])
+      totalGap = _.reduce(gaps, (a, b) -> a + b)
+      if totalGap is 0
+        rolling = _.map(gaps, -> distance / colWidths.length)
+      else
+        rolling = _.map(gaps, (item) -> Math.ceil distance * (item / totalGap))
+        rollsum = _.reduce(rolling, (a, b) -> a + b)
+      for i in [0..colCount]
+        largest = colWidths[i]
+        cachedHeaders[i].css "width", largest - rolling[i]
+        cachedColumns[i].css "width", largest - rolling[i]
+    else
+      distance = selfWidth - sum - @getScrollbar()
+      bonus = Math.floor(distance / colWidths.length)
+      for i in [0..colCount]
+        largest = colWidths[i]
+        cachedHeaders[i].css "width", largest + bonus
+        cachedColumns[i].css "width", largest + bonus
+
   render: =>
     t = super()
     return t

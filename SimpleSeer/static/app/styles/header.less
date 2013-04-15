@@ -4,6 +4,7 @@ header {
   background: url("../img/MT_222222.png") repeat;
   box-shadow: none;
   border-bottom: 1px solid #000000;
+  white-space: nowrap;
 
   nav {
     height: 100%;
@@ -12,7 +13,7 @@ header {
       display: inline-block;
       height: 100%;
 
-      &.left { float: left; }
+      &.left { float: left; white-space: nowrap; }
       &.right { float: right; }
     }
 
@@ -34,7 +35,7 @@ header {
       color: #999;
       padding-right: 9px;
       border-right: 1px solid #2F3133;
-      
+
       .username {
         display: inline-block;
         vertical-align: top;
@@ -71,6 +72,7 @@ header {
     height: 100%;
     margin-left: 6px;
     border-left: 1px solid #383838;
+    overflow: hidden
   }
 
   .brand {
