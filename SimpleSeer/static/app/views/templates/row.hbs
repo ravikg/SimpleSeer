@@ -1,6 +1,6 @@
 <div class="tr" id="{{id}}">
   {{#each values}}
-    <div class="td" data-key="{{this.class}}" {{#if this.title}}title="{{this.title}}"{{/if}}>
+    <div class="td {{this.class}}" {{#if this.title}}title="{{this.title}}"{{/if}}>
     	<span {{#if this.title}}title="{{this.title}}"{{/if}}>{{{this.value.html}}}</span>
    	</div>
   {{/each}}

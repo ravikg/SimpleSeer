@@ -27,6 +27,7 @@ module.exports = class Table extends SubView
   thead: {}
   content: {}
   scrollThreshold: 4
+  widthCache: {}
 
   events :=>
     "click .th" : "thSort"
@@ -362,13 +363,14 @@ module.exports = class Table extends SubView
     return
 
   afterRender: =>
-    @$el.infiniteScroll({ onPage: => @infinitePage })
+    #@$el.infiniteScroll({ onPage: => @infinitePage })
+    $(window).resize(@packTable)
     @$el.find(".th[data-key=#{@sortKey}")
       .removeClass("sort-asc sort-desc").addClass("sort-#{@sortDirection}")
       .attr('direction', @sortDirection)
     @tbody = @$(".tbody").scroll(@pollShadow)
     @thead = @$(".thead")
-    @content = @tbody.find(".content")
+    @content = @tbody.find(".tscroll")
     @packTable()
 
   reflow: =>
@@ -383,19 +385,19 @@ module.exports = class Table extends SubView
     return (if distance > @scrollThreshold then distance else 0)
 
   getCellStats:(index, colData) =>
-    if( widthCache[index] ) then return widthCache[index]
+    if( @widthCache[index] ) then return @widthCache[index]
     largest = 0
     length = 0
     count = colData.length
-    for i in [0..colCount]
-      width   = $(colData[i].firstChild, tbody).outerWidth() + 15
+    for i in [0..count]
+      width   = $($(colData[i]).find("span"), @tbody).outerWidth() + 15
       largest = width if width > largest
       length += width
     avg = Math.floor(length / count)
-    widthCache[index] =
+    @widthCache[index] =
       largest: largest
       average: avg
-    return widthCache[index]
+    return @widthCache[index]
 
   packTable: =>
     cellGroups = @tbody.find(".cell-group + .cell-group")
@@ -408,7 +410,7 @@ module.exports = class Table extends SubView
     cachedColumns = []
     cellCount = $(@tbody.find(".tr")[0]).find(".td").length
     unless colCount is cellCount
-      message  = "Table: Column count in headers (#{colCount})"
+      message  = "Table: Column count in headers (#{colCount}) "
       message += "different than in cells (#{cellCount})."
       throw new Error message
     for i in [0..colCount]

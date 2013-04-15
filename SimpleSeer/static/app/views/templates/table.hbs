@@ -1,16 +1,14 @@
 <div class="table">
   <div class="thead">
-    <div class="tr">
-      {{#each cols}}
-        <div class="th {{#if this.sortable}}sortable{{/if}}" data-key="{{this.key}}">
-          {{this.title}}
-        </div>
-      {{/each}}
-    </div>
+    {{#each cols}}
+      <div class="th {{#if this.sortable}}sortable{{/if}}" data-key="{{this.key}}">
+        {{this.title}}
+      </div>
+    {{/each}}
   </div>
   <div class="tcontent">
     <div class="tbody">
-      <div class="container">
+      <div class="tscroll">
         {{#each rows}}
           {{{this}}}
         {{/each}}
