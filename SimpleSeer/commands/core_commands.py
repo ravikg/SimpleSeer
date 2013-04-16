@@ -246,10 +246,17 @@ class NotebookCommand(Command):
 
         
     def run(self):
+        from ..notebook import contextDict
         import subprocess
         import os, os.path
         if not os.path.exists(self.options.notebook_dir):
             os.makedirs(self.options.notebook_dir)
+        
+        # Since these errors will get swallowed by the ipython proc call, pre-test them:
+        try:
+            contextDict()
+        except Exception as e:
+            self.log.info('Error setting up notebook context: {}.  Continuting to load, but some globals will not be available.'.format(e))
         
         subprocess.call(["ipython", "notebook",
                 '--port', self.options.port,
