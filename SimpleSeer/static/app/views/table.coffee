@@ -1,17 +1,16 @@
+Application = require 'application'
 SubView = require 'views/core/subview'
-application = require 'application'
-template = require './templates/table'
-rowTemplate = require './templates/row'
+Template = require './templates/table'
+RowTemplate = require './templates/row'
 Collection = require "collections/table"
-#Frame = require "models/frame"
-#Measurement = require "models/measurement"
 
 # Standardized Table View
 # @TODO: Fix the sorting issue -- collection set array is in reverse order
 
 module.exports = class Table extends SubView
-  template: template
-  rowTemplate: rowTemplate
+  template: Template
+  rowTemplate: RowTemplate
+
   tbody: {}
   thead: {}
   content: {}
@@ -27,37 +26,30 @@ module.exports = class Table extends SubView
   direction: -1
   insertDirection: -1
   scrollThreshold: 4
-  header: undefined
-  scrollElement: ".tbody"
 
-  events :=>
+  events: =>
     "click .th" : "sortByColumn"
     "change .tbody input" : "changeCell"
 
-  onScroll: (per) =>
-    @pollShadow()
+  onScroll:(per) => @pollShadow()
 
-  onPage: () =>
-    @infinitePage()
+  onPage: => @infinitePage()
 
   getOptions: =>
-    # Setting up our initial conditions, options, variables, columns etc
-    if @options.sortKey? and @options.sortKey
+    if @options.sortKey?
       @sortKey = @options.sortKey
-    if @options.sortDirection? and @options.sortDirection
+    if @options.sortDirection?
       @direction = @options.sortDirection
       if @direction == 1
         @sortDirection = 'asc'
       else
         @sortDirection = 'desc'
-    if @options.editable? and @options.editable
+    if @options.editable?
       @editable = @options.editable
     if !@options.tableCols?
       @tableCols = [key: "id", title: "ID"]
     else
       @tableCols = @options.tableCols
-
-    # Get the collection
     if @options.collection_model
       @_collection = require "collections/" + @options.collection_model + "s"
       @_model = require "models/" + @options.collection_model
@@ -75,24 +67,20 @@ module.exports = class Table extends SubView
       else
         @collection.setParam 'sortkey', @sortKey
       @collection.setParam 'sortorder', @direction
-    @collection.fetch
-      success:@updateData
+    @collection.fetch()
 
   initialize: =>
     super()
     @rows = []
     @getOptions()
     @getCollection()
-    return
 
-  # Render the empty table with given @tableCols
   getRenderData: =>
-    header: @header
     cols: @tableCols
     rows: @rows
     pageButtons: @options.page == "page"
 
-  isEditable: (cols, key) =>
+  isEditable:(cols, key) =>
     edit = 0
     $.each cols, (k, v) ->
       if v.key == key
@@ -100,7 +88,7 @@ module.exports = class Table extends SubView
           edit++
     return (if edit then true else false)
 
-  subCols: (key) =>
+  subCols:(key) =>
     subCols = undefined
     $.each @tableCols, (k, v) ->
       if v.key == key
@@ -137,7 +125,7 @@ module.exports = class Table extends SubView
     ###
 
   # Render the cell
-  renderCell: (raw, key) =>
+  renderCell:(raw, key) =>
     value =
       html: ""
       raw: raw
@@ -193,7 +181,7 @@ module.exports = class Table extends SubView
     value['html'] = if v then v else raw
     return value
 
-  changeCell: (e) =>
+  changeCell:(e) =>
     ###
     console.log "Saved cell"
     '''target = $(e.target)
@@ -257,18 +245,17 @@ module.exports = class Table extends SubView
     @cof = true
     @collection.fetch
       filtered:true
-      success: @updateData
 
-  formatData: (data) =>
+  formatData:(data) =>
     return data
 
   updateData: =>
-    @tbody.html("")
     @rows = []
     data = @formatData(@collection.models)
     _.each data, (model) =>
       @insertRow(model, @insertDirection)
     @render()
+    @packTable()
 
   infinitePage: =>
     if @collection.lastavail >= @limit
@@ -282,7 +269,10 @@ module.exports = class Table extends SubView
       .addClass("sort-#{@sortDirection}")
       .attr('direction', @sortDirection)
     @thead = @$(".thead")
-    @tbody = @$(".tbody")
+    @tbody = @$(".tbody").infiniteScroll {
+      onPage: => @onPage()
+      onScroll: => @onScroll()
+    }
     @content = @tbody.find(".tscroll")
     @tbody.scrollTop(@lastY) if @lastY
     @packTable()
@@ -369,7 +359,3 @@ module.exports = class Table extends SubView
       newWidth = lastCellWidth + distance
       cachedHeaders[colCount-1].css "width", newWidth
       cachedColumns[colCount-1].css "width", newWidth
-
-  render: =>
-    t = super()
-    return t

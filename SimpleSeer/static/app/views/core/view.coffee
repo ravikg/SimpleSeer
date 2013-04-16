@@ -1,31 +1,29 @@
 #### views.coffee is the base class for all views
 # - - -
 
-# Main application reference 
+# Main application reference
 application = require 'application'
 
 module.exports = class View extends Backbone.View
   subviews: {}
   events: {}
   firstRender:true
-    
+
   initialize: (options={}) =>
     super()
 
     if options.context?
-      # Load any context attached to view  
-      # For further details, see:  
-      # _SeerCloud/_ `models/core/context`  
+      # Load any context attached to view
+      # For further details, see:
+      # _SeerCloud/_ `models/core/context`
       # _SimpleSeer/_ `seer_application`
       application.loadContext(options.context)
     @subviews = {}
 
   _setScroll: (el=@$el) =>
     el.infiniteScroll
-      onScroll:(per) =>
-        @trigger 'scroll', per
-      onPage: =>
-        @trigger 'page'
+      onScroll:(per) => @trigger('scroll', per)
+      onPage: => @trigger('page')
 
   focus: =>
     if !@$el.is(":visible")
@@ -48,21 +46,21 @@ module.exports = class View extends Backbone.View
         application.subscriptions[channel] = application.socket.emit('subscribe', channel)
       application.socket.on("message:#{channel}", handler)
 
-  #### Transition is way to call a method with a transition in and out.  
+  #### Transition is way to call a method with a transition in and out.
   # > __callback__ : Function to call between __in__ and __out__ effects
-  # 
-  # Valid translations are:  
-  # blind, bounce, clip, drop, explode, fade, fold, highlight, puff, pulsate, scale, shake, size, slide, transfer  
-  # __Example__:  
-  # effect:  
-  # &nbsp; callback: @myCallback  
-  # &nbsp; out:  
-  # &nbsp; &nbsp; type: 'slide'  
-  # &nbsp; &nbsp; options: { direction: "right" }  
-  # &nbsp; &nbsp; speed: 500  
-  # &nbsp; in:  
-  # &nbsp; &nbsp; type: 'slide'  
-  # &nbsp; &nbsp; options: { direction: "left" }  
+  #
+  # Valid translations are:
+  # blind, bounce, clip, drop, explode, fade, fold, highlight, puff, pulsate, scale, shake, size, slide, transfer
+  # __Example__:
+  # effect:
+  # &nbsp; callback: @myCallback
+  # &nbsp; out:
+  # &nbsp; &nbsp; type: 'slide'
+  # &nbsp; &nbsp; options: { direction: "right" }
+  # &nbsp; &nbsp; speed: 500
+  # &nbsp; in:
+  # &nbsp; &nbsp; type: 'slide'
+  # &nbsp; &nbsp; options: { direction: "left" }
   # &nbsp; &nbsp; speed: 500
   transition: (callback) =>
     @$el.hide @effect.out['type'], @effect.out['options'], @effect.out['speed'], =>
@@ -70,7 +68,7 @@ module.exports = class View extends Backbone.View
       @$el.show @effect.in['type'], @effect.in['options'], @effect.in['speed'], @effect['callback'] || => return
 
 
-  # Renders view using effects if defined 
+  # Renders view using effects if defined
   render: =>
     callback = =>
       @$el.html @template @getRenderData()
@@ -129,7 +127,7 @@ module.exports = class View extends Backbone.View
       parent:@
       selector:selector
     @subviews[name] = new viewClass(options)
-    
+
   # Recursively destroys subviews.  This is done automatically in `@remove`
   clearSubviews: =>
     for name, subview of @subviews
