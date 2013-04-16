@@ -1,66 +1,55 @@
+Application = require 'application'
 SubView = require 'views/core/subview'
-application = require 'application'
-template = require './templates/table'
-rowTemplate = require './templates/row'
+Template = require './templates/table'
+RowTemplate = require './templates/row'
 Collection = require "collections/table"
-#Frame = require "models/frame"
-#Measurement = require "models/measurement"
 
 # Standardized Table View
 # @TODO: Fix the sorting issue -- collection set array is in reverse order
 
 module.exports = class Table extends SubView
-  template:template
-  rowTemplate:rowTemplate
-  direction:-1
-  insertDirection: -1
-  renderComplete:false
-  sortKey:'id'
-  sortDirection:'desc'
-  cof:false
-  editable:true
-  editableList:{}
-  header:undefined
-  limit:50
-  headersInit:false
+  template: Template
+  rowTemplate: RowTemplate
+
   tbody: {}
   thead: {}
   content: {}
-  scrollThreshold: 4
   widthCache: {}
+  editableList:{}
+  sortKey: 'id'
+  sortDirection: 'desc'
+  cof: false
+  editable: true
+  renderComplete: false
+  lastY: 0
+  limit: 50
+  direction: -1
+  insertDirection: -1
+  scrollThreshold: 4
 
-  events :=>
+  events: =>
     "click .th" : "sortByColumn"
     "change .tbody input" : "changeCell"
 
-  onPage: =>
-    @infinitePage()
+  onScroll:(per) => @pollShadow()
+
+  onPage: => @infinitePage()
 
   getOptions: =>
-    # Setting up our initial conditions, options, variables, columns etc
-
-    if @options.sortKey? and @options.sortKey
+    if @options.sortKey?
       @sortKey = @options.sortKey
-
-    if @options.sortDirection? and @options.sortDirection
+    if @options.sortDirection?
       @direction = @options.sortDirection
       if @direction == 1
         @sortDirection = 'asc'
       else
         @sortDirection = 'desc'
-
-    if @options.editable? and @options.editable
+    if @options.editable?
       @editable = @options.editable
-
     if !@options.tableCols?
-      @tableCols = [
-        key: "id"
-        title: "ID"
-      ]
+      @tableCols = [key: "id", title: "ID"]
     else
       @tableCols = @options.tableCols
-
-    # Get the collection
     if @options.collection_model
       @_collection = require "collections/" + @options.collection_model + "s"
       @_model = require "models/" + @options.collection_model
@@ -70,52 +59,36 @@ module.exports = class Table extends SubView
       @_model = require "models/frame"
       @_url = "api/frame"
 
-    # Pick how we want to paginate this bad boy
-    #if @options.page == "inf"
-    #  @on "page", @infinitePage
-    #else
-    #  @on "page", @infinitePage
-    # @TODO: Initialize the html pagination
-
   getCollection: =>
     @collection = new @_collection([],{model:@_model,clearOnFetch:@cof,url:@_url})
-
     if !@options.collection_model
       if @sortKey == 'capturetime'
         @collection.setParam 'sortkey', 'capturetime_epoch'
       else
         @collection.setParam 'sortkey', @sortKey
       @collection.setParam 'sortorder', @direction
-
-    @collection.fetch
-      success:@updateData
+    @collection.fetch()
 
   initialize: =>
     super()
     @rows = []
     @getOptions()
     @getCollection()
-    return
 
-  # Render the empty table with given @tableCols
   getRenderData: =>
-    header:@header
-    cols:@tableCols
-    rows:@rows
-    pageButtons:@options.page == "page"
+    cols: @tableCols
+    rows: @rows
+    pageButtons: @options.page == "page"
 
-  isEditable: (cols, key) =>
+  isEditable:(cols, key) =>
     edit = 0
     $.each cols, (k, v) ->
       if v.key == key
         if v.editable? and v.editable
           edit++
-    if edit
-      return true
-    else
-      return false
+    return (if edit then true else false)
 
-  subCols: (key) =>
+  subCols:(key) =>
     subCols = undefined
     $.each @tableCols, (k, v) ->
       if v.key == key
@@ -152,7 +125,7 @@ module.exports = class Table extends SubView
     ###
 
   # Render the cell
-  renderCell: (raw, key) =>
+  renderCell:(raw, key) =>
     value =
       html: ""
       raw: raw
@@ -208,7 +181,7 @@ module.exports = class Table extends SubView
     value['html'] = if v then v else raw
     return value
 
-  changeCell: (e) =>
+  changeCell:(e) =>
     ###
     console.log "Saved cell"
     '''target = $(e.target)
@@ -230,139 +203,90 @@ module.exports = class Table extends SubView
         @saveCell(frame, obj)'''
     ###
 
-  saveCell: (frame, obj, key = '') =>
+  saveCell:(frame, obj, key = '') =>
     frame.save if key then {key: obj} else obj
 
-  # Render the row
   renderRow:(row) =>
     values = []
     $.each @tableCols, (k, v) =>
-      path = v.key.split('-')
+      path = v.key.split '-'
+      key = v.key
       if path.length > 1
-        r = row.get(path[0])
-        key = v.key
+        r = row.get path[0]
         val = r[path[1]]
       else
-        key = v.key
-        val = row.get(path[0])
-
+        val = row.get path[0]
       value = @renderCell(val, key)
-      r = {'class' : v.key, 'value' : value}
-      values.push r
+      values.push {'class' : v.key, 'value' : value}
 
-    return {id:row.id, values:values}
+    return {id: row.id, values: values}
 
-  # Insert a new row
-  insertRow: (row, insertDirection = 1) =>
+  insertRow:(row, insertDirection = 1) =>
+    markup = @rowTemplate @renderRow(row)
     if insertDirection is -1
-      @rows.unshift @rowTemplate @renderRow(row)
+      @rows.unshift(markup)
     else
-      @rows.push @rowTemplate @renderRow(row)
-    return "Insert row"
-
-  # Initialize persistant headers
-  initializeHeaders: =>
-    sh = @$el.find('.thead .tr.sh')
-    offset = sh.offset()
-
-    ph = @$el.find('.thead .tr.ph')
-    ph.css('width', sh.css('width'))
-
-    # @TODO: Change this so it always references @$el
-    $('#slides').scroll(@updateHeaders)
+      @rows.push(markup)
 
   sortByColumn:(e, set) =>
-    # Click events for sorting
-
     key = $(e.currentTarget).data('key')
-    direction = $(e.currentTarget).attr('direction')
-
-    unless direction
-      direction = 'desc'
-
+    direction = $(e.currentTarget).attr('direction') || "desc"
     if !set
-      if key == "capturetime"
-        @collection.setParam 'sortkey', 'capturetime_epoch'
-      else
-        @collection.setParam 'sortkey', key
-
+      @collection.setParam 'sortkey', if key is "capturetime" then 'capturetime_epoch' else key
     @sortKey = key
-
     if direction == "asc"
-        @collection.setParam 'sortorder', -1
-        @sortDirection = 'desc'
-        @direction = -1
+      @collection.setParam 'sortorder', -1
+      @sortDirection = 'desc'
+      @direction = -1
     else
-        @collection.setParam 'sortorder', 1
-        @sortDirection = 'asc'
-        @direction = 1
-
+      @collection.setParam 'sortorder', 1
+      @sortDirection = 'asc'
+      @direction = 1
     @cof = true
     @collection.fetch
       filtered:true
-      success: @updateData
 
-  formatData: (data) =>
+  formatData:(data) =>
     return data
 
-  # Completed collection fetch, render the table content
   updateData: =>
-    @$el.find('.table .tbody').html('')
-
-    # Iterate through the collection list
-    data = @formatData(@collection.models)
-
     @rows = []
+    data = @formatData(@collection.models)
     _.each data, (model) =>
       @insertRow(model, @insertDirection)
-
-    # Initialize persistant headers
-    if !@headersInit
-      @initializeHeaders()
-      @headersInit = true
-
     @render()
-    return
-
-  # Paginate
-  paginate: =>
-    # @TODO: Change this so it always references @$el
-    @$el.infiniteScroll({onPage: => @infinitePage})
-
-  #appendData: =>
-  #  console.log "appenddata"
-  #  @rows = []
-  #  _.each @collection.models, (model) =>
-  #    @insertRow(model, @insertDirection)
-  #  @render()
+    @packTable()
 
   infinitePage: =>
     if @collection.lastavail >= @limit
       @collection.setParam('skip', (@collection.getParam('skip') + @limit))
       @collection.fetch()
-    return
 
   afterRender: =>
-    #@$el.infiniteScroll({ onPage: => @infinitePage })
-    throttlePack = _.debounce @packTable, 100
-    $(window).resize(throttlePack)
+    $(window).resize( _.debounce @packTable, 100 )
     @$el.find(".th[data-key=#{@sortKey}]")
-      .removeClass("sort-asc sort-desc").addClass("sort-#{@sortDirection}")
+      .removeClass("sort-asc sort-desc")
+      .addClass("sort-#{@sortDirection}")
       .attr('direction', @sortDirection)
-    @tbody = @$(".tbody").scroll(@pollShadow)
     @thead = @$(".thead")
+    @tbody = @$(".tbody").infiniteScroll {
+      onPage: => @onPage()
+      onScroll: => @onScroll()
+    }
     @content = @tbody.find(".tscroll")
+    @tbody.scrollTop(@lastY) if @lastY
     @packTable()
 
   reflow: =>
     @packTable()
 
   pollShadow: =>
+    @lastY = top = @tbody.scrollTop()
     @thead.removeClass("shadow")
-    @thead.addClass("shadow") if @tbody.scrollTop() > 0
+    @thead.addClass("shadow") if top > 0
 
   getScrollbar: =>
-    distance = @tbody.width() - @content.width()
+    distance = @tbody.width() - @content.width().top
     return (if distance > @scrollThreshold then distance else 0)
 
   getCellStats:(index, colData) =>
@@ -435,7 +359,3 @@ module.exports = class Table extends SubView
       newWidth = lastCellWidth + distance
       cachedHeaders[colCount-1].css "width", newWidth
       cachedColumns[colCount-1].css "width", newWidth
-
-  render: =>
-    t = super()
-    return t
