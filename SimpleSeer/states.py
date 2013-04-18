@@ -200,34 +200,42 @@ class Core(object):
             for watcher in self.watchers:
                 watcher.check(frame.results)
     """
+
+
+    _queue = {}
+
+    def schedule(self, frame, inspections=None, measurements=None):
+        pass
     
-    
-    def process(self, frame):
-        if self._worker_enabled:
-            async_results = self.process_async(frame)
-            return self.process_async_complete(frame, async_results)
+    def process(self, frame, inspections=None, measurements=None, overwrite=True, clean=False):
+        from worker import process_inspections, process_measurements
         
-        frame.features = []
-        frame.results = []
-        
-        # all times are in seconds, not ms
-        ct_epoch = int(frame.capturetime.strftime("%s"))
-        for inspection in M.Inspection.objects:
-            if inspection.parent:
-                continue
-            if inspection.camera and inspection.camera != frame.camera:
-                continue
-            if 'interval' in inspection.parameters and not nextInInterval(frame, inspection.parameters['intervalField'], inspection.parameters['interval']):
-                continue
+        if not frame.id in self._queue:
+            features = process_inspections(frame)
+            results = process_measurements(frame, features)
+        else:
+            features = [ feat for feat in self._queue[frame.id]['features'] ]
+            results = [ res for res in self._queue[frame.id]['results'] ]
             
-            features = inspection.execute(frame)
-            frame.features += features
+        if clean:
+            frame.features = []
+            frame.results = []
             
-            for m in inspection.measurements:
-                if 'interval' in m.parameters and not nextInInterval(frame, m.parameters['intervalField'], m.parameters['interval']):
-                    continue
+        if overwrite:
+            # Find a list of inspection id from new inspection
+            # Use those to find list of features from old frame that are not in list of new
+            # Then append those features to the list of new features
+            newInspections = { feature.inspection: 1 for feature in features }.keys()
+            keptFeatures = [ feature for feature in frame.features if not feature.inspection in newInspections ]
+            features += keptFeatures
             
-                m.execute(frame, features)
+            # Same pattern, but for measurement results
+            newResults = { result.measurement_id: 1 for result in results }.keys()
+            keptResults = [ result for result in frame.results if not result.measurement_id in newResults ]
+            results += keptResults
+            
+        frame.features = features
+        frame.results = results
             
     def process_async(self, frame):
         frame.features = []
