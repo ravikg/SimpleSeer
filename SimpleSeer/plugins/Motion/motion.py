@@ -54,7 +54,7 @@ class MotionTrend(base.MeasurementPlugin):
            ).order_by("capturetime")
         if len(frameset) < minframes:
             return trend
-        print len(frameset)
+        #print len(frameset)
         frameset = reversed(frameset) #load into memory
         
         for frame in frameset:
