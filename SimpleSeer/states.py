@@ -211,12 +211,12 @@ class Core(object):
         from worker import process_inspections, process_measurements
         
         if not frame.id in self._queue:
-            features = process_inspections(frame)
-            results = process_measurements(frame, features)
-        else:
-            features = [ feat for feat in self._queue[frame.id]['features'] ]
-            results = [ res for res in self._queue[frame.id]['results'] ]
-            
+            self._queue[frame.id]['features'] = process_inspections(frame, inspections)
+            self._queue[frame.id]['results'] = process_measurements(frame, features, measurements)
+        
+        features = [ feat for feat in self._queue[frame.id]['features'] ]
+        results = [ res for res in self._queue[frame.id]['results'] ]
+        
         if clean:
             frame.features = []
             frame.results = []
@@ -236,62 +236,6 @@ class Core(object):
             
         frame.features = features
         frame.results = results
-            
-    def process_async(self, frame):
-        frame.features = []
-        frame.results = []
-        frame.save_image()
-        #make sure the image is in gridfs (does nothing if already saved)
-        
-        results_async = []
-        inspections = list(M.Inspection.objects)
-        #allocate each inspection to a celery task
-
-        # all times are in seconds, not ms
-        for inspection in M.Inspection.objects:
-            if inspection.parent:
-                continue
-            if inspection.camera and inspection.camera != frame.camera:
-                continue
-            if 'interval' in inspection.parameters and not nextInInterval(frame, inspection.parameters['intervalField'], inspection.parameters['interval']):
-                continue
-            results_async.append(execute_inspection.delay(inspection.id, frame.imgfile.grid_id, frame.metadata))
-        
-        return results_async
-        
-    def process_async_complete(self, frame, results_async):
-        
-        #note that async results refer to Celery results, and not Frame results
-        results_complete = []
-        ct_epoch = int(frame.capturetime.strftime("%s"))
-        while not len(results_complete) == len(results_async):
-            new_ready_results = []
-            for index, r in enumerate(results_async):
-                if not index in results_complete and r.ready():
-                    new_ready_results.append(index)
-                    
-            for result_index in new_ready_results:
-                (scvfeatures, inspection_id) = results_async[result_index].get()
-                insp = M.Inspection.objects.get(id=inspection_id)
-                features = []
-                
-                
-                for scvfeature in scvfeatures:
-                    scvfeature.image = frame.image 
-                    ff = M.FrameFeature()
-                    ff.setFeature(scvfeature)
-                    ff.inspection = insp.id
-                    features.append(ff)
-                
-                frame.features += features
-                #import pdb;pdb.set_trace()
-                for m in insp.measurements:
-                    if 'interval' in m.parameters and not nextInInterval(frame, m.parameters['intervalField'], m.parameters['interval']):
-                        continue
-                    m.execute(frame, features)
-                    
-            results_complete += new_ready_results
-            time.sleep(0.2)
                 
     @property
     def results(self):

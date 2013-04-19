@@ -25,6 +25,20 @@ import logging
 log = logging.getLogger()
 
 
+def workerRunning():
+    # TODO
+    print 'warning: not really testing if worker running'
+    return False
+
+def process_inspections(frame, inspections):
+    matchedInspections = []
+    
+    if workerRunning():
+        # Do stuff
+        pass
+    else:
+        pass
+        
 @task()
 def ping_worker(number):
     """
