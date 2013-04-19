@@ -106,6 +106,13 @@ module.exports = class View extends Backbone.View
     for name, subview of @subviews
       subview.render()
 
+  # Causes a chain reaction of reflows. Any place using this function
+  # needs to call super so that all sub-elements get a trigger as well
+  reflow: =>
+    for i,o of @subviews
+      o.reflow()
+    return
+
   # Adds a subview to the current view.
   #
   # -get rendered when the parent view is rendered

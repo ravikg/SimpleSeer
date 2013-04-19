@@ -278,6 +278,7 @@ module.exports = class Table extends SubView
     @packTable()
 
   reflow: =>
+    super()
     @packTable()
 
   pollShadow: =>
