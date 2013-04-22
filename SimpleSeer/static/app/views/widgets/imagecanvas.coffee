@@ -45,6 +45,11 @@ module.exports = class ImageCanvas extends SubView
 	# away from the edges of the canvas to
 	# prevent any clipping of the markup.
 	_align: =>
+		if @options.layout is "centered"
+			# If the user wants to center the images
+			# themselves, provide an option.
+			return
+
 		[w, h] = [@image.width(), @image.height()]
 		left = Math.floor((@options.width - w) / 2)
 		top = Math.floor((@options.height - h) / 2)

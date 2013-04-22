@@ -97,22 +97,35 @@ module.exports = class FilterCollection extends Collection
   # subscrbe to channel on pubsub
   # TODO: finish this up
   subscribe: (channel,callback=@receive) =>
-    if channel?
+    if channel
       if @name
         namePath = @name + '/'
       else
         namePath = ''
+      #console.info "removing listener: message:#{@subscribePath}/#{namePath}"
       application.socket.removeListener "message:#{@subscribePath}/#{namePath}", callback
       @name = channel
+      namePath = @name + '/'
+    else
+      namePath = ''
     #if application.debug
       #console.info "series:  subscribing to channel "+"message:#{@subscribePath}/#{namePath}"
     if application.socket
       application.socket.on "message:#{@subscribePath}/#{namePath}", callback
+      #console.info "binding to: message:#{@subscribePath}/#{namePath}"
       if !application.subscriptions["#{@subscribePath}/#{namePath}"]
+        #console.info "subscribing to: #{@subscribePath}/#{namePath}"
         application.subscriptions["#{@subscribePath}/#{namePath}"] = application.socket.emit 'subscribe', "#{@subscribePath}/#{namePath}"
+    #console.log "------------------------------------------------------------------"
   #trigger fired when receiving data on the pubsub subscription.
   receive: (data) =>
-    console.log data
+    _obj = new @model data.data
+    if @getParam 'sortorder' == -1
+      at = 0
+    else
+      at = (@models.length)
+    @add _obj, {at:at}
+    return _obj
     
   # Set sort param.  Bubble up through bound FiltersCollections
   setParam: (key,val) =>
@@ -183,13 +196,14 @@ module.exports = class FilterCollection extends Collection
       limit=@getParam('limit')
     _json =
       skip:skip
-      limit:limit
       query: @getParam 'query'
       sortinfo:
         type: @getParam 'sorttype', ''
         name: @getParam 'sortkey', 'capturetime_epoch'
         order: @getParam 'sortorder'
         
+    if limit != false
+      _json['sortinfo']['limit'] = limit
     if @getParam('groupby')
       _json['groupByField'] = {groupby: @getParam('groupby'), groupfns: @getParam('groupfns')}
     if addParams
@@ -204,8 +218,9 @@ module.exports = class FilterCollection extends Collection
     "/"+JSON.stringify dataSet
 
   # trigger fired before the fetch method makes request to server 
-  preFetch:()=>
-    application.modal.show()
+  preFetch:(params)=>
+    if params.modal
+      application.modal.show(params.modal)
     if !@clearOnFetch
       @_all = @models
     for o in @callbackStack['pre']
@@ -221,7 +236,7 @@ module.exports = class FilterCollection extends Collection
       if @getParam 'sortorder' == -1
         at = 0
       else
-        at = (@models.length - 1)
+        at = (@models.length)
       @add @_all, {at:at ,silent: true}
       @_all = []
     for i,o of @callbackStack['post']
@@ -233,7 +248,21 @@ module.exports = class FilterCollection extends Collection
 
   # refreshes the collection from the server
   globalRefresh:=>
-    @fetch({force:true})
+    _skip = @getParam('skip')
+    callback = =>
+    if _skip > 0
+      _limit = @getParam('limit')
+      #console.log "temp setting from: ",_skip,_limit
+      limit = _limit + _skip
+      #console.log "to: ",0,limit
+      @setParam('skip',0)
+      @setParam('limit',limit)
+      callback = =>
+        #console.log "resetting: ",_skip,_limit
+        @setParam('skip',_skip)
+        @setParam('limit',_limit)
+      
+    @fetch({force:true,filtered:true,modal:false,success:callback})
 
   setRaw: (response) =>
     @raw = response
@@ -244,12 +273,14 @@ module.exports = class FilterCollection extends Collection
   # - __before__: fires before the fetch makes request to server
   # - __success__: fires after the fetch makes request to server
   fetch: (params={}) =>
+    if !params.modal?
+      params.modal = {message:'<p class="large center">Loading<p>',throbber:true}
     if params.filtered and @clearOnFetch == false
       @clearOnFetch = true
       @callbackStack['post'].push => @clearOnFetch = false
 
     params['silent'] = true
-    @preFetch()
+    @preFetch(params)
     if params.forceRefresh
       @models = []
     total = params.total || false

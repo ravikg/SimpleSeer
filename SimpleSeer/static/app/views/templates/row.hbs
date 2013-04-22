@@ -1,5 +1,7 @@
-<tr id="{{id}}">
+<div class="tr" id="{{id}}">
   {{#each values}}
-    <td class="{{this.class}}">{{{this.value}}}</td>
+    <div class="td {{this.class}}" {{#if this.title}}title="{{this.title}}"{{/if}}>
+    	<span {{#if this.title}}title="{{this.title}}"{{/if}}>{{{this.value.html}}}</span>
+   	</div>
   {{/each}}
-</tr>
+</div>
