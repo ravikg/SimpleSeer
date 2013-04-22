@@ -78,6 +78,12 @@ class FrameFeature(SimpleEmbeddedDoc, mongoengine.EmbeddedDocument):
             self._featurebuffer = pickle.loads(self.featurepickle)
         return self._featurebuffer
     
+    @classmethod
+    def wrap(cls, data):
+        ff = FrameFeature()
+        ff.setFeature(data)
+        return ff
+    
     #this converts a SimpleCV Feature object into a FrameFeature
     #clean this up a bit
     def setFeature(self, data):
