@@ -203,7 +203,7 @@ module.exports = class FilterCollection extends Collection
         order: @getParam 'sortorder'
         
     if limit != false
-      _json['sortinfo']['limit'] = limit
+      _json['limit'] = limit
     if @getParam('groupby')
       _json['groupByField'] = {groupby: @getParam('groupby'), groupfns: @getParam('groupfns')}
     if addParams

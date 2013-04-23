@@ -37,9 +37,9 @@ module.exports = class SubView extends View
         o._pageTrigger()
     return
 
-  _scrollTrigger: =>
-    @trigger 'scroll'
+  _scrollTrigger: (per) =>
+    @trigger 'scroll', per
     for i,o of @subviews
       if !o.onScroll?
-        o._scrollTrigger()
+        o._scrollTrigger(per)
     return
