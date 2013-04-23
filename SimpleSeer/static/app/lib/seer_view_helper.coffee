@@ -143,13 +143,13 @@ Handlebars.registerHelper "key_value", (obj, fn) ->
       value: obj[k]
     )
   retVal
-  
+
 Handlebars.registerHelper "not_in", (context, options) ->
   if options.hash.needle in options.hash.haystack
     options.inverse context
   else
     options.fn context
-    
+
 Handlebars.registerHelper "localize_dt", (epoch, options) ->
   dt = moment.utc(epoch)
   if options.hash.format?
@@ -160,14 +160,14 @@ Handlebars.registerHelper "localize_dt", (epoch, options) ->
   return new Handlebars.SafeString dt.format(f)
 
 Handlebars.registerHelper "log", (value) ->
-  console.log "Handlebars Log: ", value
+  #console.log "Handlebars Log: ", value
   return new Handlebars.SafeString ""
 
 Handlebars.registerHelper "resultlist", (results) ->
   tpl = ""
   if results.length is 0
     tpl += "<div data-use=\"no-results\" class=\"centered\">Part Failed: No Results</div>"
-  else 
+  else
     for result in results
       value = result.numeric or ""
       unless value is undefined 
