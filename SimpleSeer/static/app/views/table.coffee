@@ -24,7 +24,8 @@ module.exports = class Table extends SubView
   insertDirection: -1
   scrollThreshold: 4
   sortType: 'collection'
-  uniqid: 0
+  header: ''
+  tableClasses: 'table'
 
   events: =>
     "click .th" : "sortByColumn"
@@ -93,6 +94,8 @@ module.exports = class Table extends SubView
     @getCollection()
 
   getRenderData: =>
+    classes: @tableClasses
+    header: @header
     cols: @tableCols
     rows: @rows
     pageButtons: @options.page == "page"
@@ -243,17 +246,6 @@ module.exports = class Table extends SubView
   saveCell:(frame, obj, key = '') =>
     frame.save if key then {key: obj} else obj
 
-  renderBlankRow: =>
-    values = []
-
-    _.each @tableCols, (v, k) =>
-      key = v.key
-      value = @renderCell('', key)
-      values.push {'class' : v.key, 'value' : value}
-
-    id = @uniqid++
-    return {id: 'c' + id, values: values}
-
   renderRow:(row) =>
     values = []
     $.each @tableCols, (k, v) =>
@@ -268,13 +260,6 @@ module.exports = class Table extends SubView
       values.push {'class' : v.key, 'value' : value}
 
     return {id: row.id, values: values}
-
-  insertBlankRow: (insertDirection = 1) =>
-    markup = @rowTemplate @renderBlankRow()
-    if insertDirection is -1 
-      @rows.unshift(markup)
-    else
-      @rows.push(markup)
 
   insertRow:(row, insertDirection = 1) =>
     markup = @rowTemplate @renderRow(row)
