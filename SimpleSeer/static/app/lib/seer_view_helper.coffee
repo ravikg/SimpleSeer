@@ -170,10 +170,14 @@ Handlebars.registerHelper "resultlist", (results) ->
   else
     for result in results
       value = result.numeric or ""
-      unless value is undefined
-        label = result.measurement_label
-        unit = if result.unit is "deg" then "&deg;" else " (#{result.unit})"
-        if value is "" then unit = ""
+      unless value is undefined 
+        obj = SimpleSeer.measurements.where({name:result.measurement_name})[0]
+        label = obj.get('label')
+        if obj.get('units')
+          unit = if obj.get('units') is "deg" then "&deg;" else " (#{obj.get('units')})"
+        else
+          unit = ""
+        if value is "" then unit = "--"
         tpl += "<div class=\"elastic interactive\">#{label}:<span>#{value}#{unit}</span></div>"
   return new Handlebars.SafeString tpl
 
