@@ -165,7 +165,7 @@ Handlebars.registerHelper "log", (value) ->
 
 Handlebars.registerHelper "resultlist", (results) ->
   tpl = ""
-  if results.length is 0
+  if !results or results.length is 0
     tpl += "<div data-use=\"no-results\" class=\"centered\">Part Failed: No Results</div>"
   else
     for result in results
