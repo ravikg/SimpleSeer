@@ -23,6 +23,8 @@ module.exports = class Table extends SubView
   direction: -1
   insertDirection: -1
   scrollThreshold: 4
+  sortType: 'collection'
+  uniqid: 0
 
   events: =>
     "click .th" : "sortByColumn"
@@ -31,6 +33,22 @@ module.exports = class Table extends SubView
   onScroll:(per) => @pollShadow()
 
   onPage: => @infinitePage()
+
+  getColumnKeyByTitle: (title) =>
+    key = null
+    _.each @tableCols, (col) =>
+      if col.title == title
+        key = col.key
+
+    return key
+
+  getColumnTitleByKey: (key) =>
+    title = null
+    _.each @tableCols, (col) =>
+      if col.key == key
+        title = col.title
+
+    return title
 
   getOptions: =>
     if @options.sortKey?
@@ -94,22 +112,6 @@ module.exports = class Table extends SubView
         if v.subcols
           subCols = v.subcols
     return subCols
-
-  getColumnKeyByTitle: (title) =>
-    key = null
-    _.each @tableCols, (col) =>
-      if col.title == title
-        key = col.key
-
-    return key
-
-  getColumnTitleByKey: (key) =>
-    title = null
-    _.each @tableCols, (col) =>
-      if col.key == key
-        title = col.title
-
-    return title
 
   editableCell: =>
     ###
@@ -241,6 +243,17 @@ module.exports = class Table extends SubView
   saveCell:(frame, obj, key = '') =>
     frame.save if key then {key: obj} else obj
 
+  renderBlankRow: =>
+    values = []
+
+    _.each @tableCols, (v, k) =>
+      key = v.key
+      value = @renderCell('', key)
+      values.push {'class' : v.key, 'value' : value}
+
+    id = @uniqid++
+    return {id: 'c' + id, values: values}
+
   renderRow:(row) =>
     values = []
     $.each @tableCols, (k, v) =>
@@ -255,6 +268,13 @@ module.exports = class Table extends SubView
       values.push {'class' : v.key, 'value' : value}
 
     return {id: row.id, values: values}
+
+  insertBlankRow: (insertDirection = 1) =>
+    markup = @rowTemplate @renderBlankRow()
+    if insertDirection is -1 
+      @rows.unshift(markup)
+    else
+      @rows.push(markup)
 
   insertRow:(row, insertDirection = 1) =>
     markup = @rowTemplate @renderRow(row)
