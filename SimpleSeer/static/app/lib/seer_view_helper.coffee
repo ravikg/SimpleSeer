@@ -170,7 +170,7 @@ Handlebars.registerHelper "resultlist", (results) ->
   else
     for result in results
       value = result.numeric or ""
-      unless value is undefined 
+      unless value is undefined
         obj = SimpleSeer.measurements.where({name:result.measurement_name})[0]
         label = obj.get('label')
         if obj.get('units')
@@ -178,7 +178,7 @@ Handlebars.registerHelper "resultlist", (results) ->
         else
           unit = ""
         if value is "" then unit = "--"
-        tpl += "<div class=\"elastic interactive\">#{label}:<span>#{value}#{unit}</span></div>"
+        tpl += "<div class=\"elastic interactive\"><span class=\"label\">#{label}:</span><span class=\"value\">#{value}#{unit}</span><div class=\"clearfix\"></div></div>"
   return new Handlebars.SafeString tpl
 
 Handlebars.registerHelper "metalist", (results, template) ->
@@ -186,7 +186,7 @@ Handlebars.registerHelper "metalist", (results, template) ->
   for key in template
     label = key
     value = results[key] or ""
-    tpl += "<div class=\"elastic spacedown\">#{label}:<span>#{value}</span></div>"
+    tpl += "<div class=\"elastic spacedown\">#{label}:<span class=\"value\">#{value}</span></div>"
   return new Handlebars.SafeString tpl
 
 Handlebars.registerHelper "capturetime", (time) ->
