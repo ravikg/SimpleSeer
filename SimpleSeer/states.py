@@ -2,9 +2,7 @@ import time
 from collections import deque
 from Queue import Queue, Empty
 from cStringIO import StringIO
-from worker import ping_worker, execute_inspection
 
-import zmq
 import gevent
 
 from . import models as M
@@ -15,21 +13,6 @@ from .camera import StillCamera, VideoCamera
 from realtime import ChannelManager
 
 import logging
-
-def nextInInterval(frame, field, interval):
-    currentValue = 0
-    try:
-        currentValue = getattr(frame, field)
-    except:
-        currentValue = frame.metadata[field]
-        field = 'metadata__' + field
-    
-    roundValue = currentValue - (currentValue % interval)
-    kwargs = {'%s__gte' % field: roundValue, '%s__lt' % field: currentValue, 'camera': frame.camera}
-    if M.Frame.objects(**kwargs).count() == 0:
-        return True
-    return False
-
 
 class Core(object):
     '''Implements the core functionality of SimpleSeer
@@ -74,9 +57,6 @@ class Core(object):
         util.load_plugins()
         self.reloadInspections()
         
-        if not self.config.skip_worker_check:
-            self.workerCheck(5.0) #wait up to 5s for worker processes
-        
         self.lastframes = deque()
         self.framecount = 0
         self.reset()
@@ -85,27 +65,6 @@ class Core(object):
     def get(cls):
         return cls._instance
         
-    def workerCheck(self, timeout = 0.5, checkinterval = 0.1):
-        result = ping_worker.delay(1)
-        checktime = time.time()
-        self.log.info("checking for worker process")
-        
-        self._worker_checked = checktime
-        while not result.ready():
-            time.sleep(checkinterval)
-            if time.time() - checktime > timeout:
-                self.log.info("worker check timeout")
-                self._worker_enabled = False
-                return False
-        
-        if result.get() == 2:
-            self.log.info("worker found")
-            self._worker_enabled = True
-            return True
-        else:
-            self._worker_enabled = False
-            return False
-                
     def reloadInspections(self):
         i = list(M.Inspection.objects)
         m = list(M.Measurement.objects)
