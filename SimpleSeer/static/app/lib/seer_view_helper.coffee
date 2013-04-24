@@ -169,6 +169,7 @@ Handlebars.registerHelper "resultlist", (results) ->
     tpl += "<div data-use=\"no-results\" class=\"centered\">Part Failed: No Results</div>"
   else
     for result in results
+      console.log result
       value = result.numeric or ""
       unless value is undefined
         obj = SimpleSeer.measurements.where({name:result.measurement_name})[0]
@@ -178,7 +179,7 @@ Handlebars.registerHelper "resultlist", (results) ->
         else
           unit = ""
         if value is "" then unit = "--"
-        tpl += "<div class=\"elastic interactive\"><span class=\"label\">#{label}:</span><span class=\"value\">#{value}#{unit}</span><div class=\"clearfix\"></div></div>"
+        tpl += "<div class=\"elastic interactive\"><span class=\"label #{if result.state is 1 then "fail" else "pass"}\">#{label}:</span><span class=\"value #{if result.state is 1 then "fail" else "pass"}\">#{value}#{unit}</span><div class=\"clearfix\"></div></div>"
   return new Handlebars.SafeString tpl
 
 Handlebars.registerHelper "metalist", (results, template) ->
