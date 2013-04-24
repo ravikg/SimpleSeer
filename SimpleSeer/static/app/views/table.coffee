@@ -85,7 +85,7 @@ module.exports = class Table extends SubView
       else
         @collection.setParam 'sortkey', @sortKey
       @collection.setParam 'sortorder', @direction
-    @collection.fetch()
+    @collection.fetch({'success':@updateData})
 
   initialize: =>
     super()
@@ -248,14 +248,10 @@ module.exports = class Table extends SubView
 
   renderRow:(row) =>
     values = []
-    $.each @tableCols, (k, v) =>
-      path = v.key.split '-'
+
+    _.each @tableCols, (v, k) =>
       key = v.key
-      if path.length > 1
-        r = row.get path[0]
-        val = r[path[1]]
-      else
-        val = row.get path[0]
+      val = row[v.key]
       value = @renderCell(val, key)
       values.push {'class' : v.key, 'value' : value}
 
