@@ -69,7 +69,11 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
         'ordering': ['executeorder']
     }
 
-    def execute(self, frame, features):
+    def execute(self, frame, features=None):
+        
+        if not features:
+            features = frame.features
+        
         featureset = self.findFeatureset(features)
         #this will catch nested features
 
@@ -99,10 +103,10 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
             hasToleranceFunction = hasattr(function_ref, 'tolerance')
 
         if self.booleans:
-            values = self.testBooleans(values, self.booleans, frame.results)
+            values = self.testBooleans(values, self.booleans, values)
 
         if self.conditions:
-            conds = self.testBooleans(values, self.conditions, frame.results)
+            conds = self.testBooleans(values, self.conditions, values)
             values = [ v for v, c in zip(values, conds) if c ]
 
         results = self.toResults(frame, values)
@@ -197,22 +201,6 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
 
         return results
 
-    def backfillTolerances(self):
-        from .Frame import Frame
-        from .Alert import Alert
-
-        #NJO, we shouldn't be doing this, but we need something to trigger
-        #and our REST stuff is a little too static
-        Alert.info("Backfilling Measurements")
-
-        for frame in Frame.objects:
-            log.info('Backfilling measurement on frame %s' % frame.id)
-            if frame.results:
-                self.tolerance(frame, frame.results)
-                frame.save()
-        Alert.clear()
-        Alert.refresh('backfill')
-
     def findFeatureset(self, features):
 
         fs = []
@@ -251,21 +239,10 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
                 measurement_id=self.id,
                 measurement_name=self.name)
             for i, v in enumerate(values) ]
-        frame.results.extend(results)
         return results
 
     def save(self, *args, **kwargs):
         from ..realtime import ChannelManager
-
-        # Optional parameter: skipBackfill
-        try:
-            skipBackfill = kwargs.pop('skipBackfill')
-        except:
-            skipBackfill = 0
-
-        if not skipBackfill:
-            if '_changed_fields' not in dir(self) or 'tolerances' in self._changed_fields:
-                self.backfillTolerances()
 
         # Optional parameter: skipDeps
         try:
@@ -284,7 +261,6 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
             if m.name == self.name and m.id != self.id:
                 log.info('trying to save measurements with duplicate names: %s' % m.name)
                 self.name = self.name + '_1'
-
 
         super(Measurement, self).save(*args, **kwargs)
         ChannelManager().publish('meta/', self)
