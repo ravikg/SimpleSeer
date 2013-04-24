@@ -51,6 +51,7 @@ class Foreman():
         if not self._initialized:
             self._useWorkers = self.workerRunning()
             self._initialized = True
+            ensure_plugins()
 
     def workerRunning(self):
         i = celery.control.inspect()
@@ -59,7 +60,7 @@ class Foreman():
         else:
             return False
 
-    def process_inspections(self, frame, inspections):
+    def process_inspections(self, frame, inspections=None):
         inspKwargs = {'camera': frame.camera, 'parent__exists': False}
         if inspections:
             inspKwargs['id__in'] = inspections
@@ -71,8 +72,23 @@ class Foreman():
         else:
             return self.serial_inspection_iterator(frame, filteredInsps)
 
-    def process_measurements(self, frame, measurements):
-        pass
+    def process_measurements(self, frame, measurements=None):
+        # Need to test the next in interval... used by scanline measurement in zingermans
+        measKwargs = {}
+        
+        # only measurements for which there is a matching feature...
+        insps = [ feat.inspection for feat in frame.features ]
+        measKwargs['inspection__in'] = insps
+        
+        if measurements:
+            measKwargs['id__in'] = measurements
+        
+        filteredMeass = M.Measurement.objects(**measKwargs)
+        
+        if self._useWorkers:
+            return self.worker_measurement_iterator(frame, filteredMeass)
+        else:
+            return self.serial_measurement_iterator(frame, filteredMeass)
 
     def worker_inspection_iterator(self, frame, insps):
         from time import sleep
@@ -105,6 +121,12 @@ class Foreman():
             features = i.execute(frame)
             for feat in features:
                 yield feat
+                
+    def serial_measurement_iterator(self, frame, meass):
+        for m in meass:
+            results = m.execute(frame)
+            for res in results:
+                yield res
 
     @task
     def inspection_execute(fid, iid):
