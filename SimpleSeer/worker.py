@@ -76,29 +76,40 @@ class Foreman():
         # Need to test the next in interval... used by scanline measurement in zingermans
         measKwargs = {}
         
-        # only measurements for which there is a matching feature...
-        insps = [ feat.inspection for feat in frame.features ]
-        measKwargs['inspection__in'] = insps
-        
-        if measurements:
-            measKwargs['id__in'] = measurements
-        
-        filteredMeass = M.Measurement.objects(**measKwargs)
-        
-        if self._useWorkers:
-            return self.worker_measurement_iterator(frame, filteredMeass)
-        else:
-            return self.serial_measurement_iterator(frame, filteredMeass)
+        if frame.features:        
+            # only measurements for which there is a matching feature...
+            # exact format of feature object depends on whether it came from worker or serial
+            if '_data' in frame.features[0]:
+                insps = [ feat.inspection for feat in frame.features ]
+            else:
+                insps = [ feat.__dict__['inspection'] for feat in frame.features ]
+            measKwargs['inspection__in'] = insps
+            
+            if measurements:
+                measKwargs['id__in'] = measurements
+            
+            filteredMeass = M.Measurement.objects(**measKwargs)
+            
+            if self._useWorkers:
+                return self.worker_measurement_iterator(frame, filteredMeass)
+            else:
+                return self.serial_measurement_iterator(frame, filteredMeass)
 
     def worker_inspection_iterator(self, frame, insps):
+        return self.worker_x_iterator(frame, insps, self.inspection_execute)
+        
+    def worker_measurement_iterator(self, frame, meass):
+        return self.worker_x_iterator(frame, meass, self.measurement_execute)
+            
+    def worker_x_iterator(self, frame, objs, fn):
         from time import sleep
         
         scheduled = []
-        for i in insps:
-            scheduled.append(self.inspection_execute.delay(frame.id, i.id))
+        for o in objs:
+            scheduled.append(fn.delay(frame.id, o.id))
         
         completed = 0
-        while completed < len(insps):
+        while completed < len(objs):
             ready = []
             
             # List of scheduled items ready
@@ -109,9 +120,9 @@ class Foreman():
             # Get the completed results
             for idx in ready:
                 async = scheduled.pop(idx)
-                features = async.get()
-                for feat in features:
-                    yield feat
+                output = async.get()
+                for out in output:
+                    yield out
                 completed += 1
             
             sleep(0.1)
@@ -135,6 +146,17 @@ class Foreman():
             inspection = M.Inspection.objects.get(id=iid)
             features = inspection.execute(frame)
             return features        
+        except Exception as e:
+            log.info(e)
+            print e
+
+    @task
+    def measurement_execute(fid, mid):
+        try:
+            frame = M.Frame.objects.get(id=fid)
+            measurement = M.Measurement.objects.get(id=mid)
+            results = measurement.execute(frame)
+            return results        
         except Exception as e:
             log.info(e)
             print e
