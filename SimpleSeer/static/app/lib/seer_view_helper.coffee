@@ -160,7 +160,7 @@ Handlebars.registerHelper "localize_dt", (epoch, options) ->
   return new Handlebars.SafeString dt.format(f)
 
 Handlebars.registerHelper "log", (value) ->
-  #console.log "Handlebars Log: ", value
+  console.log "Handlebars Log: ", value
   return new Handlebars.SafeString ""
 
 Handlebars.registerHelper "resultlist", (results) ->
@@ -178,7 +178,7 @@ Handlebars.registerHelper "resultlist", (results) ->
         else
           unit = ""
         if value is "" then unit = "--"
-        tpl += "<div class=\"elastic interactive\"><span class=\"label\">#{label}:</span><span class=\"value\">#{value}#{unit}</span><div class=\"clearfix\"></div></div>"
+        tpl += "<div class=\"elastic interactive #{if result.state is 1 then "fail" else "pass"}\"><span class=\"label\">#{label}:</span><span class=\"value\">#{value}#{unit}</span><div class=\"clearfix\"></div></div>"
   return new Handlebars.SafeString tpl
 
 Handlebars.registerHelper "metalist", (results, template) ->
@@ -192,3 +192,11 @@ Handlebars.registerHelper "metalist", (results, template) ->
 Handlebars.registerHelper "capturetime", (time) ->
   str = new moment(parseInt(time)).format("M/D/YYYY h:mm a")
   return new Handlebars.SafeString str
+
+Handlebars.registerHelper "tolstate", (results) ->
+  console.log results.length
+  len = _.where(results, {state: 1}).length
+  if len > 0 or results.length is 0
+    return "fail"
+  else
+    return "pass"
