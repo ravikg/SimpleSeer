@@ -9,7 +9,7 @@ module.exports = class frameViewer extends SubView
   template:template
   realtime:true
   useThumb: false
-    
+
   initialize: =>
     @url = ''
     super()
@@ -25,7 +25,7 @@ module.exports = class frameViewer extends SubView
     if application.socket
       if !application.subscriptions["frame/"]?
         application.subscriptions["frame/"] = application.socket.emit 'subscribe', "frame/"
-      application.socket.on "message:frame/", @receive    
+      application.socket.on "message:frame/", @receive
 
   loaderToggle:(img)=>
     @$el.find('.fillImage:visible').css("display", "none")
@@ -34,7 +34,7 @@ module.exports = class frameViewer extends SubView
     @setSize(ci)
 
   setSize:(ci=@$el.find(".fillImage:visible")) =>
-    ci.css("margin-top", ((@$el.find(".fillImageCont").height() / 2) - (ci.height() / 2) + "px"))    
+    ci.css("margin-top", ((@$el.find(".fillImageCont").height() / 2) - (ci.height() / 2) + "px"))
 
   receive:(frame)=>
     if !(frame instanceof Frame)
@@ -48,7 +48,7 @@ module.exports = class frameViewer extends SubView
     ci = $(@imgs[@imgcurr])
     ci.attr('src',@url)
     return @frame
-    
+
   render:=>
     super()
     @imgs = @$el.find('img')
@@ -58,13 +58,14 @@ module.exports = class frameViewer extends SubView
     @imgcurr = 0
     application.modal.onSuccess()
     return @
-  
+
   getRenderData: =>
     url:@url
-  
+
   onUpdate: (frame) =>
     @frame = frame
     @render()
 
   reflow: =>
+    super()
     @setSize()

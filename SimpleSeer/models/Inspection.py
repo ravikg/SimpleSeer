@@ -184,6 +184,10 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
     def measurements(self):
         return Measurement.objects(inspection = self.id)
         
+    @property
+    def featureclass(self):
+        return self.get_plugin(self.method).featureclass
+        
     def __eq__(self, other):
         if isinstance(other, self.__class__):
             # Note: ignoring name to test if this inspection is functionally equivalent to other inspection (name is irrelevant)

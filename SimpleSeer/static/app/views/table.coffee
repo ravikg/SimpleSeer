@@ -4,9 +4,6 @@ Template = require './templates/table'
 RowTemplate = require './templates/row'
 Collection = require "collections/table"
 
-# Standardized Table View
-# @TODO: Fix the sorting issue -- collection set array is in reverse order
-
 module.exports = class Table extends SubView
   template: Template
   rowTemplate: RowTemplate
@@ -44,6 +41,8 @@ module.exports = class Table extends SubView
         @sortDirection = 'asc'
       else
         @sortDirection = 'desc'
+    if @options.tableKey?
+      @tableKey = @options.tableKey
     if @options.editable?
       @editable = @options.editable
     if !@options.tableCols?
@@ -96,6 +95,22 @@ module.exports = class Table extends SubView
           subCols = v.subcols
     return subCols
 
+  getColumnKeyByTitle: (title) =>
+    key = null
+    _.each @tableCols, (col) =>
+      if col.title == title
+        key = col.key
+
+    return key
+
+  getColumnTitleByKey: (key) =>
+    title = null
+    _.each @tableCols, (col) =>
+      if col.key == key
+        title = col.title
+
+    return title
+
   editableCell: =>
     ###
        $(".td").dblclick ->
@@ -124,84 +139,104 @@ module.exports = class Table extends SubView
         input.focus()
     ###
 
+  # Returns the tableCol given a key
+  getTableCol: (cols, key) =>
+    col = null
+    _.each cols, (a, b) =>  
+      if a.key == key
+        col = a
+    return col
+
   # Render the cell
   renderCell:(raw, key) =>
-    value =
-      html: ""
-      raw: raw
-    # Special cases go here? Human readable, etc.
-    parentKey = key
     v = raw
+    html = ''
+    tableCol = @getTableCol(@tableCols, key)
 
-    # Process the cell for an editable field
-    if @editable
-      if @isEditable(@tableCols, key)
-        subcols = @subCols(key)
-        if subcols
-          html = '<div class="subCols">'
-          $.each subcols, (k, v) =>
-            key = v.key
-            path = key.split('-')
-            val = ''
-            if v? and v and v[path[2]]? and v[path[2]]
-              val = v[path[2]]
-            placeholder = v.title
-            if @isEditable(subcols, key)
+    # Generate the html
+    if typeof v == 'object' # Complicated render
+      if tableCol.editable
+        if tableCol.subCols
+          html += '<div class="subCols">'
+          _.each tableCol.subCols, (a, b) =>
+            col = a
+            if col.editable # Sub column is editable
+              value = ''
+              placeholder = if col.placeholder then col.placeholder else col.title
+              _.each v, (field) =>
+                if field.key == col.key
+                  value = field.value
               args = {
                 placeholder: placeholder
                 type: 'text'
-                name: parentKey + '-' + path[2]
-                v: val
-                class: parentKey + '-' + path[2]
+                name: key + '-' + col.key
+                value: value
+                class: key + '-' + col.key
               }
               html += '<div class="subCol">'
               html += "<input "
               $.each args, (k, v) =>
                 html += k + '="' + v + '" '
               html += "/></div>"
-            else
-              html += '<div class="' + parentKey + '.' + key + '">' + val + '</div>';
+          html += '</div>'
+        else 
+          col = tableCol
+          if col.editable # Sub column is editable
+            value = ''
+            placeholder = if col.placeholder then col.placeholder else col.title
+            _.each v, (field) =>
+              if field.key == col.key
+                value = field.value
+            args = {
+              placeholder: placeholder
+              type: 'text'
+              name: col.key
+              value: value
+              class: col.key
+            }
+            html += "<input "
+            $.each args, (k, v) =>
+              html += k + '="' + v + '" '
+            html += "/>"
+      else # Not editable, return self
+        v = v
+    else # Simple render
+      v = v
 
-          html += '</div>';
-          v = html
-        else
-          # @TODO: Pull nullval into scope here
-          args = {
-            placeholder: v
-            type: 'text'
-            v: v
-            class: key
-          }
-          html = "<input "
-          $.each args, (k, v) =>
-            html += k + '="' + v + '" '
-          html += "/>"
-          v = html
+    if !html
+      html = v
 
-    value['html'] = if v then v else raw
+    value =
+      html: html
+      raw: raw
     return value
 
-  changeCell:(e) =>
-    ###
-    console.log "Saved cell"
-    '''target = $(e.target)
-    id = target.parents('tr').attr('id')
-    key = target.attr('class')
-    value = target.val();
-    if id and key and value
-      frame = @collection.get(id)
-      o = key.split('-')
-      if o.length > 1
-        p = frame.get(o[0])
-        if !p[o[1]]?
-          p[o[1]] = {}
-        p[o[1]][o[2]] = value
-        @saveCell(frame, p, p[0])
-      else
-        obj = {}
-        obj[key] = value
-        @saveCell(frame, obj)'''
-    ###
+  # Default saveCell functionality
+  saveCell: (obj) =>
+    return
+
+  changeCell:(e) => # @TODO: DO THIS TOMORROW
+    target = $(e.target)
+    id = target.parents('div.tr').attr('id')
+    cls = target.attr('class')
+    spl = cls.split('-')
+    if spl[0]
+      key = spl[0]
+    if spl[1]
+      subkey = spl[1]
+    title = @getColumnTitleByKey(key)
+    value = target.val()
+
+    obj =
+      target: target
+      id: id
+      cls: cls
+      key: key
+      subkey: subkey
+      title: title
+      value: value
+
+    @saveCell(obj)
 
   saveCell:(frame, obj, key = '') =>
     frame.save if key then {key: obj} else obj
@@ -250,8 +285,10 @@ module.exports = class Table extends SubView
     return data
 
   updateData: =>
-    @rows = []
-    data = @formatData(@collection.models)
+    @rows = [] 
+    if !@tableData and @collection and @collection.models
+      @tableData = @collection.models
+    data = @formatData(@tableData)
     _.each data, (model) =>
       @insertRow(model, @insertDirection)
     @render()
@@ -278,6 +315,7 @@ module.exports = class Table extends SubView
     @packTable()
 
   reflow: =>
+    super()
     @packTable()
 
   pollShadow: =>

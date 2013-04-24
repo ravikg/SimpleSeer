@@ -143,13 +143,13 @@ Handlebars.registerHelper "key_value", (obj, fn) ->
       value: obj[k]
     )
   retVal
-  
+
 Handlebars.registerHelper "not_in", (context, options) ->
   if options.hash.needle in options.hash.haystack
     options.inverse context
   else
     options.fn context
-    
+
 Handlebars.registerHelper "localize_dt", (epoch, options) ->
   dt = moment.utc(epoch)
   if options.hash.format?
@@ -160,21 +160,25 @@ Handlebars.registerHelper "localize_dt", (epoch, options) ->
   return new Handlebars.SafeString dt.format(f)
 
 Handlebars.registerHelper "log", (value) ->
-  console.log "Handlebars Log: ", value
+  #console.log "Handlebars Log: ", value
   return new Handlebars.SafeString ""
 
 Handlebars.registerHelper "resultlist", (results) ->
   tpl = ""
-  if results.length is 0
+  if !results or results.length is 0
     tpl += "<div data-use=\"no-results\" class=\"centered\">Part Failed: No Results</div>"
-  else 
+  else
     for result in results
       value = result.numeric or ""
-      unless value is undefined 
-        label = result.measurement_label    
-        unit = if result.unit is "deg" then "&deg;" else " (#{result.unit})"
-        if value is "" then unit = ""
-        tpl += "<div class=\"elastic interactive\">#{label}:<span>#{value}#{unit}</span></div>"
+      unless value is undefined
+        obj = SimpleSeer.measurements.where({name:result.measurement_name})[0]
+        label = obj.get('label')
+        if obj.get('units')
+          unit = if obj.get('units') is "deg" then "&deg;" else " (#{obj.get('units')})"
+        else
+          unit = ""
+        if value is "" then unit = "--"
+        tpl += "<div class=\"elastic interactive\"><span class=\"label\">#{label}:</span><span class=\"value\">#{value}#{unit}</span><div class=\"clearfix\"></div></div>"
   return new Handlebars.SafeString tpl
 
 Handlebars.registerHelper "metalist", (results, template) ->
@@ -182,7 +186,7 @@ Handlebars.registerHelper "metalist", (results, template) ->
   for key in template
     label = key
     value = results[key] or ""
-    tpl += "<div class=\"elastic spacedown\">#{label}:<span>#{value}</span></div>"
+    tpl += "<div class=\"elastic spacedown\">#{label}:<span class=\"value\">#{value}</span></div>"
   return new Handlebars.SafeString tpl
 
 Handlebars.registerHelper "capturetime", (time) ->

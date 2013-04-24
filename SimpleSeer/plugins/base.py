@@ -2,6 +2,8 @@ import os as os
 
 class InspectionPlugin(object):
 
+    featureclass = None
+
     def __init__(self, inspection):
         self.inspection = inspection
 
