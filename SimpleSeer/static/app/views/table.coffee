@@ -19,18 +19,37 @@ module.exports = class Table extends SubView
   editable: true
   renderComplete: false
   lastY: 0
-  limit: 50
+  limit: 20
   direction: -1
   insertDirection: -1
   scrollThreshold: 4
+  sortType: 'collection'
+  header: ''
+  tableClasses: 'table'
 
   events: =>
-    "click .th" : "sortByColumn"
-    "change .tbody input" : "changeCell"
+    "click .th.sortable":"sortByColumn"
+    "change .tbody input":"changeCell"
 
   onScroll:(per) => @pollShadow()
 
   onPage: => @infinitePage()
+
+  getColumnKeyByTitle: (title) =>
+    key = null
+    _.each @tableCols, (col) =>
+      if col.title == title
+        key = col.key
+
+    return key
+
+  getColumnTitleByKey: (key) =>
+    title = null
+    _.each @tableCols, (col) =>
+      if col.key == key
+        title = col.title
+
+    return title
 
   getOptions: =>
     if @options.sortKey?
@@ -66,7 +85,7 @@ module.exports = class Table extends SubView
       else
         @collection.setParam 'sortkey', @sortKey
       @collection.setParam 'sortorder', @direction
-    @collection.fetch()
+    @collection.fetch({'success':@updateData})
 
   initialize: =>
     super()
@@ -75,6 +94,8 @@ module.exports = class Table extends SubView
     @getCollection()
 
   getRenderData: =>
+    classes: @tableClasses
+    header: @header
     cols: @tableCols
     rows: @rows
     pageButtons: @options.page == "page"
@@ -94,22 +115,6 @@ module.exports = class Table extends SubView
         if v.subcols
           subCols = v.subcols
     return subCols
-
-  getColumnKeyByTitle: (title) =>
-    key = null
-    _.each @tableCols, (col) =>
-      if col.title == title
-        key = col.key
-
-    return key
-
-  getColumnTitleByKey: (key) =>
-    title = null
-    _.each @tableCols, (col) =>
-      if col.key == key
-        title = col.title
-
-    return title
 
   editableCell: =>
     ###
@@ -215,7 +220,7 @@ module.exports = class Table extends SubView
   saveCell: (obj) =>
     return
 
-  changeCell:(e) => # @TODO: DO THIS TOMORROW
+  changeCell:(e) =>
     target = $(e.target)
     id = target.parents('div.tr').attr('id')
     cls = target.attr('class')
@@ -243,14 +248,10 @@ module.exports = class Table extends SubView
 
   renderRow:(row) =>
     values = []
-    $.each @tableCols, (k, v) =>
-      path = v.key.split '-'
+
+    _.each @tableCols, (v, k) =>
       key = v.key
-      if path.length > 1
-        r = row.get path[0]
-        val = r[path[1]]
-      else
-        val = row.get path[0]
+      val = row[v.key]
       value = @renderCell(val, key)
       values.push {'class' : v.key, 'value' : value}
 
@@ -263,11 +264,17 @@ module.exports = class Table extends SubView
     else
       @rows.push(markup)
 
+  getSortKey: (k) =>
+    key = k
+    key = if k is "capturetime" then 'capturetime_epoch' else key
+    return key
+
   sortByColumn:(e, set) =>
     key = $(e.currentTarget).data('key')
     direction = $(e.currentTarget).attr('direction') || "desc"
+    k = @getSortKey(key)
     if !set
-      @collection.setParam 'sortkey', if key is "capturetime" then 'capturetime_epoch' else key
+      @collection.setParam 'sortkey', k
     @sortKey = key
     if direction == "asc"
       @collection.setParam 'sortorder', -1
@@ -278,15 +285,17 @@ module.exports = class Table extends SubView
       @sortDirection = 'asc'
       @direction = 1
     @cof = true
-    @collection.fetch
-      filtered:true
+    @collection.fetch({'success':@updateData, 'filtered':true})
 
   formatData:(data) =>
     return data
 
+  render: =>
+    super()
+
   updateData: =>
-    @rows = [] 
-    if !@tableData and @collection and @collection.models
+    @rows = []
+    if @collection and @collection.models
       @tableData = @collection.models
     data = @formatData(@tableData)
     _.each data, (model) =>
@@ -297,7 +306,7 @@ module.exports = class Table extends SubView
   infinitePage: =>
     if @collection.lastavail >= @limit
       @collection.setParam('skip', (@collection.getParam('skip') + @limit))
-      @collection.fetch()
+      @collection.fetch({'success' : @updateData})
 
   afterRender: =>
     $(window).resize( _.debounce @packTable, 100 )

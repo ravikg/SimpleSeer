@@ -4,7 +4,10 @@ Measurement = require "../models/measurement"
 module.exports = class Measurements extends Collection
   url: "/api/measurement"
   model: Measurement
-  
+  toSave: []
+  saveTimeout: undefined
+  rows: undefined
+
   getTable:(key,cols)=>
 
     columns = {}
@@ -25,6 +28,7 @@ module.exports = class Measurements extends Collection
           if !rows[item.criteria[key]][_l]?
             rows[item.criteria[key]][_l] = []
           rows[item.criteria[key]][_l].push {id:o.get("id"), operator:item.rule.operator, value:item.rule.value}
+
     return {columns:columns,rows:rows}
 
   setTable:(data) =>
@@ -57,6 +61,25 @@ module.exports = class Measurements extends Collection
           o.attributes.tolerances.push tolerance
           isChanged = true
         if isChanged
-          o.save()
+          @setSave(o)
+          #o.save()
 
-    return       
+    return
+
+  setSave: (o) =>
+    i = 0
+    _.each @toSave, (meas) =>
+      if meas.cid == o.cid
+        @toSave.splice(i,1)
+      i++
+    @toSave.push(o)
+    if @timeout
+      @clearSave()
+    @timeout = setTimeout(@doSave, 3000);
+
+  doSave: =>
+    _.each @toSave, (meas) =>
+      meas.save()
+
+  clearSave: =>
+    clearTimeout(@timeout)

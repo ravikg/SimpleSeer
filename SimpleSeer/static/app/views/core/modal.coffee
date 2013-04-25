@@ -40,7 +40,8 @@ module.exports = class modal extends View
   _reset:=>
     for i of @_callbacks
       @_callbacks[i] = []
-    @$el.find(".message").html('')
+    # @TODO: what the?
+    #@$el.find(".message").html('')
     return
 
   # options:
@@ -64,7 +65,7 @@ module.exports = class modal extends View
       @$el.find('#throbberGraphic').hide().addClass("hidden")
 
     #message
-    if options.message
+    if options.message?
       @$el.find(".message").html(options.message).show()
     else 
       @$el.find(".message").hide()
