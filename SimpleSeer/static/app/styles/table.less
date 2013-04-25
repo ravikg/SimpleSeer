@@ -70,6 +70,7 @@
   .td {
     color: inherit;
     padding: 4px 7px;
+    height: 100%;
 
     span { white-space: nowrap }
 
@@ -118,5 +119,13 @@
       &.sort-desc { background-image: url("/img/down-arrow.png"); }
       &.sort-asc { background-image: url("/img/up-arrow.png"); }
     }
+  }
+}
+
+.table.controls {
+  border-top: 1px solid #000;
+
+  .tr {
+    height: auto;
   }
 }
