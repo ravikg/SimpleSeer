@@ -2,6 +2,7 @@ import time
 from collections import deque
 from Queue import Queue, Empty
 from cStringIO import StringIO
+from worker import Foreman
 
 import gevent
 
@@ -22,6 +23,7 @@ class Core(object):
        - watch
     '''
     _instance=None
+    _queue = {} # Processing queue if frames are scheduled
 
     class Transition(Exception):
         def __init__(self, state):
@@ -131,47 +133,18 @@ class Core(object):
 
         return currentframes
     
-    """
-    This is probably not used any more.  commenting out to make sure
-        
-    def inspect(self, frames = []):
-        if not len(frames) and not len(self.lastframes):
-            frames = self.capture()
-        elif not len(frames):
-            frames = self.lastframes[-1]
-        
-        for frame in frames:
-            frame.features = []
-            frame.results = []
-            for inspection in self.inspections:
-                if inspection.parent:  #root parents only
-                    continue
-                
-                if inspection.camera and frame.camera != inspection.camera:
-                    #this camera, or all cameras if no camera is specified
-                    continue
-                
-                feats = inspection.execute(frame.image)
-                frame.features.extend(feats)
-                for m in inspection.measurements:
-                    m.execute(frame, feats)
-                    
-            for watcher in self.watchers:
-                watcher.check(frame.results)
-    """
-
-
-    _queue = {}
-
     def schedule(self, frame, inspections=None, measurements=None):
-        pass
+        fm = Foreman()
+        self._queue[frame.id] = {}
+        self._queue[frame.id]['features'] = fm.process_inspections(frame, inspections)
+        self._queue[frame.id]['results'] = fm.process_measurements(frame, features, measurements)
     
     def process(self, frame, inspections=None, measurements=None, overwrite=True, clean=False):
-        from worker import process_inspections, process_measurements
-        
         if not frame.id in self._queue:
-            self._queue[frame.id]['features'] = process_inspections(frame, inspections)
-            self._queue[frame.id]['results'] = process_measurements(frame, features, measurements)
+            fm = Foreman()
+            self._queue[frame.id] = {}
+            self._queue[frame.id]['features'] = fm.process_inspections(frame, inspections)
+            self._queue[frame.id]['results'] = fm.process_measurements(frame, measurements)
         
         features = [ feat for feat in self._queue[frame.id]['features'] ]
         results = [ res for res in self._queue[frame.id]['results'] ]
@@ -193,8 +166,11 @@ class Core(object):
             keptResults = [ result for result in frame.results if not result.measurement_id in newResults ]
             results += keptResults
             
-        frame.features = features
-        frame.results = results
+            frame.features = []
+            frame.results = []
+            
+        frame.features += features
+        frame.results += results
                 
     @property
     def results(self):
