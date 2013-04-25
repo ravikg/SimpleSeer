@@ -301,6 +301,7 @@ module.exports = class Table extends SubView
     _.each data, (model) =>
       @insertRow(model, @insertDirection)
     @render()
+    @clearCache()
     @packTable()
 
   infinitePage: =>
@@ -350,6 +351,9 @@ module.exports = class Table extends SubView
       largest: largest
       average: avg
     return @widthCache[index]
+
+  clearCache: =>
+    @widthCache = {}
 
   packTable: =>
     cellGroups = @tbody.find(".cell-group + .cell-group")
