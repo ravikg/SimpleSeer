@@ -19,10 +19,10 @@ module.exports = class Table extends SubView
   editable: true
   renderComplete: false
   lastY: 0
-  limit: 20
+  limit: 100
   direction: -1
   insertDirection: -1
-  scrollThreshold: 4
+  #scrollThreshold: 4
   sortType: 'collection'
   header: ''
   tableClasses: 'table'
@@ -31,9 +31,11 @@ module.exports = class Table extends SubView
     "click .th.sortable":"sortByColumn"
     "change .tbody input":"changeCell"
 
-  onScroll:(per) => @pollShadow()
+  #onScroll:(per) => @pollShadow()
 
-  onPage: => @infinitePage()
+  #onPage: =>
+  #  console.log 'hit'
+  #  @infinitePage()
 
   getColumnKeyByTitle: (title) =>
     key = null
@@ -83,7 +85,8 @@ module.exports = class Table extends SubView
     if !@options.collection_model
       @collection.setParam 'sortkey', @getSortKey(@sortKey)
       @collection.setParam 'sortorder', @direction
-    @collection.on('reset',@updateData)
+      @collection.setParam 'limit', @limit
+    #@collection.on('reset',@updateData)
     @collection.fetch({'success':@updateData})
     @subscribe()
 
@@ -103,6 +106,7 @@ module.exports = class Table extends SubView
     @rows = []
     @getOptions()
     @getCollection()
+    @on 'page', @infinitePage
 
   getRenderData: =>
     classes: @tableClasses
@@ -316,37 +320,40 @@ module.exports = class Table extends SubView
     @packTable()
 
   infinitePage: =>
+    #console.log @collection.lastavail
     if @collection.lastavail >= @limit
       @collection.setParam('skip', (@collection.getParam('skip') + @limit))
       @collection.fetch({'success' : @updateData})
 
   afterRender: =>
-    $(window).resize( _.debounce @packTable, 100 )
+    #$(window).resize( _.debounce @packTable, 100 )
     @$el.find(".th[data-key=#{@sortKey}]")
       .removeClass("sort-asc sort-desc")
       .addClass("sort-#{@sortDirection}")
       .attr('direction', @sortDirection)
     @thead = @$(".thead")
-    @tbody = @$(".tbody").infiniteScroll {
-      onPage: => @onPage()
-      onScroll: => @onScroll()
-    }
-    @content = @tbody.find(".tscroll")
-    @tbody.scrollTop(@lastY) if @lastY
-    @packTable()
+    @tbody = @$(".tcontent")
+    #@tbody = @$(".tbody").infiniteScroll {
+    #  onPage: => @onPage()
+    #  onScroll: => @onScroll()
+    #}
+    #@content = @tbody.find(".tscroll")
+    #@tbody.scrollTop(@lastY) if @lastY
+    #@packTable()
 
   reflow: =>
     super()
+    #$(window).resize( _.debounce @packTable, 1000 )
     @packTable()
 
-  pollShadow: =>
-    @lastY = top = @tbody.scrollTop()
-    @thead.removeClass("shadow")
-    @thead.addClass("shadow") if top > 0
+  #pollShadow: =>
+  #  @lastY = top = @tbody.scrollTop()
+  #  @thead.removeClass("shadow")
+  #  @thead.addClass("shadow") if top > 0
 
-  getScrollbar: =>
-    distance = @tbody.width() - @content.width().top
-    return (if distance > @scrollThreshold then distance else 0)
+  #getScrollbar: =>
+  #  distance = @tbody.width() - @content.width().top
+  #  return (if distance > @scrollThreshold then distance else 0)
 
   getCellStats:(index, colData) =>
     if( @widthCache[index] ) then return @widthCache[index]
@@ -391,7 +398,7 @@ module.exports = class Table extends SubView
       td = cachedColumns[i].css("width", largest)
       newCols.push $(td[0]).outerWidth()
     sum = _.reduce(newCols, (a, b) -> a + b)
-    selfWidth = @content.width()
+    selfWidth = @tbody.width()
     if sum >= selfWidth
       gaps = []
       distance = sum - selfWidth - 2
