@@ -1,14 +1,10 @@
 .ui-zoomify {
   padding: 10px;
-  margin-bottom: 10px;
-  background: #f8f8f8;
-  border: 1px solid #bbb;
   color: #000;
 }
 
 .ui-zoomify .window {
-  padding-bottom: 10px;
-  border-bottom: 1px solid #ccc;
+
 }
 
 .ui-zoomify .window .view {
@@ -37,10 +33,10 @@
   position: absolute;
   top: 0;
   left: 0;
-  
+
   width: 100%;
   z-index: 0;
-}    
+}
 
 .ui-zoomify .settings {
   padding-top: 9px;
@@ -52,7 +48,7 @@
   height: 12px;
   margin-bottom: 0;
   padding: 5px;
-  width: 45px;  
+  width: 45px;
 }
 
 .ui-zoomify .settings .slider {
