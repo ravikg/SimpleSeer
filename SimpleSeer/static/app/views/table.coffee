@@ -317,7 +317,6 @@ module.exports = class Table extends SubView
       @insertRow(model, @insertDirection)
     @render()
     @clearCache()
-    @packTable()
 
   infinitePage: =>
     #console.log @collection.lastavail
@@ -333,6 +332,7 @@ module.exports = class Table extends SubView
       .attr('direction', @sortDirection)
     @thead = @$(".thead")
     @tbody = @$(".tcontent")
+    @packTable()
     #@tbody = @$(".tbody").infiniteScroll {
     #  onPage: => @onPage()
     #  onScroll: => @onScroll()
