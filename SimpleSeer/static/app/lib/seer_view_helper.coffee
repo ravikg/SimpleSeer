@@ -194,7 +194,6 @@ Handlebars.registerHelper "capturetime", (time) ->
   return new Handlebars.SafeString str
 
 Handlebars.registerHelper "tolstate", (results) ->
-  #console.log results.length
   len = _.where(results, {state: 1}).length
   if len > 0 or results.length is 0
     return "fail"
