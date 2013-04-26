@@ -78,14 +78,25 @@ module.exports = class Table extends SubView
       @_url = "api/frame"
 
   getCollection: =>
-    @collection = new @_collection([],{model:@_model,clearOnFetch:@cof,url:@_url})
+    bindFilter = Application.context[@options.parent.dashboard.options.parent.options.context].filtercollection
+    @collection = new @_collection([],{bindFilter:bindFilter,model:@_model,clearOnFetch:@cof,url:@_url})
     if !@options.collection_model
-      if @sortKey == 'capturetime'
-        @collection.setParam 'sortkey', 'capturetime_epoch'
-      else
-        @collection.setParam 'sortkey', @sortKey
+      @collection.setParam 'sortkey', @getSortKey(@sortKey)
       @collection.setParam 'sortorder', @direction
+    @collection.on('reset',@updateData)
     @collection.fetch({'success':@updateData})
+    @subscribe()
+
+  subscribe: (channel="") =>
+    if channel
+      namePath = channel + "/"
+      if application.socket
+        application.socket.removeListener "message:#Chart/#{namePath}", @chartCheck
+        application.socket.on "message:Chart/#{namePath}", @chartCheck
+        #console.info "binding to: message:Chart/#{namePath}"
+        if !application.subscriptions["Chart/#{namePath}"]
+          #console.info "subscribing to: #{@subscribePath}/#{namePath}"
+          application.subscriptions["Chart/#{namePath}"] = application.socket.emit 'subscribe', "Chart/#{namePath}"
 
   initialize: =>
     super()
