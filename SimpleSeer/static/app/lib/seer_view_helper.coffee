@@ -160,7 +160,7 @@ Handlebars.registerHelper "localize_dt", (epoch, options) ->
   return new Handlebars.SafeString dt.format(f)
 
 Handlebars.registerHelper "log", (value) ->
-  console.log "Handlebars Log: ", value
+  #console.log "Handlebars Log: ", value
   return new Handlebars.SafeString ""
 
 Handlebars.registerHelper "resultlist", (results) ->
@@ -194,7 +194,7 @@ Handlebars.registerHelper "capturetime", (time) ->
   return new Handlebars.SafeString str
 
 Handlebars.registerHelper "tolstate", (results) ->
-  console.log results.length
+  #console.log results.length
   len = _.where(results, {state: 1}).length
   if len > 0 or results.length is 0
     return "fail"
