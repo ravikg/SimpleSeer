@@ -214,7 +214,8 @@ def ScrubCommand(self):
                     f.save(False)
         
             # Rebuild the cache
-            res = ChannelManager().rpcSendRequest('olap_req/', {'action': 'rebuild'})
+            if retention.get('purge', False):
+                res = ChannelManager().rpcSendRequest('olap_req/', {'action': 'rebuild'})
         
             # This line of code needed to solve fragmentation bug in mongo
             # Can run very slow when run on large collections
