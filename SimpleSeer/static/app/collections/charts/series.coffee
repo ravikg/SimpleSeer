@@ -43,12 +43,20 @@ module.exports = class Series extends FilterCollection
     return @
 
   comparator: (point,point2) =>
-    if point2.attributes.x.unix() > point.attributes.x.unix()
-      return -1
+    if point2.attributes.x.unix and point.attributes.x.unix
+      if point2.attributes.x.unix() > point.attributes.x.unix()
+        return -1
+      else
+        return 1
     else
-      return 1
+      if point2.attributes.x > point.attributes.x
+        return -1
+      else
+        return 1
+    
 
   parse: (response) =>
+    @raw = response.data
     super(response)
     @subscribe(response.chart)
     clean = @_clean response.data
@@ -71,6 +79,8 @@ module.exports = class Series extends FilterCollection
     @view.hideMessage()
     if !@view.hasData
       @view.showMessage('error','No data to display')
+    if @view.options.callback?
+      @view.options.callback(@view)
     $('.alert_error').remove()
   
   onError: =>

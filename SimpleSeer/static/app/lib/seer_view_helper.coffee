@@ -195,7 +195,7 @@ Handlebars.registerHelper "capturetime", (time) ->
 
 Handlebars.registerHelper "tolstate", (results) ->
   len = _.where(results, {state: 1}).length
-  if len > 0 or results.length is 0
+  if results and (len > 0 or results.length is 0)
     return "fail"
   else
     return "pass"
