@@ -1,4 +1,4 @@
-@paneWidth: 239px;
+@paneWidth: 100%;
 
 .controlPane {
   display: none;
@@ -15,7 +15,7 @@
 
   &.showing {
     display: block;
-    width: 239px;
+    width: 100%;
   }
 
   &:before {
@@ -31,10 +31,10 @@
 
   .content {
     float: left;
-    width: @paneWidth - 2px;
+    width: 100%;
     height: auto;
     background: none;
-    .tab { width: @paneWidth - 2px; }
+    .tab { width: 100%; }
 
     /* Reset box model for chosen popups. */
     * {
@@ -45,7 +45,7 @@
 
   .bar {
     float: left;
-    width: @paneWidth - 2px;
+    width: @paneWidth;
     height: 21px;
     box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.2), inset 0px -1px 0px rgba(0,0,0,.4);
     background: url("../img/MT_666666.png") repeat;
