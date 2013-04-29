@@ -17,9 +17,20 @@ class ResultEmbed(SimpleEmbeddedDoc, mongoengine.EmbeddedDocument):
     message = mongoengine.StringField()
 
     def __repr__(self):
+        # Make this compatible with embedded objects from worker (no _data)
+        if '_data' in self:
+            inspName = self.inspection_name
+            measName = self.measurement_name
+            numeric = self.numeric
+            string = self.string
+        else:
+            inspName = self.__dict__['inspection_name']
+            measName = self.__dict__['measurement_name']
+            numeric = self.__dict__['numeric']
+            string = self.__dict__['string']
+            
         return '<ResultEmbed %s:%s = (%s,%s)>' % (
-            self.inspection_name, self.measurement_name,
-            self.numeric, self.string)
+            inspName, measName, numeric, string)
 
     def get_or_create_result(self):
         result, created =  Result.objects.get_or_create(
