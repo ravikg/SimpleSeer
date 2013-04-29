@@ -73,7 +73,6 @@ class Foreman():
             return self.serial_inspection_iterator(frame, filteredInsps)
 
     def process_measurements(self, frame, measurements=None):
-        # Need to test the next in interval... used by scanline measurement in zingermans
         measKwargs = {}
         
         if frame.features:        
@@ -84,29 +83,38 @@ class Foreman():
             else:
                 insps = [ feat.__dict__['inspection'] for feat in frame.features ]
             measKwargs['inspection__in'] = insps
+        else:
+            # No features, but limit measurements to those associated with features on this camera
+            measKwargs['inspection__in'] = [ insp.id for insp in M.Inspection.objects(camera=frame.camera) ]
             
-            if measurements:
-                measKwargs['id__in'] = measurements
-            
-            filteredMeass = M.Measurement.objects(**measKwargs)
-            
-            if self._useWorkers:
-                return self.worker_measurement_iterator(frame, filteredMeass)
-            else:
-                return self.serial_measurement_iterator(frame, filteredMeass)
+        if measurements:
+            measKwargs['id__in'] = measurements
+        
+        filteredMeass = M.Measurement.objects(**measKwargs)
+        
+        if self._useWorkers:
+            return self.worker_measurement_iterator(frame, filteredMeass)
+        else:
+            return self.serial_measurement_iterator(frame, filteredMeass)
 
     def worker_inspection_iterator(self, frame, insps):
-        return self.worker_x_iterator(frame, insps, self.inspection_execute)
+        sched = self.worker_x_schedule(frame, insps, self.inspection_execute)
+        return self.worker_x_iterator(frame, insps, sched)
         
     def worker_measurement_iterator(self, frame, meass):
-        return self.worker_x_iterator(frame, meass, self.measurement_execute)
+        sched = self.worker_x_schedule(frame, meass, self.measurement_execute)
+        return self.worker_x_iterator(frame, meass, sched)
             
-    def worker_x_iterator(self, frame, objs, fn):
-        from time import sleep
-        
+    def worker_x_schedule(self, frame, objs, fn):
         scheduled = []
         for o in objs:
+            print 'Scheduling {}'.format(o)
             scheduled.append(fn.delay(frame.id, o.id))
+        return scheduled
+            
+    def worker_x_iterator(self, frame, objs, scheduled):
+        from time import sleep
+        print 'iter'
         
         completed = 0
         while completed < len(objs):
@@ -142,6 +150,7 @@ class Foreman():
     @task
     def inspection_execute(fid, iid):
         try:
+            print 'Inspecting {}'.format(iid)
             frame = M.Frame.objects.get(id=fid)
             inspection = M.Inspection.objects.get(id=iid)
             features = inspection.execute(frame)
@@ -153,6 +162,7 @@ class Foreman():
     @task
     def measurement_execute(fid, mid):
         try:
+            print 'Measuring {}'.format(mid)
             frame = M.Frame.objects.get(id=fid)
             measurement = M.Measurement.objects.get(id=mid)
             results = measurement.execute(frame)
