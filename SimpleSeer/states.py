@@ -133,44 +133,70 @@ class Core(object):
 
         return currentframes
     
-    def schedule(self, frame, inspections=None, measurements=None):
+    def schedule(self, frame, inspections=None):
         fm = Foreman()
         self._queue[frame.id] = {}
         self._queue[frame.id]['features'] = fm.process_inspections(frame, inspections)
-        self._queue[frame.id]['results'] = fm.process_measurements(frame, features, measurements)
-    
+        
     def process(self, frame, inspections=None, measurements=None, overwrite=True, clean=False):
+        # First do all features, then do all results
         if not frame.id in self._queue:
+            print 'Proc queuing'
             fm = Foreman()
             self._queue[frame.id] = {}
             self._queue[frame.id]['features'] = fm.process_inspections(frame, inspections)
-            self._queue[frame.id]['results'] = fm.process_measurements(frame, measurements)
         
-        features = [ feat for feat in self._queue[frame.id]['features'] ]
-        results = [ res for res in self._queue[frame.id]['results'] ]
+        features = [ feat for feat in self._queue[frame.id].pop('features') ]
         
         if clean:
             frame.features = []
-            frame.results = []
             
         if overwrite:
             # Find a list of inspection id from new inspection
             # Use those to find list of features from old frame that are not in list of new
             # Then append those features to the list of new features
-            newInspections = { feature.inspection: 1 for feature in features }.keys()
+            if features:
+                # worker created features do not have _data after json decoding
+                if '_data' in features[0]:
+                    newInspections = { feature.inspection: 1 for feature in features }.keys()
+                else:
+                    newInspections = { feature.__dict__['inspection']: 1 for feature in features }.keys() 
+            else:
+                newInspections = []
             keptFeatures = [ feature for feature in frame.features if not feature.inspection in newInspections ]
             features += keptFeatures
             
-            # Same pattern, but for measurement results
-            newResults = { result.measurement_id: 1 for result in results }.keys()
-            keptResults = [ result for result in frame.results if not result.measurement_id in newResults ]
-            results += keptResults
-            
             frame.features = []
-            frame.results = []
             
         frame.features += features
+             
+        # Now that we know we have features, can process measurements
+        if not 'results' in self._queue[frame.id]:
+            fm = Foreman()
+            self._queue[frame.id]['results'] = fm.process_measurements(frame, measurements)
+        
+        results = [ res for res in self._queue[frame.id].pop('results') ]
+        
+        if clean:
+            frame.results = []
+        
+        if overwrite:
+            if results:
+                if '_data' in results[0]:
+                    newResults = { result.measurement_id: 1 for result in results }.keys()
+                else:
+                    print results[0].__dict__
+                    newResults = { result.__dict__['measurement_name']: 1 for result in results }.keys()
+            else:
+                newResults = []
+            keptResults = [ result for result in frame.results if not result.measurement_name in newResults ]
+            results += keptResults
+        
+            frame.results = []
+        
         frame.results += results
+        self._queue.pop(frame.id)
+        
                 
     @property
     def results(self):
@@ -179,7 +205,7 @@ class Core(object):
             results = []
             for f in frameset:
                 results += [f.results for f in frameset]
-            
+        
             ret.append(results)
             
         return ret
