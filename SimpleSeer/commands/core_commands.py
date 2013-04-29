@@ -68,6 +68,9 @@ def OlapCommand(self):
         od = OLAPData()
         gevent.spawn_link_exception(od.listen)
         
+        import time; time.sleep(1)
+        Inspection.objects.count()
+        
         # Schedule olaps (olaps with stats)
         so = ScheduledOLAP()
         gevent.spawn_link_exception(so.runSked)
