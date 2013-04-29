@@ -15,6 +15,7 @@ from .camera import StillCamera, VideoCamera
 from realtime import ChannelManager
 
 import logging
+log = logging.getLogger(__name__)
 
 def nextInInterval(frame, field, interval):
     currentValue = 0
@@ -74,8 +75,11 @@ class Core(object):
         util.load_plugins()
         self.reloadInspections()
         
-        if not self.config.skip_worker_check:
+        if not self.config.skip_worker_check and not self.config.framebuffer:
             self.workerCheck(5.0) #wait up to 5s for worker processes
+        
+        if self.config.framebuffer and not self.config.skip_worker_check:
+            log.warn("Framebuffer is active, while worker is enabled.  Workers can not handle framebuffer calls, so you should add skip_worker_check: 1 to the config")
         
         self.lastframes = deque()
         self.framecount = 0
