@@ -7,6 +7,7 @@ from SimpleSeer.models import Frame
 from datetime import timedelta
 
 from SimpleSeer.plugins import base
+from mongoengine.queryset import QuerySet
 
 """
 Overly simplified motion detection plugin
@@ -48,14 +49,14 @@ class MotionTrend(base.MeasurementPlugin):
         if feature.featuretype == "MotionFeature" and feature.feature.movement > motionthreshhold:
             return trend
             
-        frameset = Frame.objects(capturetime__gt = frame.capturetime - timedelta(seconds=timewindow),
+        frameset = Frame.lastobjects(capturetime__gt = frame.capturetime - timedelta(seconds=timewindow),
            capturetime__lt = frame.capturetime, 
            camera = frame.camera
-           ).order_by("capturetime")
+           )
         if len(frameset) < minframes:
             return trend
         #print len(frameset)
-        frameset = reversed(frameset) #load into memory
+        frameset = reversed(list(frameset)) #load into memory, if not already
         
         for frame in frameset:
             motion = [feature for feature in frame.features if feature.featuretype == "MotionFeature"]
@@ -112,11 +113,14 @@ plugin this, MotionFeature:MotionFeature
 
   def __call__(self, image):
     if self.inspection.camera:
-        frames = M.Frame.objects(camera = self.inspection.camera).order_by('-capturetime').limit(1)
+        frames = M.Frame.lastobjects(camera = self.inspection.camera)
     else:
-        frames = M.Frame.objects.order_by('-capturetime').limit(1)
+        frames = M.Frame.lastobjects()
     
-    if frames.count() > 0:
+    if type(frames) == QuerySet:
+        frames.limit(1) #this is residue, we should instead create a fake queryset
+    
+    if len(frames) > 0:
       lastframe = frames[0]
       lastimage = lastframe.image
     else:

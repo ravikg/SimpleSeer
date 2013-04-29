@@ -31,8 +31,6 @@ class FrameSchema(fes.Schema):
     #TODO, make this feasible as a formencode schema for upload
 
 
-
-
 class Frame(SimpleDoc, mongoengine.Document):
     """
         Frame Objects are a mongo-friendly wrapper for SimpleCV image objects,
@@ -63,6 +61,7 @@ class Frame(SimpleDoc, mongoengine.Document):
     notes = mongoengine.StringField()
     _imgcache = ''
     _imgcache_dirty = False
+    _recentframes = [] #class-wide frame cache for lastobjects()
     
 
     meta = {
@@ -74,6 +73,61 @@ class Frame(SimpleDoc, mongoengine.Document):
     def filterFieldNames(cls):
         return ['_id', 'camera', 'capturetime', 'capturetime_epoch', 'localtz', 'metadata', 'notes', 'height', 'width', 'imgfile', 'results']
 
+
+    @classmethod
+    def lastobjects(self, **kwargs):
+        if not Session().framebuffer:
+            return Frame.objects(**kwargs).order_by("-capturetime")
+        
+        if not len(self._recentframes):
+            self._recentframes.extend(list(Frame.objects.order_by("-capturetime").limit(Session().framebuffer)))
+        
+        subset = [frame for frame in self._recentframes]
+        def valuecompare(frame, field, value):
+            fields = field.split("__")
+            operator = "eq"
+            if fields[-1] in ["gt", "lt", "gte", "lte", "startswith", "contains", "exists"]:
+                operator = fields.pop()
+            
+            item = getattr(frame, fields.pop(0))
+            while len(fields):
+                item = item.get(fields.pop(0), None)
+            
+            if operator == "eq":
+                return item == value
+            elif operator == "gt":
+                return item > value
+            elif operator == "lt":
+                return item < value
+            elif operator == "gte":
+                return item >= value
+            elif operator == "lte":
+                return item <= value
+            elif operator == "startswith":
+                return item.startswith(value)
+            elif operator == "contains":
+                return value in item
+            elif operator == "exists":
+                return not item == None
+                
+        for field, value in kwargs.items():
+            subset = [f for f in subset if valuecompare(f, field, value)]
+                
+        return subset
+
+    def _addToBuffer(self):
+        
+        if not self.id or not Session().framebuffer:
+            return
+        
+        already_in = Frame.lastobjects(id = self.id)
+        
+        if len(already_in) and already_in[0] == self:
+            return
+        
+        self._recentframes.append(self)
+        if len(self._recentframes) > Session().framebuffer:
+            self._recentframes.pop(0)
 
     @LazyProperty
     def thumbnail(self):
@@ -181,6 +235,10 @@ class Frame(SimpleDoc, mongoengine.Document):
             publish = kwargs.pop('publish')
         
         super(Frame, self).save(*args, **kwargs)
+        
+        if newFrame and Session().framebuffer:
+            self._addToBuffer()
+        
         
         # Once everything else is saved, publish result
         # Do not place any other save actions after this line or realtime objects will miss data
