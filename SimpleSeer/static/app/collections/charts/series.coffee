@@ -35,11 +35,15 @@ module.exports = class Series extends FilterCollection
     super(models, args)
     @setParam 'sortkey', 'capturetime_epoch'
     @setParam 'sortorder', 1
-    args.realtime = true
+    if args.realtime
+      @realtime = true
+    else
+      @realtime = false
+    #args.realtime = true
     #if args.realtime
     #  @subscribe()
     @on("remove",@shiftChart)
-    @fetch()
+    #@fetch()
     return @
 
   comparator: (point,point2) =>
@@ -58,11 +62,15 @@ module.exports = class Series extends FilterCollection
   parse: (response) =>
     @raw = response.data
     super(response)
-    @subscribe(response.chart)
+    if @realtime
+      @subscribe(response.chart)
     clean = @_clean response.data
     return clean
 
   fetch: (args={}) =>
+    if @view.options.fetchCheck?
+      if !@view.options.fetchCheck()
+        return
     @view.showMessage('loading','Loading')
     args.success = @onSuccess
     args.error = @onError
@@ -72,8 +80,8 @@ module.exports = class Series extends FilterCollection
 
   onSuccess: (obj, rawJson) =>
     #TODO: make a better bubble up callback system than this hackery:
-    if @view.options.parent.rawCallback?
-      @view.options.parent.rawCallback(@raw)
+    #if @view.options.parent.rawCallback?
+    #  @view.options.parent.rawCallback(@raw)
     @view.hasData = false
     @_drawData()
     @view.hideMessage()
