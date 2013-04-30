@@ -13,7 +13,8 @@ from .realtime import ChannelManager
 from . import models as M
 
 import logging
-log = logging.getLogger()
+from celery.utils import log
+log = log.get_task_logger(__name__)
 
 from . import celeryconfig
 celery = Celery()
@@ -21,20 +22,16 @@ celery.config_from_object(celeryconfig)
             
 ensure_plugins()
             
-
-def nextInInterval(frame, field, interval):
-    currentValue = 0
-    try:
-        currentValue = getattr(frame, field)
-    except:
-        currentValue = frame.metadata[field]
-        field = 'metadata__' + field
+class InspectionLogHandler(logging.Handler):
     
-    roundValue = currentValue - (currentValue % interval)
-    kwargs = {'%s__gte' % field: roundValue, '%s__lt' % field: currentValue, 'camera': frame.camera}
-    if M.Frame.objects(**kwargs).count() == 0:
-        return True
-    return False
+    _inspection = None
+    
+    def __init__(self, inspection):
+        self._inspection = inspection
+        print 'log {}'.format(inspection)
+        
+    def emit(self, msg):
+        print 'I like errors'
 
 class Foreman():
 # Manages a lot of worker-related tasks
@@ -42,16 +39,25 @@ class Foreman():
 
     _useWorkers = False
     _initialized = False
+    _log = {}
     
     __sharedState = {}
     
     def __init__(self):
+        from .realtime import PubSubHandler
+            
         self.__dict__ = self.__sharedState
             
         if not self._initialized:
             self._useWorkers = self.workerRunning()
             self._initialized = True
             ensure_plugins()
+            
+            # Have to do some extra log handling simple celery doesn't play well with other loggers
+            mainLogger = logging.getLogger(__name__)
+            
+            log.addHandler(PubSubHandler())
+            log.setLevel(mainLogger.getEffectiveLevel()) 
 
     def workerRunning(self):
         i = celery.control.inspect()
@@ -149,24 +155,26 @@ class Foreman():
 
     @task
     def inspection_execute(fid, iid):
+        log.addHandler(InspectionLogHandler(iid))
         try:
-            print 'Inspecting {}'.format(iid)
+            print(repr(self.log.handlers))
+            log.warn('Inspecting {}'.format(iid))
             frame = M.Frame.objects.get(id=fid)
             inspection = M.Inspection.objects.get(id=iid)
             features = inspection.execute(frame)
             return features        
         except Exception as e:
-            log.info(e)
-            print e
+            log.error(e)
+            print error
+            return []
 
     @task
     def measurement_execute(fid, mid):
         try:
-            print 'Measuring {}'.format(mid)
+            log.info('Measuring {}'.format(mid))
             frame = M.Frame.objects.get(id=fid)
             measurement = M.Measurement.objects.get(id=mid)
             results = measurement.execute(frame)
             return results        
         except Exception as e:
-            log.info(e)
-            print e
+            log.error(e)
