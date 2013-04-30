@@ -3,7 +3,7 @@
   require('views/core/subview')
 ]
 
-# ImageCanvas provides a image and 
+# ImageCanvas provides a image and
 # a canvas bound to a Processing.js
 # object. This widget handles dirty
 # tasks like handling scale.
@@ -43,11 +43,11 @@ module.exports = class ImageCanvas extends SubView
 
   _process: =>
     if !@processing?
-      @processing = new Processing(@canvas.get(0))		
+      @processing = new Processing(@canvas.get(0))
 
   # The align method is called when
   # the widget is given a padding option.
-  # Padding is used to push the image 
+  # Padding is used to push the image
   # away from the edges of the canvas to
   # prevent any clipping of the markup.
   _align: =>
@@ -72,23 +72,31 @@ module.exports = class ImageCanvas extends SubView
   # the canvas and image need to be
   # sized to the parent container.
   _scale: =>
-    [w, h] = [@image.attr("data-w"), @image.attr("data-h")]
-    box =
-      width: @options.width - @options.padding * 2,
-      height: @options.height - @options.padding * 2
+    if @options.scaling is true
+      [w, h] = [@image.attr("data-w"), @image.attr("data-h")]
+      box =
+        width: @options.width - @options.padding * 2,
+        height: @options.height - @options.padding * 2
 
-  # Check if we need to scale down the image itself.
-    wider = (w > box.width)
-    taller = (h > box.height)
-    if(wider or taller)
-      scaleW = box.width / w
-      scaleH = box.height / h
-      @_scaleFactor = Math.min(scaleH, scaleW)
-      @image.width(w * @_scaleFactor)
-      @image.height(h * @_scaleFactor)	
+      # Check if we need to scale down the image itself.
+      wider = (w > box.width)
+      taller = (h > box.height)
+      if(wider or taller)
+        scaleW = box.width / w
+        scaleH = box.height / h
+        @_scaleFactor = Math.min(scaleH, scaleW)
+        @image.width(w * @_scaleFactor)
+        @image.height(h * @_scaleFactor)
 
-    @canvas.width @image.width() + @options.padding * 2
-    @canvas.height @image.height() + @options.padding * 2		
+      @canvas.width @image.width() + @options.padding * 2
+      @canvas.height @image.height() + @options.padding * 2
+    else
+      @canvas.width @options.width
+      @canvas.height @options.height
+      @image.width @options.width
+      @image.height @options.height
+      @_scaleFactor = @image.width() / @image.attr("data-w")
+
 
   # The markup method is called each
   # time the view is rendered. It draws
