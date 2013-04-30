@@ -188,6 +188,8 @@ class Frame(SimpleDoc, mongoengine.Document):
         self.imgfile.delete()
         self._imgcache = ''
         self._imgcache_dirty = False
+        if self.thumbnail_file:
+            self.thumbnail_file.delete()
 
     def has_image_data(self):
         if self.clip_id and self.clip: return True
@@ -244,9 +246,14 @@ class Frame(SimpleDoc, mongoengine.Document):
         # Do not place any other save actions after this line or realtime objects will miss data
         # Only publish to frame/ channel if this is a new frame (not a re-saved frame from a backfill)
         
-        if newFrame and publish:
+        if publish:
+            if newFrame:
+                channel = "frame/"
+            else:
+                channel = "frameupdate/"
+            
             #send the frame without features, and some other stuff
-            realtime.ChannelManager().publish('frame/', dict(
+            realtime.ChannelManager().publish(channel, dict(
                 id = str(self.id),
                 capturetime = self.capturetime,
                 capturetime_epoch = self.capturetime_epoch,
@@ -263,8 +270,15 @@ class Frame(SimpleDoc, mongoengine.Document):
                 metadata = self.metadata,
                 notes = self.notes)
             )
+            
         
-        
+    def delete(self, *args, **kwargs):
+        if not kwargs.get("publish", True):
+            kwargs.pop("publish")
+        elif self.id:
+            realtime.ChannelManager().publish("framedelete/", { "id": str(self.id) })
+        self.delete_image()
+        super(Frame, self).save(*args, **kwargs)
         
     def serialize(self):
         s = StringIO()
