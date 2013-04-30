@@ -1,4 +1,4 @@
-from .Session import Session
+
 from celery import Celery
 from celery import task
 from celery.exceptions import RetryTaskError
@@ -11,27 +11,61 @@ from .util import ensure_plugins, jsonencode
 
 from .realtime import ChannelManager
 from . import models as M
+from .Session import Session
 
-import logging
 from celery.utils import log
 log = log.get_task_logger(__name__)
+import logging
 
 from . import celeryconfig
 celery = Celery()
 celery.config_from_object(celeryconfig)
             
 ensure_plugins()
-            
+
 class InspectionLogHandler(logging.Handler):
-    
-    _inspection = None
-    
-    def __init__(self, inspection):
-        self._inspection = inspection
-        print 'log {}'.format(inspection)
+
+    def __init__(self):
+        super(InspectionLogHandler, self).__init__()
+        self._msgs = {}
         
     def emit(self, msg):
-        print 'I like errors'
+        import ipdb;ipdb.set_trace()
+        from .realtime import ChannelManager
+        
+        insp = self._getInspectionId(msg.msg)
+        if insp:
+            fra = self._getFrame(msg.msg)
+            if fra:
+                ChannelManager().publish('logging/', '{} {} {}'.format(insp, fra, msg.msg[50:]))
+                
+    # Remove self from the logger
+    def remove(self, logger):
+        for hdl in logger.handles:
+            if hdl == self:
+                logger.removeHandler(hdl)
+        
+    def _getInspectionId(self, msg):
+        # Assume the first 24 digits is inspection id
+        potentialId = msg[:24]
+        if ObjectId.is_valid(potentialId):
+            insp = M.Inspection.objects(id=potentialId)
+            if insp:
+                return insp[0].id
+        
+        return None
+        
+    def _getFrame(self, msg):
+        # Assume the first 24 digits is inspection id
+        potentialId = msg[25:49]
+        if ObjectId.is_valid(potentialId):
+            fra = M.Frame.objects(id=potentialId)
+            if fra:
+                return fra[0].id
+        
+        return None
+        
+            
 
 class Foreman():
 # Manages a lot of worker-related tasks
@@ -39,7 +73,6 @@ class Foreman():
 
     _useWorkers = False
     _initialized = False
-    _log = {}
     
     __sharedState = {}
     
@@ -53,11 +86,9 @@ class Foreman():
             self._initialized = True
             ensure_plugins()
             
-            # Have to do some extra log handling simple celery doesn't play well with other loggers
-            mainLogger = logging.getLogger(__name__)
-            
             log.addHandler(PubSubHandler())
-            log.setLevel(mainLogger.getEffectiveLevel()) 
+            log.addHandler(InspectionLogHandler())
+            log.setLevel(20) # INFO 
 
     def workerRunning(self):
         i = celery.control.inspect()
@@ -114,13 +145,11 @@ class Foreman():
     def worker_x_schedule(self, frame, objs, fn):
         scheduled = []
         for o in objs:
-            print 'Scheduling {}'.format(o)
             scheduled.append(fn.delay(frame.id, o.id))
         return scheduled
             
     def worker_x_iterator(self, frame, objs, scheduled):
         from time import sleep
-        print 'iter'
         
         completed = 0
         while completed < len(objs):
@@ -155,26 +184,25 @@ class Foreman():
 
     @task
     def inspection_execute(fid, iid):
-        log.addHandler(InspectionLogHandler(iid))
         try:
-            print(repr(self.log.handlers))
-            log.warn('Inspecting {}'.format(iid))
+            log.info('{} {} Inspecting'.format(iid, fid))
             frame = M.Frame.objects.get(id=fid)
             inspection = M.Inspection.objects.get(id=iid)
             features = inspection.execute(frame)
             return features        
         except Exception as e:
             log.error(e)
-            print error
+            print e
             return []
 
     @task
     def measurement_execute(fid, mid):
         try:
-            log.info('Measuring {}'.format(mid))
+            log.warn('Measuring {}'.format(mid))
             frame = M.Frame.objects.get(id=fid)
             measurement = M.Measurement.objects.get(id=mid)
             results = measurement.execute(frame)
             return results        
         except Exception as e:
             log.error(e)
+            return []
