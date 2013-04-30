@@ -72,7 +72,7 @@ module.exports = class ImageCanvas extends SubView
   # the canvas and image need to be
   # sized to the parent container.
   _scale: =>
-    if @options.scaling is true
+    unless @options.scaling is false
       [w, h] = [@image.attr("data-w"), @image.attr("data-h")]
       box =
         width: @options.width - @options.padding * 2,
