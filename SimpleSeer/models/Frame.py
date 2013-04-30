@@ -129,11 +129,16 @@ class Frame(SimpleDoc, mongoengine.Document):
         if len(self._recentframes) > Session().framebuffer:
             self._recentframes.pop(0)
 
+
     @LazyProperty
     def thumbnail(self):
         if self.thumbnail_file is None or self.thumbnail_file.grid_id is None:
             img = self.image
-            thumbnail_img = img.scale(140.0 / img.height)
+            if Session().thumbnail_height:
+                thumb_height = float(Session().thumbnail_height)
+            else:
+                thumb_height = 140.0
+            thumbnail_img = img.scale(thumb_height / float(img.height))
             if self.id and not "is_slave" in Session().mongo:
                 img_data = StringIO()
                 thumbnail_img.save(img_data, "jpeg", quality = 75)
