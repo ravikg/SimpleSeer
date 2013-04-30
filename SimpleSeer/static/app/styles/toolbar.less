@@ -1,3 +1,13 @@
+.menu-widget {
+  padding:10px;
+  input {
+    width: 100%;
+  }
+  textarea {
+    width: 100%;
+  }
+}
+
 #toolbar {
   float: left;
   height: 100%;
@@ -109,7 +119,7 @@
     display: block;
     left: 0px;
     top: 0px;
-    width: 237px;
+    /*width: 237px;*/
 
     border: none;
     border-radius: 0px;
@@ -121,4 +131,8 @@
 
 #toolbar.expanded + #content {
   padding-left: 238px;
+}
+
+#toolbar.expanded + .controlPane {
+  width: 234px;
 }

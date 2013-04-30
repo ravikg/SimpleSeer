@@ -241,7 +241,7 @@ module.exports = class FilterCollection extends Collection
       @_all = []
     for i,o of @callbackStack['post']
       if typeof o == 'function'
-        o()        
+        o()
     @callbackStack['post'] = []
     @trigger 'reset', @models
     return

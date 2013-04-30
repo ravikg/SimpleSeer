@@ -263,12 +263,17 @@ module.exports = class Table extends SubView
 
   renderRow:(row) =>
     values = []
+    classes = if row.classes then row.classes else {}
+    id = if row.id then row.id else ''
 
     _.each @tableCols, (v, k) =>
       key = v.key
       val = row[v.key]
       value = @renderCell(val, key)
-      values.push {'class' : v.key, 'value' : value}
+      cls = v.key
+      if classes and classes[key]
+        cls += ' ' + classes[key]
+      values.push {'class' : cls, 'value' : value}
 
     return {id: row.id, values: values}
 
