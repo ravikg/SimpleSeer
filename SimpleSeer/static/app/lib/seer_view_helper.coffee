@@ -194,7 +194,7 @@ Handlebars.registerHelper "editablemetalist", (results, template) ->
   for key in template
     label = key
     value = results[key] or ""
-    tpl += "<div class=\"elastic spacedown\">#{label}:<input class=\"value\" name=\"#{label}\" value=\"#{value}\" /></div>"
+    tpl += "<div class=\"elastic spacedown\"><span class=\"label\">#{label}</span><span class=\"input\"><input class=\"value\" name=\"#{label}\" value=\"#{value}\" /></span></div>"
   return new Handlebars.SafeString tpl
 
 Handlebars.registerHelper "capturetime", (time) ->
