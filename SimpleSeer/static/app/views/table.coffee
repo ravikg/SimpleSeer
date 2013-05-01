@@ -29,7 +29,7 @@ module.exports = class Table extends SubView
 
   events: =>
     "click .th.sortable":"sortByColumn"
-    "change .tbody input":"changeCell"
+    "change .tcontent input":"changeCell"
 
   #onScroll:(per) => @pollShadow()
 
@@ -230,10 +230,6 @@ module.exports = class Table extends SubView
       html: html
       raw: raw
     return value
-
-  # Default saveCell functionality
-  saveCell: (obj) =>
-    return
 
   changeCell:(e) =>
     target = $(e.target)
