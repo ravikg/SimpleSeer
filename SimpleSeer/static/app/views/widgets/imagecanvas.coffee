@@ -22,6 +22,9 @@ module.exports = class ImageCanvas extends SubView
   hideMarkup: =>
     @canvas.hide?()
 
+  toggleMarkup: =>
+    @canvas.toggle?()
+
   getRenderData: =>
     image: @options.image
 
