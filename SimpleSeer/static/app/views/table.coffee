@@ -280,9 +280,9 @@ module.exports = class Table extends SubView
   insertRow:(row, insertDirection = 1) =>
     markup = @rowTemplate @renderRow(row)
     if insertDirection is -1
-      @rows.unshift(markup)
-    else
       @rows.push(markup)
+    else
+      @rows.unshift(markup)
 
   getSortKey: (k) =>
     key = k

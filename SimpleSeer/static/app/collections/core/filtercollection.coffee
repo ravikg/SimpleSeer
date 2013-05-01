@@ -109,18 +109,18 @@ module.exports = class FilterCollection extends Collection
     else
       namePath = ''
     #if application.debug
-    console.info "series:  subscribing to channel "+"message:#{@subscribePath}/#{namePath}"
+    #console.info "series:  subscribing to channel "+"message:#{@subscribePath}/#{namePath}"
     if application.socket
       application.socket.on "message:#{@subscribePath}/#{namePath}", callback
-      console.info "binding to: message:#{@subscribePath}/#{namePath}"
+      #console.info "binding to: message:#{@subscribePath}/#{namePath}"
       if !application.subscriptions["#{@subscribePath}/#{namePath}"]
-        console.info "subscribing to: #{@subscribePath}/#{namePath}"
+        #console.info "subscribing to: #{@subscribePath}/#{namePath}"
         application.subscriptions["#{@subscribePath}/#{namePath}"] = application.socket.emit 'subscribe', "#{@subscribePath}/#{namePath}"
     #console.log "------------------------------------------------------------------"
   #trigger fired when receiving data on the pubsub subscription.
   receive: (data) =>
     _obj = new @model data.data
-    if @getParam('sortorder') != -1
+    if @getParam('sortorder') == -1
       at = 0
     else
       at = (@models.length)
@@ -233,7 +233,7 @@ module.exports = class FilterCollection extends Collection
   postFetch:()=>
     application.modal.onSuccess()
     if !@clearOnFetch
-      if @getParam('sortorder') != -1
+      if @getParam('sortorder') == -1
         at = 0
       else
         at = (@_all.length)
@@ -304,7 +304,7 @@ module.exports = class FilterCollection extends Collection
     @totalavail = response.total_frames
     @lastavail = response.frames?.length || 0
     @setRaw (response)
-    dir = @getParam 'sortorder'
-    if dir and response.frames
-      response.frames = response.frames.reverse()
+    #dir = @getParam 'sortorder'
+    #if dir and response.frames
+    #  response.frames = response.frames.reverse()
     return response.frames
