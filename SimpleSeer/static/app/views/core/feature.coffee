@@ -1,7 +1,6 @@
-Model = require "models/model"
+View = require "views/core/view"
 
-
-module.exports = class Feature extends Model
+module.exports = class Feature extends View
   
   #initialize: =>
   #  @data = {}

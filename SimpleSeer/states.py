@@ -14,6 +14,7 @@ from .camera import StillCamera, VideoCamera
 from realtime import ChannelManager
 
 import logging
+log = logging.getLogger(__name__)
 
 class Core(object):
     '''Implements the core functionality of SimpleSeer
@@ -58,6 +59,9 @@ class Core(object):
 
         util.load_plugins()
         self.reloadInspections()
+        
+        if self.config.framebuffer
+            log.warn("Framebuffer is active, while worker is enabled.  Workers can not handle framebuffer calls, so you should add skip_worker_check: 1 to the config")
         
         self.lastframes = deque()
         self.framecount = 0

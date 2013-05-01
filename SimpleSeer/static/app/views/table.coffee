@@ -19,18 +19,39 @@ module.exports = class Table extends SubView
   editable: true
   renderComplete: false
   lastY: 0
-  limit: 50
+  limit: 100
   direction: -1
   insertDirection: -1
-  scrollThreshold: 4
+  #scrollThreshold: 4
+  sortType: 'collection'
+  header: ''
+  tableClasses: 'table'
 
   events: =>
-    "click .th" : "sortByColumn"
-    "change .tbody input" : "changeCell"
+    "click .th.sortable":"sortByColumn"
+    "change .tbody input":"changeCell"
 
-  onScroll:(per) => @pollShadow()
+  #onScroll:(per) => @pollShadow()
 
-  onPage: => @infinitePage()
+  #onPage: =>
+  #  console.log 'hit'
+  #  @infinitePage()
+
+  getColumnKeyByTitle: (title) =>
+    key = null
+    _.each @tableCols, (col) =>
+      if col.title == title
+        key = col.key
+
+    return key
+
+  getColumnTitleByKey: (key) =>
+    title = null
+    _.each @tableCols, (col) =>
+      if col.key == key
+        title = col.title
+
+    return title
 
   getOptions: =>
     if @options.sortKey?
@@ -59,22 +80,37 @@ module.exports = class Table extends SubView
       @_url = "api/frame"
 
   getCollection: =>
-    @collection = new @_collection([],{model:@_model,clearOnFetch:@cof,url:@_url})
+    bindFilter = Application.context[@options.parent.dashboard.options.parent.options.context].filtercollection
+    @collection = new @_collection([],{bindFilter:bindFilter,model:@_model,clearOnFetch:@cof,url:@_url})
     if !@options.collection_model
-      if @sortKey == 'capturetime'
-        @collection.setParam 'sortkey', 'capturetime_epoch'
-      else
-        @collection.setParam 'sortkey', @sortKey
+      @collection.setParam 'sortkey', @getSortKey(@sortKey)
       @collection.setParam 'sortorder', @direction
-    @collection.fetch()
+      @collection.setParam 'limit', @limit
+    #@collection.on('reset',@updateData)
+    @collection.fetch({'success':@updateData})
+    @subscribe()
+
+  subscribe: (channel="") =>
+    if channel
+      namePath = channel + "/"
+      if application.socket
+        application.socket.removeListener "message:#Chart/#{namePath}", @chartCheck
+        application.socket.on "message:Chart/#{namePath}", @chartCheck
+        #console.info "binding to: message:Chart/#{namePath}"
+        if !application.subscriptions["Chart/#{namePath}"]
+          #console.info "subscribing to: #{@subscribePath}/#{namePath}"
+          application.subscriptions["Chart/#{namePath}"] = application.socket.emit 'subscribe', "Chart/#{namePath}"
 
   initialize: =>
     super()
     @rows = []
     @getOptions()
     @getCollection()
+    @on 'page', @infinitePage
 
   getRenderData: =>
+    classes: @tableClasses
+    header: @header
     cols: @tableCols
     rows: @rows
     pageButtons: @options.page == "page"
@@ -94,22 +130,6 @@ module.exports = class Table extends SubView
         if v.subcols
           subCols = v.subcols
     return subCols
-
-  getColumnKeyByTitle: (title) =>
-    key = null
-    _.each @tableCols, (col) =>
-      if col.title == title
-        key = col.key
-
-    return key
-
-  getColumnTitleByKey: (key) =>
-    title = null
-    _.each @tableCols, (col) =>
-      if col.key == key
-        title = col.title
-
-    return title
 
   editableCell: =>
     ###
@@ -215,7 +235,7 @@ module.exports = class Table extends SubView
   saveCell: (obj) =>
     return
 
-  changeCell:(e) => # @TODO: DO THIS TOMORROW
+  changeCell:(e) =>
     target = $(e.target)
     id = target.parents('div.tr').attr('id')
     cls = target.attr('class')
@@ -243,16 +263,17 @@ module.exports = class Table extends SubView
 
   renderRow:(row) =>
     values = []
-    $.each @tableCols, (k, v) =>
-      path = v.key.split '-'
+    classes = if row.classes then row.classes else {}
+    id = if row.id then row.id else ''
+
+    _.each @tableCols, (v, k) =>
       key = v.key
-      if path.length > 1
-        r = row.get path[0]
-        val = r[path[1]]
-      else
-        val = row.get path[0]
+      val = row[v.key]
       value = @renderCell(val, key)
-      values.push {'class' : v.key, 'value' : value}
+      cls = v.key
+      if classes and classes[key]
+        cls += ' ' + classes[key]
+      values.push {'class' : cls, 'value' : value}
 
     return {id: row.id, values: values}
 
@@ -263,11 +284,17 @@ module.exports = class Table extends SubView
     else
       @rows.push(markup)
 
+  getSortKey: (k) =>
+    key = k
+    key = if k is "capturetime" then 'capturetime_epoch' else key
+    return key
+
   sortByColumn:(e, set) =>
     key = $(e.currentTarget).data('key')
     direction = $(e.currentTarget).attr('direction') || "desc"
+    k = @getSortKey(key)
     if !set
-      @collection.setParam 'sortkey', if key is "capturetime" then 'capturetime_epoch' else key
+      @collection.setParam 'sortkey', k
     @sortKey = key
     if direction == "asc"
       @collection.setParam 'sortorder', -1
@@ -278,54 +305,60 @@ module.exports = class Table extends SubView
       @sortDirection = 'asc'
       @direction = 1
     @cof = true
-    @collection.fetch
-      filtered:true
+    @collection.fetch({'success':@updateData, 'filtered':true})
 
   formatData:(data) =>
     return data
 
+  render: =>
+    super()
+
   updateData: =>
-    @rows = [] 
-    if !@tableData and @collection and @collection.models
+    @rows = []
+    if @collection and @collection.models
       @tableData = @collection.models
     data = @formatData(@tableData)
     _.each data, (model) =>
       @insertRow(model, @insertDirection)
     @render()
-    @packTable()
+    @clearCache()
 
   infinitePage: =>
+    #console.log @collection.lastavail
     if @collection.lastavail >= @limit
       @collection.setParam('skip', (@collection.getParam('skip') + @limit))
-      @collection.fetch()
+      @collection.fetch({'success' : @updateData})
 
   afterRender: =>
-    $(window).resize( _.debounce @packTable, 100 )
+    #$(window).resize( _.debounce @packTable, 100 )
     @$el.find(".th[data-key=#{@sortKey}]")
       .removeClass("sort-asc sort-desc")
       .addClass("sort-#{@sortDirection}")
       .attr('direction', @sortDirection)
     @thead = @$(".thead")
-    @tbody = @$(".tbody").infiniteScroll {
-      onPage: => @onPage()
-      onScroll: => @onScroll()
-    }
-    @content = @tbody.find(".tscroll")
-    @tbody.scrollTop(@lastY) if @lastY
+    @tbody = @$(".tcontent")
     @packTable()
+    #@tbody = @$(".tbody").infiniteScroll {
+    #  onPage: => @onPage()
+    #  onScroll: => @onScroll()
+    #}
+    #@content = @tbody.find(".tscroll")
+    #@tbody.scrollTop(@lastY) if @lastY
+    #@packTable()
 
   reflow: =>
     super()
+    #$(window).resize( _.debounce @packTable, 1000 )
     @packTable()
 
-  pollShadow: =>
-    @lastY = top = @tbody.scrollTop()
-    @thead.removeClass("shadow")
-    @thead.addClass("shadow") if top > 0
+  #pollShadow: =>
+  #  @lastY = top = @tbody.scrollTop()
+  #  @thead.removeClass("shadow")
+  #  @thead.addClass("shadow") if top > 0
 
-  getScrollbar: =>
-    distance = @tbody.width() - @content.width().top
-    return (if distance > @scrollThreshold then distance else 0)
+  #getScrollbar: =>
+  #  distance = @tbody.width() - @content.width().top
+  #  return (if distance > @scrollThreshold then distance else 0)
 
   getCellStats:(index, colData) =>
     if( @widthCache[index] ) then return @widthCache[index]
@@ -341,6 +374,9 @@ module.exports = class Table extends SubView
       largest: largest
       average: avg
     return @widthCache[index]
+
+  clearCache: =>
+    @widthCache = {}
 
   packTable: =>
     cellGroups = @tbody.find(".cell-group + .cell-group")
@@ -367,7 +403,7 @@ module.exports = class Table extends SubView
       td = cachedColumns[i].css("width", largest)
       newCols.push $(td[0]).outerWidth()
     sum = _.reduce(newCols, (a, b) -> a + b)
-    selfWidth = @content.width()
+    selfWidth = @tbody.width()
     if sum >= selfWidth
       gaps = []
       distance = sum - selfWidth - 2

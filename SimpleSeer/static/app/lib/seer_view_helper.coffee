@@ -178,7 +178,7 @@ Handlebars.registerHelper "resultlist", (results) ->
         else
           unit = ""
         if value is "" then unit = "--"
-        tpl += "<div class=\"elastic interactive\"><span class=\"label\">#{label}:</span><span class=\"value\">#{value}#{unit}</span><div class=\"clearfix\"></div></div>"
+        tpl += "<div class=\"elastic interactive #{if result.state is 1 then "fail" else "pass"}\"><span class=\"label\">#{label}:</span><span class=\"value\">#{value}#{unit}</span><div class=\"clearfix\"></div></div>"
   return new Handlebars.SafeString tpl
 
 Handlebars.registerHelper "metalist", (results, template) ->
@@ -189,6 +189,21 @@ Handlebars.registerHelper "metalist", (results, template) ->
     tpl += "<div class=\"elastic spacedown\">#{label}:<span class=\"value\">#{value}</span></div>"
   return new Handlebars.SafeString tpl
 
+Handlebars.registerHelper "editablemetalist", (results, template) ->
+  tpl = ""
+  for key in template
+    label = key
+    value = results[key] or ""
+    tpl += "<div class=\"elastic spacedown\"><span class=\"label\">#{label}</span><span class=\"input\"><input class=\"value\" name=\"#{label}\" value=\"#{value}\" /></span></div>"
+  return new Handlebars.SafeString tpl
+
 Handlebars.registerHelper "capturetime", (time) ->
   str = new moment(parseInt(time)).format("M/D/YYYY h:mm a")
   return new Handlebars.SafeString str
+
+Handlebars.registerHelper "tolstate", (results) ->
+  len = _.where(results, {state: 1}).length
+  if results and (len > 0 or results.length is 0)
+    return "fail"
+  else
+    return "pass"

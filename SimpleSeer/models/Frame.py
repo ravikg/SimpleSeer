@@ -31,8 +31,6 @@ class FrameSchema(fes.Schema):
     #TODO, make this feasible as a formencode schema for upload
 
 
-
-
 class Frame(SimpleDoc, mongoengine.Document):
     """
         Frame Objects are a mongo-friendly wrapper for SimpleCV image objects,
@@ -63,10 +61,11 @@ class Frame(SimpleDoc, mongoengine.Document):
     notes = mongoengine.StringField()
     _imgcache = ''
     _imgcache_dirty = False
+    _recentframes = [] #class-wide frame cache for lastobjects()
     
 
     meta = {
-        'indexes': ["capturetime", "-capturetime", ('camera', '-capturetime'), "-capturetime_epoch", "capturetime_epoch", "results", "results.state", "metadata"]
+        'indexes': ["capturetime", "camera", "-capturetime", ('camera', '-capturetime'), "-capturetime_epoch", "capturetime_epoch", "results", "results.state", "metadata"]
     }
     
     @classmethod
@@ -75,11 +74,71 @@ class Frame(SimpleDoc, mongoengine.Document):
         return ['_id', 'camera', 'capturetime', 'capturetime_epoch', 'localtz', 'metadata', 'notes', 'height', 'width', 'imgfile', 'results']
 
 
+    @classmethod
+    def lastobjects(self, **kwargs):
+        if not Session().framebuffer:
+            return Frame.objects(**kwargs).order_by("-capturetime")
+        
+        if not len(self._recentframes):
+            self._recentframes.extend(list(Frame.objects.order_by("-capturetime").limit(Session().framebuffer)))
+        
+        subset = [frame for frame in self._recentframes]
+        def valuecompare(frame, field, value):
+            fields = field.split("__")
+            operator = "eq"
+            if fields[-1] in ["gt", "lt", "gte", "lte", "startswith", "contains", "exists"]:
+                operator = fields.pop()
+            
+            item = getattr(frame, fields.pop(0))
+            while len(fields):
+                item = item.get(fields.pop(0), None)
+            
+            if operator == "eq":
+                return item == value
+            elif operator == "gt":
+                return item > value
+            elif operator == "lt":
+                return item < value
+            elif operator == "gte":
+                return item >= value
+            elif operator == "lte":
+                return item <= value
+            elif operator == "startswith":
+                return item.startswith(value)
+            elif operator == "contains":
+                return value in item
+            elif operator == "exists":
+                return not item == None
+                
+        for field, value in kwargs.items():
+            subset = [f for f in subset if valuecompare(f, field, value)]
+                
+        return subset
+
+    def _addToBuffer(self):
+        
+        if not self.id or not Session().framebuffer:
+            return
+        
+        already_in = Frame.lastobjects(id = self.id)
+        
+        if len(already_in) and already_in[0] == self:
+            return
+        
+        self._recentframes.append(self)
+        if len(self._recentframes) > Session().framebuffer:
+            self._recentframes.pop(0)
+
+
     @LazyProperty
     def thumbnail(self):
         if self.thumbnail_file is None or self.thumbnail_file.grid_id is None:
             img = self.image
-            thumbnail_img = img.scale(140.0 / img.height)
+            if Session().thumbnail_height:
+                thumb_height = float(Session().thumbnail_height)
+            else:
+                thumb_height = 140.0
+            thumbnail_img = img.scale(thumb_height / float(img.height))
             if self.id and not "is_slave" in Session().mongo:
                 img_data = StringIO()
                 thumbnail_img.save(img_data, "jpeg", quality = 75)
@@ -134,6 +193,8 @@ class Frame(SimpleDoc, mongoengine.Document):
         self.imgfile.delete()
         self._imgcache = ''
         self._imgcache_dirty = False
+        if self.thumbnail_file:
+            self.thumbnail_file.delete()
 
     def has_image_data(self):
         if self.clip_id and self.clip: return True
@@ -182,13 +243,22 @@ class Frame(SimpleDoc, mongoengine.Document):
         
         super(Frame, self).save(*args, **kwargs)
         
+        if newFrame and Session().framebuffer:
+            self._addToBuffer()
+        
+        
         # Once everything else is saved, publish result
         # Do not place any other save actions after this line or realtime objects will miss data
         # Only publish to frame/ channel if this is a new frame (not a re-saved frame from a backfill)
         
-        if newFrame and publish:
+        if publish:
+            if newFrame:
+                channel = "frame/"
+            else:
+                channel = "frameupdate/"
+            
             #send the frame without features, and some other stuff
-            realtime.ChannelManager().publish('frame/', dict(
+            realtime.ChannelManager().publish(channel, dict(
                 id = str(self.id),
                 capturetime = self.capturetime,
                 capturetime_epoch = self.capturetime_epoch,
@@ -205,8 +275,15 @@ class Frame(SimpleDoc, mongoengine.Document):
                 metadata = self.metadata,
                 notes = self.notes)
             )
+            
         
-        
+    def delete(self, *args, **kwargs):
+        if not kwargs.get("publish", True):
+            kwargs.pop("publish")
+        elif self.id:
+            realtime.ChannelManager().publish("framedelete/", { "id": str(self.id) })
+        self.delete_image()
+        super(Frame, self).save(*args, **kwargs)
         
     def serialize(self):
         s = StringIO()
