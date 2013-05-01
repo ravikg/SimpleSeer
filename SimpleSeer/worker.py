@@ -21,13 +21,14 @@ from . import celeryconfig
 celery = Celery()
 celery.config_from_object(celeryconfig)
             
+from collections import defaultdict
+            
 ensure_plugins()
 
 class InspectionLogHandler(logging.Handler):
 
     def __init__(self):
         super(InspectionLogHandler, self).__init__()
-        self._msgs = {}
         
     def emit(self, msg):
         import ipdb;ipdb.set_trace()
@@ -37,14 +38,9 @@ class InspectionLogHandler(logging.Handler):
         if insp:
             fra = self._getFrame(msg.msg)
             if fra:
-                ChannelManager().publish('logging/', '{} {} {}'.format(insp, fra, msg.msg[50:]))
+                # This should be doing an update of the feature history log
+                pass
                 
-    # Remove self from the logger
-    def remove(self, logger):
-        for hdl in logger.handles:
-            if hdl == self:
-                logger.removeHandler(hdl)
-        
     def _getInspectionId(self, msg):
         # Assume the first 24 digits is inspection id
         potentialId = msg[:24]
@@ -73,6 +69,7 @@ class Foreman():
 
     _useWorkers = False
     _initialized = False
+    _inspectionLog = None
     
     __sharedState = {}
     
@@ -185,7 +182,7 @@ class Foreman():
     @task
     def inspection_execute(fid, iid):
         try:
-            log.info('{} {} Inspecting'.format(iid, fid))
+            log.warn('{} {} Inspecting'.format(iid, fid))
             frame = M.Frame.objects.get(id=fid)
             inspection = M.Inspection.objects.get(id=iid)
             features = inspection.execute(frame)

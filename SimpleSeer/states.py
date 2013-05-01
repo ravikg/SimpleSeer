@@ -196,7 +196,6 @@ class Core(object):
         
         frame.results += results
         self._queue.pop(frame.id)
-        
                 
     @property
     def results(self):
