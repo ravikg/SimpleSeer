@@ -34,12 +34,11 @@ module.exports = class imageList extends SubView
     return
     
   addObjs: =>
-  addObjs: =>
     @render()
     
   receive: (data) =>
     console.dir data.data
-    @filtercollection.add data.data
+    #@filtercollection.add data.data
     @render()
 
   getRenderData: =>
