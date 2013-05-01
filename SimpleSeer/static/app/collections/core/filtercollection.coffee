@@ -28,7 +28,7 @@ module.exports = class FilterCollection extends Collection
   # `url` is the path to the restful filter object
   url:"/getFrames"
   # `subscribePath` is the channel the `subscribe` method (websocket/pubsub) uses to listen for events 
-  subscribePath:"frame"
+  subscribePath:"Frame"
   # if `mute` is true, altering the query params will not fire a request to the server.  This is typically used for parent level filtercollections that have other filtercollection bound to it  
   mute:false
   # if clearOnFetch is true, the filtercollection will clear its models list for every request (page by page, or changing filters).
@@ -109,18 +109,18 @@ module.exports = class FilterCollection extends Collection
     else
       namePath = ''
     #if application.debug
-      #console.info "series:  subscribing to channel "+"message:#{@subscribePath}/#{namePath}"
+    console.info "series:  subscribing to channel "+"message:#{@subscribePath}/#{namePath}"
     if application.socket
       application.socket.on "message:#{@subscribePath}/#{namePath}", callback
-      #console.info "binding to: message:#{@subscribePath}/#{namePath}"
+      console.info "binding to: message:#{@subscribePath}/#{namePath}"
       if !application.subscriptions["#{@subscribePath}/#{namePath}"]
-        #console.info "subscribing to: #{@subscribePath}/#{namePath}"
+        console.info "subscribing to: #{@subscribePath}/#{namePath}"
         application.subscriptions["#{@subscribePath}/#{namePath}"] = application.socket.emit 'subscribe', "#{@subscribePath}/#{namePath}"
     #console.log "------------------------------------------------------------------"
   #trigger fired when receiving data on the pubsub subscription.
   receive: (data) =>
     _obj = new @model data.data
-    if @getParam 'sortorder' == -1
+    if @getParam('sortorder') != -1
       at = 0
     else
       at = (@models.length)
@@ -233,12 +233,13 @@ module.exports = class FilterCollection extends Collection
   postFetch:()=>
     application.modal.onSuccess()
     if !@clearOnFetch
-      if @getParam 'sortorder' == -1
+      if @getParam('sortorder') != -1
         at = 0
       else
-        at = (@models.length)
+        at = (@_all.length)
       @add @_all, {at:at ,silent: true}
       @_all = []
+
     for i,o of @callbackStack['post']
       if typeof o == 'function'
         o()
