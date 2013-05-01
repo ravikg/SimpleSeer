@@ -273,7 +273,7 @@ def thumbnail(frame_id):
     if not frame.thumbnail_file:
         t = frame.thumbnail
         if not "is_slave" in Session().mongo or not Session().mongo['is_slave']:
-            frame.save()
+            frame.save(publish = False)
         else:
             s = StringIO()
             t.save(s, "jpeg", quality = 75)
