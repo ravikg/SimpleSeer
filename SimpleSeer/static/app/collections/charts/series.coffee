@@ -43,6 +43,7 @@ module.exports = class Series extends FilterCollection
     #if args.realtime
     #  @subscribe()
     @on("remove",@shiftChart)
+    @on("reset",@onSuccess)
     #@fetch()
     return @
 
@@ -72,7 +73,7 @@ module.exports = class Series extends FilterCollection
       if !@view.options.fetchCheck()
         return
     @view.showMessage('loading','Loading')
-    args.success = @onSuccess
+    #args.success = @onSuccess
     args.error = @onError
     args['total'] = true
     args['params'] = {skip:~@limit+1,limit:@limit}
