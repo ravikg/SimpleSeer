@@ -279,7 +279,8 @@ module.exports = class FilterCollection extends Collection
     if params.filtered and @clearOnFetch == false
       @clearOnFetch = true
       @callbackStack['post'].push => @clearOnFetch = false
-
+    if !params.error?
+      params.error = => console.error 'generic request error'
     params['silent'] = true
     @preFetch(params)
     if params.forceRefresh
