@@ -1,0 +1,15 @@
+{{#if header}}
+  {{{header}}}
+{{/if}}
+<table class="{{classes}}">
+    <div class="thead">
+	   {{#each cols}}
+	       <th class="th {{#if this.sortable}}sortable{{/if}}" title="{{this.title}}" data-key="{{this.key}}">
+	           {{this.title}}
+	       </th>
+	   {{/each}}
+    </div>
+    {{#each rows}}
+        {{{this}}}
+    {{/each}}
+</table>

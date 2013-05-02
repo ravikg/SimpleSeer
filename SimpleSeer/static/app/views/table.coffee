@@ -1,7 +1,7 @@
 Application = require 'application'
 SubView = require 'views/core/subview'
-Template = require './templates/table'
-RowTemplate = require './templates/row'
+Template = require './templates/table2'
+RowTemplate = require './templates/row2'
 Collection = require "collections/table"
 
 module.exports = class Table extends SubView
@@ -28,8 +28,8 @@ module.exports = class Table extends SubView
   tableClasses: 'table'
 
   events: =>
-    "click .th.sortable":"sortByColumn"
-    "change .tcontent input":"changeCell"
+    "click th.sortable":"sortByColumn"
+    "change input":"changeCell"
 
   #onScroll:(per) => @pollShadow()
 
@@ -233,7 +233,7 @@ module.exports = class Table extends SubView
 
   changeCell:(e) =>
     target = $(e.target)
-    id = target.parents('div.tr').attr('id')
+    id = target.parents('tr').attr('id')
     cls = target.attr('class')
     spl = cls.split('-')
     if spl[0]
@@ -251,7 +251,6 @@ module.exports = class Table extends SubView
       subkey: subkey
       title: title
       value: value
-
     @saveCell(obj)
 
   saveCell:(frame, obj, key = '') =>
@@ -333,7 +332,7 @@ module.exports = class Table extends SubView
       .attr('direction', @sortDirection)
     @thead = @$(".thead")
     @tbody = @$(".tcontent")
-    @packTable()
+    #@packTable()
     #@tbody = @$(".tbody").infiniteScroll {
     #  onPage: => @onPage()
     #  onScroll: => @onScroll()
@@ -345,7 +344,7 @@ module.exports = class Table extends SubView
   reflow: =>
     super()
     #$(window).resize( _.debounce @packTable, 1000 )
-    @packTable()
+    #@packTable()
 
   #pollShadow: =>
   #  @lastY = top = @tbody.scrollTop()
@@ -375,6 +374,7 @@ module.exports = class Table extends SubView
     @widthCache = {}
 
   packTable: =>
+    return
     cellGroups = @tbody.find(".cell-group + .cell-group")
     colCount = @thead.find(".th").length
     colWidths = []
