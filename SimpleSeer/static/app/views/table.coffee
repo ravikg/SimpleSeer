@@ -341,10 +341,10 @@ module.exports = class Table extends SubView
     #@tbody.scrollTop(@lastY) if @lastY
     #@packTable()
 
-  reflow: =>
-    super()
-    #$(window).resize( _.debounce @packTable, 1000 )
-    #@packTable()
+  #reflow: =>
+  #  super()
+  #  #$(window).resize( _.debounce @packTable, 1000 )
+  #  #@packTable()
 
   #pollShadow: =>
   #  @lastY = top = @tbody.scrollTop()
