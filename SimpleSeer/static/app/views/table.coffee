@@ -86,8 +86,9 @@ module.exports = class Table extends SubView
       @collection.setParam 'sortkey', @getSortKey(@sortKey)
       @collection.setParam 'sortorder', @direction
       @collection.setParam 'limit', @limit
-    #@collection.on('reset',@updateData)
-    @collection.fetch({'success':@updateData})
+    @collection.on('reset',@updateData)
+    @collection.fetch()
+    #@collection.fetch({'success':@updateData})
     @subscribe()
 
   subscribe: (channel="") =>
@@ -341,10 +342,10 @@ module.exports = class Table extends SubView
     #@tbody.scrollTop(@lastY) if @lastY
     #@packTable()
 
-  reflow: =>
-    super()
-    #$(window).resize( _.debounce @packTable, 1000 )
-    #@packTable()
+  #reflow: =>
+  #  super()
+  #  #$(window).resize( _.debounce @packTable, 1000 )
+  #  #@packTable()
 
   #pollShadow: =>
   #  @lastY = top = @tbody.scrollTop()
