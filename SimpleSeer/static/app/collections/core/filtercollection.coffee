@@ -239,8 +239,7 @@ module.exports = class FilterCollection extends Collection
         at = (@_all.length)
       @add @_all, {at:at ,silent: true}
       @_all = []
-
-    for i,o of @callbackStack['post']
+    for o in @callbackStack['post']
       if typeof o == 'function'
         o()
     @callbackStack['post'] = []
@@ -274,6 +273,8 @@ module.exports = class FilterCollection extends Collection
   # - __before__: fires before the fetch makes request to server
   # - __success__: fires after the fetch makes request to server
   fetch: (params={}) =>
+    #console.dir params
+    #console.log params
     if !params.modal?
       params.modal = {message:'<p class="large center">Loading<p>',throbber:true}
     if params.filtered and @clearOnFetch == false
@@ -288,11 +289,15 @@ module.exports = class FilterCollection extends Collection
     total = params.total || false
     _url = @baseUrl+@getUrl(total,params['params']||false)
     for o in @_boundCollections
+      #TODO: TRACE WHERE THIS DAMN PARAM IS COMING FROM 
+      delete params.success
       o.fetch(params)
     if !@mute
       @_all = @models
-      @callbackStack['pre'].push params.before
-      @callbackStack['post'].push params.success
+      if params.before
+        @callbackStack['pre'].push params.before
+      if params.success
+        @callbackStack['post'].push params.success
       params.success = @postFetch
       if @url != _url or params.force
         @url = _url
