@@ -51,13 +51,9 @@ def ControlsCommand(self):
 
 @Command.simple(use_gevent=True)
 def OlapCommand(self):
-    try:
-        from SeerCloud.OLAPUtils import ScheduledOLAP, RealtimeOLAP, OLAPData
-        from SeerCloud.backfill import MetaSchedule
-    except:
-        print 'Error starting OLAP schedules.  This requires Seer Cloud'
-        return 0
-    
+    from SeerCloud.OLAPUtils import ScheduledOLAP, RealtimeOLAP, OLAPData
+    from SeerCloud.backfill import MetaSchedule
+
     from SimpleSeer.models.Inspection import Inspection, Measurement
 
     try:
@@ -66,7 +62,8 @@ def OlapCommand(self):
 
         # The olap cache manager
         od = OLAPData()
-        gevent.spawn_link_exception(od.listen)
+        gevent.spawn_link_exception(od.listenReq)
+        gevent.spawn_link_exception(od.listenDel)
         
         import time; time.sleep(1)
         Inspection.objects.count()
@@ -237,7 +234,7 @@ class ScrubCommand(Command):
             
                 # Rebuild the cache
                 if retention.get('purge', False):
-                    res = ChannelManager().rpcSendRequest('olap_req/', {'action': 'scrub', 'capturetime_epoch__lt': first_capturetime})
+                    res = ChannelManager().rpcSendRequest('olap_req/', {'action': 'scrub', 'capturetime_epoch__lte': first_capturetime})
             
                 # This line of code needed to solve fragmentation bug in mongo
                 # Can run very slow when run on large collections
