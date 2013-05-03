@@ -42,7 +42,8 @@ module.exports = SeerApplication =
         console.log "error"
       @.socket.on 'disconnect', ->
         console.log "discon"
-      #@.socket.on 'message', (msg) ->
+      @.socket.on 'message', (msg) ->
+        console.log msg
       @socket.on "message:alert/", window.SimpleSeer._serveralert
       @socket.emit 'subscribe', 'alert/'
 
