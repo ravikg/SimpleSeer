@@ -163,22 +163,23 @@ Handlebars.registerHelper "log", (value) ->
   #console.log "Handlebars Log: ", value
   return new Handlebars.SafeString ""
 
-Handlebars.registerHelper "resultlist", (results) ->
+Handlebars.registerHelper "resultlist", (results, blacklist) ->
   tpl = ""
   if !results or results.length is 0
     tpl += "<div data-use=\"no-results\" class=\"centered\">Part Failed: No Results</div>"
   else
     for result in results
-      value = result.numeric or ""
-      unless value is undefined
-        obj = SimpleSeer.measurements.where({name:result.measurement_name})[0]
-        label = obj.get('label')
-        if obj.get('units')
-          unit = if obj.get('units') is "deg" then "&deg;" else " (#{obj.get('units')})"
-        else
-          unit = ""
-        if value is "" then unit = "--"
-        tpl += "<div class=\"elastic interactive #{if result.state is 1 then "fail" else "pass"}\"><span class=\"label\">#{label}:</span><span class=\"value\">#{value}#{unit}</span><div class=\"clearfix\"></div></div>"
+      unless ~blacklist.fields.indexOf(result.measurement_name)
+        value = result.numeric or ""
+        unless value is undefined
+          obj = SimpleSeer.measurements.where({name:result.measurement_name})[0]
+          label = obj.get('label')
+          if obj.get('units')
+            unit = if obj.get('units') is "deg" then "&deg;" else " (#{obj.get('units')})"
+          else
+            unit = ""
+          if value is "" then unit = "--"
+          tpl += "<div class=\"elastic interactive #{if result.state is 1 then "fail" else "pass"}\"><span class=\"label\">#{label}:</span><span class=\"value\">#{value}#{unit}</span><div class=\"clearfix\"></div></div>"
   return new Handlebars.SafeString tpl
 
 Handlebars.registerHelper "metalist", (results, template) ->
