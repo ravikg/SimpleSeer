@@ -33,29 +33,14 @@ module.exports = SeerApplication =
     $('#client-name').html(window.SimpleSeer.settings.ui_pagename || "")
 
     if window.WebSocket?
-      io.sockets.on('connection', (socket) ->
-          socket.on('disconnect', ->
-              console.log('DISCONNESSO!!! ');
-          );
-          socket.on('error', ->
-              console.log('ERORORORORORR !!! ');
-          );
-          socket.on('timeout', ->
-              console.log('TIMEOUTTTTTTT!!! ');
-          );
-      );
       @socket = io.connect '/rt'
-      @socket.on 'timeout', ->
-        console.log "timeout"
       @socket.on 'connect', ->
-        console.log "connect"
-      @socket.on 'error', ->
-        console.log "error"
-      @socket.on 'disconnect', ->
-        console.log "discon"
-      @socket.on 'message', (msg) ->
-        console.log msg
-
+        @socket.on 'timeout', ->
+          console.error 'websocket timeout'
+        @socket.on 'error', ->
+          console.error 'websocket error'
+        @socket.on 'disconnect', ->
+          console.error 'websocket disconnect'
       @socket.on "message:alert/", window.SimpleSeer._serveralert
       @socket.emit 'subscribe', 'alert/'
 
