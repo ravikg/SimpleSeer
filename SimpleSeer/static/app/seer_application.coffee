@@ -34,16 +34,17 @@ module.exports = SeerApplication =
 
     if window.WebSocket?
       @socket = io.connect '/rt'
-      io.on 'timeout', ->
+      @socket.on 'timeout', ->
         console.log "timeout"
-      io.on 'connect', ->
+      @socket.on 'connect', ->
         console.log "connect"
-      io.on 'error', ->
+      @socket.on 'error', ->
         console.log "error"
-      io.on 'disconnect', ->
+      @socket.on 'disconnect', ->
         console.log "discon"
-      io.on 'message', (msg) ->
+      @socket.on 'message', (msg) ->
         console.log msg
+
       @socket.on "message:alert/", window.SimpleSeer._serveralert
       @socket.emit 'subscribe', 'alert/'
 
@@ -66,7 +67,7 @@ module.exports = SeerApplication =
       modal: true
       buttons:
         Ok: ->
-          $( this ).dialog( "close" )
+          $( this ).dialog( "utorialclose" )
 
   _preinitialize: ->
     tc = require 'collections/tab_container'
