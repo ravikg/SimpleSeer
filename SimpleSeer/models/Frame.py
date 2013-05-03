@@ -25,7 +25,7 @@ from ..util import LazyProperty
 class FrameSchema(fes.Schema):
     allow_extra_fields=True
     filter_extra_fields=True
-    camera = fev.UnicodeString(not_empty=True)
+    camera = fev.UnicodeString(if_missing='')
     metadata = V.JSON(if_empty={}, if_missing={})
     notes = fev.UnicodeString(if_empty="", if_missing="")
     #TODO, make this feasible as a formencode schema for upload
@@ -282,6 +282,7 @@ class Frame(SimpleDoc, mongoengine.Document):
             kwargs.pop("publish")
         elif self.id:
             realtime.ChannelManager().publish("framedelete/", { "id": str(self.id) })
+        
         self.delete_image()
         super(Frame, self).save(*args, **kwargs)
         
