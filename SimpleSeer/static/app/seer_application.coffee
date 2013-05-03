@@ -104,21 +104,9 @@ module.exports = SeerApplication =
     return @context[name]
 
   alert:(message, alert_type, pop=false) ->
-    if @inAnim is true
-      @alertStack.push {message: message, alert_type: alert_type}
-      return
-
     switch alert_type
       when "clear"
-        @inAnim = true
-        $("#messages > .alert").fadeOut(400, (=>
-          @inAnim = false
-          $("#messages > .alert:hidden").remove()
-          stack = _.clone(@alertStack)
-          @alertStack = []
-          for alert in stack
-            @alert(alert.message, alert.alert_type)
-        ))
+        $("#messages > .alert").remove()
       when "redirect"
         if message is "@rebuild"
           window.location.reload()
