@@ -11,21 +11,21 @@ module.exports = SeerApplication =
   menuItems: {}
   menuBars: {}
   context: {}
-  alertStack: [] 
+  alertStack: []
   inAnim: false
-  
-  # Set up the application and include the 
+
+  # Set up the application and include the
   # necessary modules. Configures the page
-  # and 
+  # and
   _init: (settings) ->
     @settings = _.extend @settings, settings
-    
+
     if @settings.mongo.is_slave
       $(".notebook").hide()
-  		
+
     if !@settings.template_paths?
       @settings.template_paths = {}
-      
+
     @subscriptions = {}
     @timeOffset = (new Date()).getTimezoneOffset() * 60 * 1000
 
@@ -34,21 +34,25 @@ module.exports = SeerApplication =
 
     if window.WebSocket?
       @socket = io.connect '/rt'
-      #@.socket.on 'timeout', ->
-      #@.socket.on 'connect', ->
-      #@.socket.on 'error', ->
-      #@.socket.on 'disconnect', ->
+      @.socket.on 'timeout', ->
+        console.log "timeout"
+      @.socket.on 'connect', ->
+        console.log "connect"
+      @.socket.on 'error', ->
+        console.log "error"
+      @.socket.on 'disconnect', ->
+        console.log "discon"
       #@.socket.on 'message', (msg) ->
       @socket.on "message:alert/", window.SimpleSeer._serveralert
       @socket.emit 'subscribe', 'alert/'
-      
+
     m = require 'collections/measurements'
     @measurements = new m()
     @measurements.fetch()
     t = require 'views/core/modal'
     @modal = new t()
 
-    
+
     $("#slides").infiniteScroll
       onScroll:(per) =>
         @activeTab.trigger 'scroll', per
@@ -67,7 +71,7 @@ module.exports = SeerApplication =
     tc = require 'collections/tab_container'
     @tabs = new tc()
     @tabs.fetch()
-  
+
   route: (route, name=false, callback= =>) ->
     console.log route,name,callback
     for r in Backbone.history.handlers
@@ -101,7 +105,7 @@ module.exports = SeerApplication =
       #a = @context[name].fetch()
     return @context[name]
 
-  alert:(message, alert_type, pop=false) ->    
+  alert:(message, alert_type, pop=false) ->
     if @inAnim is true
       @alertStack.push {message: message, alert_type: alert_type}
       return
@@ -120,16 +124,16 @@ module.exports = SeerApplication =
       when "redirect"
         if message is "@rebuild"
           window.location.reload()
-        else 
+        else
           window.SimpleSeer.router.navigate(message || window.location.hash, true)
-      else 
+      else
         if !message then return false
         _duplicate = false
 
         #console.group(new Date()); console.log(message); console.groupEnd();
         #$(".alert-#{alert_type}").each (e,v)->
         #  if ($(v).data("message") == message) then _duplicate = true
-        
+
         if _duplicate is false
           popup = $("<div style=\"display: none\">#{message}</div>")
           popup.addClass("alert alert-#{alert_type}").data("message", message).appendTo("#messages")
