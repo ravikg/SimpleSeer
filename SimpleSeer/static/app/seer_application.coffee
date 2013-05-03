@@ -34,15 +34,15 @@ module.exports = SeerApplication =
 
     if window.WebSocket?
       @socket = io.connect '/rt'
-      @socket.on 'timeout', ->
+      io.on 'timeout', ->
         console.log "timeout"
-      @socket.on 'connect', ->
+      io.on 'connect', ->
         console.log "connect"
-      @socket.on 'error', ->
+      io.on 'error', ->
         console.log "error"
-      @socket.on 'disconnect', ->
+      io.on 'disconnect', ->
         console.log "discon"
-      @socket.on 'message', (msg) ->
+      io.on 'message', (msg) ->
         console.log msg
       @socket.on "message:alert/", window.SimpleSeer._serveralert
       @socket.emit 'subscribe', 'alert/'
