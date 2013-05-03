@@ -33,6 +33,17 @@ module.exports = SeerApplication =
     $('#client-name').html(window.SimpleSeer.settings.ui_pagename || "")
 
     if window.WebSocket?
+      io.sockets.on('connection', (socket) ->
+          socket.on('disconnect', ->
+              console.log('DISCONNESSO!!! ');
+          );
+          socket.on('error', ->
+              console.log('ERORORORORORR !!! ');
+          );
+          socket.on('timeout', ->
+              console.log('TIMEOUTTTTTTT!!! ');
+          );
+      );
       @socket = io.connect '/rt'
       @socket.on 'timeout', ->
         console.log "timeout"
