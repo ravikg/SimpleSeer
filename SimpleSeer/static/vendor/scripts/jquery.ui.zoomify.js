@@ -15,12 +15,12 @@ $.widget("ui.zoomify", {
 
     var image = content.find(".display").get(0);
     self.image = image;
-    
+
     var ratio = image.width / image.height;
     content.find(".view").height(image.height + 2);
 
     var scale = (self.viewport.zoom * 100) / self.options.min;
-     
+
     var frame = content.find(".frame");
     frame.css({"top": self.viewport.y, "left": self.viewport.x});
     frame.width(image.width / scale);
@@ -40,7 +40,7 @@ $.widget("ui.zoomify", {
       var value = 0;
       self.viewport.y = value;
       frame.css("top", value);
-    }    
+    }
 
     if( frame.width() + self.viewport.x > image.width - frameWidth ) {
       var value = image.width - Math.ceil(frame.width()) - frameWidth;
@@ -71,7 +71,7 @@ $.widget("ui.zoomify", {
       });
     }
   },
-  
+
   _create: function() {
     var self = this;
     var options = this.options;
@@ -80,20 +80,20 @@ $.widget("ui.zoomify", {
     element.addClass("ui-zoomify");
 
     self.viewport = {zoom: options.zoom, x: options.x, y: options.y};
-  
+
     var content = $('<div class="window"><div class="view"><div class="frame"></div><img class="display" src="'+options.image+'"></div></div><div class="settings"><input type="text" value=""><div class="slider"></div></div>').appendTo(element);
     content.find("input").attr("value", self.viewport.zoom * 100 + "%");
     content.find(".display").load(function() { self.loaded = true; self.updateDisplay('zoom'); }).bind('dragstart', function(event) { event.preventDefault(); });;
 
     stuff = {width: element.find(".view").width(), height: options.realHeight * (element.find(".view").width() / options.realWidth)}
     content.find(".view").attr("width", stuff.width).attr("height", stuff.height);
-    
+
     content.find(".view").click(function(e) {
       self.viewport.x = (e.offsetX || e.originalEvent.layerX - $(e.target).position().left) - content.find(".frame").width() / 2;
       self.viewport.y = (e.offsetY || e.originalEvent.layerY - $(e.target).position().top) - content.find(".frame").height() / 2;
       self.updateDisplay('pan');
     });
-    
+
     content.find(".frame").draggable({
       containment: "parent",
       drag: function(event, ui) {
@@ -101,8 +101,8 @@ $.widget("ui.zoomify", {
          self.viewport.y = ui.position.top;
          self.updateDisplay('pan');
       }
-    });   
-    
+    });
+
     content.find(".slider").slider({
       min: options.min,
       max: options.max,
@@ -118,24 +118,29 @@ $.widget("ui.zoomify", {
       if(e.which == 13){
         var input = $(this);
         var value = String(Math.max(input.attr("value").replace("%", ""), self.options.min));
-        
+
         // Set the slider's value
         $("#control .slider").slider("option", "value", value.replace(/\%/g, ""));
 
         // Add percent sign back in
         input.attr("value", value.replace(/\%/g, "") + "%");
         self.viewport.zoom = content.find("input").attr("value").replace(/\%/g, "") / 100;
-        
+
         self.updateDisplay('zoom');
       }
     });
-    
+
     $(window).resize(function() { self.updateDisplay('zoom'); });
+  },
+
+  repaint: function() {
+    var self = this;
+    self.updateDisplay();
   },
 
   _setOption: function(option, value) {
     var self = this;
-    
+
     $.Widget.prototype._setOption.apply( this, arguments );
     switch(option) {
       case "image":
