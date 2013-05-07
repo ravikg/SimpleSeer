@@ -108,7 +108,8 @@ $.widget("ui.zoomify", {
       max: options.max,
       value: (options.zoom * 100),
       slide: function(event, ui) {
-        $(this).parent().find("input").attr("value", ui.value + "%");
+        value = Math.floor(ui.value);
+        $(this).parent().find("input").attr("value", value + "%");
         self.viewport.zoom = content.find("input").attr("value").replace(/\%/g, "") / 100;
         self.updateDisplay('zoom');
       }
@@ -118,6 +119,7 @@ $.widget("ui.zoomify", {
       if(e.which == 13){
         var input = $(this);
         var value = String(Math.max(input.attr("value").replace("%", ""), self.options.min));
+        value = Math.floor(value);
 
         // Set the slider's value
         $("#control .slider").slider("option", "value", value.replace(/\%/g, ""));
