@@ -106,7 +106,7 @@ module.exports = class Table extends SubView
     @getOptions()
     @getCollection()
     @on 'page', @infinitePage
-    @on 'scroll', @pollShadow
+    @on 'scroll', @scrollPage
 
   getRenderData: =>
     classes: @tableClasses
@@ -334,7 +334,7 @@ module.exports = class Table extends SubView
     @hider = @$('.hider')
 
     @hider.width(@static.width() + 2)
-    @head.width(@static.width())
+    @head.width(@static.width() + 1)
     #@head.css('top', @table.offset().top)
 
     key = undefined
@@ -363,7 +363,6 @@ module.exports = class Table extends SubView
       .addClass("sort-#{@sortDirection}")
       .attr('direction', @sortDirection)
     @updateHeader()
-    window.updateHeader = @updateHeader
     #@packTable()
     #@tbody = @$(".tbody").infiniteScroll {
     #  onPage: => @onPage()
@@ -376,6 +375,15 @@ module.exports = class Table extends SubView
   reflow: =>
     super()
     @updateHeader()
+
+  scrollLeft: =>
+    left = $('#content #slides').scrollLeft()
+    offset = @static.offset()
+    @head.css('left', offset.left)
+
+  scrollPage: (per) =>
+    @scrollLeft()
+    @pollShadow(per)
 
   pollShadow: (per) =>
     if per > 0
