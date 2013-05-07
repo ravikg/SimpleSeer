@@ -179,7 +179,7 @@ Handlebars.registerHelper "resultlist", (results, blacklist) ->
           else
             unit = ""
           if value is "" then unit = "--"
-          tpl += "<div class=\"elastic interactive #{if result.state is 1 then "fail" else "pass"}\"><span class=\"label\">#{label}:</span><span class=\"value\">#{value}#{unit}</span><div class=\"clearfix\"></div></div>"
+          tpl += "<div class=\"elastic interactive #{if result.state is 1 then "fail" else "pass"}\" data-feature=\"#{result.measurement_name}\"><span class=\"label\">#{label}:</span><span class=\"value\">#{value}#{unit}</span><div class=\"clearfix\"></div></div>"
   return new Handlebars.SafeString tpl
 
 Handlebars.registerHelper "metalist", (results, template) ->

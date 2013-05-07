@@ -18,9 +18,11 @@ module.exports = class ImageCanvas extends SubView
 
   showMarkup: =>
     @canvas.show?()
+    return @
 
   hideMarkup: =>
     @canvas.hide?()
+    return @
 
   toggleMarkup: =>
     @canvas.toggle?()
@@ -36,6 +38,7 @@ module.exports = class ImageCanvas extends SubView
 
   afterRender: =>
     @canvas = @$("canvas")
+    if @options.stealth then @hideMarkup()
     @image = @$("img")
     @image.load =>
       @image.attr("data-w", @image.get(0).width)
@@ -71,12 +74,21 @@ module.exports = class ImageCanvas extends SubView
       "left": "#{left - @options.padding}px"
       "top": "#{top - @options.padding}px"
 
+  # Get the real image size
+  _getOriginalSize: (img) =>
+    src = (if img.getAttribute then img.getAttribute("src") else false) || img.src;
+    if src
+      t = new Image()
+      t.src = src
+      return [t.width, t.height]
+    [0,0]
+
   # The scale method is called when
   # the canvas and image need to be
   # sized to the parent container.
   _scale: =>
     unless @options.scaling is false
-      [w, h] = [@image.attr("data-w"), @image.attr("data-h")]
+      [w, h] = [@image.data("w"), @image.data("h")]
       box =
         width: @options.width - @options.padding * 2,
         height: @options.height - @options.padding * 2
@@ -110,7 +122,7 @@ module.exports = class ImageCanvas extends SubView
     [w1, h1] = [@image.width(), @image.height()]
     @_process()
     @processing.size w, h
-    @processing.scale @_scaleFactor
+    @processing.scale w1 / @options.model.get("width")
     @processing.background 0, 0
     engine(@processing, @options, [w1, h1])
 
@@ -123,4 +135,11 @@ module.exports = class ImageCanvas extends SubView
     if value? then @options.height = value
     @afterLoad()
     return @options.height
+
+  repaint: =>
+    @_markup(@options.engine)
+
+  setFeature:(feature) =>
+    @options.feature = feature
+    @afterLoad()
 
