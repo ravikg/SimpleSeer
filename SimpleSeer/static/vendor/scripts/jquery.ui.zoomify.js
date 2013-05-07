@@ -109,7 +109,7 @@ $.widget("ui.zoomify", {
       value: (options.zoom * 100),
       slide: function(event, ui) {
         value = Math.floor(ui.value);
-        $(this).parent().find("input").attr("value", value + "%");
+        $(this).parent().find("input").attr("value",  value + "%");
         self.viewport.zoom = content.find("input").attr("value").replace(/\%/g, "") / 100;
         self.updateDisplay('zoom');
       }
