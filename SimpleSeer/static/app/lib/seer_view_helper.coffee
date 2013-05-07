@@ -168,12 +168,22 @@ Handlebars.registerHelper "resultlist", (results, blacklist) ->
   if !results or results.length is 0
     tpl += "<div data-use=\"no-results\" class=\"centered\">Part Failed: No Results</div>"
   else
+
+    results.map  ((item) => item.mmm = SimpleSeer.measurements.where({name:item.measurement_name})[0])
+    results.sort ((a, b) =>
+      k1 = a.mmm.get('labelkey')
+      k2 = b.mmm.get('labelkey')
+      if k1 > k2 then return 1
+      if k1 is k2 then return 0
+      if k1 < k2 then return -1
+    )
+
     for result in results
       unless ~blacklist.fields.indexOf(result.measurement_name)
         value = result.numeric or ""
         unless value is undefined
-          obj = SimpleSeer.measurements.where({name:result.measurement_name})[0]
-          label = obj.get('label')
+          obj = result.mmm
+          label = "#{obj.get('label')}"
           if obj.get('units')
             unit = if obj.get('units') is "deg" then "&deg;" else " (#{obj.get('units')})"
           else

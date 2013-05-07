@@ -92,19 +92,17 @@ module.exports = class ImageCanvas extends SubView
       box =
         width: @options.width - @options.padding * 2,
         height: @options.height - @options.padding * 2
-
       # Check if we need to scale down the image itself.
       wider = (w > box.width)
       taller = (h > box.height)
-      if(wider or taller)
-        scaleW = box.width / w
-        scaleH = box.height / h
-        @_scaleFactor = Math.min(scaleH, scaleW)
-        @image.width(w * @_scaleFactor)
-        @image.height(h * @_scaleFactor)
-
+      scaleW = box.width / w
+      scaleH = box.height / h
+      @_scaleFactor = Math.min(scaleH, scaleW)
+      @image.width(w * @_scaleFactor)
+      @image.height(h * @_scaleFactor)
       @canvas.width @image.width() + @options.padding * 2
       @canvas.height @image.height() + @options.padding * 2
+
     else
       @canvas.width @options.width
       @canvas.height @options.height
