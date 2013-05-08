@@ -28,6 +28,7 @@ module.exports = class Table extends SubView
   tableClasses: 'table'
   firefox: false
   left: undefined
+  persistentHeader: false
 
   events: =>
     "click th.sortable":"sortByColumn"
@@ -54,6 +55,8 @@ module.exports = class Table extends SubView
     return title
 
   getOptions: =>
+    if @options.persistentHeader?
+      @persistentHeader = @options.persistentHeader
     if @options.sortKey?
       @sortKey = @options.sortKey
     if @options.sortDirection?
@@ -110,7 +113,8 @@ module.exports = class Table extends SubView
     @getOptions()
     @getCollection()
     @on 'page', @infinitePage
-    @on 'scroll', @scrollPage
+    if @persistentHeader
+      @on 'scroll', @scrollPage
 
   getRenderData: =>
     classes: @tableClasses
@@ -329,38 +333,37 @@ module.exports = class Table extends SubView
       @collection.fetch({'success' : @updateData})
 
   updateHeader: =>
-    @$(".table.floater").html('')
-    @$(".table.static .thead").clone().appendTo('.table.floater').css('opacity', 1)
-    @head = @$(".header")
-    @static = @$(".table.static .thead")
-    @floater = @$(".table.floater .thead")
-    @table = @$(".table.static")
-    @hider = @$('.hider')
+    if @persistentHeader
+      console.log "persistent Header"
+      @$(".table.floater").html('')
+      @$(".table.static .thead").clone().appendTo('.table.floater').css('opacity', 1)
+      @head = @$(".header")
+      @static = @$(".table.static .thead")
+      @floater = @$(".table.floater .thead")
+      @table = @$(".table.static")
+      @hider = @$('.hider')
 
-    @hider.width(@static.width() + 12)
-    @head.width(@static.width() + 1)
-    @hider.css('left', @head.offset().left - 10)
+      @hider.width(@static.width() + 12)
+      @head.width(@static.width() + 1)
+      @hider.css('left', @head.offset().left - 10)
 
-    key = undefined
-    w = undefined
-    tot = 0
-    _.each @static.find('.th'), (column) =>
-      col = $(column)
-      key = col.attr('data-key')
-      width = col.width()
-      place = col.find('.placeholder')
-      p = $(place)
-      pwidth = p.width()
-      ppadleft = parseInt(p.css('padding-left'), 10)
-      ppadright = parseInt(p.css('padding-right'), 10)
-      w = pwidth + ppadleft + ppadright + 1
-      h = col.height()
-      tot += w
-      @floater.find(".th[data-key=#{key}]").css('width', w).css('height', h)
+      key = undefined
+      w = undefined
+      _.each @static.find('.th'), (column) =>
+        col = $(column)
+        key = col.attr('data-key')
+        width = col.width()
+        place = col.find('.placeholder')
+        p = $(place)
+        pwidth = p.width()
+        ppadleft = parseInt(p.css('padding-left'), 10)
+        ppadright = parseInt(p.css('padding-right'), 10)
+        w = pwidth + ppadleft + ppadright + 1
+        h = col.height()
+        @floater.find(".th[data-key=#{key}]").css('width', w).css('height', h)
 
-    @floater.find(".th[data-key=#{key}]").css('width', w - 2)
-    @table.css('position', 'relative').css('top', @head.find('.downloads').height() + parseInt(@head.find('.downloads').css('padding-top')) + parseInt(@head.find('.downloads').css('padding-bottom')))
-
+      @floater.find(".th[data-key=#{key}]").css('width', w - 2)
+      @table.css('position', 'relative').css('top', @head.find('.downloads').height() + parseInt(@head.find('.downloads').css('padding-top')) + parseInt(@head.find('.downloads').css('padding-bottom')))
 
   afterRender: =>
     #$(window).resize( _.debounce @packTable, 100 )
@@ -368,6 +371,7 @@ module.exports = class Table extends SubView
       .removeClass("sort-asc sort-desc")
       .addClass("sort-#{@sortDirection}")
       .attr('direction', @sortDirection)
+
     @updateHeader()
     #@packTable()
     #@tbody = @$(".tbody").infiniteScroll {
