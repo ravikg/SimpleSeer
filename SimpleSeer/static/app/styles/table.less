@@ -1,6 +1,7 @@
 .hider {
   height: 10px; position: fixed; 
-  z-index: 999999; background: #eee;
+  z-index: 999999;
+  background: url("../img/MT_EEEEEE.png") repeat;
   margin-top: -10px;
 }
 
@@ -9,6 +10,10 @@
   background-color: #fff;
   z-index: 99999;
   position: fixed;
+
+  .float {
+    float: left;
+  }
 
   .downloads {
     float: right;
@@ -72,6 +77,10 @@
     &:last-child { border-bottom: none; }
     &:nth-child(odd) { background: #fff; }
     &:nth-child(even) { background: #fff; }
+
+    &:nth-child(2n) {
+      background: url("../img/MT_EEEEEE.png") repeat;
+    }
   }
 
   .th, .td {
@@ -109,8 +118,7 @@
 
     .subCols {
       .subCol {
-        width: 50px;
-        float: left;
+
       }
     }
 
@@ -119,6 +127,10 @@
   .td.fail {
     background-color: #FF0000;
     color: #FFFFFF;
+  }
+
+  .thead {
+    background: url("../img/MT_EEEEEE.png") repeat;
   }
 
   .th {

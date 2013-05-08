@@ -26,6 +26,9 @@ module.exports = class Table extends SubView
   sortType: 'collection'
   header: ''
   tableClasses: 'table'
+  firefox: false
+  left: undefined
+  persistentHeader: false
 
   events: =>
     "click th.sortable":"sortByColumn"
@@ -52,6 +55,8 @@ module.exports = class Table extends SubView
     return title
 
   getOptions: =>
+    if @options.persistentHeader?
+      @persistentHeader = @options.persistentHeader
     if @options.sortKey?
       @sortKey = @options.sortKey
     if @options.sortDirection?
@@ -102,11 +107,15 @@ module.exports = class Table extends SubView
 
   initialize: =>
     super()
+    if $.browser.mozilla
+      @firefox = true
     @rows = []
     @getOptions()
     @getCollection()
     @on 'page', @infinitePage
-    @on 'scroll', @scrollPage
+    @scroll = $('#content #slides')
+    if @persistentHeader
+      @on 'scroll', @scrollPage
 
   getRenderData: =>
     classes: @tableClasses
@@ -300,7 +309,7 @@ module.exports = class Table extends SubView
       @sortDirection = 'asc'
       @direction = 1
     @cof = true
-    @collection.fetch({'success':@updateData, 'filtered':true})
+    @collection.fetch({'filtered':true})
 
   formatData:(data) =>
     return data
@@ -309,6 +318,9 @@ module.exports = class Table extends SubView
     super()
 
   updateData: =>
+    if @cof == true
+      @scroll.scrollTop(0)
+      @cof = false
     @rows = []
     if @collection and @collection.models
       @tableData = @collection.models
@@ -322,39 +334,39 @@ module.exports = class Table extends SubView
     #console.log @collection.lastavail
     if @collection.lastavail >= @limit
       @collection.setParam('skip', (@collection.getParam('skip') + @limit))
-      @collection.fetch({'success' : @updateData})
+      @collection.fetch()
 
   updateHeader: =>
-    @$(".table.floater").html('')
-    @$(".table.static .thead").clone().appendTo('.table.floater').css('opacity', 1)
-    @head = @$(".header")
-    @static = @$(".table.static .thead")
-    @floater = @$(".table.floater .thead")
-    @table = @$(".table.static")
-    @hider = @$('.hider')
+    if @persistentHeader
+      @$(".table.floater").html('')
+      @$(".table.static .thead").clone().appendTo('.table.floater').css('opacity', 1)
+      @head = @$(".header")
+      @static = @$(".table.static .thead")
+      @floater = @$(".table.floater .thead")
+      @table = @$(".table.static")
+      @hider = @$('.hider')
 
-    @hider.width(@static.width() + 2)
-    @head.width(@static.width() + 1)
-    #@head.css('top', @table.offset().top)
+      @hider.width(@static.width() + 12)
+      @head.width(@static.width() + 1)
+      @hider.css('left', @head.offset().left - 10)
 
-    key = undefined
-    w = undefined
-    _.each @static.find('.th'), (column) =>
-      col = $(column)
-      key = col.attr('data-key')
-      width = col.width()
-      place = col.find('.placeholder')
-      p = $(place)
-      pwidth = p.width()
-      ppadleft = parseInt(p.css('padding-left'), 10)
-      ppadright = parseInt(p.css('padding-right'), 10)
-      w = pwidth + ppadleft + ppadright + 1
-      h = col.height()
-      @floater.find(".th[data-key=#{key}]").css('width', w).css('height', h)
+      key = undefined
+      w = undefined
+      _.each @static.find('.th'), (column) =>
+        col = $(column)
+        key = col.attr('data-key')
+        width = col.width()
+        place = col.find('.placeholder')
+        p = $(place)
+        pwidth = p.width()
+        ppadleft = parseInt(p.css('padding-left'), 10)
+        ppadright = parseInt(p.css('padding-right'), 10)
+        w = pwidth + ppadleft + ppadright + 1
+        h = col.height()
+        @floater.find(".th[data-key=#{key}]").css('width', w).css('height', h)
 
-    @floater.find(".th[data-key=#{key}]").css('width', w - 2)
-    @table.css('position', 'relative').css('top', @head.find('.downloads').height() + parseInt(@head.find('.downloads').css('padding-top')) + parseInt(@head.find('.downloads').css('padding-bottom')))
-
+      @floater.find(".th[data-key=#{key}]").css('width', w - 2)
+      @table.css('position', 'relative').css('top', @head.find('.downloads').height() + parseInt(@head.find('.downloads').css('padding-top')) + parseInt(@head.find('.downloads').css('padding-bottom')))
 
   afterRender: =>
     #$(window).resize( _.debounce @packTable, 100 )
@@ -362,6 +374,7 @@ module.exports = class Table extends SubView
       .removeClass("sort-asc sort-desc")
       .addClass("sort-#{@sortDirection}")
       .attr('direction', @sortDirection)
+
     @updateHeader()
     #@packTable()
     #@tbody = @$(".tbody").infiniteScroll {
@@ -377,9 +390,14 @@ module.exports = class Table extends SubView
     @updateHeader()
 
   scrollLeft: =>
-    left = $('#content #slides').scrollLeft()
-    offset = @static.offset()
-    @head.css('left', offset.left)
+    l = @scroll.scrollLeft()
+    if l != @left
+      @left = l
+      offset = @static.offset()
+      if @firefox
+        @head.css('left', offset.left - 1)
+      else
+        @head.css('left', offset.left)
 
   scrollPage: (per) =>
     @scrollLeft()
