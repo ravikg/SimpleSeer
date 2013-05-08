@@ -104,6 +104,8 @@ module.exports = class Table extends SubView
 
   initialize: =>
     super()
+    if $.browser.mozilla
+      @firefox = true
     @rows = []
     @getOptions()
     @getCollection()
@@ -355,9 +357,6 @@ module.exports = class Table extends SubView
       h = col.height()
       tot += w
       @floater.find(".th[data-key=#{key}]").css('width', w).css('height', h)
-
-    if $.browser.mozilla
-      @firefox = true
 
     @floater.find(".th[data-key=#{key}]").css('width', w - 2)
     @table.css('position', 'relative').css('top', @head.find('.downloads').height() + parseInt(@head.find('.downloads').css('padding-top')) + parseInt(@head.find('.downloads').css('padding-bottom')))
