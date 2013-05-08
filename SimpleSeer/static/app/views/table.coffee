@@ -26,6 +26,8 @@ module.exports = class Table extends SubView
   sortType: 'collection'
   header: ''
   tableClasses: 'table'
+  firefox: false
+  left: undefined
 
   events: =>
     "click th.sortable":"sortByColumn"
@@ -333,12 +335,13 @@ module.exports = class Table extends SubView
     @table = @$(".table.static")
     @hider = @$('.hider')
 
-    @hider.width(@static.width() + 2)
+    @hider.width(@static.width() + 12)
     @head.width(@static.width() + 1)
-    #@head.css('top', @table.offset().top)
+    @hider.css('left', @head.offset().left - 10)
 
     key = undefined
     w = undefined
+    tot = 0
     _.each @static.find('.th'), (column) =>
       col = $(column)
       key = col.attr('data-key')
@@ -350,7 +353,11 @@ module.exports = class Table extends SubView
       ppadright = parseInt(p.css('padding-right'), 10)
       w = pwidth + ppadleft + ppadright + 1
       h = col.height()
+      tot += w
       @floater.find(".th[data-key=#{key}]").css('width', w).css('height', h)
+
+    if $.browser.mozilla
+      @firefox = true
 
     @floater.find(".th[data-key=#{key}]").css('width', w - 2)
     @table.css('position', 'relative').css('top', @head.find('.downloads').height() + parseInt(@head.find('.downloads').css('padding-top')) + parseInt(@head.find('.downloads').css('padding-bottom')))
@@ -377,9 +384,14 @@ module.exports = class Table extends SubView
     @updateHeader()
 
   scrollLeft: =>
-    left = $('#content #slides').scrollLeft()
-    offset = @static.offset()
-    @head.css('left', offset.left)
+    l = $('#content #slides').scrollLeft()
+    if l != @left
+      @left = l
+      offset = @static.offset()
+      if @firefox
+        @head.css('left', offset.left - 1)
+      else
+        @head.css('left', offset.left)
 
   scrollPage: (per) =>
     @scrollLeft()
