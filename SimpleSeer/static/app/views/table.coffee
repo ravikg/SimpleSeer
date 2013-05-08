@@ -31,8 +31,6 @@ module.exports = class Table extends SubView
     "click th.sortable":"sortByColumn"
     "change input":"changeCell"
 
-  #onScroll:(per) => @pollShadow()
-
   #onPage: =>
   #  console.log 'hit'
   #  @infinitePage()
@@ -108,6 +106,7 @@ module.exports = class Table extends SubView
     @getOptions()
     @getCollection()
     @on 'page', @infinitePage
+    @on 'scroll', @scrollPage
 
   getRenderData: =>
     classes: @tableClasses
@@ -325,14 +324,45 @@ module.exports = class Table extends SubView
       @collection.setParam('skip', (@collection.getParam('skip') + @limit))
       @collection.fetch({'success' : @updateData})
 
+  updateHeader: =>
+    @$(".table.floater").html('')
+    @$(".table.static .thead").clone().appendTo('.table.floater').css('opacity', 1)
+    @head = @$(".header")
+    @static = @$(".table.static .thead")
+    @floater = @$(".table.floater .thead")
+    @table = @$(".table.static")
+    @hider = @$('.hider')
+
+    @hider.width(@static.width() + 2)
+    @head.width(@static.width() + 1)
+    #@head.css('top', @table.offset().top)
+
+    key = undefined
+    w = undefined
+    _.each @static.find('.th'), (column) =>
+      col = $(column)
+      key = col.attr('data-key')
+      width = col.width()
+      place = col.find('.placeholder')
+      p = $(place)
+      pwidth = p.width()
+      ppadleft = parseInt(p.css('padding-left'), 10)
+      ppadright = parseInt(p.css('padding-right'), 10)
+      w = pwidth + ppadleft + ppadright + 1
+      h = col.height()
+      @floater.find(".th[data-key=#{key}]").css('width', w).css('height', h)
+
+    @floater.find(".th[data-key=#{key}]").css('width', w - 2)
+    @table.css('position', 'relative').css('top', @head.find('.downloads').height() + parseInt(@head.find('.downloads').css('padding-top')) + parseInt(@head.find('.downloads').css('padding-bottom')))
+
+
   afterRender: =>
     #$(window).resize( _.debounce @packTable, 100 )
     @$el.find(".th[data-key=#{@sortKey}]")
       .removeClass("sort-asc sort-desc")
       .addClass("sort-#{@sortDirection}")
       .attr('direction', @sortDirection)
-    @thead = @$(".thead")
-    @tbody = @$(".tcontent")
+    @updateHeader()
     #@packTable()
     #@tbody = @$(".tbody").infiniteScroll {
     #  onPage: => @onPage()
@@ -342,12 +372,24 @@ module.exports = class Table extends SubView
     #@tbody.scrollTop(@lastY) if @lastY
     #@packTable()
 
-  #reflow: =>
-  #  super()
-  #  #$(window).resize( _.debounce @packTable, 1000 )
-  #  #@packTable()
+  reflow: =>
+    super()
+    @updateHeader()
 
-  #pollShadow: =>
+  scrollLeft: =>
+    left = $('#content #slides').scrollLeft()
+    offset = @static.offset()
+    @head.css('left', offset.left)
+
+  scrollPage: (per) =>
+    @scrollLeft()
+    @pollShadow(per)
+
+  pollShadow: (per) =>
+    if per > 0
+      @head.addClass('shadow')
+    else 
+      @head.removeClass('shadow')
   #  @lastY = top = @tbody.scrollTop()
   #  @thead.removeClass("shadow")
   #  @thead.addClass("shadow") if top > 0
