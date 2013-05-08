@@ -113,6 +113,7 @@ module.exports = class Table extends SubView
     @getOptions()
     @getCollection()
     @on 'page', @infinitePage
+    @scroll = $('#content #slides')
     if @persistentHeader
       @on 'scroll', @scrollPage
 
@@ -308,7 +309,7 @@ module.exports = class Table extends SubView
       @sortDirection = 'asc'
       @direction = 1
     @cof = true
-    @collection.fetch({'success':@updateData, 'filtered':true})
+    @collection.fetch({'filtered':true})
 
   formatData:(data) =>
     return data
@@ -317,6 +318,9 @@ module.exports = class Table extends SubView
     super()
 
   updateData: =>
+    if @cof == true
+      @scroll.scrollTop(0)
+      @cof = false
     @rows = []
     if @collection and @collection.models
       @tableData = @collection.models
@@ -330,11 +334,10 @@ module.exports = class Table extends SubView
     #console.log @collection.lastavail
     if @collection.lastavail >= @limit
       @collection.setParam('skip', (@collection.getParam('skip') + @limit))
-      @collection.fetch({'success' : @updateData})
+      @collection.fetch()
 
   updateHeader: =>
     if @persistentHeader
-      console.log "persistent Header"
       @$(".table.floater").html('')
       @$(".table.static .thead").clone().appendTo('.table.floater').css('opacity', 1)
       @head = @$(".header")
@@ -387,7 +390,7 @@ module.exports = class Table extends SubView
     @updateHeader()
 
   scrollLeft: =>
-    l = $('#content #slides').scrollLeft()
+    l = @scroll.scrollLeft()
     if l != @left
       @left = l
       offset = @static.offset()
