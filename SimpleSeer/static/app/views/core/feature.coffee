@@ -160,31 +160,39 @@ module.exports = class Feature extends View
         lineWidth = p2[0] - p1[0]
         pjs.fill(color[0],color[1],color[2])
         pjs.stroke(color[0], color[1], color[2])
-        @keyValueBox(pjs, [p1[0] + lineWidth / 2, p1[1] - kv.height / 2], key, val, "center")
+        @keyValueBox(pjs, [p1[0] + lineWidth / 2, p1[1] - kv.height / 2 + style[1]], key, val, "center")
         pjs.fill(color[0],color[1],color[2])
         pjs.stroke(color[0], color[1], color[2])
-        @arrow(pjs, p1, [p1[0] + lineWidth / 2 - kv.width / 2, p1[1]])
-        @arrow(pjs, p2, [p1[0] + lineWidth / 2 + kv.width / 2, p1[1]])
+        @arrow(pjs, p1, [p1[0] + lineWidth / 2 - kv.width / 2, p1[1] + style[1]])
+        @arrow(pjs, p2, [p1[0] + lineWidth / 2 + kv.width / 2, p1[1] + style[1]])
       if align is "left"
         lineWidth = p2[0] - p1[0]
         pjs.fill(color[0],color[1],color[2])
         pjs.stroke(color[0], color[1], color[2])
-        @keyValueBox(pjs, [p1[0] + 30 * @scale, p1[1] - kv.height  / 2], key, val, "left")
+        @keyValueBox(pjs, [p1[0] + 30 * @scale, p1[1] - kv.height  / 2 + style[1]], key, val, "left")
         pjs.fill(color[0],color[1],color[2])
         pjs.stroke(color[0], color[1], color[2])
-        @arrow(pjs, p1, [p1[0] + 30 * @scale, p1[1]])
-        @arrow(pjs, p2, [p1[0] + 30 * @scale + kv.width, p1[1]])
+        @arrow(pjs, [p1[0], p1[1] + style[1]], [p1[0] + 30 * @scale, p1[1] + style[1]])
+        @arrow(pjs, [p2[0], p2[1] + style[1]], [p1[0] + 30 * @scale + kv.width, p1[1] + style[1]])
       if align is "right"
         lineWidth = p2[0] - p1[0]
         pjs.fill(color[0],color[1],color[2])
         pjs.stroke(color[0], color[1], color[2])
-        @keyValueBox(pjs, [p2[0] - 30 * @scale - kv.width, p1[1] - kv.height  / 2], key, val, "left")
+        @keyValueBox(pjs, [p2[0] - 30 * @scale - kv.width, p1[1] - kv.height  / 2 + style[1]], key, val, "left")
         pjs.fill(color[0],color[1],color[2])
         pjs.stroke(color[0], color[1], color[2])
-        @arrow(pjs, p1, [p2[0] - 30 * @scale - kv.width, p1[1]])
-        @arrow(pjs, p2, [p2[0] - 30 * @scale, p1[1]])
-      pjs.line(p1[0], p1[1] - @spacing * @scale, p1[0], p1[1] + @spacing * @scale)
-      pjs.line(p2[0], p2[1] - @spacing * @scale, p2[0], p2[1] + @spacing * @scale)
+        @arrow(pjs, [p1[0], p1[1] + style[1]], [p2[0] - 30 * @scale - kv.width, p1[1] + style[1]])
+        @arrow(pjs, [p2[0], p1[1] + style[1]], [p2[0] - 30 * @scale, p1[1] + style[1]])
+
+      if style[1] is 0
+        pjs.line(p1[0], p1[1] - @spacing * @scale, p1[0], p1[1] + @spacing * @scale)
+        pjs.line(p2[0], p2[1] - @spacing * @scale, p2[0], p2[1] + @spacing * @scale)
+      else if style[1] > 0
+        pjs.line(p1[0], p1[1], p1[0], p1[1] + style[1])
+        pjs.line(p2[0], p2[1], p2[0], p2[1] + style[1])
+      else
+        pjs.line(p1[0], p1[1] + style[1], p1[0], p1[1])
+        pjs.line(p2[0], p2[1] + style[1], p2[0], p2[1])
 
   boundingBox: (pjs, bb, offset=0, position, color, id, label) =>
     bb = _.clone bb
