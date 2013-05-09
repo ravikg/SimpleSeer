@@ -51,13 +51,9 @@ def ControlsCommand(self):
 
 @Command.simple(use_gevent=True)
 def OlapCommand(self):
-    try:
-        from SeerCloud.OLAPUtils import ScheduledOLAP, RealtimeOLAP, OLAPData
-        from SeerCloud.backfill import MetaSchedule
-    except:
-        print 'Error starting OLAP schedules.  This requires Seer Cloud'
-        return 0
-    
+    from SeerCloud.OLAPUtils import ScheduledOLAP, RealtimeOLAP, OLAPData
+    from SeerCloud.backfill import MetaSchedule
+
     from SimpleSeer.models.Inspection import Inspection, Measurement
 
     try:
@@ -66,7 +62,11 @@ def OlapCommand(self):
 
         # The olap cache manager
         od = OLAPData()
-        gevent.spawn_link_exception(od.listen)
+        gevent.spawn_link_exception(od.listenReq)
+        gevent.spawn_link_exception(od.listenDel)
+        
+        import time; time.sleep(1)
+        Inspection.objects.count()
         
         # Schedule olaps (olaps with stats)
         so = ScheduledOLAP()
@@ -180,47 +180,74 @@ def OPCCommand(self):
         ChannelManager().publish('opc/', data)
         counter = tagcounter
 
-@Command.simple(use_gevent=False)
-def ScrubCommand(self):
-    from SimpleSeer.realtime import ChannelManager
-    
-    'Run the frame scrubber'
-    from SimpleSeer import models as M
-    retention = self.session.retention
-    if not retention:
-        self.log.info('No retention policy set, skipping cleanup')
-        return
-    while retention['interval']:
-        if not M.Frame._get_db().metaschedule.count():
-            q_csr = M.Frame.objects(imgfile__ne = None)
-            q_csr = q_csr.order_by('-capturetime')
-            q_csr = q_csr.skip(retention['maxframes'])
-            numframes = q_csr.count()
-            for f in q_csr:
-                # clean out the fs.files and .chunks
-                f.imgfile.delete()
-                f.imgfile = None
+
+class ScrubCommand(Command):
+    use_gevent = False
+    def __init__(self, subparser):
+        subparser.add_argument("-t", "--thumbnails", dest="thumbnails", default=False, action="store_true")
         
-                if retention.get('purge',False):
-                    f.delete()
-                else:
-                    f.save(False)
+    def run(self):
+        from SimpleSeer.realtime import ChannelManager
         
-            # Rebuild the cache
-            res = ChannelManager().rpcSendRequest('olap_req/', {'action': 'rebuild'})
+        'Run the frame scrubber'
+        from SimpleSeer import models as M
         
-            # This line of code needed to solve fragmentation bug in mongo
-            # Can run very slow when run on large collections
-            db = M.Frame._get_db()
-            if 'fs.files' in db.collection_names():
-                db.command({'compact': 'fs.files'})
-            if 'fs.chunks' in db.collection_names():
-                db.command({'compact': 'fs.chunks'})
+        if self.options.thumbnails:
+            self.log.info("Scrubbing cached thumbnails from Frame collection")
+            for f in M.Frame.objects(thumbnail_file__ne = None):
+                f.thumbnail_file.delete()
+                f.thumbnail_file = None
+                f.save(publish = False)
+            return
         
-            self.log.info('Purged %d frame files', numframes)
-        else:
-            self.log.info('Backfill running.  Waiting to scrub')
-        time.sleep(retention["interval"])
+        
+        retention = self.session.retention
+        if not retention:
+            self.log.info('No retention policy set, skipping cleanup')
+            return
+            
+        first_capturetime = ''
+        while retention['interval']:
+            if not M.Frame._get_db().metaschedule.count():
+                q_csr = M.Frame.objects(imgfile__ne = None)
+                q_csr = q_csr.order_by('-capturetime')
+                q_csr = q_csr.skip(retention['maxframes'])
+                numframes = q_csr.count()
+                self.log.info("Preparing to scrub {} files".format(numframes))
+                index = 0
+                for f in q_csr:
+                    if not first_capturetime:
+                        first_capturetime = f.capturetime_epoch
+                    # clean out the fs.files and .chunks
+                    f.imgfile.delete()
+                    f.imgfile = None
+                    
+                    index += 1
+                    if retention.get('purge',False):
+                        f.delete(publish = False)
+                        if not index % 100:
+                            self.log.info("deleted {} frames".format(index))
+                    else:
+                        if not index % 100:
+                            self.log.info("deleted image from {} frames".format(index))
+                        f.save(False)
+            
+                # Rebuild the cache
+                if retention.get('purge', False):
+                    res = ChannelManager().rpcSendRequest('olap_req/', {'action': 'scrub', 'capturetime_epoch__lte': first_capturetime})
+            
+                # This line of code needed to solve fragmentation bug in mongo
+                # Can run very slow when run on large collections
+                db = M.Frame._get_db()
+                if 'fs.files' in db.collection_names():
+                    db.command({'compact': 'fs.files'})
+                if 'fs.chunks' in db.collection_names():
+                    db.command({'compact': 'fs.chunks'})
+            
+                self.log.info('Scrubbed %d frame files', numframes)
+            else:
+                self.log.info('Backfill in progress.  Waiting to scrub')
+            time.sleep(retention["interval"])
 
 @Command.simple(use_gevent=False)
 def ShellCommand(self):

@@ -1,11 +1,8 @@
 Application = require 'application'
 SubView = require 'views/core/subview'
-Template = require './templates/table'
-RowTemplate = require './templates/row'
+Template = require './templates/table2'
+RowTemplate = require './templates/row2'
 Collection = require "collections/table"
-
-# Standardized Table View
-# @TODO: Fix the sorting issue -- collection set array is in reverse order
 
 module.exports = class Table extends SubView
   template: Template
@@ -22,20 +19,44 @@ module.exports = class Table extends SubView
   editable: true
   renderComplete: false
   lastY: 0
-  limit: 50
+  limit: 100
   direction: -1
   insertDirection: -1
-  scrollThreshold: 4
+  #scrollThreshold: 4
+  sortType: 'collection'
+  header: ''
+  tableClasses: 'table'
+  firefox: false
+  left: undefined
+  persistentHeader: false
 
   events: =>
-    "click .th" : "sortByColumn"
-    "change .tbody input" : "changeCell"
+    "click th.sortable":"sortByColumn"
+    "change input":"changeCell"
 
-  onScroll:(per) => @pollShadow()
+  #onPage: =>
+  #  console.log 'hit'
+  #  @infinitePage()
 
-  onPage: => @infinitePage()
+  getColumnKeyByTitle: (title) =>
+    key = null
+    _.each @tableCols, (col) =>
+      if col.title == title
+        key = col.key
+
+    return key
+
+  getColumnTitleByKey: (key) =>
+    title = null
+    _.each @tableCols, (col) =>
+      if col.key == key
+        title = col.title
+
+    return title
 
   getOptions: =>
+    if @options.persistentHeader?
+      @persistentHeader = @options.persistentHeader
     if @options.sortKey?
       @sortKey = @options.sortKey
     if @options.sortDirection?
@@ -44,6 +65,8 @@ module.exports = class Table extends SubView
         @sortDirection = 'asc'
       else
         @sortDirection = 'desc'
+    if @options.tableKey?
+      @tableKey = @options.tableKey
     if @options.editable?
       @editable = @options.editable
     if !@options.tableCols?
@@ -60,22 +83,43 @@ module.exports = class Table extends SubView
       @_url = "api/frame"
 
   getCollection: =>
-    @collection = new @_collection([],{model:@_model,clearOnFetch:@cof,url:@_url})
+    bindFilter = Application.context[@options.parent.dashboard.options.parent.options.context].filtercollection
+    @collection = new @_collection([],{bindFilter:bindFilter,model:@_model,clearOnFetch:@cof,url:@_url})
     if !@options.collection_model
-      if @sortKey == 'capturetime'
-        @collection.setParam 'sortkey', 'capturetime_epoch'
-      else
-        @collection.setParam 'sortkey', @sortKey
+      @collection.setParam 'sortkey', @getSortKey(@sortKey)
       @collection.setParam 'sortorder', @direction
+      @collection.setParam 'limit', @limit
+    @collection.on('reset',@updateData)
     @collection.fetch()
+    #@collection.fetch({'success':@updateData})
+    @subscribe()
+
+  subscribe: (channel="") =>
+    if channel
+      namePath = channel + "/"
+      if application.socket
+        application.socket.removeListener "message:#Chart/#{namePath}", @chartCheck
+        application.socket.on "message:Chart/#{namePath}", @chartCheck
+        #console.info "binding to: message:Chart/#{namePath}"
+        if !application.subscriptions["Chart/#{namePath}"]
+          #console.info "subscribing to: #{@subscribePath}/#{namePath}"
+          application.subscriptions["Chart/#{namePath}"] = application.socket.emit 'subscribe', "Chart/#{namePath}"
 
   initialize: =>
     super()
+    if $.browser.mozilla
+      @firefox = true
     @rows = []
     @getOptions()
     @getCollection()
+    @on 'page', @infinitePage
+    @scroll = $('#content #slides')
+    if @persistentHeader
+      @on 'scroll', @scrollPage
 
   getRenderData: =>
+    classes: @tableClasses
+    header: @header
     cols: @tableCols
     rows: @rows
     pageButtons: @options.page == "page"
@@ -124,115 +168,137 @@ module.exports = class Table extends SubView
         input.focus()
     ###
 
+  # Returns the tableCol given a key
+  getTableCol: (cols, key) =>
+    col = null
+    _.each cols, (a, b) =>  
+      if a.key == key
+        col = a
+    return col
+
   # Render the cell
   renderCell:(raw, key) =>
-    value =
-      html: ""
-      raw: raw
-    # Special cases go here? Human readable, etc.
-    parentKey = key
     v = raw
+    html = ''
+    tableCol = @getTableCol(@tableCols, key)
 
-    # Process the cell for an editable field
-    if @editable
-      if @isEditable(@tableCols, key)
-        subcols = @subCols(key)
-        if subcols
-          html = '<div class="subCols">'
-          $.each subcols, (k, v) =>
-            key = v.key
-            path = key.split('-')
-            val = ''
-            if v? and v and v[path[2]]? and v[path[2]]
-              val = v[path[2]]
-            placeholder = v.title
-            if @isEditable(subcols, key)
+    # Generate the html
+    if typeof v == 'object' # Complicated render
+      if tableCol.editable
+        if tableCol.subCols
+          html += '<div class="subCols">'
+          _.each tableCol.subCols, (a, b) =>
+            col = a
+            if col.editable # Sub column is editable
+              value = ''
+              placeholder = if col.placeholder then col.placeholder else col.title
+              _.each v, (field) =>
+                if field.key == col.key
+                  value = field.value
               args = {
                 placeholder: placeholder
                 type: 'text'
-                name: parentKey + '-' + path[2]
-                v: val
-                class: parentKey + '-' + path[2]
+                name: key + '-' + col.key
+                value: value
+                class: key + '-' + col.key
               }
               html += '<div class="subCol">'
               html += "<input "
               $.each args, (k, v) =>
                 html += k + '="' + v + '" '
               html += "/></div>"
-            else
-              html += '<div class="' + parentKey + '.' + key + '">' + val + '</div>';
+          html += '</div>'
+        else 
+          col = tableCol
+          if col.editable # Sub column is editable
+            value = ''
+            placeholder = if col.placeholder then col.placeholder else col.title
+            _.each v, (field) =>
+              if field.key == col.key
+                value = field.value
+            args = {
+              placeholder: placeholder
+              type: 'text'
+              name: col.key
+              value: value
+              class: col.key
+            }
+            html += "<input "
+            $.each args, (k, v) =>
+              html += k + '="' + v + '" '
+            html += "/>"
+      else # Not editable, return self
+        v = v
+    else # Simple render
+      v = v
 
-          html += '</div>';
-          v = html
-        else
-          # @TODO: Pull nullval into scope here
-          args = {
-            placeholder: v
-            type: 'text'
-            v: v
-            class: key
-          }
-          html = "<input "
-          $.each args, (k, v) =>
-            html += k + '="' + v + '" '
-          html += "/>"
-          v = html
+    if !html
+      html = v
 
-    value['html'] = if v then v else raw
+    value =
+      html: html
+      raw: raw
     return value
 
   changeCell:(e) =>
-    ###
-    console.log "Saved cell"
-    '''target = $(e.target)
+    target = $(e.target)
     id = target.parents('tr').attr('id')
-    key = target.attr('class')
-    value = target.val();
-    if id and key and value
-      frame = @collection.get(id)
-      o = key.split('-')
-      if o.length > 1
-        p = frame.get(o[0])
-        if !p[o[1]]?
-          p[o[1]] = {}
-        p[o[1]][o[2]] = value
-        @saveCell(frame, p, p[0])
-      else
-        obj = {}
-        obj[key] = value
-        @saveCell(frame, obj)'''
-    ###
+    cls = target.attr('class')
+    spl = cls.split('-')
+    if spl[0]
+      key = spl[0]
+    if spl[1]
+      subkey = spl[1]
+    title = @getColumnTitleByKey(key)
+    value = target.val()
+
+    obj =
+      target: target
+      id: id
+      cls: cls
+      key: key
+      subkey: subkey
+      title: title
+      value: value
+    @saveCell(obj)
 
   saveCell:(frame, obj, key = '') =>
     frame.save if key then {key: obj} else obj
 
   renderRow:(row) =>
     values = []
-    $.each @tableCols, (k, v) =>
-      path = v.key.split '-'
+    classes = if row.classes then row.classes else {}
+    id = if row.id then row.id else ''
+
+    _.each @tableCols, (v, k) =>
       key = v.key
-      if path.length > 1
-        r = row.get path[0]
-        val = r[path[1]]
-      else
-        val = row.get path[0]
+      val = row[v.key]
       value = @renderCell(val, key)
-      values.push {'class' : v.key, 'value' : value}
+      cls = v.key
+      if classes and classes[key]
+        cls += ' ' + classes[key]
+      values.push {'class' : cls, 'value' : value}
 
     return {id: row.id, values: values}
 
   insertRow:(row, insertDirection = 1) =>
     markup = @rowTemplate @renderRow(row)
     if insertDirection is -1
-      @rows.unshift(markup)
-    else
       @rows.push(markup)
+    else
+      @rows.unshift(markup)
+
+  getSortKey: (k) =>
+    key = k
+    key = if k is "capturetime" then 'capturetime_epoch' else key
+    return key
 
   sortByColumn:(e, set) =>
     key = $(e.currentTarget).data('key')
     direction = $(e.currentTarget).attr('direction') || "desc"
+    k = @getSortKey(key)
     if !set
-      @collection.setParam 'sortkey', if key is "capturetime" then 'capturetime_epoch' else key
+      @collection.setParam 'sortkey', k
     @sortKey = key
     if direction == "asc"
       @collection.setParam 'sortorder', -1
@@ -243,52 +309,112 @@ module.exports = class Table extends SubView
       @sortDirection = 'asc'
       @direction = 1
     @cof = true
-    @collection.fetch
-      filtered:true
+    @collection.fetch({'filtered':true})
 
   formatData:(data) =>
     return data
 
+  render: =>
+    super()
+
   updateData: =>
+    if @cof == true
+      @scroll.scrollTop(0)
+      @cof = false
     @rows = []
-    data = @formatData(@collection.models)
+    if @collection and @collection.models
+      @tableData = @collection.models
+    data = @formatData(@tableData)
     _.each data, (model) =>
       @insertRow(model, @insertDirection)
     @render()
-    @packTable()
+    @clearCache()
 
   infinitePage: =>
+    #console.log @collection.lastavail
     if @collection.lastavail >= @limit
       @collection.setParam('skip', (@collection.getParam('skip') + @limit))
       @collection.fetch()
 
+  updateHeader: =>
+    if @persistentHeader
+      @$(".table.floater").html('')
+      @$(".table.static .thead").clone().appendTo('.table.floater').css('opacity', 1)
+      @head = @$(".header")
+      @static = @$(".table.static .thead")
+      @floater = @$(".table.floater .thead")
+      @table = @$(".table.static")
+      @hider = @$('.hider')
+
+      @hider.width(@static.width() + 12)
+      @head.width(@static.width() + 1)
+      @hider.css('left', @head.offset().left - 10)
+
+      key = undefined
+      w = undefined
+      _.each @static.find('.th'), (column) =>
+        col = $(column)
+        key = col.attr('data-key')
+        width = col.width()
+        place = col.find('.placeholder')
+        p = $(place)
+        pwidth = p.width()
+        ppadleft = parseInt(p.css('padding-left'), 10)
+        ppadright = parseInt(p.css('padding-right'), 10)
+        w = pwidth + ppadleft + ppadright + 1
+        h = col.height()
+        @floater.find(".th[data-key=#{key}]").css('width', w).css('height', h)
+
+      @floater.find(".th[data-key=#{key}]").css('width', w - 2)
+      @table.css('position', 'relative').css('top', @head.find('.downloads').height() + parseInt(@head.find('.downloads').css('padding-top')) + parseInt(@head.find('.downloads').css('padding-bottom')))
+
   afterRender: =>
-    $(window).resize( _.debounce @packTable, 100 )
+    #$(window).resize( _.debounce @packTable, 100 )
     @$el.find(".th[data-key=#{@sortKey}]")
       .removeClass("sort-asc sort-desc")
       .addClass("sort-#{@sortDirection}")
       .attr('direction', @sortDirection)
-    @thead = @$(".thead")
-    @tbody = @$(".tbody").infiniteScroll {
-      onPage: => @onPage()
-      onScroll: => @onScroll()
-    }
-    @content = @tbody.find(".tscroll")
-    @tbody.scrollTop(@lastY) if @lastY
-    @packTable()
+
+    @updateHeader()
+    #@packTable()
+    #@tbody = @$(".tbody").infiniteScroll {
+    #  onPage: => @onPage()
+    #  onScroll: => @onScroll()
+    #}
+    #@content = @tbody.find(".tscroll")
+    #@tbody.scrollTop(@lastY) if @lastY
+    #@packTable()
 
   reflow: =>
     super()
-    @packTable()
+    @updateHeader()
 
-  pollShadow: =>
-    @lastY = top = @tbody.scrollTop()
-    @thead.removeClass("shadow")
-    @thead.addClass("shadow") if top > 0
+  scrollLeft: =>
+    l = @scroll.scrollLeft()
+    if l != @left
+      @left = l
+      offset = @static.offset()
+      if @firefox
+        @head.css('left', offset.left - 1)
+      else
+        @head.css('left', offset.left)
 
-  getScrollbar: =>
-    distance = @tbody.width() - @content.width().top
-    return (if distance > @scrollThreshold then distance else 0)
+  scrollPage: (per) =>
+    @scrollLeft()
+    @pollShadow(per)
+
+  pollShadow: (per) =>
+    if per > 0
+      @head.addClass('shadow')
+    else 
+      @head.removeClass('shadow')
+  #  @lastY = top = @tbody.scrollTop()
+  #  @thead.removeClass("shadow")
+  #  @thead.addClass("shadow") if top > 0
+
+  #getScrollbar: =>
+  #  distance = @tbody.width() - @content.width().top
+  #  return (if distance > @scrollThreshold then distance else 0)
 
   getCellStats:(index, colData) =>
     if( @widthCache[index] ) then return @widthCache[index]
@@ -305,7 +431,11 @@ module.exports = class Table extends SubView
       average: avg
     return @widthCache[index]
 
+  clearCache: =>
+    @widthCache = {}
+
   packTable: =>
+    return
     cellGroups = @tbody.find(".cell-group + .cell-group")
     colCount = @thead.find(".th").length
     colWidths = []
@@ -330,7 +460,7 @@ module.exports = class Table extends SubView
       td = cachedColumns[i].css("width", largest)
       newCols.push $(td[0]).outerWidth()
     sum = _.reduce(newCols, (a, b) -> a + b)
-    selfWidth = @content.width()
+    selfWidth = @tbody.width()
     if sum >= selfWidth
       gaps = []
       distance = sum - selfWidth - 2

@@ -1,4 +1,7 @@
-<div class="table">
+{{#if header}}
+  {{{header}}}
+{{/if}}
+<div class="{{classes}}">
   <div class="thead">
     {{#each cols}}
       <div class="th {{#if this.sortable}}sortable{{/if}}" title="{{this.title}}" data-key="{{this.key}}">
@@ -7,12 +10,9 @@
     {{/each}}
   </div>
   <div class="tcontent">
-    <div class="tbody">
-      <div class="tscroll infs-wrapper">
         {{#each rows}}
           {{{this}}}
         {{/each}}
-      </div>
-    </div>
+        <div style="clear:both;"></div>
   </div>
 </div>

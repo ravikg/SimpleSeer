@@ -1,0 +1,19 @@
+<div class="hider">
+</div>
+{{#if header}}
+  {{{header}}}
+{{/if}}
+<table class="{{classes}} static">
+    <thead class="thead">
+	   {{#each cols}}
+	       <th class="th {{#if this.sortable}}sortable{{/if}}" title="{{this.title}}" data-key="{{this.key}}">
+	           <div class="placeholder">{{this.title}}</div>
+	       </th>
+	   {{/each}}
+    </thead>
+    <tbody class="tbody">
+        {{#each rows}}
+            {{{this}}}
+        {{/each}}
+    </tbody>
+</table>

@@ -28,7 +28,7 @@ module.exports = class FilterCollection extends Collection
   # `url` is the path to the restful filter object
   url:"/getFrames"
   # `subscribePath` is the channel the `subscribe` method (websocket/pubsub) uses to listen for events 
-  subscribePath:"frame"
+  subscribePath:"Frame"
   # if `mute` is true, altering the query params will not fire a request to the server.  This is typically used for parent level filtercollections that have other filtercollection bound to it  
   mute:false
   # if clearOnFetch is true, the filtercollection will clear its models list for every request (page by page, or changing filters).
@@ -109,7 +109,7 @@ module.exports = class FilterCollection extends Collection
     else
       namePath = ''
     #if application.debug
-      #console.info "series:  subscribing to channel "+"message:#{@subscribePath}/#{namePath}"
+    #console.info "series:  subscribing to channel "+"message:#{@subscribePath}/#{namePath}"
     if application.socket
       application.socket.on "message:#{@subscribePath}/#{namePath}", callback
       #console.info "binding to: message:#{@subscribePath}/#{namePath}"
@@ -120,7 +120,7 @@ module.exports = class FilterCollection extends Collection
   #trigger fired when receiving data on the pubsub subscription.
   receive: (data) =>
     _obj = new @model data.data
-    if @getParam 'sortorder' == -1
+    if @getParam('sortorder') == -1
       at = 0
     else
       at = (@models.length)
@@ -203,7 +203,7 @@ module.exports = class FilterCollection extends Collection
         order: @getParam 'sortorder'
         
     if limit != false
-      _json['sortinfo']['limit'] = limit
+      _json['limit'] = limit
     if @getParam('groupby')
       _json['groupByField'] = {groupby: @getParam('groupby'), groupfns: @getParam('groupfns')}
     if addParams
@@ -233,15 +233,15 @@ module.exports = class FilterCollection extends Collection
   postFetch:()=>
     application.modal.onSuccess()
     if !@clearOnFetch
-      if @getParam 'sortorder' == -1
+      if @getParam('sortorder') == -1
         at = 0
       else
-        at = (@models.length)
+        at = (@_all.length)
       @add @_all, {at:at ,silent: true}
       @_all = []
-    for i,o of @callbackStack['post']
+    for o in @callbackStack['post']
       if typeof o == 'function'
-        o()        
+        o()
     @callbackStack['post'] = []
     @trigger 'reset', @models
     return
@@ -273,12 +273,15 @@ module.exports = class FilterCollection extends Collection
   # - __before__: fires before the fetch makes request to server
   # - __success__: fires after the fetch makes request to server
   fetch: (params={}) =>
+    #console.dir params
+    #console.log params
     if !params.modal?
       params.modal = {message:'<p class="large center">Loading<p>',throbber:true}
     if params.filtered and @clearOnFetch == false
       @clearOnFetch = true
       @callbackStack['post'].push => @clearOnFetch = false
-
+    if !params.error?
+      params.error = => console.error 'generic request error'
     params['silent'] = true
     @preFetch(params)
     if params.forceRefresh
@@ -286,11 +289,15 @@ module.exports = class FilterCollection extends Collection
     total = params.total || false
     _url = @baseUrl+@getUrl(total,params['params']||false)
     for o in @_boundCollections
+      #TODO: TRACE WHERE THIS DAMN PARAM IS COMING FROM 
+      delete params.success
       o.fetch(params)
     if !@mute
       @_all = @models
-      @callbackStack['pre'].push params.before
-      @callbackStack['post'].push params.success
+      if params.before
+        @callbackStack['pre'].push params.before
+      if params.success
+        @callbackStack['post'].push params.success
       params.success = @postFetch
       if @url != _url or params.force
         @url = _url
@@ -303,7 +310,7 @@ module.exports = class FilterCollection extends Collection
     @totalavail = response.total_frames
     @lastavail = response.frames?.length || 0
     @setRaw (response)
-    dir = @getParam 'sortorder'
-    if dir and response.frames
-      response.frames = response.frames.reverse()
+    #dir = @getParam 'sortorder'
+    #if dir and response.frames
+    #  response.frames = response.frames.reverse()
     return response.frames

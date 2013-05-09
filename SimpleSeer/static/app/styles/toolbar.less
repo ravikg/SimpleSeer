@@ -1,3 +1,13 @@
+.menu-widget {
+  padding:10px;
+  input {
+    width: 100%;
+  }
+  textarea {
+    width: 100%;
+  }
+}
+
 #toolbar {
   float: left;
   height: 100%;
@@ -23,6 +33,7 @@
       background: #999ca4;
       border-top: 1px solid #B9BCC3;
       border-bottom: 1px solid #2c2d30;
+      display: block;
 
       &.blue {
         border-top-color: #0090CD;
@@ -77,7 +88,7 @@
 
 #toolbar.expanded {
   width: 237px;
-  overflow-y: hidden;
+  overflow-y: auto;
   overflow-x: hidden;
 
   #toolbar-toggle {
@@ -108,7 +119,7 @@
     display: block;
     left: 0px;
     top: 0px;
-    width: 237px;
+    /*width: 237px;*/
 
     border: none;
     border-radius: 0px;
@@ -120,4 +131,8 @@
 
 #toolbar.expanded + #content {
   padding-left: 238px;
+}
+
+#toolbar.expanded + .controlPane {
+  width: 234px;
 }
