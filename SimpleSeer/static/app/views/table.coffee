@@ -365,7 +365,8 @@ module.exports = class Table extends SubView
         @floater.find(".th[data-key=#{key}]").css('width', w).css('height', h)
 
       @floater.find(".th[data-key=#{key}]").css('width', w - 2)
-      @table.css('position', 'relative').css('top', @head.find('.downloads').height() + parseInt(@head.find('.downloads').css('padding-top')) + parseInt(@head.find('.downloads').css('padding-bottom')))
+      @table.css('position', 'relative')
+      #@table.css('position', 'relative').css('top', @head.find('.downloads').height() + parseInt(@head.find('.downloads').css('padding-top')) + parseInt(@head.find('.downloads').css('padding-bottom')))
 
   afterRender: =>
     #$(window).resize( _.debounce @packTable, 100 )
