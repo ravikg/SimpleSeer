@@ -74,15 +74,6 @@ module.exports = class ImageCanvas extends SubView
       "left": "#{left - @options.padding}px"
       "top": "#{top - @options.padding}px"
 
-  # Get the real image size
-  _getOriginalSize: (img) =>
-    src = (if img.getAttribute then img.getAttribute("src") else false) || img.src;
-    if src
-      t = new Image()
-      t.src = src
-      return [t.width, t.height]
-    [0,0]
-
   # The scale method is called when
   # the canvas and image need to be
   # sized to the parent container.
@@ -102,7 +93,6 @@ module.exports = class ImageCanvas extends SubView
       @image.height(h * @_scaleFactor)
       @canvas.width @image.width() + @options.padding * 2
       @canvas.height @image.height() + @options.padding * 2
-
     else
       @canvas.width @options.width
       @canvas.height @options.height

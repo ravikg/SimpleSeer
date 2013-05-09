@@ -87,6 +87,7 @@ module.exports = class Feature extends View
     totalW = (@stroke * 2) + (margin * 2) + labelW
     totalH = (@stroke * 2) + (margin * 2) + (@font_size * @scale) - (2 * @scale)
     unless mock is true
+      pjs.strokeWeight(@stroke * @scale)
       pjs.rect(x, y, totalW, totalH)
       pjs.text(label, x + totalW / 2, y + margin)
     return {width: totalW, height: totalH}
@@ -134,6 +135,7 @@ module.exports = class Feature extends View
       [e, f] = [
         a + @arrow_size * @scale * pjs.cos(angle + @deg2rad(30)),
         b + @arrow_size * @scale * pjs.sin(angle + @deg2rad(30)) ]
+      pjs.strokeWeight(@stroke * @scale)
       pjs.triangle(a, b, c, d, e, f)
       pjs.line(a, b, x, y)
 
@@ -141,6 +143,7 @@ module.exports = class Feature extends View
     [x0, y0] = xy
     x1 = x0 + angle_width
     y1 = y0
+    pjs.strokeWeight(@stroke * @scale)
     pjs.line(x0, y0, x1, y1)
     pjs.line(x0, y0 + angle_height, x1, y1)
     pjs.noFill()
@@ -154,8 +157,9 @@ module.exports = class Feature extends View
       d0 = p2[0] - p1[0]
       d1 = p2[1] - p1[1]
       if (d0 > d1) then (p2[1] = p1[1]) else (p2[0] = p1[0])
+    pjs.strokeWeight(@stroke * @scale)
 
-    if p1[1] is p2[1]
+    if p1[1] is p2[1] # Horizontal
       if align is "center"
         lineWidth = p2[0] - p1[0]
         pjs.fill(color[0],color[1],color[2])
@@ -163,8 +167,8 @@ module.exports = class Feature extends View
         @keyValueBox(pjs, [p1[0] + lineWidth / 2, p1[1] - kv.height / 2 + style[1]], key, val, "center")
         pjs.fill(color[0],color[1],color[2])
         pjs.stroke(color[0], color[1], color[2])
-        @arrow(pjs, p1, [p1[0] + lineWidth / 2 - kv.width / 2, p1[1] + style[1]])
-        @arrow(pjs, p2, [p1[0] + lineWidth / 2 + kv.width / 2, p1[1] + style[1]])
+        @arrow(pjs, [p1[0], p1[1] + style[1]], [p1[0] + lineWidth / 2 - kv.width / 2, p1[1] + style[1]])
+        @arrow(pjs, [p2[0], p2[1] + style[1]], [p1[0] + lineWidth / 2 + kv.width / 2, p1[1] + style[1]])
       if align is "left"
         lineWidth = p2[0] - p1[0]
         pjs.fill(color[0],color[1],color[2])
@@ -203,6 +207,7 @@ module.exports = class Feature extends View
     pjs.line(bb[0][0], bb[0][1], bb[1][0], bb[1][1])
     kv = @mockKeyValueBox(pjs, id, label)
     pjs.fill(color[0],color[1],color[2])
+    pjs.strokeWeight(@stroke * @scale)
     unless offset is 0
       pjs.line(pt1[0], pt1[1], pt1[0] + offset, pt1[1])
       pjs.line(pt2[0], pt2[1], pt2[0] + offset, pt2[1])
@@ -219,10 +224,12 @@ module.exports = class Feature extends View
 
   arrowBox: (pjs, lined, offset=0, position, color, id, label) =>
     pjs.fill(color[0],color[1],color[2])
+    pjs.strokeWeight(@stroke * @scale)
     pjs.stroke(color[0], color[1], color[2])
     p1 = [parseInt(lined[0][0], 10), parseInt(lined[0][1], 10)]
     p2 = [parseInt(lined[1][0], 10), parseInt(lined[1][1], 10)]
     kv = @mockKeyValueBox(pjs, id, label)
+    pjs.strokeWeight(@stroke * @scale)
     pjs.fill(color[0],color[1],color[2])
     unless offset is 0
       pjs.line(p1[0], p1[1], p1[0] + offset, p1[1])
