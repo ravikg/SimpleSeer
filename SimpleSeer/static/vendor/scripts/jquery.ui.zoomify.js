@@ -112,6 +112,9 @@ $.widget("ui.zoomify", {
         $(this).parent().find("input").attr("value",  value + "%");
         self.viewport.zoom = content.find("input").attr("value").replace(/\%/g, "") / 100;
         self.updateDisplay('zoom');
+        self.viewport.x = content.find(".frame").position().left;
+        self.viewport.y = content.find(".frame").position().top;
+        self.updateDisplay('pan');
       }
     });
 
