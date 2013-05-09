@@ -158,7 +158,8 @@ module.exports = class Feature extends View
       d1 = p2[1] - p1[1]
       if (d0 > d1) then (p2[1] = p1[1]) else (p2[0] = p1[0])
     pjs.strokeWeight(@stroke * @scale)
-    if p1[1] is p2[1]
+
+    if p1[1] is p2[1] # Horizontal
       if align is "center"
         lineWidth = p2[0] - p1[0]
         pjs.fill(color[0],color[1],color[2])
