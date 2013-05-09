@@ -166,8 +166,8 @@ module.exports = class Feature extends View
         @keyValueBox(pjs, [p1[0] + lineWidth / 2, p1[1] - kv.height / 2 + style[1]], key, val, "center")
         pjs.fill(color[0],color[1],color[2])
         pjs.stroke(color[0], color[1], color[2])
-        @arrow(pjs, p1, [p1[0] + lineWidth / 2 - kv.width / 2, p1[1] + style[1]])
-        @arrow(pjs, p2, [p1[0] + lineWidth / 2 + kv.width / 2, p1[1] + style[1]])
+        @arrow(pjs, [p1[0], p1[1] + style[1]], [p1[0] + lineWidth / 2 - kv.width / 2, p1[1] + style[1]])
+        @arrow(pjs, [p2[0], p2[1] + style[1]], [p1[0] + lineWidth / 2 + kv.width / 2, p1[1] + style[1]])
       if align is "left"
         lineWidth = p2[0] - p1[0]
         pjs.fill(color[0],color[1],color[2])
