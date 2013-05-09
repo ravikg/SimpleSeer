@@ -331,8 +331,7 @@ module.exports = class Table extends SubView
     @clearCache()
 
   infinitePage: =>
-    #console.log @collection.lastavail
-    if @collection.lastavail >= @limit
+    if @collection and @collection.lastavail >= @limit
       @collection.setParam('skip', (@collection.getParam('skip') + @limit))
       @collection.fetch()
 
