@@ -137,7 +137,7 @@ module.exports = class Feature extends View
       pjs.triangle(a, b, c, d, e, f)
       pjs.line(a, b, x, y)
 
-  anglePlatform:(pjs, xy, angle_width, angle_height=29) =>
+  anglePlatform:(pjs, xy, angle_width, angle_height=29*@scale) =>
     [x0, y0] = xy
     x1 = x0 + angle_width
     y1 = y0
@@ -169,20 +169,20 @@ module.exports = class Feature extends View
         lineWidth = p2[0] - p1[0]
         pjs.fill(color[0],color[1],color[2])
         pjs.stroke(color[0], color[1], color[2])
-        @keyValueBox(pjs, [p1[0] + 30, p1[1] - kv.height  / 2], key, val, "left")
+        @keyValueBox(pjs, [p1[0] + 30 * @scale, p1[1] - kv.height  / 2], key, val, "left")
         pjs.fill(color[0],color[1],color[2])
         pjs.stroke(color[0], color[1], color[2])
-        @arrow(pjs, p1, [p1[0] + 30, p1[1]])
-        @arrow(pjs, p2, [p1[0] + 30 + kv.width, p1[1]])
+        @arrow(pjs, p1, [p1[0] + 30 * @scale, p1[1]])
+        @arrow(pjs, p2, [p1[0] + 30 * @scale + kv.width, p1[1]])
       if align is "right"
         lineWidth = p2[0] - p1[0]
         pjs.fill(color[0],color[1],color[2])
         pjs.stroke(color[0], color[1], color[2])
-        @keyValueBox(pjs, [p2[0] - 30 - kv.width, p1[1] - kv.height  / 2], key, val, "left")
+        @keyValueBox(pjs, [p2[0] - 30 * @scale - kv.width, p1[1] - kv.height  / 2], key, val, "left")
         pjs.fill(color[0],color[1],color[2])
         pjs.stroke(color[0], color[1], color[2])
-        @arrow(pjs, p1, [p2[0] - 30 - kv.width, p1[1]])
-        @arrow(pjs, p2, [p2[0] - 30, p1[1]])
+        @arrow(pjs, p1, [p2[0] - 30 * @scale - kv.width, p1[1]])
+        @arrow(pjs, p2, [p2[0] - 30 * @scale, p1[1]])
       pjs.line(p1[0], p1[1] - @spacing * @scale, p1[0], p1[1] + @spacing * @scale)
       pjs.line(p2[0], p2[1] - @spacing * @scale, p2[0], p2[1] + @spacing * @scale)
 
@@ -201,13 +201,13 @@ module.exports = class Feature extends View
       pt1[0] += offset
       pt2[0] += offset
     if position is "top"
-      @arrow(pjs, pt1, [pt1[0], pt1[1] - kv.height - 12])
-      @arrow(pjs, pt2, [pt2[0], pt2[1] + 20])
-      @keyValueBox(pjs, [pt1[0], pt1[1] - kv.height - 12], id, label, "gap")
+      @arrow(pjs, pt1, [pt1[0], pt1[1] - kv.height - 12 * @scale])
+      @arrow(pjs, pt2, [pt2[0], pt2[1] + 20 * @scale])
+      @keyValueBox(pjs, [pt1[0], pt1[1] - kv.height - 12 * @scale], id, label, "gap")
     if position is "bottom"
-      @arrow(pjs, pt1, [pt1[0], pt1[1] - 20])
-      @arrow(pjs, pt2, [pt2[0], pt2[1] + kv.height + 12])
-      @keyValueBox(pjs, [pt1[0], pt2[1] + 11], id, label, "gap")
+      @arrow(pjs, pt1, [pt1[0], pt1[1] - 20 * @scale])
+      @arrow(pjs, pt2, [pt2[0], pt2[1] + kv.height + 12 * @scale])
+      @keyValueBox(pjs, [pt1[0], pt2[1] + 11 * @scale], id, label, "gap")
 
   arrowBox: (pjs, lined, offset=0, position, color, id, label) =>
     pjs.fill(color[0],color[1],color[2])
@@ -222,10 +222,10 @@ module.exports = class Feature extends View
       p1[0] = p1[0] + offset
       p2[0] = p2[0] + offset
     if position is "top"
-      @arrow(pjs, p1, [p1[0], p1[1] - kv.height - 12])
-      @arrow(pjs, p2, [p2[0], p2[1] + 20])
-      @keyValueBox(pjs, [p1[0] - 1, p1[1] - kv.height - 12], id, label, "gap")
+      @arrow(pjs, p1, [p1[0], p1[1] - kv.height - 12 * @scale])
+      @arrow(pjs, p2, [p2[0], p2[1] + 20 * @scale])
+      @keyValueBox(pjs, [p1[0] - 1, p1[1] - kv.height - 12 * @scale], id, label, "gap")
     if position is "bottom"
-      @arrow(pjs, p1, [p1[0], p1[1] - 20])
-      @arrow(pjs, p2, [p2[0], p2[1] + kv.height + 12])
-      @keyValueBox(pjs, [p1[0] - 1, p2[1] + 11], id, label, "gap")
+      @arrow(pjs, p1, [p1[0], p1[1] - 20 * @scale])
+      @arrow(pjs, p2, [p2[0], p2[1] + kv.height + 12 * @scale])
+      @keyValueBox(pjs, [p1[0] - 1, p2[1] + 11 * @scale], id, label, "gap")
