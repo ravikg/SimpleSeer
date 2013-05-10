@@ -1,5 +1,5 @@
 .ui-zoomify {
-  padding: 10px;
+  padding: 9px 8px;
   color: #000;
 }
 
@@ -33,7 +33,6 @@
   position: absolute;
   top: 0;
   left: 0;
-
   width: 100%;
   z-index: 0;
 }
@@ -43,22 +42,25 @@
   height: 23px;
 }
 
-.ui-zoomify .settings input {
-  font-size: 11px;
+.ui-zoomify .settings input[type=text] {
+  font-size: 12px;
   height: 12px;
   margin-bottom: 0;
-  padding: 5px;
+  padding: 4px 4px 5px 4px;
   width: 45px;
+  border: 1px solid #5F5F5F;
 }
 
 .ui-zoomify .settings .slider {
-  height: 8px;
+  width: 143px !important;
+  height: 6px;
   float: right;
-  margin-right: 1px;
-  margin-top: 7px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: #fff;
+  margin-top: 9px;
 }
 
-.ui-zoomify .settings .slider .ui-slider-handle {
-  width: 15px;
-  height: 15px;
+.ui-zoomify .settings .slider.mozilla {
+  margin-top: 1px;
 }
