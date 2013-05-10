@@ -76,7 +76,7 @@ module.exports = class Series extends FilterCollection
     #args.success = @onSuccess
     args.error = @onError
     args['total'] = true
-    args['params'] = {skip:~@limit+1,limit:@limit}
+    #args['params'] = {skip:~@limit+1,limit:@limit}
     super(args)
 
   onSuccess: (obj, rawJson) =>
