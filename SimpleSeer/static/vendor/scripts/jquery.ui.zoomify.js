@@ -81,7 +81,7 @@ $.widget("ui.zoomify", {
 
     self.viewport = {zoom: options.zoom, x: options.x, y: options.y};
 
-    var content = $('<div class="window"><div class="view"><div class="frame"></div><img class="display" src="'+options.image+'"></div></div><div class="settings"><input type="text" value=""><div class="slider"></div></div>').appendTo(element);
+    var content = $('<div class="window"><div class="view"><div class="frame"></div><img class="display" src="'+options.image+'"></div></div><div class="settings"><input type="text" value=""><input class="slider" type="range"></div>').appendTo(element);
     content.find("input").attr("value", self.viewport.zoom * 100 + "%");
     content.find(".display").load(function() { self.loaded = true; self.updateDisplay('zoom'); }).bind('dragstart', function(event) { event.preventDefault(); });;
 
@@ -103,7 +103,7 @@ $.widget("ui.zoomify", {
       }
     });
 
-    content.find(".slider").slider({
+    /*content.find(".slider").slider({
       min: options.min,
       max: options.max,
       value: (options.zoom * 100),
@@ -116,9 +116,31 @@ $.widget("ui.zoomify", {
         self.viewport.y = content.find(".frame").position().top;
         self.updateDisplay('pan');
       }
-    });
+    });*/
 
-    content.find("input").keypress(function(e) {
+    var _range = content.find("input[type=range]")
+      .attr("min", options.min)
+      .attr("max", options.max)
+      .attr("value", options.zoom * 100)
+
+    function onRange() {
+      value = Math.floor(this.value);
+      $(this).parent().find("input[type=text]").attr("value",  value + "%");
+      self.viewport.zoom = content.find("input[type=text]").attr("value").replace(/\%/g, "") / 100;
+      self.updateDisplay('zoom');
+      self.viewport.x = content.find(".frame").position().left;
+      self.viewport.y = content.find(".frame").position().top;
+      self.updateDisplay('pan');
+    }
+
+    if( $.browser.hasOwnProperty("mozilla") ) {
+      _range.get(0).oninput = onRange;
+      _range.addClass("mozilla");
+    } else {
+      _range.get(0).onchange = onRange;
+    }
+
+    content.find("input[type=text]").keypress(function(e) {
       if(e.which == 13){
         var input = $(this);
         var value = String(Math.max(input.attr("value").replace("%", ""), self.options.min));
@@ -157,8 +179,8 @@ $.widget("ui.zoomify", {
       	value = Math.min(value, self.options.max / 100)
         self.options.zoom = value;
         self.viewport.zoom = value;
-        self.element.find(".slider").slider("option", "value", value * 100);
-        self.element.find("input").attr("value", Math.floor(value * 100) + "%");
+        self.element.find("input[type=range]").attr("value", value * 100);
+        self.element.find("input[type=text]").attr("value", Math.floor(value * 100) + "%");
         self.updateDisplay('zoom');
         break;
       case "x":
