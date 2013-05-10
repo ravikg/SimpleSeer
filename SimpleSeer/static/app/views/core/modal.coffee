@@ -20,7 +20,7 @@ module.exports = class modal extends View
   _callbacks:
     cancel: []
     success: []
-    
+
   events:
     'click .ok-button':'onSuccess'
     'click .cancel-button':'onCancel'
@@ -34,9 +34,9 @@ module.exports = class modal extends View
       if (e.which == 13) #Enter
         @onSuccess()
     )
-      
+
     super()
-    
+
   _reset: () =>
     for i of @_callbacks
       @_callbacks[i] = []
@@ -67,14 +67,14 @@ module.exports = class modal extends View
     #message
     if options.message?
       @$el.find(".message").html(options.message).show()
-    else 
+    else
       @$el.find(".message").hide()
-    
+
     #success and cancel
     for i in ['success','cancel']
       if options[i]?
         @addCallback i, options[i]
-    
+
     #cancelMessage
     ele = @$el.find('.cancel-button')
     if options.cancelMessage?
@@ -89,8 +89,8 @@ module.exports = class modal extends View
       ele.html(options.okMessage)
       ele.show()
     else
-      ele.hide()    
-    
+      ele.hide()
+
     #inputMessage
     ele = @$el.find('input')
     if options.inputMessage?
@@ -101,11 +101,11 @@ module.exports = class modal extends View
       ele.hide()
 
     #show modal
-    @$el.show()
+    @$el.show("fade")
     if options.inputMessage?
       ele.get(0).focus()
     return
-  
+
   addCallback:(type,func) =>
     if @_callbacks[type]? and typeof func == 'function'
       @_callbacks[type].push func
@@ -119,13 +119,13 @@ module.exports = class modal extends View
       values.action = 'DEFAULT'
     if !values.userInput?
       values.userInput = @$el.find('input').val()
-    @$el.hide()
+    @$el.hide("fade")
     for f in @_callbacks['success']
       r = f(values)
     if !r
       @_reset()
     return
-  
+
   onCancel: =>
     @$el.hide()
     for f in @_callbacks['cancel']
