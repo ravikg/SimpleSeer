@@ -237,7 +237,9 @@ module.exports = class FilterCollection extends Collection
         at = 0
       else
         at = (@_all.length)
-      @add @_all, {at:at ,silent: true}
+      # I disabled this because i think we always want paginated data at the pushed on to the stack - Jim
+      #@add @_all, {at:at ,silent: true}
+      @add @_all, {at:0, silent: true}
       @_all = []
     for o in @callbackStack['post']
       if typeof o == 'function'

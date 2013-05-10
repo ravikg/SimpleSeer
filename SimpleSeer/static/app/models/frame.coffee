@@ -36,3 +36,10 @@ module.exports = class Frame extends Model
     if not response.thumbnail_file? or not response.thumbnail_file
       response.thumbnail_file = "/grid/thumbnail_file/" + response.id
     return response
+    
+  save:(attributes, options)=>
+    if @attributes.features?
+      delete @attributes.features
+    if @attributes.results?
+      delete @attributes.results      
+    super(attributes, options)
