@@ -160,7 +160,7 @@ Handlebars.registerHelper "localize_dt", (epoch, options) ->
   return new Handlebars.SafeString dt.format(f)
 
 Handlebars.registerHelper "log", (value) ->
-  #console.log "Handlebars Log: ", value
+  console.log "Handlebars Log: ", value
   return new Handlebars.SafeString ""
 
 Handlebars.registerHelper "resultlist", (results, blacklist) ->
@@ -168,18 +168,28 @@ Handlebars.registerHelper "resultlist", (results, blacklist) ->
   if !results or results.length is 0
     tpl += "<div data-use=\"no-results\" class=\"centered\">Part Failed: No Results</div>"
   else
+
+    results.map  ((item) => item.mmm = SimpleSeer.measurements.where({name:item.measurement_name})[0])
+    results.sort ((a, b) =>
+      k1 = a.mmm.get('labelkey')
+      k2 = b.mmm.get('labelkey')
+      if k1 > k2 then return 1
+      if k1 is k2 then return 0
+      if k1 < k2 then return -1
+    )
+
     for result in results
       unless ~blacklist.fields.indexOf(result.measurement_name)
         value = result.numeric or ""
         unless value is undefined
-          obj = SimpleSeer.measurements.where({name:result.measurement_name})[0]
-          label = obj.get('label')
+          obj = result.mmm
+          label = "#{obj.get('label')}"
           if obj.get('units')
             unit = if obj.get('units') is "deg" then "&deg;" else " (#{obj.get('units')})"
           else
             unit = ""
           if value is "" then unit = "--"
-          tpl += "<div class=\"elastic interactive #{if result.state is 1 then "fail" else "pass"}\"><span class=\"label\">#{label}:</span><span class=\"value\">#{value}#{unit}</span><div class=\"clearfix\"></div></div>"
+          tpl += "<div class=\"elastic interactive #{if result.state is 1 then "fail" else "pass"}\" data-feature=\"#{result.measurement_name}\"><span class=\"label\">#{label}:</span><span class=\"value\">#{value}#{unit}</span><div class=\"clearfix\"></div></div>"
   return new Handlebars.SafeString tpl
 
 Handlebars.registerHelper "metalist", (results, template) ->

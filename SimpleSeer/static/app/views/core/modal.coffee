@@ -37,7 +37,7 @@ module.exports = class modal extends View
       
     super()
     
-  _reset:=>
+  _reset: () =>
     for i of @_callbacks
       @_callbacks[i] = []
     # @TODO: what the?
@@ -58,7 +58,7 @@ module.exports = class modal extends View
   #   throbber:      (bool)     Use throbber graphic
   show:(options={throbber:true}) =>
 
-  	#throbber
+    #throbber
     if options.throbber
       @$el.find('#throbberGraphic').show().removeClass("hidden")
     else
@@ -115,14 +115,15 @@ module.exports = class modal extends View
   #   userInput:     (string)   Value entered by user
   #   action:        (string)   Action taken ['DEFAULT','OK']
   onSuccess:(values={}) =>
-  	if !values.action?
+    if !values.action?
       values.action = 'DEFAULT'
-  	if !values.userInput?
+    if !values.userInput?
       values.userInput = @$el.find('input').val()
     @$el.hide()
     for f in @_callbacks['success']
-      f(values)
-    @_reset()
+      r = f(values)
+    if !r
+      @_reset()
     return
   
   onCancel: =>

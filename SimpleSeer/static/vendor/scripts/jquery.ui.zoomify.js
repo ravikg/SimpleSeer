@@ -108,9 +108,13 @@ $.widget("ui.zoomify", {
       max: options.max,
       value: (options.zoom * 100),
       slide: function(event, ui) {
-        $(this).parent().find("input").attr("value", ui.value + "%");
+        value = Math.floor(ui.value);
+        $(this).parent().find("input").attr("value",  value + "%");
         self.viewport.zoom = content.find("input").attr("value").replace(/\%/g, "") / 100;
         self.updateDisplay('zoom');
+        self.viewport.x = content.find(".frame").position().left;
+        self.viewport.y = content.find(".frame").position().top;
+        self.updateDisplay('pan');
       }
     });
 
@@ -118,6 +122,7 @@ $.widget("ui.zoomify", {
       if(e.which == 13){
         var input = $(this);
         var value = String(Math.max(input.attr("value").replace("%", ""), self.options.min));
+        value = Math.floor(value);
 
         // Set the slider's value
         $("#control .slider").slider("option", "value", value.replace(/\%/g, ""));
@@ -152,9 +157,8 @@ $.widget("ui.zoomify", {
       	value = Math.min(value, self.options.max / 100)
         self.options.zoom = value;
         self.viewport.zoom = value;
-        //self.options.y = self.viewport.y = self.options.x = self.viewport.x = 0;
         self.element.find(".slider").slider("option", "value", value * 100);
-        self.element.find("input").attr("value", (value * 100) + "%");
+        self.element.find("input").attr("value", Math.floor(value * 100) + "%");
         self.updateDisplay('zoom');
         break;
       case "x":
@@ -168,19 +172,19 @@ $.widget("ui.zoomify", {
         self.updateDisplay('pan');
         break;
       case "min":
-        self.options.min = value;
+        self.options.min = Math.floor(value);
         self.options.y = self.viewport.y = self.options.x = self.viewport.x = 0;
         self.element.find(".slider").slider("option", "min", value);
         self.updateDisplay('zoom');
         break;
       case "max":
-        self.options.max = value;
+        self.options.max = Math.floor(value);
         self.options.y = self.viewport.y = self.options.x = self.viewport.x = 0;
         self.element.find(".slider").slider("option", "max", value);
         self.updateDisplay('zoom');
         break;
       case "height":
-        self.options.height = value;
+        self.options.height = Math.floor(value);
         self.updateDisplay('pan');
     }
   }
