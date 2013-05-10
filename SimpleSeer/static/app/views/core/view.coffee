@@ -18,6 +18,7 @@ module.exports = class View extends Backbone.View
       # _SeerCloud/_ `models/core/context`
       # _SimpleSeer/_ `seer_application`
       application.loadContext(options.context)
+    @on "uiFocus", @focus
     @subviews = {}
 
   _setScroll: (el=@$el) =>
@@ -73,7 +74,8 @@ module.exports = class View extends Backbone.View
     callback = =>
       @$el.html @template @getRenderData()
       @renderSubviews()
-      @focus()
+      #@focus()
+      @trigger "uiFocus"
       @afterRender()
       if @firstRender  && (@onScroll? || @onPage?)
         _ele = @$el.find(@scrollElement)
