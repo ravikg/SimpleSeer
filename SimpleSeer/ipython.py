@@ -5,6 +5,7 @@ def load_ipython_extension(ipython):
     from . import models as M
     from SimpleCV import Image, ImageSet, Color
     import zmq
+    import bson
     
     from .util import load_plugins
     
@@ -24,6 +25,7 @@ def load_ipython_extension(ipython):
             Dashboard = M.Dashboard,
             Color = Color,
             M=M,
+            ObjectId = bson.ObjectId,
             cm=ChannelManager(),
             Channel=Channel),
         interactive=True)
