@@ -27,6 +27,7 @@ module.exports = class Table extends SubView
   header: ''
   tableClasses: 'table'
   firefox: false
+  msie: true
   left: undefined
   persistentHeader: false
 
@@ -107,6 +108,9 @@ module.exports = class Table extends SubView
 
   initialize: =>
     super()
+    # @Todo: Standardize and push this up the chain
+    if $.browser.msie
+      @msie = true
     if $.browser.mozilla
       @firefox = true
     @rows = []
@@ -394,7 +398,7 @@ module.exports = class Table extends SubView
     if l != @left
       @left = l
       offset = @static.offset()
-      if @firefox
+      if @firefox or @msie
         @head.css('left', offset.left - 1)
       else
         @head.css('left', offset.left)
