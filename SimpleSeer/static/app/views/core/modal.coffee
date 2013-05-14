@@ -122,7 +122,7 @@ module.exports = class modal extends View
     @$el.hide("fade")
     for f in @_callbacks['success']
       r = f(values)
-    if !r
+    if r != true
       @_reset()
     return
 
