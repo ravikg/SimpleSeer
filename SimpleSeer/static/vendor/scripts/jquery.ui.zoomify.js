@@ -118,41 +118,6 @@ $.widget("ui.zoomify", {
       }
     });
 
-    /*var _range = content.find("input[type=range]")
-      .attr("min", options.min)
-      .attr("max", options.max)
-      .attr("step", 2)
-      .attr("value", options.zoom * 100)
-
-    function rangeChange() {
-      value = Math.floor(this.value);
-      $(this).parent().find("input[type=text]").attr("value",  value + "%");
-      self.viewport.zoom = content.find("input[type=text]").attr("value").replace(/\%/g, "") / 100;
-      self.updateDisplay('zoom');
-      self.viewport.x = content.find(".frame").position().left;
-      self.viewport.y = content.find(".frame").position().top;
-      self.updateDisplay('pan');
-    }*/
-
-    /**
-     * input[type=range] is not very supported
-     * at the moment. Here is the fix:
-     */
-    /*if( $.browser.hasOwnProperty("msie") || $.browser.hasOwnProperty("mozilla") ) {
-      fdSlider.createSlider({
-        inp: _range.get(0),
-        animation: "tween",
-        min: options.min,
-        max: options.max,
-        step: 2,
-        hideInput: true
-      });
-      fdSlider.addEvent(_range.get(0), "move", function() { console.log("work"); })
-      _range.addClass("mozilla");
-    } else {
-      _range.get(0).onchange = rangeChange
-    }*/
-
     content.find("input[type=text]").keypress(function(e) {
       if(e.which == 13){
         var input = $(this);
@@ -186,7 +151,7 @@ $.widget("ui.zoomify", {
       	value = Math.min(value, self.options.max / 100)
         self.options.zoom = value;
         self.viewport.zoom = value;
-        self.element.find("input[type=range]").attr("value", value * 100);
+        self.element.find(".slider").slider("option", "value", value * 100);
         self.element.find("input[type=text]").attr("value", Math.floor(value * 100) + "%");
         self.updateDisplay('zoom');
         break;
