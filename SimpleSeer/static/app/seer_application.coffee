@@ -14,6 +14,7 @@ module.exports = SeerApplication =
   alertStack: []
   inAnim: false
   browser: {}
+  loading: true
 
   # Set up the application and include the
   # necessary modules. Configures the page
@@ -98,8 +99,8 @@ module.exports = SeerApplication =
       return @menuBars[options.id]
 
   loadContext:(name) ->
-    _context = require 'models/core/context'
     if !@context[name]?
+      _context = require 'models/core/context'
       @context[name] = new _context({name:name})
       #a = @context[name].fetch()
     return @context[name]
