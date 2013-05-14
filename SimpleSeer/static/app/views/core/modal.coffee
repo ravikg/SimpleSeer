@@ -111,6 +111,10 @@ module.exports = class modal extends View
       @_callbacks[type].push func
     return
 
+  clear: =>
+    @$el.hide("fade")
+    @_reset()
+
   # values:
   #   userInput:     (string)   Value entered by user
   #   action:        (string)   Action taken ['DEFAULT','OK']
