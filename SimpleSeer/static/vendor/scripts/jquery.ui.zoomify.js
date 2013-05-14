@@ -129,7 +129,7 @@ $.widget("ui.zoomify", {
       }
     });
 
-    $(window).resize(function() { self.updateDisplay('zoom'); });
+    //$(window).resize(function() { self.updateDisplay('zoom'); });
   },
 
   repaint: function() {

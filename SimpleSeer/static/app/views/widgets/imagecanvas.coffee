@@ -83,8 +83,6 @@ module.exports = class ImageCanvas extends SubView
       box =
         width: @options.width - @options.padding * 2,
         height: @options.height - @options.padding * 2
-
-      console.log @options
       # Check if we need to scale down the image itself.
       wider = (w > box.width)
       taller = (h > box.height)
