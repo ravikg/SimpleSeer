@@ -2,7 +2,8 @@
 Backbone = if describe? then require('backbone') else window.Backbone
 
 module.exports = class Model extends Backbone.Model
-
+  cachebust: true
+  
   #this will be overloaded by appropriate plugins
   getPlugin: (name) ->
     return
@@ -16,3 +17,10 @@ module.exports = class Model extends Backbone.Model
       return
       
     p[fn]
+
+  url:=>
+    url = super()
+    if @cachebust
+      url += "?cachebust="+new moment().valueOf()
+    return url
+
