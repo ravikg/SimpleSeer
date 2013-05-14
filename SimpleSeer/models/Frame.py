@@ -71,7 +71,8 @@ class Frame(SimpleDoc, mongoengine.Document):
     @classmethod
     #which fields we care about for Filter.py
     def filterFieldNames(cls):
-        return ['_id', 'camera', 'capturetime', 'capturetime_epoch', 'localtz', 'metadata', 'notes', 'height', 'width', 'imgfile', 'results']
+        return ['_id', 'capturetime', 'capturetime_epoch', 'updatetime', 'localtz', 'camera', 'height', 
+               'width', 'clip_id', 'clip_frame', 'imgfile', 'thumbnail_file', 'metadata', 'notes', 'results']
 
 
     @classmethod
