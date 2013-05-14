@@ -78,8 +78,10 @@ module.exports = class FilterCollection extends Collection
     
     # Set baseUrl off of default url.  url is changed, baseUrl remains root url
     if params.url?
-      @url = params.url
-    @baseUrl = @url
+      @_url = params.url
+      @baseUrl = @_url
+    else
+      @baseUrl = @url    
     
     # Load filter widgets
     # TODO: make these collections
@@ -301,7 +303,7 @@ module.exports = class FilterCollection extends Collection
       if params.success
         @callbackStack['post'].push params.success
       params.success = @postFetch
-      if @url != _url or params.force
+      if @_url != _url or params.force
         @url = _url
         super(params)
       else if params.success
