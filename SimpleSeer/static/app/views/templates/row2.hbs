@@ -1,7 +1,9 @@
 <tr id="{{id}}" class="tr">
-  {{#each values}}
-    <td class="td {{this.class}}" {{#if this.title}}title="{{this.title}}"{{/if}}>
-        <span {{#if this.title}}title="{{this.title}}"{{/if}}>{{{this.value.html}}}</span>&nbsp;
-    </td>
-  {{/each}}
+{{#each values}}
+<td class="td {{this.class}}" {{#if this.title}}title="{{this.title}}"{{/if}}>
+{{#if this.value.html}}
+<span {{#if this.title}}title="{{this.title}}"{{/if}}>{{{this.value.html}}}</span>
+{{/if}}
+</td>
+{{/each}}
 </tr>

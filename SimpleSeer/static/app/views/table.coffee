@@ -27,6 +27,7 @@ module.exports = class Table extends SubView
   header: ''
   tableClasses: 'table'
   firefox: false
+  msie: true
   left: undefined
   persistentHeader: false
 
@@ -107,6 +108,9 @@ module.exports = class Table extends SubView
 
   initialize: =>
     super()
+    # @Todo: Standardize and push this up the chain
+    if $.browser.msie
+      @msie = true
     if $.browser.mozilla
       @firefox = true
     @rows = []
@@ -331,8 +335,7 @@ module.exports = class Table extends SubView
     @clearCache()
 
   infinitePage: =>
-    #console.log @collection.lastavail
-    if @collection.lastavail >= @limit
+    if @collection and @collection.lastavail >= @limit
       @collection.setParam('skip', (@collection.getParam('skip') + @limit))
       @collection.fetch()
 
@@ -366,7 +369,8 @@ module.exports = class Table extends SubView
         @floater.find(".th[data-key=#{key}]").css('width', w).css('height', h)
 
       @floater.find(".th[data-key=#{key}]").css('width', w - 2)
-      @table.css('position', 'relative').css('top', @head.find('.downloads').height() + parseInt(@head.find('.downloads').css('padding-top')) + parseInt(@head.find('.downloads').css('padding-bottom')))
+      @table.css('position', 'relative')
+      #@table.css('position', 'relative').css('top', @head.find('.downloads').height() + parseInt(@head.find('.downloads').css('padding-top')) + parseInt(@head.find('.downloads').css('padding-bottom')))
 
   afterRender: =>
     #$(window).resize( _.debounce @packTable, 100 )
@@ -394,7 +398,7 @@ module.exports = class Table extends SubView
     if l != @left
       @left = l
       offset = @static.offset()
-      if @firefox
+      if @firefox or @msie
         @head.css('left', offset.left - 1)
       else
         @head.css('left', offset.left)
