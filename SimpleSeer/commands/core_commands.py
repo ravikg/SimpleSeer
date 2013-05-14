@@ -49,40 +49,6 @@ def ControlsCommand(self):
     if self.session.arduino:
        Controls(self.session).run()
 
-@Command.simple(use_gevent=True)
-def OlapCommand(self):
-    from SeerCloud.OLAPUtils import ScheduledOLAP, RealtimeOLAP, OLAPData
-    from SeerCloud.backfill import MetaSchedule
-
-    from SimpleSeer.models.Inspection import Inspection, Measurement
-
-    try:
-        Inspection.register_plugins('seer.plugins.inspection')
-        Measurement.register_plugins('seer.plugins.measurement')
-
-        # The olap cache manager
-        od = OLAPData()
-        gevent.spawn_link_exception(od.listenReq)
-        gevent.spawn_link_exception(od.listenDel)
-        
-        import time; time.sleep(1)
-        Inspection.objects.count()
-        
-        # Schedule olaps (olaps with stats)
-        so = ScheduledOLAP()
-        gevent.spawn_link_exception(so.runSked)
-        
-        # Backfill listener
-        ms = MetaSchedule()
-        gevent.spawn_link_exception(ms.run)
-        gevent.spawn_link_exception(ms.listen)
-        
-        ro = RealtimeOLAP()
-        ro.monitorRealtime()
-        
-    except KeyboardInterrupt as e:
-        print "Interrupted by user"
-
 class WebCommand(Command):
     
     def __init__(self, subparser):

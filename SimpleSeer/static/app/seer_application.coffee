@@ -13,6 +13,11 @@ module.exports = SeerApplication =
   context: {}
   alertStack: []
   inAnim: false
+  browser: {}
+  # set keys in browser for browser dependency
+  # browser['firefox']['error'] = 3  // displays error to user if the current browser is firefox less than version 3 then halts the page load
+  # browser['firefox']['warn'] = 3  // displays warning to user that they should upgrade for better usability if the current browser is firefox less than version 3
+  # events do not fire if browser version is equal to the int in the error or warn params 
 
   # Set up the application and include the
   # necessary modules. Configures the page

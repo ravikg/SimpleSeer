@@ -156,16 +156,10 @@ $.widget("ui.zoomify", {
     content.find("input[type=text]").keypress(function(e) {
       if(e.which == 13){
         var input = $(this);
-        var value = String(Math.max(input.attr("value").replace("%", ""), self.options.min));
-        value = Math.floor(value);
-
-        // Set the slider's value
-        $("#control .slider").slider("option", "value", value.replace(/\%/g, ""));
-
-        // Add percent sign back in
-        input.attr("value", value.replace(/\%/g, "") + "%");
-        self.viewport.zoom = content.find("input").attr("value").replace(/\%/g, "") / 100;
-
+        var value = Math.floor(Math.max(parseInt(input.attr("value"), 10), self.options.min));
+        content.find(".slider").slider("option", "value", value);
+        input.attr("value", value + "%");
+        self.viewport.zoom = value / 100;
         self.updateDisplay('zoom');
       }
     });
