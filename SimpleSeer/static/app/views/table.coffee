@@ -27,7 +27,7 @@ module.exports = class Table extends SubView
   header: ''
   tableClasses: 'table'
   firefox: false
-  msie: true
+  msie: false
   left: undefined
   persistentHeader: false
 
@@ -109,10 +109,9 @@ module.exports = class Table extends SubView
   initialize: =>
     super()
     # @Todo: Standardize and push this up the chain
-    if $.browser.msie
-      @msie = true
-    if $.browser.mozilla
-      @firefox = true
+    @msie = $.browser.hasOwnProperty('msie')
+    @firefox = $.browser.hasOwnProperty('mozilla')
+
     @rows = []
     @getOptions()
     @getCollection()
@@ -190,7 +189,6 @@ module.exports = class Table extends SubView
     if typeof v == 'object' # Complicated render
       if tableCol.editable
         if tableCol.subCols
-          html += '<div class="subCols">'
           _.each tableCol.subCols, (a, b) =>
             col = a
             if col.editable # Sub column is editable
@@ -206,12 +204,10 @@ module.exports = class Table extends SubView
                 value: value
                 class: key + '-' + col.key
               }
-              html += '<div class="subCol">'
               html += "<input "
               $.each args, (k, v) =>
                 html += k + '="' + v + '" '
-              html += "/></div>"
-          html += '</div>'
+              html += "/>"
         else 
           col = tableCol
           if col.editable # Sub column is editable
@@ -347,6 +343,15 @@ module.exports = class Table extends SubView
       @static = @$(".table.static .thead")
       @floater = @$(".table.floater .thead")
       @table = @$(".table.static")
+      @controls = @table.hasClass('controls')
+
+      extras = {'w':0, 'h':0, 't':0, 'l':0}
+      if @controls
+        extras.w = 4
+        extras.h = 0
+        extras.t = -8
+        extras.l = 0
+
       @hider = @$('.hider')
 
       @hider.width(@static.width() + 12)
@@ -364,13 +369,12 @@ module.exports = class Table extends SubView
         pwidth = p.width()
         ppadleft = parseInt(p.css('padding-left'), 10)
         ppadright = parseInt(p.css('padding-right'), 10)
-        w = pwidth + ppadleft + ppadright + 1
-        h = col.height()
+        w = pwidth + ppadleft + ppadright + 1 + extras.w
+        h = col.height() + extras.h
         @floater.find(".th[data-key=#{key}]").css('width', w).css('height', h)
 
       @floater.find(".th[data-key=#{key}]").css('width', w - 2)
-      @table.css('position', 'relative')
-      #@table.css('position', 'relative').css('top', @head.find('.downloads').height() + parseInt(@head.find('.downloads').css('padding-top')) + parseInt(@head.find('.downloads').css('padding-bottom')))
+      @table.css('position', 'relative').css('top', @head.height() - @floater.height() + extras.t)
 
   afterRender: =>
     #$(window).resize( _.debounce @packTable, 100 )
@@ -393,7 +397,7 @@ module.exports = class Table extends SubView
     super()
     @updateHeader()
 
-  scrollLeft: =>
+  scrollLeft: (per) =>
     l = @scroll.scrollLeft()
     if l != @left
       @left = l
@@ -403,18 +407,18 @@ module.exports = class Table extends SubView
       else
         @head.css('left', offset.left)
 
-  scrollPage: (per) =>
-    @scrollLeft()
-    @pollShadow(per)
+  scrollDown: (per) =>
+    d = @scroll.scrollTop()
+    if d > 0
+      if !@head.hasClass('shadow')
+        @head.addClass('shadow')
+    else
+      if @head.hasClass('shadow')
+        @head.removeClass('shadow')
 
-  pollShadow: (per) =>
-    if per > 0
-      @head.addClass('shadow')
-    else 
-      @head.removeClass('shadow')
-  #  @lastY = top = @tbody.scrollTop()
-  #  @thead.removeClass("shadow")
-  #  @thead.addClass("shadow") if top > 0
+  scrollPage: (per) =>
+    @scrollLeft(per)
+    @scrollDown(per)
 
   #getScrollbar: =>
   #  distance = @tbody.width() - @content.width().top
