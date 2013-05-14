@@ -383,6 +383,9 @@ module.exports = class Table extends SubView
       .addClass("sort-#{@sortDirection}")
       .attr('direction', @sortDirection)
 
+    if !@scroll
+      @scroll = $('#content #slides')
+
     @updateHeader()
     #@packTable()
     #@tbody = @$(".tbody").infiniteScroll {
@@ -417,6 +420,8 @@ module.exports = class Table extends SubView
         @head.removeClass('shadow')
 
   scrollPage: (per) =>
+    if !@scroll
+      @scroll = $('#content #slides')
     @scrollLeft(per)
     @scrollDown(per)
 
