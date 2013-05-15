@@ -27,7 +27,7 @@ module.exports = class View extends Backbone.View
       #onPage: => @trigger('page')
 
   focus:(back=false) =>
-    console.info 'in focus'
+    #console.info 'in focus'
     #if !back and !@$el.is(":visible")
     #  @$el.show()
     if application.loading
@@ -93,6 +93,7 @@ module.exports = class View extends Backbone.View
 
   # Renders view using effects if defined
   render: =>
+    #console.log 'render'
     callback = =>
       @$el.html @template @getRenderData()
       @renderSubviews()
