@@ -58,7 +58,7 @@ class Frame(SimpleDoc, mongoengine.Document):
     imgfile = mongoengine.FileField()
     thumbnail_file = mongoengine.FileField()
     metadata = mongoengine.DictField()
-    notes = mongoengine.StringField()
+    notes = mongoengine.StringField(default='')
     _imgcache = ''
     _imgcache_dirty = False
     _recentframes = [] #class-wide frame cache for lastobjects()
