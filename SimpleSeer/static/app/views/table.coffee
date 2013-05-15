@@ -102,9 +102,10 @@ module.exports = class Table extends SubView
   emptyData: =>
     if @emptyCollection.length 
       @hasHidden = true
+      @collection.fetch({'filtered':true})
 
   getEmptyCollection: (key) =>
-    if @collection
+    if @collection and !@showHidden
       @emptyCollection = new @_collection([],{model:@_model,clearOnFetch:@cof,url:@_url})
       @emptyCollection.setParam 'sortkey', @getSortKey(@sortKey)
       @emptyCollection.setParam 'sortorder', @direction
@@ -112,6 +113,8 @@ module.exports = class Table extends SubView
       @emptyCollection.setParam 'query', {"logic":"and","criteria":[{"type":"frame","isset":0,"name":key}]}
       @emptyCollection.on('reset',@emptyData)
       @emptyCollection.fetch()
+    else
+      @collection.fetch({'filtered':true})
 
   subscribe: (channel="") =>
     if channel
@@ -316,8 +319,6 @@ module.exports = class Table extends SubView
     key = $(e.currentTarget).data('key')
     direction = $(e.currentTarget).attr('direction') || "desc"
     k = @getSortKey(key)
-    # @TODO: Is this in the right spot? Maybe move it down below the directional params
-    @getEmptyCollection(k)
     if !set
       @collection.setParam 'sortkey', k
     @sortKey = key
@@ -334,7 +335,7 @@ module.exports = class Table extends SubView
       @collection.setParam 'query', {}
     else
       @collection.setParam 'query', {"logic":"and","criteria":[{"type":"frame","isset":1,"name":k}]}
-    @collection.fetch({'filtered':true})
+    @getEmptyCollection(k)
 
   showHiddenEvent: (e) =>
     @showHidden = true
