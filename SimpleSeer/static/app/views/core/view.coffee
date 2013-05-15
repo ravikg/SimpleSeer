@@ -27,7 +27,7 @@ module.exports = class View extends Backbone.View
       #onPage: => @trigger('page')
 
   focus:(back=false) =>
-    console.info 'in focus'
+    #console.info 'in focus'
     #if !back and !@$el.is(":visible")
     #  @$el.show()
     if application.loading
@@ -46,13 +46,13 @@ module.exports = class View extends Backbone.View
       else
         if @options.parent?
           @options.parent.focus(true)
-      
+
   unfocus: =>
     #if @$el.is(":visible")
     #  @$el.hide()
     for i,o of @subviews
       o.unfocus()
-    
+
 
   # Override in child class.  Returns template handlebars function
   template: =>
