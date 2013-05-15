@@ -30,10 +30,14 @@ module.exports = class Table extends SubView
   msie: false
   left: undefined
   persistentHeader: false
+  showHidden: false
+  hasHidden: false
+  scrollElem: '#content #slides'
 
   events: =>
     "click th.sortable":"sortByColumn"
     "change input":"changeCell"
+    "click .showhidden .controlButton":"showHiddenEvent"
 
   #onPage: =>
   #  console.log 'hit'
@@ -95,6 +99,20 @@ module.exports = class Table extends SubView
     #@collection.fetch({'success':@updateData})
     @subscribe()
 
+  emptyData: =>
+    if @emptyCollection.length 
+      @hasHidden = true
+
+  getEmptyCollection: (key) =>
+    if @collection
+      @emptyCollection = new @_collection([],{model:@_model,clearOnFetch:@cof,url:@_url})
+      @emptyCollection.setParam 'sortkey', @getSortKey(@sortKey)
+      @emptyCollection.setParam 'sortorder', @direction
+      @emptyCollection.setParam 'limit', @limit
+      @emptyCollection.setParam 'query', {"logic":"and","criteria":[{"type":"frame","isset":0,"name":key}]}
+      @emptyCollection.on('reset',@emptyData)
+      @emptyCollection.fetch()
+
   subscribe: (channel="") =>
     if channel
       namePath = channel + "/"
@@ -116,7 +134,7 @@ module.exports = class Table extends SubView
     @getOptions()
     @getCollection()
     @on 'page', @infinitePage
-    @scroll = $('#content #slides')
+    @scroll = $(@scrollElem)
     if @persistentHeader
       @on 'scroll', @scrollPage
 
@@ -293,10 +311,13 @@ module.exports = class Table extends SubView
     key = if k is "capturetime" then 'capturetime_epoch' else key
     return key
 
+
   sortByColumn:(e, set) =>
     key = $(e.currentTarget).data('key')
     direction = $(e.currentTarget).attr('direction') || "desc"
     k = @getSortKey(key)
+    # @TODO: Is this in the right spot? Maybe move it down below the directional params
+    @getEmptyCollection(k)
     if !set
       @collection.setParam 'sortkey', k
     @sortKey = key
@@ -309,7 +330,17 @@ module.exports = class Table extends SubView
       @sortDirection = 'asc'
       @direction = 1
     @cof = true
+    if @showHidden
+      @collection.setParam 'query', {}
+    else
+      @collection.setParam 'query', {"logic":"and","criteria":[{"type":"frame","isset":1,"name":k}]}
     @collection.fetch({'filtered':true})
+
+  showHiddenEvent: (e) =>
+    @showHidden = true
+    @collection.setParam 'query', {}
+    @collection.fetch({'filtered':true})
+
 
   formatData:(data) =>
     return data
@@ -377,24 +408,21 @@ module.exports = class Table extends SubView
       @table.css('position', 'relative').css('top', @head.height() - @floater.height() + extras.t)
 
   afterRender: =>
-    #$(window).resize( _.debounce @packTable, 100 )
+
     @$el.find(".th[data-key=#{@sortKey}]")
       .removeClass("sort-asc sort-desc")
       .addClass("sort-#{@sortDirection}")
       .attr('direction', @sortDirection)
 
     if !@scroll
-      @scroll = $('#content #slides')
+      @scroll = $(@scrollElem)
 
     @updateHeader()
-    #@packTable()
-    #@tbody = @$(".tbody").infiniteScroll {
-    #  onPage: => @onPage()
-    #  onScroll: => @onScroll()
-    #}
-    #@content = @tbody.find(".tscroll")
-    #@tbody.scrollTop(@lastY) if @lastY
-    #@packTable()
+
+    if !@showHidden and @hasHidden
+      cols = @tableCols.length
+      $(".table.static tbody").prepend('<tr><td class="td showhidden" colspan="'+cols+'"><span class="controlButton">Show hidden rows?</span></td></tr>')
+
 
   reflow: =>
     super()
@@ -421,7 +449,7 @@ module.exports = class Table extends SubView
 
   scrollPage: (per) =>
     if !@scroll
-      @scroll = $('#content #slides')
+      @scroll = $(@scrollElem)
     @scrollLeft(per)
     @scrollDown(per)
 
