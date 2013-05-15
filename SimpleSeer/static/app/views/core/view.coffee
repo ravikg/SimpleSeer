@@ -93,6 +93,7 @@ module.exports = class View extends Backbone.View
 
   # Renders view using effects if defined
   render: =>
+    #console.log 'render'
     callback = =>
       @$el.html @template @getRenderData()
       @renderSubviews()
