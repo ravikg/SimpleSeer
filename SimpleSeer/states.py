@@ -60,7 +60,7 @@ class Core(object):
         util.load_plugins()
         self.reloadInspections()
         
-        if self.config.framebuffer
+        if self.config.framebuffer:
             log.warn("Framebuffer is active, while worker is enabled.  Workers can not handle framebuffer calls, so you should add skip_worker_check: 1 to the config")
         
         self.lastframes = deque()
@@ -145,7 +145,6 @@ class Core(object):
     def process(self, frame, inspections=None, measurements=None, overwrite=True, clean=False):
         # First do all features, then do all results
         if not frame.id in self._queue:
-            print 'Proc queuing'
             fm = Foreman()
             self._queue[frame.id] = {}
             self._queue[frame.id]['features'] = fm.process_inspections(frame, inspections)
@@ -189,7 +188,6 @@ class Core(object):
                 if '_data' in results[0]:
                     newResults = { result.measurement_id: 1 for result in results }.keys()
                 else:
-                    print results[0].__dict__
                     newResults = { result.__dict__['measurement_name']: 1 for result in results }.keys()
             else:
                 newResults = []
