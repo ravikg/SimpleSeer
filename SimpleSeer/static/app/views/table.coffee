@@ -102,7 +102,6 @@ module.exports = class Table extends SubView
   emptyData: =>
     if @emptyCollection.length 
       @hasHidden = true
-      @collection.fetch({'filtered':true})
 
   getEmptyCollection: (key) =>
     if @collection and !@showHidden
@@ -112,9 +111,7 @@ module.exports = class Table extends SubView
       @emptyCollection.setParam 'limit', @limit
       @emptyCollection.setParam 'query', {"logic":"and","criteria":[{"type":"frame","isset":0,"name":key}]}
       @emptyCollection.on('reset',@emptyData)
-      @emptyCollection.fetch()
-    else
-      @collection.fetch({'filtered':true})
+      @emptyCollection.fetch({'async':false})
 
   subscribe: (channel="") =>
     if channel
@@ -336,6 +333,7 @@ module.exports = class Table extends SubView
     else
       @collection.setParam 'query', {"logic":"and","criteria":[{"type":"frame","isset":1,"name":k}]}
     @getEmptyCollection(k)
+    @collection.fetch({'filtered':true})
 
   showHiddenEvent: (e) =>
     @showHidden = true
