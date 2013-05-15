@@ -3,6 +3,7 @@ from celery import Celery
 from celery import task
 from celery.exceptions import RetryTaskError
 from celery.contrib import rdb
+from celery.result import ResultSet
 
 from bson import ObjectId
 from gridfs import GridFS
@@ -99,7 +100,7 @@ class Foreman():
         if inspections:
             inspKwargs['id__in'] = inspections
         
-        filteredInsps = M.Inspection.objects(**inspKwargs)
+        filteredInsps = M.Inspection.objects(inspKwargs)
         
         if self._useWorkers:
             return self.worker_inspection_iterator(frame, filteredInsps)    
@@ -133,40 +134,23 @@ class Foreman():
 
     def worker_inspection_iterator(self, frame, insps):
         sched = self.worker_x_schedule(frame, insps, self.inspection_execute)
-        return self.worker_x_iterator(frame, insps, sched)
+        return self.worker_x_iterator(sched)
         
     def worker_measurement_iterator(self, frame, meass):
         sched = self.worker_x_schedule(frame, meass, self.measurement_execute)
-        return self.worker_x_iterator(frame, meass, sched)
+        return self.worker_x_iterator(sched)
             
     def worker_x_schedule(self, frame, objs, fn):
-        scheduled = []
+        scheduled = ResultSet([])
         for o in objs:
-            scheduled.append(fn.delay(frame.id, o.id))
+            scheduled.add(fn.delay(frame.id, o.id))
         return scheduled
             
-    def worker_x_iterator(self, frame, objs, scheduled):
-        from time import sleep
+    def worker_x_iterator(self, scheduled):
+        for output in scheduled:
+            for out in output:
+                yield out
         
-        completed = 0
-        while completed < len(objs):
-            ready = []
-            
-            # List of scheduled items ready
-            for idx, s in enumerate(scheduled):
-                if s.ready():
-                    ready.insert(0, idx)
-                    
-            # Get the completed results
-            for idx in ready:
-                async = scheduled.pop(idx)
-                output = async.get()
-                for out in output:
-                    yield out
-                completed += 1
-            
-            sleep(0.1)
-
     def serial_inspection_iterator(self, frame, insps):
         for i in insps:
             features = i.execute(frame)
