@@ -60,6 +60,12 @@ module.exports = class FilterCollection extends Collection
 
     super(models,params)
     
+    if params.viewid?
+      olap = require 'models/OLAP'
+      @dataview = new olap({id:params.viewid})
+      @dataview.fetch({async:false})
+      params.url = "chart/data/#{@dataview.get('id')}"
+    
     # ###bindFilter:
     #   An instance of FilterCollection that when changed, bubbles the filter
     #   up through all bound filters.
@@ -205,7 +211,10 @@ module.exports = class FilterCollection extends Collection
         order: @getParam 'sortorder'
         
     if limit != false
-      _json['limit'] = limit
+      if @dataview?
+        _json['limit'] = skip + @_defaults['limit']
+      else
+        _json['limit'] = limit
     if @getParam('groupby')
       _json['groupByField'] = {groupby: @getParam('groupby'), groupfns: @getParam('groupfns')}
     if addParams
@@ -311,10 +320,30 @@ module.exports = class FilterCollection extends Collection
   
   # parses data returned by `fetch`.  (after `preFetch` and `fetch`, but before `postFetch`)
   parse: (response) =>
-    @totalavail = response.total_frames
-    @lastavail = response.frames?.length || 0
-    @setRaw (response)
-    #dir = @getParam 'sortorder'
-    #if dir and response.frames
-    #  response.frames = response.frames.reverse()
-    return response.frames
+    # check for new olap request
+    if response.data?
+      @lastavail = response.data?.length || 0
+      keys = @dataview.get("dataMap")
+      map = @dataview.get("_ormMap")
+      frames = []
+      for f in response.data
+        frame = {id:f.m[0], results:[]}
+        for i,k of keys
+          if map.root[k]?
+            frame[k] = f.d[i]
+          else if map.results[k]?
+            fa = k.split(".")
+            res = {}
+            res['measurement_name'] = fa[0]
+            res[fa[1]] = f.d[i]
+            frame.results.push res
+        frames.push frame
+      return frames
+    else
+      @totalavail = response.total_frames
+      @lastavail = response.frames?.length || 0
+      @setRaw (response)
+      #dir = @getParam 'sortorder'
+      #if dir and response.frames
+      #  response.frames = response.frames.reverse()
+      return response.frames
