@@ -18,6 +18,7 @@ class ResultEmbed(SimpleEmbeddedDoc, mongoengine.EmbeddedDocument):
 
     def __repr__(self):
         # Make this compatible with embedded objects from worker (no _data)
+        # The problem occurs with results from workers that are not yet saved in the database
         if '_data' in self:
             inspName = self.inspection_name
             measName = self.measurement_name
