@@ -38,6 +38,7 @@ module.exports = class Table extends SubView
     "click th.sortable":"sortByColumn"
     "change input":"changeCell"
     "click .showhidden .controlButton":"showHiddenEvent"
+    "click .downloads .controlButton":"downloadData"
 
   getColumnKeyByTitle: (title) =>
     key = null
@@ -305,6 +306,18 @@ module.exports = class Table extends SubView
     key = k
     key = if k is "capturetime" then 'capturetime_epoch' else key
     return key
+
+  downloadData: (e) =>
+    if @collection
+      type = $(e.target).attr('data-type')
+      @collection.setParam 'limit', ''
+      url = @collection.url
+      s = url.split("?")
+      s[0] += "/" + type
+      url = s.join("?")
+      @collection.setParam 'limit', @limit
+      window.open(encodeURI(url))
+    return false
 
   sortByColumn:(e, set) =>
     key = $(e.currentTarget).data('key')
