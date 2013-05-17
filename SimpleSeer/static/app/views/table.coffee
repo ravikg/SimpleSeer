@@ -22,7 +22,6 @@ module.exports = class Table extends SubView
   limit: 100
   direction: -1
   insertDirection: -1
-  #scrollThreshold: 4
   sortType: 'collection'
   header: ''
   tableClasses: 'table'
@@ -33,15 +32,13 @@ module.exports = class Table extends SubView
   showHidden: false
   hasHidden: false
   scrollElem: '#content #slides'
+  viewid: "5089a6d31d41c855e4628fb0"
 
   events: =>
     "click th.sortable":"sortByColumn"
     "change input":"changeCell"
     "click .showhidden .controlButton":"showHiddenEvent"
-
-  #onPage: =>
-  #  console.log 'hit'
-  #  @infinitePage()
+    "click .downloads .controlButton":"downloadData"
 
   getColumnKeyByTitle: (title) =>
     key = null
@@ -89,14 +86,13 @@ module.exports = class Table extends SubView
 
   getCollection: =>
     bindFilter = Application.context[@options.parent.dashboard.options.parent.options.context].filtercollection
-    @collection = new @_collection([],{bindFilter:bindFilter,model:@_model,clearOnFetch:@cof,url:@_url})
+    @collection = new @_collection([],{bindFilter:bindFilter,model:@_model,clearOnFetch:@cof,url:@_url,viewid:@viewid})
     if !@options.collection_model
       @collection.setParam 'sortkey', @getSortKey(@sortKey)
       @collection.setParam 'sortorder', @direction
       @collection.setParam 'limit', @limit
     @collection.on('reset',@updateData)
     @collection.fetch()
-    #@collection.fetch({'success':@updateData})
     @subscribe()
 
   emptyData: =>
@@ -105,7 +101,7 @@ module.exports = class Table extends SubView
 
   getEmptyCollection: (key) =>
     if @collection and !@showHidden
-      @emptyCollection = new @_collection([],{model:@_model,clearOnFetch:@cof,url:@_url})
+      @emptyCollection = new @_collection([],{model:@_model,clearOnFetch:@cof,url:@_url,viewid:@viewid})
       @emptyCollection.setParam 'sortkey', @getSortKey(@sortKey)
       @emptyCollection.setParam 'sortorder', @direction
       @emptyCollection.setParam 'limit', @limit
@@ -311,6 +307,17 @@ module.exports = class Table extends SubView
     key = if k is "capturetime" then 'capturetime_epoch' else key
     return key
 
+  downloadData: (e) =>
+    if @collection
+      type = $(e.target).attr('data-type')
+      @collection.setParam 'limit', ''
+      url = @collection.url
+      s = url.split("?")
+      s[0] += "/" + type
+      url = s.join("?")
+      @collection.setParam 'limit', @limit
+      window.open(encodeURI(url))
+    return false
 
   sortByColumn:(e, set) =>
     key = $(e.currentTarget).data('key')
@@ -340,7 +347,6 @@ module.exports = class Table extends SubView
     @collection.setParam 'query', {}
     @collection.fetch({'filtered':true})
 
-
   formatData:(data) =>
     return data
 
@@ -358,7 +364,6 @@ module.exports = class Table extends SubView
     _.each data, (model) =>
       @insertRow(model, @insertDirection)
     @render()
-    @clearCache()
 
   infinitePage: =>
     if @collection and @collection.lastavail >= @limit
@@ -375,6 +380,7 @@ module.exports = class Table extends SubView
       @table = @$(".table.static")
       @controls = @table.hasClass('controls')
 
+      # Some extra nudging 
       extras = {'w':0, 'h':0, 't':0, 'l':0}
       if @controls
         extras.w = 4
@@ -418,10 +424,10 @@ module.exports = class Table extends SubView
 
     @updateHeader()
 
+    # Shows a placeholder row, that asks the user if they would like to see the hidden rows on sort
     if !@showHidden and @hasHidden
       cols = @tableCols.length
       $(".table.static tbody").prepend('<tr><td class="td showhidden" colspan="'+cols+'"><span class="controlButton">Show hidden rows?</span></td></tr>')
-
 
   reflow: =>
     super()
@@ -451,82 +457,3 @@ module.exports = class Table extends SubView
       @scroll = $(@scrollElem)
     @scrollLeft(per)
     @scrollDown(per)
-
-  #getScrollbar: =>
-  #  distance = @tbody.width() - @content.width().top
-  #  return (if distance > @scrollThreshold then distance else 0)
-
-  getCellStats:(index, colData) =>
-    if( @widthCache[index] ) then return @widthCache[index]
-    largest = 0
-    length = 0
-    count = colData.length - 1
-    for i in [0..count]
-      width   = $($(colData[i]).find("span"), @tbody).outerWidth() + 15
-      largest = width if width > largest
-      length += width
-    avg = Math.floor(length / count)
-    @widthCache[index] =
-      largest: largest
-      average: avg
-    return @widthCache[index]
-
-  clearCache: =>
-    @widthCache = {}
-
-  packTable: =>
-    return
-    cellGroups = @tbody.find(".cell-group + .cell-group")
-    colCount = @thead.find(".th").length
-    colWidths = []
-    newCols = []
-    avgWidths = []
-    packedReduction = 0
-    cachedHeaders = []
-    cachedColumns = []
-    cellCount = $(@tbody.find(".tr")[0]).find(".td").length
-    unless colCount is cellCount
-      return false
-    for i in [0..colCount-1]
-      cachedHeaders[i] = @thead.find(".th:nth-child(" + (i + 1) + ")")
-      cachedColumns[i] = @tbody.find(".tr .td:nth-child(" + (i + 1) + ")")
-    for i in [0..colCount-1]
-      stats = @getCellStats(i, cachedColumns[i])
-      colWidths.push stats.largest
-      avgWidths.push stats.average
-    for i in [0..colCount-1]
-      largest = colWidths[i]
-      th = cachedHeaders[i].css("width", largest)
-      td = cachedColumns[i].css("width", largest)
-      newCols.push $(td[0]).outerWidth()
-    sum = _.reduce(newCols, (a, b) -> a + b)
-    selfWidth = @tbody.width()
-    if sum >= selfWidth
-      gaps = []
-      distance = sum - selfWidth - 2
-      _.each _.zip(colWidths, avgWidths), ((item) -> gaps.push item[0] - item[1])
-      totalGap = _.reduce(gaps, (a, b) -> a + b)
-      if totalGap is 0
-        rolling = _.map(gaps, -> distance / colCount)
-      else
-        rolling = _.map(gaps, (item) -> Math.ceil distance * (item / totalGap))
-        rollsum = _.reduce(rolling, (a, b) -> a + b)
-      for i in [0..colCount-1]
-        largest = colWidths[i]
-        cachedHeaders[i].css "width", largest - rolling[i]
-        cachedColumns[i].css "width", largest - rolling[i]
-    else
-      distance = selfWidth - sum
-      bonus = Math.floor(distance / colCount)
-      for i in [0..colCount-1]
-        largest = colWidths[i]
-        cachedHeaders[i].css "width", largest + bonus
-        cachedColumns[i].css "width", largest + bonus
-    lastCell = $(@tbody.find(".tr")[0]).find(".td:last-child")
-    lastCellWidth = lastCell.outerWidth()
-    lastCellEnd = lastCellWidth + lastCell.position().left
-    distance = selfWidth - lastCellEnd
-    unless distance is 0
-      newWidth = lastCellWidth + distance
-      cachedHeaders[colCount-1].css "width", newWidth
-      cachedColumns[colCount-1].css "width", newWidth
