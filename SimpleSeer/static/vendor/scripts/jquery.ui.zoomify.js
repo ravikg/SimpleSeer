@@ -81,12 +81,12 @@ $.widget("ui.zoomify", {
 
     self.viewport = {zoom: options.zoom, x: options.x, y: options.y};
 
-    var content = $('<div class="window"><div class="view"><div class="frame"></div><img class="display" src="'+options.image+'"></div></div><div class="settings"><input type="text" value=""><div class="slider"></div></div>').appendTo(element);
+    var content = $('<div class="window"><div class="view"><div class="frame"></div><img class="display" src="'+options.image+'"></div></div><div class="settings"><input type="text" value=""><div class="sliderHolder"><div class="slider"></div></div></div>').appendTo(element);
     content.find("input").attr("value", self.viewport.zoom * 100 + "%");
     content.find(".display").load(function() { self.loaded = true; self.updateDisplay('zoom'); }).bind('dragstart', function(event) { event.preventDefault(); });;
 
     stuff = {width: element.find(".view").width(), height: options.realHeight * (element.find(".view").width() / options.realWidth)}
-    content.find(".view").attr("width", stuff.width).attr("height", stuff.height);
+    content.find(".view").css("height", stuff.height);
 
     content.find(".view").click(function(e) {
       self.viewport.x = (e.offsetX || e.originalEvent.layerX - $(e.target).position().left) - content.find(".frame").width() / 2;
@@ -109,7 +109,7 @@ $.widget("ui.zoomify", {
       value: (options.zoom * 100),
       slide: function(event, ui) {
         value = Math.floor(ui.value);
-        $(this).parent().find("input").attr("value",  value + "%");
+        $(this).parent().parent().find("input").attr("value",  value + "%");
         self.viewport.zoom = content.find("input").attr("value").replace(/\%/g, "") / 100;
         self.updateDisplay('zoom');
         self.viewport.x = content.find(".frame").position().left;
@@ -118,24 +118,18 @@ $.widget("ui.zoomify", {
       }
     });
 
-    content.find("input").keypress(function(e) {
+    content.find("input[type=text]").keypress(function(e) {
       if(e.which == 13){
         var input = $(this);
-        var value = String(Math.max(input.attr("value").replace("%", ""), self.options.min));
-        value = Math.floor(value);
-
-        // Set the slider's value
-        $("#control .slider").slider("option", "value", value.replace(/\%/g, ""));
-
-        // Add percent sign back in
-        input.attr("value", value.replace(/\%/g, "") + "%");
-        self.viewport.zoom = content.find("input").attr("value").replace(/\%/g, "") / 100;
-
+        var value = Math.floor(Math.max(parseInt(input.attr("value"), 10), self.options.min));
+        content.find(".slider").slider("option", "value", value);
+        input.attr("value", value + "%");
+        self.viewport.zoom = value / 100;
         self.updateDisplay('zoom');
       }
     });
 
-    $(window).resize(function() { self.updateDisplay('zoom'); });
+    //$(window).resize(function() { self.updateDisplay('zoom'); });
   },
 
   repaint: function() {
@@ -158,7 +152,7 @@ $.widget("ui.zoomify", {
         self.options.zoom = value;
         self.viewport.zoom = value;
         self.element.find(".slider").slider("option", "value", value * 100);
-        self.element.find("input").attr("value", Math.floor(value * 100) + "%");
+        self.element.find("input[type=text]").attr("value", Math.floor(value * 100) + "%");
         self.updateDisplay('zoom');
         break;
       case "x":

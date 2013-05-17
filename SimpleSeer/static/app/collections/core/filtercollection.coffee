@@ -60,6 +60,12 @@ module.exports = class FilterCollection extends Collection
 
     super(models,params)
     
+    if params.viewid?
+      olap = require 'models/OLAP'
+      @dataview = new olap({id:params.viewid})
+      @dataview.fetch({async:false})
+      params.url = "chart/data/#{@dataview.get('id')}"
+    
     # ###bindFilter:
     #   An instance of FilterCollection that when changed, bubbles the filter
     #   up through all bound filters.
@@ -78,8 +84,10 @@ module.exports = class FilterCollection extends Collection
     
     # Set baseUrl off of default url.  url is changed, baseUrl remains root url
     if params.url?
-      @url = params.url
-    @baseUrl = @url
+      @_url = params.url
+      @baseUrl = @_url
+    else
+      @baseUrl = @url    
     
     # Load filter widgets
     # TODO: make these collections
@@ -203,7 +211,10 @@ module.exports = class FilterCollection extends Collection
         order: @getParam 'sortorder'
         
     if limit != false
-      _json['limit'] = limit
+      if @dataview?
+        _json['limit'] = skip + limit
+      else
+        _json['limit'] = limit
     if @getParam('groupby')
       _json['groupByField'] = {groupby: @getParam('groupby'), groupfns: @getParam('groupfns')}
     if addParams
@@ -237,7 +248,9 @@ module.exports = class FilterCollection extends Collection
         at = 0
       else
         at = (@_all.length)
-      @add @_all, {at:at ,silent: true}
+      # I disabled this because i think we always want paginated data at the pushed on to the stack - Jim
+      #@add @_all, {at:at ,silent: true}
+      @add @_all, {at:0, silent: true}
       @_all = []
     for o in @callbackStack['post']
       if typeof o == 'function'
@@ -299,7 +312,7 @@ module.exports = class FilterCollection extends Collection
       if params.success
         @callbackStack['post'].push params.success
       params.success = @postFetch
-      if @url != _url or params.force
+      if @_url != _url or params.force
         @url = _url
         super(params)
       else if params.success
@@ -307,10 +320,33 @@ module.exports = class FilterCollection extends Collection
   
   # parses data returned by `fetch`.  (after `preFetch` and `fetch`, but before `postFetch`)
   parse: (response) =>
-    @totalavail = response.total_frames
-    @lastavail = response.frames?.length || 0
-    @setRaw (response)
-    #dir = @getParam 'sortorder'
-    #if dir and response.frames
-    #  response.frames = response.frames.reverse()
-    return response.frames
+    # check for new olap request
+    if response.data?
+      @lastavail = response.data?.length || 0
+      keys = @dataview.get("dataMap")
+      map = @dataview.get("_ormMap")
+      frames = []
+      for f in response.data
+        frame = {id:f.m[0], results:[]}
+        meas = {}
+        for i,k of keys
+          if map.root[k]?
+            frame[k] = f.d[i]
+          else if map.results[k]?
+            fa = k.split(".")
+            if !meas[fa[0]]?
+              meas[fa[0]] = {}
+            meas[fa[0]]['measurement_name'] = fa[0]
+            meas[fa[0]][fa[1]] = f.d[i]
+        for i,me of meas
+          frame.results.push me
+        frames.push frame
+      return frames
+    else
+      @totalavail = response.total_frames
+      @lastavail = response.frames?.length || 0
+      @setRaw (response)
+      #dir = @getParam 'sortorder'
+      #if dir and response.frames
+      #  response.frames = response.frames.reverse()
+      return response.frames

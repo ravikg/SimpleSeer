@@ -58,7 +58,7 @@ class Frame(SimpleDoc, mongoengine.Document):
     imgfile = mongoengine.FileField()
     thumbnail_file = mongoengine.FileField()
     metadata = mongoengine.DictField()
-    notes = mongoengine.StringField()
+    notes = mongoengine.StringField(default='')
     _imgcache = ''
     _imgcache_dirty = False
     _recentframes = [] #class-wide frame cache for lastobjects()
@@ -71,7 +71,8 @@ class Frame(SimpleDoc, mongoengine.Document):
     @classmethod
     #which fields we care about for Filter.py
     def filterFieldNames(cls):
-        return ['_id', 'camera', 'capturetime', 'capturetime_epoch', 'localtz', 'metadata', 'notes', 'height', 'width', 'imgfile', 'results']
+        return ['_id', 'capturetime', 'capturetime_epoch', 'updatetime', 'localtz', 'camera', 'height', 
+               'width', 'clip_id', 'clip_frame', 'imgfile', 'thumbnail_file', 'metadata', 'notes', 'results']
 
 
     @classmethod

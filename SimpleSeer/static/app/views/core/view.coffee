@@ -12,12 +12,13 @@ module.exports = class View extends Backbone.View
   initialize: (options={}) =>
     super()
 
-    if options.context?
+    if @options.context?
       # Load any context attached to view
       # For further details, see:
       # _SeerCloud/_ `models/core/context`
       # _SimpleSeer/_ `seer_application`
-      application.loadContext(options.context)
+      application.loadContext(@options.context)
+    #@on "uiFocus", @focus
     @subviews = {}
 
   _setScroll: (el=@$el) =>
@@ -25,11 +26,33 @@ module.exports = class View extends Backbone.View
       onScroll:(per) => @trigger('scroll', per)
       #onPage: => @trigger('page')
 
-  focus: =>
-    if !@$el.is(":visible")
-      @$el.show()
-    if @options.context
-      application.context[@options.context].activate()
+  focus:(back=false) =>
+    #console.info 'in focus'
+    #if !back and !@$el.is(":visible")
+    #  @$el.show()
+    if application.loading
+      #console.log 'loading...'
+      if @options.context
+        if back
+          application.loading = false
+        #console.log 'ACTIVATING CONTEXT!'
+        application.context[@options.context].activate()
+        back = false
+      else
+        back = true
+      if !back
+        for i,o of @subviews
+          o.focus()
+      else
+        if @options.parent?
+          @options.parent.focus(true)
+
+  unfocus: =>
+    #if @$el.is(":visible")
+    #  @$el.hide()
+    for i,o of @subviews
+      o.unfocus()
+
 
   # Override in child class.  Returns template handlebars function
   template: =>
@@ -70,10 +93,12 @@ module.exports = class View extends Backbone.View
 
   # Renders view using effects if defined
   render: =>
+    #console.log 'render'
     callback = =>
       @$el.html @template @getRenderData()
       @renderSubviews()
-      @focus()
+      #@focus()
+      #@trigger "uiFocus"
       @afterRender()
       if @firstRender  && (@onScroll? || @onPage?)
         _ele = @$el.find(@scrollElement)

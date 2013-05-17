@@ -4,12 +4,11 @@
   display: none;
   cursor: default;
   position: relative;
-  top: 6px;
+  top: -1px;
   left: 34px;
   width: @paneWidth;
   height: auto;
   border: 1px solid #1B1C1E;
-  border-radius: 2px;
   background: #999ca4;
   box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.4);
 
@@ -20,7 +19,7 @@
 
   &:before {
     position: absolute;
-    top: 4px;
+    top: 11px;
     left: -5px;
     z-index: 43;
     width: 5px;
@@ -41,7 +40,7 @@
       box-sizing: content-box;
       -moz-box-sizing: content-box;
     }
-  }  
+  }
 
   .bar {
     float: left;
@@ -61,7 +60,7 @@
       margin-right: 4px;
       background:
         url("../img/arrow_context_dropdown.png") no-repeat 1px 7px;
-    } 
+    }
 
     .tabs {
       display: inline-block;
@@ -81,14 +80,14 @@
 
         -webkit-user-select: none;
         -moz-user-select: none;
-        -ms-user-select: none;     
+        -ms-user-select: none;
 
         &.active {
           cursor: default;
           padding: 4px 12px 0px 9px;
           background:
             /*url("../img/arrow_expand_v.png") no-repeat 5px 8px,*/
-            #999ca4;  
+            #999ca4;
         }
 
         &.blue {
@@ -107,9 +106,9 @@
           box-shadow:
             inset 0px 1px 0px #CB3500,
             inset 0px 4px 0px #952500;
-        }     
-                       
+        }
+
       }
-    }    
+    }
   }
 }
