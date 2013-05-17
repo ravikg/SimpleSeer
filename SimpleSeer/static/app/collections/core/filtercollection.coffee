@@ -212,7 +212,7 @@ module.exports = class FilterCollection extends Collection
         
     if limit != false
       if @dataview?
-        _json['limit'] = skip + @_defaults['limit']
+        _json['limit'] = skip + limit
       else
         _json['limit'] = limit
     if @getParam('groupby')
@@ -328,15 +328,18 @@ module.exports = class FilterCollection extends Collection
       frames = []
       for f in response.data
         frame = {id:f.m[0], results:[]}
+        meas = {}
         for i,k of keys
           if map.root[k]?
             frame[k] = f.d[i]
           else if map.results[k]?
             fa = k.split(".")
-            res = {}
-            res['measurement_name'] = fa[0]
-            res[fa[1]] = f.d[i]
-            frame.results.push res
+            if !meas[fa[0]]?
+              meas[fa[0]] = {}
+            meas[fa[0]]['measurement_name'] = fa[0]
+            meas[fa[0]][fa[1]] = f.d[i]
+        for i,me of meas
+          frame.results.push me
         frames.push frame
       return frames
     else
