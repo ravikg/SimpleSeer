@@ -311,8 +311,8 @@ module.exports = class Table extends SubView
   downloadData: (e) =>
     if @collection
       type = $(e.target).attr('data-type')
-      @collection.setParam 'limit', ''
-      url = @collection.url
+      @collection.setParam 'limit', 999999999
+      url = @collection.baseUrl + @collection.getUrl()
       s = url.split("?")
       s[0] += "/" + type
       url = s.join("?")
