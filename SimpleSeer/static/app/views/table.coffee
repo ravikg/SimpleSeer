@@ -31,6 +31,7 @@ module.exports = class Table extends SubView
   persistentHeader: false
   showHidden: false
   hasHidden: false
+  noData: false
   scrollElem: '#content #slides'
   viewid: "5089a6d31d41c855e4628fb0"
 
@@ -96,7 +97,7 @@ module.exports = class Table extends SubView
     @subscribe()
 
   emptyData: =>
-    if @emptyCollection.length 
+    if @emptyCollection.length > 1
       @hasHidden = true
 
   getEmptyCollection: (key) =>
@@ -358,6 +359,10 @@ module.exports = class Table extends SubView
       @scroll.scrollTop(0)
       @cof = false
     @rows = []
+    if @collection and !@collection.length
+      @noData = true
+    else
+      @noData = false
     if @collection and @collection.models
       @tableData = @collection.models
     data = @formatData(@tableData)
@@ -428,6 +433,11 @@ module.exports = class Table extends SubView
     if !@showHidden and @hasHidden
       cols = @tableCols.length
       $(".table.static tbody").prepend('<tr><td class="td showhidden" colspan="'+cols+'"><span class="controlButton">Show hidden rows?</span></td></tr>')
+
+    # Shows the row if there is no data
+    if @noData
+      cols = @tableCols.length
+      $(".table.static tbody").prepend('<tr><td class="td showhidden" colspan="'+cols+'">There was no data. Try expanding your filters.</td></tr>')
 
   reflow: =>
     super()
