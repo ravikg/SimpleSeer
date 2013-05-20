@@ -226,6 +226,8 @@ module.exports = class FilterCollection extends Collection
   getUrl: (total=false, addParams, dataSet=false)=>
     if !dataSet
       dataSet = @getSettings(total, addParams)
+    if dataSet.sortinfo.name?
+      dataSet.sortinfo.name = encodeURIComponent dataSet.sortinfo.name
     "/"+JSON.stringify dataSet
 
   # trigger fired before the fetch method makes request to server 
