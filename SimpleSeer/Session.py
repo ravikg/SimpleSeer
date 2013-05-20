@@ -59,6 +59,9 @@ class Session():
     def configure(self, d):
         from .models.base import SONScrub
         self._config = d
+        if self.mongo.get('master', False):
+            master = self.mongo.pop("master")
+            mongoengine.connect(self.database, **master)
         mongoengine.connect(self.database, **self.mongo)
         db = mongoengine.connection.get_db()
         db.add_son_manipulator(SONScrub())

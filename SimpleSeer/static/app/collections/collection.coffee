@@ -27,7 +27,9 @@ module.exports = class Collection extends Backbone.Collection
         return
       else
         @ajaxTried = 0
-        $('#lost_connection').dialog 'open'
+        # THE EVIL UGLY ERROR BOX!!
+        #$('#lost_connection').dialog 'open'
+        console.error "Error: Lost Connection (collection.coffee)"
 
   fetch: (args) =>
     if @cachebust

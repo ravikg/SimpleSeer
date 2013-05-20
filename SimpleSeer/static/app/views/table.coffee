@@ -314,7 +314,7 @@ module.exports = class Table extends SubView
       @collection.setParam 'limit', 999999999
       url = @collection.baseUrl + @collection.getUrl()
       s = url.split("?")
-      s[0] += "/" + type
+      s[0] += "/format/" + type
       url = s.join("?")
       @collection.setParam 'limit', @limit
       window.open(encodeURI(url))
