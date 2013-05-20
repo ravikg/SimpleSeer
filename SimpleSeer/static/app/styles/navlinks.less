@@ -14,13 +14,12 @@
 		line-height: 24px;
 		padding-left: 24px;
 		position: relative;
-
-		&.selected {
-			background: url("/img/MT_CCCCCC.png") repeat;
-		}
+		background: transparent;
+		-webkit-transition: background 150ms linear;
+		-moz-transition: background 150ms linear;
 
 		&:hover {
-			background: url("/img/MT_CCCCCC.png") repeat;
+			background: #CCC;
 		}
 
 		&:first-child:hover {
@@ -45,7 +44,7 @@
 			}
 		}
 
-		.icon { 
+		.icon {
 			position: absolute;
 			top: 1px; left: 1px;
 			width: 24px;
@@ -55,14 +54,14 @@
 
 			background: transparent no-repeat center center;
 		}
-	}	
+	}
 
 	&.fixed {
 		display: block;
 		border-top: none;
 		margin-top: -7px;
 		box-shadow: 0px 1px 0px #C9CCD1;
-		
+
 		&:empty { display: none; }
 	}
 }
@@ -76,7 +75,7 @@
 	font-size: 13px;
 	color: #222;
 	padding-top: 1px;
-	
+
 	margin: 0;
 	margin-bottom: -7px;
 	margin-top: -3px;
