@@ -99,6 +99,7 @@ module.exports = class Table extends SubView
   emptyData: =>
     if @emptyCollection.length > 1
       @hasHidden = true
+    @collection.fetch({'filtered':true})
 
   getEmptyCollection: (key) =>
     if @collection and !@showHidden
@@ -338,10 +339,10 @@ module.exports = class Table extends SubView
     @cof = true
     if @showHidden
       @collection.setParam 'query', {}
+      @collection.fetch({'filtered':true})
     else
       @collection.setParam 'query', {"logic":"and","criteria":[{"type":"frame","isset":1,"name":k}]}
-    @getEmptyCollection(k)
-    @collection.fetch({'filtered':true})
+      @getEmptyCollection(k)
 
   showHiddenEvent: (e) =>
     @showHidden = true
