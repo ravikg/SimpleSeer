@@ -39,17 +39,20 @@
 }
 
 .ui-zoomify .settings {
-  padding-top: 9px;
+  padding-top: 8px;
   height: 23px;
 }
 
 .ui-zoomify .settings input[type=text] {
+  margin-top: 1px;
   font-size: 13px;
-  height: 12px;
+  height: 11px;
   margin-bottom: 0;
-  padding: 4px 4px 5px 4px;
+  padding: 3px 4px 5px 4px;
   width: 45px;
   border: 1px solid #5F5F5F;
+  border-radius: 2px;
+  color: #000;
 }
 
 .ui-zoomify .settings .slider {
