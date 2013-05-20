@@ -108,8 +108,8 @@ module.exports = class Table extends SubView
       @emptyCollection.setParam 'sortorder', @direction
       @emptyCollection.setParam 'limit', @limit
       @emptyCollection.setParam 'query', {"logic":"and","criteria":[{"type":"frame","isset":0,"name":key}]}
-      @emptyCollection.on('reset',@emptyData)
-      @emptyCollection.fetch({'async':false})
+      #@emptyCollection.on('reset',@emptyData)
+      @emptyCollection.fetch({'async':false, modal:success:@emptyData})
 
   subscribe: (channel="") =>
     if channel
