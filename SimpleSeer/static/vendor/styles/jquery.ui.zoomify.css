@@ -8,6 +8,7 @@
 }
 
 .ui-zoomify .window .view {
+  overflow: hidden;
   padding: 0px;
   width: 100%;
   border: 1px solid #000;
@@ -28,6 +29,8 @@
   -moz-box-sizing: border-box;
   background: rgba(0, 122, 255, .3);
   z-index: 1;
+  cursor: move;
+  box-shadow: #000 0px 0px 25px;
 }
 
 .ui-zoomify .window .view .display{
@@ -77,6 +80,7 @@
   border-bottom-left-radius: 0px;
   background-color: #D1D1D1;
   top: -6px;
+  cursor: move;
 }
 
 .ui-zoomify .settings .sliderHolder {
