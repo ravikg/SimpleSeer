@@ -63,7 +63,7 @@
     {% endblock %}
 
     <!-- browser compatability check -->
-    <script type="text/javascript">setTimeout(function(){if(typeof SimpleSeer==="undefined"){$("#browser_fail").show()}else{$("#app_load").hide()}if($("#browser_fail").is(":visible")==true){$("#lost_connection, #app_load").hide()}},1e4)</script>
+    <script type="text/javascript">setTimeout(function(){if(typeof SimpleSeer==="undefined"){$("#browser_fail").show()}else{$("#app_load").hide()}if($("#browser_fail").is(":visible")==true){$("#app_load").hide()}},1e4)</script>
 
     <!-- div where non-blocking pop-up messages are written.  Soon to be pushed in to modal logic, and removed. -->
     <div id="messages" class="span10 offset1"></div>
@@ -71,6 +71,5 @@
     {% block modal %}
     <div id="modal"></div>
     {% endblock %}
-    <div id="lost_connection" title="Error"></div>
   </body>
 </html>
