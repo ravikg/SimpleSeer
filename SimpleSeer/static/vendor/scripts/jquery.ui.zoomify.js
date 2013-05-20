@@ -178,7 +178,7 @@ $.widget("ui.zoomify", {
         self.updateDisplay('zoom');
         break;
       case "height":
-        self.options.height = Math.floor(value);
+        self.options.height = value;
         self.updateDisplay('pan');
     }
   }
