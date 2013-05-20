@@ -34,8 +34,8 @@
                 $tip.remove().css({top: 0, left: 0, visibility: 'hidden', display: 'block'}).prependTo(document.body);
 
                 var pos = $.extend({}, this.$element.offset())
-                pos.width = $(this.$element[0]).width();
-                pos.height = $(this.$element[0]).height();
+                pos.width = 6; //$(this.$element[0]).width();
+                pos.height = 6; //$(this.$element[0]).height();
 
                 var actualWidth = $tip[0].offsetWidth,
                     actualHeight = $tip[0].offsetHeight,
@@ -44,13 +44,13 @@
                 var tp;
                 switch (gravity.charAt(0)) {
                     case 'n':
-                        tp = {top: (pos.top + pos.height) + this.options.offsetTop, left: (pos.left + pos.width / 2 - actualWidth / 2) + this.options.offsetLeft};
+                        tp = {top: (pos.top + pos.height) - this.options.offsetTop, left: (pos.left + pos.width / 2 - actualWidth / 2) + this.options.offsetLeft};
                         break;
                     case 's':
                         tp = {top: (pos.top - actualHeight) + this.options.offsetTop, left: (pos.left + pos.width / 2 - actualWidth / 2) + this.options.offsetLeft};
                         break;
                     case 'e':
-                        tp = {top: (pos.top + pos.height / 2 - actualHeight / 2) + this.options.offsetTop, left: (pos.left - actualWidth) + this.options.offsetLeft};
+                        tp = {top: (pos.top + pos.height / 2 - actualHeight / 2) - this.options.offsetTop, left: (pos.left - actualWidth) - this.options.offsetLeft};
                         break;
                     case 'w':
                         tp = {top: (pos.top + pos.height / 2 - actualHeight / 2) + this.options.offsetTop, left: (pos.left + pos.width) + this.options.offsetLeft};

@@ -81,7 +81,7 @@ $.widget("ui.zoomify", {
 
     self.viewport = {zoom: options.zoom, x: options.x, y: options.y};
 
-    var content = $('<div class="window"><div class="view"><div class="frame"></div><img class="display" src="'+options.image+'"></div></div><div class="settings"><input type="text" value=""><div class="sliderHolder"><div class="slider"></div></div></div>').appendTo(element);
+    var content = $('<div class="window"><div class="view"><div class="frame"></div><img class="display" src="'+options.image+'"></div></div><div class="settings"><input type="text" value="" onclick="this.select()"><div class="sliderHolder"><div class="slider"></div></div></div>').appendTo(element);
     content.find("input").attr("value", self.viewport.zoom * 100 + "%");
     content.find(".display").load(function() { self.loaded = true; self.updateDisplay('zoom'); }).bind('dragstart', function(event) { event.preventDefault(); });;
 
@@ -121,7 +121,7 @@ $.widget("ui.zoomify", {
     content.find("input[type=text]").keypress(function(e) {
       if(e.which == 13){
         var input = $(this);
-        var value = Math.floor(Math.max(parseInt(input.attr("value"), 10), self.options.min));
+        var value = Math.floor(Math.min(Math.max(parseInt(input.attr("value"), 10), self.options.min), self.options.max));
         content.find(".slider").slider("option", "value", value);
         input.attr("value", value + "%");
         self.viewport.zoom = value / 100;
