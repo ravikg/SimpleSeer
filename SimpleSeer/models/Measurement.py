@@ -212,7 +212,7 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
             log.info('Backfilling measurement on frame %s' % frame.id)
             if frame.results:
                 self.tolerance(frame, frame.results)
-                frame.save()
+                frame.save(publish=False)
         Alert.clear()
         Alert.refresh('backfill')
 
