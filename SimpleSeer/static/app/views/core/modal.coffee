@@ -71,6 +71,11 @@ module.exports = class modal extends View
     else
       @$el.find(".message").hide()
 
+    if options.title?
+      @$(".title").html(options.title).show()
+    else
+      @$(".title").hide()
+
     #success and cancel
     for i in ['success','cancel']
       if options[i]?
