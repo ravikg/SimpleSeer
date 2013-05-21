@@ -57,6 +57,7 @@
   border-radius: 2px;
   color: #000;
   font-family: Arial, sans-serif;
+  box-shadow: 0px 1px 0px #B4B5BB;
 }
 
 .ui-zoomify .settings .slider {
@@ -82,6 +83,7 @@
   background-color: #D1D1D1;
   top: -6px;
   cursor: move;
+  border-radius: 1px;
 }
 
 .ui-zoomify .settings .sliderHolder {
