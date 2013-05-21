@@ -35,7 +35,7 @@ module.exports = class View extends Backbone.View
       if @options.context
         if back
           application.loading = false
-        #console.log 'ACTIVATING CONTEXT!'
+        #console.log 'ACTIVATING CONTEXT!', @options.context
         application.context[@options.context].activate()
         back = false
       else
