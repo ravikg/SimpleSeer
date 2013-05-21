@@ -121,10 +121,10 @@ module.exports = class modal extends View
   onSuccess:(values={}) =>
     if !values.action?
       values.action = 'DEFAULT'
-    for f in @_callbacks['success']
-      r = f(values)
     if !values.userInput?
       values.userInput = @$el.find('input').val()
+    for f in @_callbacks['success']
+      r = f(values)
     @$el.hide("fade")
     if r != true
       @_reset()
