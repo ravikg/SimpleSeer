@@ -35,6 +35,10 @@ module.exports = class SubView extends View
     super
     @
 
+  select: =>
+    if @filtercollection?
+      @filtercollection.fetch({filtered:true})
+
   # Used for pagination
   _pageTrigger: =>
     @trigger 'page'
