@@ -40,6 +40,7 @@ module.exports = class modal extends View
   _reset: () =>
     for i of @_callbacks
       @_callbacks[i] = []
+
     # @TODO: what the?
     #@$el.find(".message").html('')
     return
@@ -125,8 +126,8 @@ module.exports = class modal extends View
       values.userInput = @$el.find('input').val()
     for f in @_callbacks['success']
       r = f(values)
-    @$el.hide("fade")
     if r != true
+      @$el.hide("fade")
       @_reset()
     return
 
