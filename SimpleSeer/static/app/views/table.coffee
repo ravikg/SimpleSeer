@@ -432,6 +432,7 @@ module.exports = class Table extends SubView
 
   infinitePage: =>
     if @collection and @collection.lastavail >= @limit
+      @left = undefined
       @collection.setParam('skip', (@collection.getParam('skip') + @limit))
       @collection.fetch()
 
@@ -488,6 +489,7 @@ module.exports = class Table extends SubView
       @scroll = $(@scrollElem)
 
     @updateHeader()
+    @scrollPage(0)
 
     # Shows a placeholder row, that asks the user if they would like to see the hidden rows on sort
     if !@showHidden and @hasHidden
