@@ -59,14 +59,6 @@ module.exports = SeerApplication =
       onPage: =>
         @activeTab.trigger 'page'
 
-        # Set up the timeout message dialog.
-    $('#lost_connection').dialog
-      autoOpen: false
-      modal: true
-      buttons:
-        Ok: ->
-          $( this ).dialog( "utorialclose" )
-
   _preinitialize: ->
     tc = require 'collections/tab_container'
     @tabs = new tc()

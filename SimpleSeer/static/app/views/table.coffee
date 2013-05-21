@@ -15,6 +15,7 @@ module.exports = class Table extends SubView
   editableList:{}
   sortKey: 'id'
   sortDirection: 'desc'
+  lastSortKey: undefined
   cof: false
   editable: true
   renderComplete: false
@@ -97,18 +98,37 @@ module.exports = class Table extends SubView
     @subscribe()
 
   emptyData: =>
-    if @emptyCollection.length > 1
-      @hasHidden = true
+    if @emptyCollection
+      if !@emptyCollection.length
+        @hasHidden = false
+      else if @emptyCollection.length == 1
+        if @emptyCollection.models and @emptyCollection.models[0] and @emptyCollection.models[0].attributes
+          if !@emptyCollection.models[0].attributes.id
+            @hasHidden = false
+          else
+            @hasHidden = true
+      else
+        @hasHidden = true
+    else if @emptyCollection.length > 1
+      @hasHidden = false
+    @collection.fetch({'filtered':true})
 
-  getEmptyCollection: (key) =>
+  getEmptyCollection: (key, cquery) =>
     if @collection and !@showHidden
       @emptyCollection = new @_collection([],{model:@_model,clearOnFetch:@cof,url:@_url,viewid:@viewid})
       @emptyCollection.setParam 'sortkey', @getSortKey(@sortKey)
       @emptyCollection.setParam 'sortorder', @direction
       @emptyCollection.setParam 'limit', @limit
-      @emptyCollection.setParam 'query', {"logic":"and","criteria":[{"type":"frame","isset":0,"name":key}]}
-      @emptyCollection.on('reset',@emptyData)
-      @emptyCollection.fetch({'async':false})
+
+      if cquery and cquery.criteria
+        _.each cquery.criteria, (criteria, id) =>
+          if criteria.isset
+            cquery.criteria[id].isset = 0
+      else 
+        cquery = {"logic":"and","criteria":[{"type":"frame","isset":0,"name":key}]}
+
+      @emptyCollection.setParam 'query', cquery
+      @emptyCollection.fetch({'async':false, modal:success:@emptyData})
 
   subscribe: (channel="") =>
     if channel
@@ -314,7 +334,7 @@ module.exports = class Table extends SubView
       @collection.setParam 'limit', 999999999
       url = @collection.baseUrl + @collection.getUrl()
       s = url.split("?")
-      s[0] += "/" + type
+      s[0] += "/format/" + type
       url = s.join("?")
       @collection.setParam 'limit', @limit
       window.open(encodeURI(url))
@@ -323,6 +343,10 @@ module.exports = class Table extends SubView
   sortByColumn:(e, set) =>
     key = $(e.currentTarget).data('key')
     direction = $(e.currentTarget).attr('direction') || "desc"
+    if @lastSortKey and key != @lastSortKey
+      @showHidden = false
+    if key
+      @lastSortKey = key
     k = @getSortKey(key)
     if !set
       @collection.setParam 'sortkey', k
@@ -336,17 +360,43 @@ module.exports = class Table extends SubView
       @sortDirection = 'asc'
       @direction = 1
     @cof = true
+    query = @collection.getParam 'query'
     if @showHidden
-      @collection.setParam 'query', {}
+      if query.criteria
+        _.each query.criteria, (criteria, id) =>
+          if criteria.isset
+            delete(query.criteria[id])
+      query.criteria = _.compact(query.criteria)
+      @collection.setParam 'query', query
+      @collection.fetch({'filtered':true})
     else
-      @collection.setParam 'query', {"logic":"and","criteria":[{"type":"frame","isset":1,"name":k}]}
-    @getEmptyCollection(k)
-    @collection.fetch({'filtered':true})
+      if query
+        if query.criteria
+          _.each query.criteria, (criteria, id) =>
+            if criteria.isset
+              delete(query.criteria[id])
+          query.criteria.push({"type":"frame","isset":1,"name":k})
+          query.criteria = _.compact(query.criteria)
+        else 
+          query = {"logic":"and","criteria":[{"type":"frame","isset":1,"name":k}]}
+        @collection.setParam 'query', query
+      else
+        query = {"logic":"and","criteria":[{"type":"frame","isset":1,"name":k}]}
+        @collection.setParam 'query', query
+      cquery = $.extend(true, {}, query);
+      @getEmptyCollection(k, cquery)
 
   showHiddenEvent: (e) =>
     @showHidden = true
-    @collection.setParam 'query', {}
-    @collection.fetch({'filtered':true})
+    query = @collection.getParam 'query'
+    if @showHidden
+      if query.criteria
+        _.each query.criteria, (criteria, id) =>
+          if criteria.isset
+            delete(query.criteria[id])
+      query.criteria = _.compact(query.criteria)
+      @collection.setParam 'query', query
+      @collection.fetch({'filtered':true})
 
   formatData:(data) =>
     return data
@@ -359,19 +409,30 @@ module.exports = class Table extends SubView
       @scroll.scrollTop(0)
       @cof = false
     @rows = []
-    if @collection and !@collection.length
-      @noData = true
+    if @collection
+      if !@collection.length
+        @noData = true
+      else if @collection.length == 1
+        if @collection.models and @collection.models[0] and @collection.models[0].attributes
+          if !@collection.models[0].attributes.id
+            @noData = true
+          else
+            @noData = false
+      else
+        @noData = false
     else
       @noData = false
     if @collection and @collection.models
       @tableData = @collection.models
     data = @formatData(@tableData)
-    _.each data, (model) =>
-      @insertRow(model, @insertDirection)
+    if !@noData
+      _.each data, (model) =>
+        @insertRow(model, @insertDirection)
     @render()
 
   infinitePage: =>
     if @collection and @collection.lastavail >= @limit
+      @left = undefined
       @collection.setParam('skip', (@collection.getParam('skip') + @limit))
       @collection.fetch()
 
@@ -428,6 +489,7 @@ module.exports = class Table extends SubView
       @scroll = $(@scrollElem)
 
     @updateHeader()
+    @scrollPage(0)
 
     # Shows a placeholder row, that asks the user if they would like to see the hidden rows on sort
     if !@showHidden and @hasHidden

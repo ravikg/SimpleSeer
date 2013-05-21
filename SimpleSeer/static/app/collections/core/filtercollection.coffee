@@ -75,6 +75,7 @@ module.exports = class FilterCollection extends Collection
     #   > when you change the initial FilterCollection, all others
     #   > refresh with filter settings
     if params.bindFilter
+      #@bindTo params.bindFilter.subCollection
       params.bindFilter.subCollection @
       @bindFilter = params.bindFilter
       @bindFilter
@@ -87,7 +88,8 @@ module.exports = class FilterCollection extends Collection
       @_url = params.url
       @baseUrl = @_url
     else
-      @baseUrl = @url    
+      @baseUrl = @url
+    @_lastUrl = ''
     
     # Load filter widgets
     # TODO: make these collections
@@ -97,6 +99,12 @@ module.exports = class FilterCollection extends Collection
       application.settings.ui_filters_framemetadata = []
 
     return @
+
+  bindTo: (collection) =>
+    collection.subCollection @
+    @bindFilter = collection
+    #@bindFilter
+    @_sortParams = @bindFilter.getSettings()    
 
   # Add sub collection
   subCollection: (collection) =>
@@ -226,11 +234,13 @@ module.exports = class FilterCollection extends Collection
   getUrl: (total=false, addParams, dataSet=false)=>
     if !dataSet
       dataSet = @getSettings(total, addParams)
+    if dataSet.sortinfo.name?
+      dataSet.sortinfo.name = encodeURIComponent dataSet.sortinfo.name
     "/"+JSON.stringify dataSet
 
   # trigger fired before the fetch method makes request to server 
   preFetch:(params)=>
-    if params.modal
+    if params.modal and !@mute
       application.modal.show(params.modal)
     if !@clearOnFetch
       @_all = @models
@@ -312,7 +322,8 @@ module.exports = class FilterCollection extends Collection
       if params.success
         @callbackStack['post'].push params.success
       params.success = @postFetch
-      if @_url != _url or params.force
+      if @_lastUrl != _url or params.force
+        @_lastUrl = _url
         @url = _url
         super(params)
       else if params.success
