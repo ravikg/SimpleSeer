@@ -82,7 +82,7 @@ $.widget("ui.zoomify", {
     self.viewport = {zoom: options.zoom, x: options.x, y: options.y};
 
     var content = $('<div class="window"><div class="view"><div class="frame"></div><img class="display" src="'+options.image+'"></div></div><div class="settings"><input type="text" value="" onclick="this.select()"><div class="sliderHolder"><div class="slider"></div></div></div>').appendTo(element);
-    content.find("input").attr("value", self.viewport.zoom * 100 + "%");
+    content.find("input").attr("value", Math.floor(self.viewport.zoom * 100) + "%");
     content.find(".display").load(function() { self.loaded = true; self.updateDisplay('zoom'); }).bind('dragstart', function(event) { event.preventDefault(); });;
 
     stuff = {width: element.find(".view").width(), height: options.realHeight * (element.find(".view").width() / options.realWidth)}
