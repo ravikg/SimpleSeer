@@ -285,7 +285,7 @@ class Frame(SimpleDoc, mongoengine.Document):
             realtime.ChannelManager().publish("framedelete/", { "id": str(self.id) })
         
         self.delete_image()
-        super(Frame, self).save(*args, **kwargs)
+        super(Frame, self).delete(*args, **kwargs)
         
     def serialize(self):
         s = StringIO()

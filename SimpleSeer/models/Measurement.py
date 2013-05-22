@@ -203,7 +203,8 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
     def backfillTolerances(self):
         from .Frame import Frame
         from .Alert import Alert
-
+        from ..realtime import ChannelManager
+        
         #NJO, we shouldn't be doing this, but we need something to trigger
         #and our REST stuff is a little too static
         Alert.info("Backfilling Measurements")
@@ -215,6 +216,7 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
                 frame.save(publish=False)
         Alert.clear()
         Alert.refresh('backfill')
+        res = ChannelManager().rpcSendRequest('olap_req/', {'action': 'rebuild'})
 
     def findFeatureset(self, features):
 
