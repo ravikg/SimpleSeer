@@ -93,9 +93,25 @@ module.exports = class Table extends SubView
       @collection.setParam 'sortkey', @getSortKey(@sortKey)
       @collection.setParam 'sortorder', @direction
       @collection.setParam 'limit', @limit
+    @collection.subscribePath = "frameupdate"
+    @collection.subscribe(false,@receive)
+    @collection.subscribePath = "framedelete"
+    @collection.subscribe(false,@receive)
     @collection.on('reset',@updateData)
     @collection.fetch()
     @subscribe()
+
+  receive: (data) =>
+    poo = @collection.where({id:data.data.id})[0]
+    if data.channel == "framedelete/"
+      if poo
+        @collection.remove(poo)
+    else
+      if poo
+        poo.attributes = data.data
+      else
+        @collection.add(data.data,{at:0})
+    @render()
 
   emptyData: =>
     if @emptyCollection
