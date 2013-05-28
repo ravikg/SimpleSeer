@@ -86,6 +86,9 @@ module.exports = class Table extends SubView
       @_model = require "models/frame"
       @_url = "api/frame"
 
+  getCollectionExtras: =>
+    return    
+
   getCollection: =>
     bindFilter = Application.context[@options.parent.dashboard.options.parent.options.context].filtercollection
     @collection = new @_collection([],{bindFilter:bindFilter,model:@_model,clearOnFetch:@cof,url:@_url,viewid:@viewid})
@@ -93,6 +96,7 @@ module.exports = class Table extends SubView
       @collection.setParam 'sortkey', @getSortKey(@sortKey)
       @collection.setParam 'sortorder', @direction
       @collection.setParam 'limit', @limit
+    @getCollectionExtras()
     @collection.subscribePath = "frameupdate"
     @collection.subscribe(false,@receive)
     @collection.subscribePath = "framedelete"
@@ -317,6 +321,7 @@ module.exports = class Table extends SubView
   renderRow:(row) =>
     values = []
     classes = if row.classes then row.classes else {}
+    titles = if row.titles then row.titles else {}
     id = if row.id then row.id else ''
 
     _.each @tableCols, (v, k) =>
@@ -324,9 +329,12 @@ module.exports = class Table extends SubView
       val = row[v.key]
       value = @renderCell(val, key)
       cls = v.key
+      title = ""
       if classes and classes[key]
         cls += ' ' + classes[key]
-      values.push {'class' : cls, 'value' : value}
+      if titles and titles[key]
+        title = titles[key]
+      values.push {'class' : cls, 'value' : value, 'title' : title}
 
     return {id: row.id, values: values}
 
