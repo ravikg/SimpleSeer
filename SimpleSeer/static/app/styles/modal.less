@@ -1,0 +1,48 @@
+.modal-body{
+    height: 100%;
+    left: 0;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index:10000;
+}
+
+#throbberBody{
+    background: #fff;
+    border-radius: 3px;
+    box-shadow: 0px 3px 28px rgba(0,0,0,.9);
+
+    left: 50%;
+    margin: -60px -22.5%;
+    position: fixed;
+    top: 50%;
+    width: 45%;
+    padding: 15px;
+
+    .title {
+        margin-top: -5px;
+        text-align: center;
+        border-bottom: 1px solid #CCC;
+        padding-bottom: 10px;
+        margin-bottom: 8px;
+    }
+
+    .message { margin-top: 20px; }
+    .large { font-size: 20px; }
+    .center { text-align: center; }
+    input { width:488px; margin-top:5px; }
+    button { margin-top:5px; float:right; }
+}
+
+.testPassed {
+  background: #00ff00;
+  color: #ffffff;
+  padding:4px;
+}
+
+.testFailed {
+  background: #ff0000;
+  color: #ffffff;
+  padding:4px;
+}

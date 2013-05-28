@@ -3,7 +3,7 @@ application = require 'application'
 dashboardWidget = require 'views/core/dashboardWidget'
 
 module.exports = class Dashboard extends Model
-  urlRoot: -> "/api/dashboard"
+  urlRoot: "/api/dashboard"
   loaded: false
   
   initialize: =>

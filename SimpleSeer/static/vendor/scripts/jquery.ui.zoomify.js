@@ -81,8 +81,8 @@ $.widget("ui.zoomify", {
 
     self.viewport = {zoom: options.zoom, x: options.x, y: options.y};
 
-    var content = $('<div class="window"><div class="view"><div class="frame"></div><img class="display" src="'+options.image+'"></div></div><div class="settings"><input type="text" value=""><div class="sliderHolder"><div class="slider"></div></div></div>').appendTo(element);
-    content.find("input").attr("value", self.viewport.zoom * 100 + "%");
+    var content = $('<div class="window"><div class="view"><div class="frame"></div><img class="display" src="'+options.image+'"></div></div><div class="settings"><input type="text" value="" onclick="this.select()"><div class="sliderHolder"><div class="slider"></div></div></div>').appendTo(element);
+    content.find("input").attr("value", Math.floor(self.viewport.zoom * 100) + "%");
     content.find(".display").load(function() { self.loaded = true; self.updateDisplay('zoom'); }).bind('dragstart', function(event) { event.preventDefault(); });;
 
     stuff = {width: element.find(".view").width(), height: options.realHeight * (element.find(".view").width() / options.realWidth)}
@@ -118,59 +118,18 @@ $.widget("ui.zoomify", {
       }
     });
 
-    /*var _range = content.find("input[type=range]")
-      .attr("min", options.min)
-      .attr("max", options.max)
-      .attr("step", 2)
-      .attr("value", options.zoom * 100)
-
-    function rangeChange() {
-      value = Math.floor(this.value);
-      $(this).parent().find("input[type=text]").attr("value",  value + "%");
-      self.viewport.zoom = content.find("input[type=text]").attr("value").replace(/\%/g, "") / 100;
-      self.updateDisplay('zoom');
-      self.viewport.x = content.find(".frame").position().left;
-      self.viewport.y = content.find(".frame").position().top;
-      self.updateDisplay('pan');
-    }*/
-
-    /**
-     * input[type=range] is not very supported
-     * at the moment. Here is the fix:
-     */
-    /*if( $.browser.hasOwnProperty("msie") || $.browser.hasOwnProperty("mozilla") ) {
-      fdSlider.createSlider({
-        inp: _range.get(0),
-        animation: "tween",
-        min: options.min,
-        max: options.max,
-        step: 2,
-        hideInput: true
-      });
-      fdSlider.addEvent(_range.get(0), "move", function() { console.log("work"); })
-      _range.addClass("mozilla");
-    } else {
-      _range.get(0).onchange = rangeChange
-    }*/
-
     content.find("input[type=text]").keypress(function(e) {
       if(e.which == 13){
         var input = $(this);
-        var value = String(Math.max(input.attr("value").replace("%", ""), self.options.min));
-        value = Math.floor(value);
-
-        // Set the slider's value
-        $("#control .slider").slider("option", "value", value.replace(/\%/g, ""));
-
-        // Add percent sign back in
-        input.attr("value", value.replace(/\%/g, "") + "%");
-        self.viewport.zoom = content.find("input").attr("value").replace(/\%/g, "") / 100;
-
+        var value = Math.floor(Math.min(Math.max(parseInt(input.attr("value"), 10), self.options.min), self.options.max));
+        content.find(".slider").slider("option", "value", value);
+        input.attr("value", value + "%");
+        self.viewport.zoom = value / 100;
         self.updateDisplay('zoom');
       }
     });
 
-    $(window).resize(function() { self.updateDisplay('zoom'); });
+    //$(window).resize(function() { self.updateDisplay('zoom'); });
   },
 
   repaint: function() {
@@ -192,7 +151,7 @@ $.widget("ui.zoomify", {
       	value = Math.min(value, self.options.max / 100)
         self.options.zoom = value;
         self.viewport.zoom = value;
-        self.element.find("input[type=range]").attr("value", value * 100);
+        self.element.find(".slider").slider("option", "value", value * 100);
         self.element.find("input[type=text]").attr("value", Math.floor(value * 100) + "%");
         self.updateDisplay('zoom');
         break;
@@ -219,7 +178,7 @@ $.widget("ui.zoomify", {
         self.updateDisplay('zoom');
         break;
       case "height":
-        self.options.height = Math.floor(value);
+        self.options.height = value;
         self.updateDisplay('pan');
     }
   }

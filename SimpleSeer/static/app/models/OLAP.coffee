@@ -7,7 +7,7 @@ module.exports = class OLAP extends Model
   save:(a,b,c)=>
     console.log a,b,c
     console.log @attributes.dataMap
-    super()
+    #super()
     console.log @attributes.dataMap
     
 
@@ -56,3 +56,16 @@ module.exports = class OLAP extends Model
           _dd.push i
       @.view.stack.set _stk
       return _dd
+      
+  parse: (response) =>
+    _ormMap = {root:{},results:{}}
+    for o in response.dataMap
+      _p = o.indexOf('.')
+      if _p > 0
+        _ormMap['results'][o] = o.substring(0, _p)
+        #response.dataMeasurementsMap.push o.substring(0, _p)
+      else
+        _ormMap['root'][o] = o
+    #response.dataMap = dm
+    response._ormMap = _ormMap
+    super response

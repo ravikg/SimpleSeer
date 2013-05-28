@@ -40,6 +40,7 @@ module.exports = class modal extends View
   _reset: () =>
     for i of @_callbacks
       @_callbacks[i] = []
+
     # @TODO: what the?
     #@$el.find(".message").html('')
     return
@@ -69,6 +70,11 @@ module.exports = class modal extends View
       @$el.find(".message").html(options.message).show()
     else
       @$el.find(".message").hide()
+
+    if options.title?
+      @$(".title").html(options.title).show()
+    else
+      @$(".title").hide()
 
     #success and cancel
     for i in ['success','cancel']
@@ -111,6 +117,10 @@ module.exports = class modal extends View
       @_callbacks[type].push func
     return
 
+  clear: =>
+    @$el.hide("fade")
+    @_reset()
+
   # values:
   #   userInput:     (string)   Value entered by user
   #   action:        (string)   Action taken ['DEFAULT','OK']
@@ -119,10 +129,10 @@ module.exports = class modal extends View
       values.action = 'DEFAULT'
     if !values.userInput?
       values.userInput = @$el.find('input').val()
-    @$el.hide("fade")
     for f in @_callbacks['success']
       r = f(values)
-    if !r
+    if r != true
+      @$el.hide("fade")
       @_reset()
     return
 
