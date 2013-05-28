@@ -547,7 +547,8 @@ module.exports = class Table extends SubView
         @head.removeClass('shadow')
 
   scrollPage: (per) =>
-    if !@scroll
-      @scroll = $(@scrollElem)
-    @scrollLeft(per)
-    @scrollDown(per)
+    if @persistentHeader
+      if !@scroll
+        @scroll = $(@scrollElem)
+      @scrollLeft(per)
+      @scrollDown(per)
