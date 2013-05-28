@@ -102,15 +102,13 @@ module.exports = class Table extends SubView
     @subscribe()
 
   receive: (data) =>
-    poo = @collection.where({id:data.data.id})[0]
+    model = @collection.where({id: data.data.id})[0]
     if data.channel == "framedelete/"
-      if poo
-        @collection.remove(poo)
-    else
-      if poo
-        poo.attributes = data.data
-      else
-        @collection.add(data.data,{at:0})
+      if model? then @collection.remove(model)
+    if data.channel == "frameupdate/"
+      if model? then model.attributes = data.data
+      else @collection.add(data.data, {at: 0})
+    @updateData()
     @render()
 
   emptyData: =>
@@ -140,7 +138,7 @@ module.exports = class Table extends SubView
         _.each cquery.criteria, (criteria, id) =>
           if criteria.isset
             cquery.criteria[id].isset = 0
-      else 
+      else
         cquery = {"logic":"and","criteria":[{"type":"frame","isset":0,"name":key}]}
 
       @emptyCollection.setParam 'query', cquery
@@ -225,7 +223,7 @@ module.exports = class Table extends SubView
   # Returns the tableCol given a key
   getTableCol: (cols, key) =>
     col = null
-    _.each cols, (a, b) =>  
+    _.each cols, (a, b) =>
       if a.key == key
         col = a
     return col
@@ -259,7 +257,7 @@ module.exports = class Table extends SubView
               $.each args, (k, v) =>
                 html += k + '="' + v + '" '
               html += "/>"
-        else 
+        else
           col = tableCol
           if col.editable # Sub column is editable
             value = ''
@@ -393,7 +391,7 @@ module.exports = class Table extends SubView
               delete(query.criteria[id])
           query.criteria.push({"type":"frame","isset":1,"name":k})
           query.criteria = _.compact(query.criteria)
-        else 
+        else
           query = {"logic":"and","criteria":[{"type":"frame","isset":1,"name":k}]}
         @collection.setParam 'query', query
       else
@@ -462,7 +460,7 @@ module.exports = class Table extends SubView
       @table = @$(".table.static")
       @controls = @table.hasClass('controls')
 
-      # Some extra nudging 
+      # Some extra nudging
       extras = {'w':0, 'h':0, 't':0, 'l':0}
       if @controls
         extras.w = 4
