@@ -1,5 +1,5 @@
 .hider {
-  height: 10px; position: fixed; 
+  height: 10px; position: fixed;
   z-index: 999999;
   background: url("../img/MT_EEEEEE.png") repeat;
   margin-top: -10px;
@@ -47,6 +47,8 @@
   position: relative;
   height: 100%;
   table-layout: fixed;
+
+  &:not(.persistentHeader) { width: 100%; }
 
   .tcontent {
     height: 100%;

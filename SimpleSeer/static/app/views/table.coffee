@@ -102,7 +102,7 @@ module.exports = class Table extends SubView
     @subscribe()
 
   receive: (data) =>
-    model = @collection.where({id: data.data.id})[0]
+    poo = @collection.where({id: data.data.id})[0]
     if data.channel == "framedelete/"
       if model? then @collection.remove(model)
     if data.channel == "frameupdate/"
