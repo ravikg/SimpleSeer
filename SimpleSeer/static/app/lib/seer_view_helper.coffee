@@ -165,8 +165,14 @@ Handlebars.registerHelper "log", (value) ->
 
 Handlebars.registerHelper "resultlist", (results, blacklist) ->
   tpl = ""
-  if !results or results.length is 0
-    tpl += "<div data-use=\"no-results\" class=\"centered\">Part Failed: No Results</div>"
+
+  r = 0
+  _.each results, (result) =>
+    if result.state?
+      r++
+
+  if !results or results.length is 0 or !r
+    tpl += "<div data-use=\"no-results\" class=\"centered\">No Results</div>"
   else
 
     results.map  ((item) => item.mmm = SimpleSeer.measurements.where({name:item.measurement_name})[0])
@@ -214,7 +220,7 @@ Handlebars.registerHelper "capturetime", (time) ->
 
 Handlebars.registerHelper "tolstate", (results) ->
   len = _.where(results, {state: 1}).length
-  if results and (len > 0 or results.length is 0)
+  if results and (len > 0)
     return "fail"
   else
     return "pass"
