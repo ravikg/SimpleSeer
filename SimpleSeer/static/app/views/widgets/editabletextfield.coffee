@@ -5,10 +5,13 @@ application = require 'application'
 module.exports = class editabletextfield extends SubView
   template:template
   defaultString: "----"
+  text: undefined
   edit: false
 
   initialize: =>
     super()
+    if !@text
+      @text = @defaultString
 
   events: =>
     'click .edit':'clickEdit'
@@ -37,8 +40,9 @@ module.exports = class editabletextfield extends SubView
     @update(value)
   
   getRenderData:=>
-    defaultString:@defaultString
+    text:@text
   
   update: (value)=>
     console.log "@TODO: Do something with this value: ", value
+    @text = value
     @render()
