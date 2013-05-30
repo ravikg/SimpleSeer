@@ -4,7 +4,7 @@ application = require 'application'
 
 module.exports = class editabletextfield extends SubView
   template:template
-  defaultString: "----"
+  defaultString: ""
   text: undefined
   edit: false
   blur: false
@@ -16,9 +16,8 @@ module.exports = class editabletextfield extends SubView
 
   initialize: =>
     super()
-    if !@text
-      @text = @defaultString
-
+    if @options.defaultString?
+      @defaultString = @options.defaultString
     if @options.submit_id?
       @submit_id = @options.submit_id
     if @options.input_id?
@@ -29,6 +28,9 @@ module.exports = class editabletextfield extends SubView
       @minLength = @options.minLength
     if @options.regexps?
       @regexps = @options.regexps
+
+    if !@text
+      @text = @defaultString
 
     $(document).on "click", "body", (e) =>
       if @blur is true and @edit is true and e.target.id != @submit_id
@@ -41,7 +43,6 @@ module.exports = class editabletextfield extends SubView
         if @edit is true and e.target.id == @input_id
           @$el.find('.submit').click()
           @blur = false
-          @edit = false
 
   events: =>
     'click .edit':'clickEdit'
@@ -56,12 +57,15 @@ module.exports = class editabletextfield extends SubView
   keypress: (e) =>
     if e.keyCode == 13 and @edit == true
       @$el.find('.submit').click()
+      @blur = false
     if e.keyCode == 27 and @edit == true
       @edit = false
+      @blur = false
       @render()
 
   clickEdit: (e) =>
     if @edit == false
+      @blur = false
       @edit = true
       @$el.find('.edit').css('display', 'none')
       @$el.find('.submit').css('display', 'block')
@@ -76,6 +80,7 @@ module.exports = class editabletextfield extends SubView
       @$el.find('input').focus()
     else
       @edit = false
+      @blur = false
       @render()
 
   clickSubmit: (e) =>
@@ -85,11 +90,11 @@ module.exports = class editabletextfield extends SubView
     @msg = ""
     if @minLength
       if value.length < @minLength
-        @msg += "Length must be greater then " + @minLength + "<br/>"
+        @msg += "Length must be at least (" + @minLength + ") characters<br/>"
         err++
     if @maxLength
       if value.length > @maxLength
-        @msg += "Length must be less then " + @maxLength + "<br/>"
+        @msg += "Length must be no more than (" + @maxLength + ") characters<br/>"
         err++
 
     _.each @regexps, (regexp) =>
