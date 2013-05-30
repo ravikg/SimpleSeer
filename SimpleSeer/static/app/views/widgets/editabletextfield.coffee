@@ -106,12 +106,15 @@ module.exports = class editabletextfield extends SubView
       @blur = false
       application.alert("", "clear")
       @update(value)
-  
+
   getRenderData:=>
     text:@text
     submit_id:@submit_id
-  
+
   update: (value)=>
-    console.log "@TODO: Do something with this value: ", value
+    @setValue(value)
+    @trigger("update", @submit_id, value)
+
+  setValue:(value) =>
     @text = value
     @render()
