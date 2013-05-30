@@ -7,6 +7,9 @@ module.exports = class radio extends SubView
   defaultValue:null
   radios:undefined
 
+  events: =>
+    "change input": "update"
+
   initialize: =>
     super()
     if @options.radios?
@@ -16,4 +19,13 @@ module.exports = class radio extends SubView
     radios:@radios
 
   afterRender: =>
-    $('.radio').buttonset()
+    @$('.radio').buttonset()
+
+  update: =>
+    value = @$("input:checked").attr("value")
+    @trigger("update", @radios[0].id, value)
+
+  setValue:(value) =>
+    @$(".radio ##{value}").attr("checked", "checked")
+    @$('.radio').buttonset("refresh")
+
