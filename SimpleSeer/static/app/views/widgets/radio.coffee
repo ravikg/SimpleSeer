@@ -26,6 +26,7 @@ module.exports = class radio extends SubView
     @trigger("update", @radios[0].id, value)
 
   setValue:(value) =>
+    @$(".radio input:checked").removeAttr("checked")
     @$(".radio ##{value}").attr("checked", "checked")
     @$('.radio').buttonset("refresh")
 
