@@ -85,11 +85,11 @@ module.exports = class editabletextfield extends SubView
     @msg = ""
     if @minLength
       if value.length < @minLength
-        @msg += "Length must be greater then " + @minLength + "<br/>"
+        @msg += "Length must be at least (" + @minLength + ") characters<br/>"
         err++
     if @maxLength
       if value.length > @maxLength
-        @msg += "Length must be less then " + @maxLength + "<br/>"
+        @msg += "Length must be no more than (" + @maxLength + ") characters<br/>"
         err++
 
     _.each @regexps, (regexp) =>
