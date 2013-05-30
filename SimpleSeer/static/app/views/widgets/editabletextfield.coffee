@@ -9,6 +9,7 @@ module.exports = class editabletextfield extends SubView
   edit: false
   blur: false
   submit_id: undefined
+  input_id: undefined
   maxLength: undefined
   minLength: undefined
   msg: ''
@@ -20,6 +21,8 @@ module.exports = class editabletextfield extends SubView
 
     if @options.submit_id?
       @submit_id = @options.submit_id
+    if @options.input_id?
+      @input_id = @options.input_id
     if @options.maxLength?
       @maxLength = @options.maxLength
     if @options.minLength?
@@ -32,6 +35,13 @@ module.exports = class editabletextfield extends SubView
         @edit = false
         @blur = false
         @render()
+
+    $(document).on "keydown", "body", (e) =>
+      if e.keyCode == 9
+        if @edit is true and e.target.id == @input_id
+          @$el.find('.submit').click()
+          @blur = false
+          @edit = false
 
   events: =>
     'click .edit':'clickEdit'
@@ -57,6 +67,8 @@ module.exports = class editabletextfield extends SubView
       @$el.find('.submit').css('display', 'block')
       value = @$el.find('.text').html()
       html = '<input type="text" value="' + value + '" '
+      if @input_id
+        html += 'id="' + @input_id + '" '
       if @maxLength
         html += 'maxlength="' + @maxLength + '" '
       html += '/>'
