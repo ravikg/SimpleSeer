@@ -1,4 +1,39 @@
 .radio {
   margin: 10px;
   float: left;
+
+  label {
+    color: transparent;
+    font-weight: 700;
+    text-transform: uppercase;
+    background-image: url("/img/grippy.png");
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+    z-index: 9;
+
+    &.ui-state-active {
+      text-shadow: 0px 1px 0px rgba(255, 255, 255, .3);
+      color: #666;
+      background-image: none;
+      z-index: 8;
+    }
+  }
+
+  label:nth-of-type(1) {
+    &.ui-state-active {
+      background: #93B562;
+    }
+  }
+
+  label:nth-of-type(2) {
+    &.ui-state-active {
+      background: #D57363;
+    }
+  }
+
+
+  .ui-button {
+    float: right;
+    border-radius: 2px;
+  }
 }
