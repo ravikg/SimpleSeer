@@ -41,7 +41,6 @@ module.exports = class editabletextfield extends SubView
         if @edit is true and e.target.id == @input_id
           @$el.find('.submit').click()
           @blur = false
-          @edit = false
 
   events: =>
     'click .edit':'clickEdit'
