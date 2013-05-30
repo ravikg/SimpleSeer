@@ -18,16 +18,17 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      padding-right: 50px;
-      
+      padding-right: 43px;
+
       &.no-padding {
         padding: 0px;
+        padding-right: 35px;
       }
 
       input {
         font-size: 36px;
         background-color: #FFFF66;
-        border: 4px solid #FFFF00;
+        border: 4px solid #FFD600;
         width: 100%;
         padding: 0px;
         padding-left: 3px;
@@ -35,6 +36,7 @@
     }
 
   }
+
   &.editable {
 
   }
@@ -44,26 +46,26 @@
     top: 0;
     right: 0;
     bottom: 0;
-    width: 50px;
+    width: 35px;
     height: 100%;
 
     .button {
-      width: 50px;
+      width: 35px;
       height: 100%;
       position: relative;
-      float: left;
+      float: right;
       cursor: pointer;
       background-color: #CCCCCC;
       background-repeat: no-repeat;
       background-position: 50% 50%;
-      border: 2px solid #444;
-      border-top-color: #999;
-      border-left-color: #999;
-      border-left-width: 3px;
-      border-top-width: 3px;
+      border-left: 1px solid #999;
+      box-shadow: inset 1px 0 0 0 #D6D6D6;
+
+      -webkit-transition: background 100ms linear;
+      -moz-transition: background 100ms linear;
 
       &:hover {
-        background-color: #BBBBBB;
+        background-color: #DDDDDD;
       }
       &:active {
         background-color: #AAAAAA;
