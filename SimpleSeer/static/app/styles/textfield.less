@@ -5,23 +5,32 @@
   .text {
     font-size: 12px;
     line-height: 16px;
-    padding: 0px 5px;
   }
 
   &.large {
 
     .text {
       font-size: 36px;
-      line-height: 66px;
-      padding: 0px 10px;
+      line-height: inherit;
+      float: left;
+      width: 100%;
+      padding: 16px 7px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding-right: 50px;
+      
+      &.no-padding {
+        padding: 0px;
+      }
 
       input {
         font-size: 36px;
-        line-height: 42px;
-        padding: 0px 10px;
-        margin: 0px 0px 4px;
         background-color: #FFFF66;
         border: 4px solid #FFFF00;
+        width: 100%;
+        padding: 0px;
+        padding-left: 3px;
       }
     }
 
@@ -31,7 +40,10 @@
   }
 
   .buttons {
-    float: right;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
     width: 50px;
     height: 100%;
 
@@ -58,12 +70,12 @@
       }
 
       &.edit {
-        background-image: url('/img/pencil_icon&32.png');
+        background-image: url('/img/pencil_icon&16.png');
       }
 
       &.submit {
         display: none;
-        background-image: url('/img/checkmark_icon&32.png');
+        background-image: url('/img/checkmark_icon&16.png');
       }
     }
   }
