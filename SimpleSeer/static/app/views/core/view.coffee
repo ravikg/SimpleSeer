@@ -69,6 +69,9 @@ module.exports = class View extends Backbone.View
         application.subscriptions[channel] = application.socket.emit('subscribe', channel)
       application.socket.on("message:#{channel}", handler)
 
+  socketPublish:(channel, data) =>
+    application.socket.emit("publish", channel, data)
+
   #### Transition is way to call a method with a transition in and out.
   # > __callback__ : Function to call between __in__ and __out__ effects
   #
