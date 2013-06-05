@@ -1,6 +1,10 @@
 # Put your handlebars.js helpers here.
 
+Handlebars.registerHelper "eqperh", (context, options) ->
+  return "height: #{1/context.length*100}%"
 
+Handlebars.registerHelper "eqperw", (context, options) ->
+  return "width: #{1/context.length*100}%"
 
 #logical functions, thanks to
 #https://github.com/danharper/Handlebars-Helpers and js2coffee.org
@@ -9,8 +13,8 @@ Handlebars.registerHelper "if_eq", (context, options) ->
   options.inverse context
 
 Handlebars.registerHelper "unless_eq", (context, options) ->
-  return options.unless(context)  if context is options.hash.compare
-  options.fn context
+  return options.fn(context)  unless context is options.hash.compare
+  options.inverse context
 
 Handlebars.registerHelper "if_gt", (context, options) ->
   return options.fn(context)  if context > options.hash.compare
@@ -165,8 +169,14 @@ Handlebars.registerHelper "log", (value) ->
 
 Handlebars.registerHelper "resultlist", (results, blacklist) ->
   tpl = ""
-  if !results or results.length is 0
-    tpl += "<div data-use=\"no-results\" class=\"centered\">Part Failed: No Results</div>"
+
+  r = 0
+  _.each results, (result) =>
+    if result.state?
+      r++
+
+  if !results or results.length is 0 or !r
+    tpl += "<div data-use=\"no-results\" class=\"centered\">No Results</div>"
   else
 
     results.map  ((item) => item.mmm = SimpleSeer.measurements.where({name:item.measurement_name})[0])
@@ -214,7 +224,7 @@ Handlebars.registerHelper "capturetime", (time) ->
 
 Handlebars.registerHelper "tolstate", (results) ->
   len = _.where(results, {state: 1}).length
-  if results and (len > 0 or results.length is 0)
+  if results and (len > 0)
     return "fail"
   else
     return "pass"

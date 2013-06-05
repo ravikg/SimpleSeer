@@ -61,6 +61,8 @@ module.exports = class Table extends SubView
   getOptions: =>
     if @options.persistentHeader?
       @persistentHeader = @options.persistentHeader
+    if @options.infiniteScroll?
+      @infiniteScroll = @options.infiniteScroll
     if @options.sortKey?
       @sortKey = @options.sortKey
     if @options.sortDirection?
@@ -87,7 +89,7 @@ module.exports = class Table extends SubView
       @_url = "api/frame"
 
   getCollectionExtras: =>
-    return    
+    return
 
   getCollection: =>
     bindFilter = Application.context[@options.parent.dashboard.options.parent.options.context].filtercollection
@@ -168,7 +170,8 @@ module.exports = class Table extends SubView
     @rows = []
     @getOptions()
     @getCollection()
-    @on 'page', @infinitePage
+    if @infiniteScroll
+      @on 'page', @infinitePage
     @scroll = $(@scrollElem)
     if @persistentHeader
       @on 'scroll', @scrollPage

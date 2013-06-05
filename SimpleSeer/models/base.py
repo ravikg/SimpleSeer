@@ -12,12 +12,13 @@ from pymongo.son_manipulator import SONManipulator
 from SimpleCV import Image
 
 log = logging.getLogger(__name__)
+log.addHandler(logging.NullHandler())
 
 class Picklable(object):
     _jsonignore = [None]
-    
+
     #TODO: move into son manipulators
-    def __getstate__(self):  
+    def __getstate__(self):
         ret = {}
         if hasattr(self, 'id'):
             ret['id'] = self.id
@@ -26,7 +27,7 @@ class Picklable(object):
             if k == 'id': continue
             if not k:
                 continue
-              
+
             v = self._data[k]
             if k[0] == "_" or k in self._jsonignore:
                 continue
@@ -41,22 +42,22 @@ class Picklable(object):
                     ret[k] = "/grid/"+k+"/" + str(self.id)
             else:
                 ret[k] = v
-            
+
         return ret
 
 class SimpleDoc(Picklable):
     meta=dict(auto_create_index=True)
-    
+
     def update_from_json(self, d):
         for k,v in d.items():
             setattr(self, k, v)
-        
+
 class SimpleEmbeddedDoc(Picklable):
     """
     Any embedded docs (for object trees) should extend SimpleEmbeddedDoc
     """
     pass
-    
+
 class WithPlugins(object):
 
     def get_plugin(self, name):
@@ -75,7 +76,7 @@ class WithPlugins(object):
             return PluginClass(self)
         except TypeError:
             return PluginClass()
-            
+
     @classmethod
     def register_plugins(cls, group):
         if not hasattr(cls, '_plugins'):
