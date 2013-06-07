@@ -1,6 +1,10 @@
 # Put your handlebars.js helpers here.
 
+Handlebars.registerHelper "eqperh", (context, options) ->
+  return "height: #{1/context.length*100}%"
 
+Handlebars.registerHelper "eqperw", (context, options) ->
+  return "width: #{1/context.length*100}%"
 
 #logical functions, thanks to
 #https://github.com/danharper/Handlebars-Helpers and js2coffee.org
@@ -9,8 +13,8 @@ Handlebars.registerHelper "if_eq", (context, options) ->
   options.inverse context
 
 Handlebars.registerHelper "unless_eq", (context, options) ->
-  return options.unless(context)  if context is options.hash.compare
-  options.fn context
+  return options.fn(context)  unless context is options.hash.compare
+  options.inverse context
 
 Handlebars.registerHelper "if_gt", (context, options) ->
   return options.fn(context)  if context > options.hash.compare
