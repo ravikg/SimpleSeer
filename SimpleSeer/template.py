@@ -60,6 +60,7 @@ class SimpleSeerProjectTemplate(Template):
         # Create package.json
         package = json.loads((src_brunch / 'package.json').text())
         package['name'] = vars['package']
+        print "creating package.json in {0}".format(tgt_brunch)
         (tgt_brunch / 'package.json').write_text(
             json.dumps(package, indent=2))
 

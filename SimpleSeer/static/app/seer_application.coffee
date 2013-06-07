@@ -33,6 +33,7 @@ module.exports = SeerApplication =
 
     # Set up the client name.
     $('#client-name').html(window.SimpleSeer.settings.ui_pagename || "")
+    document.title = window.SimpleSeer.settings.ui_pagename || ""
 
     if window.WebSocket?
       @socket = io.connect '/rt'
