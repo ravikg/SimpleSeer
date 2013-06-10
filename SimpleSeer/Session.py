@@ -78,7 +78,10 @@ class Session():
 
     def __getattr__(self, name):
         return self._config.get(name, '')
-
+    
+    def set_config(self,name,value):
+        self._config[name] = value
+    
     def __repr__(self):
         return "SimpleSeer Session Object"
 

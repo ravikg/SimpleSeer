@@ -53,6 +53,7 @@ class WebCommand(Command):
     
     def __init__(self, subparser):
         subparser.add_argument('--procname', default='web', help='give each process a name for tracking within session')
+        subparser.add_argument('--test', default=None, help='Run testing suite')
 
     def run(self):
         'Run the web server'
@@ -76,8 +77,7 @@ class WebCommand(Command):
             db.frame.ensure_index([('results.string', 1)])
         except:
             self.log.info('Could not create indexes')
-            
-        web = WebServer(make_app())
+        web = WebServer(make_app(test = self.options.test))
         
         from SimpleSeer.Backup import Backup
         Backup.importAll(None, False, True, True)
