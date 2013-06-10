@@ -15,7 +15,12 @@ exports.config =
       # * map of ('outputFilePath': /regExp that matches input path/)
       # * map of ('outputFilePath': function that takes input path)
       joinTo:
-        'javascripts/seer.js': (path) -> true
+        'javascripts/seer.js': (path) ->
+           e = (/^vendor\/tests/).test path
+           return !e
+        'javascripts/unittest.js': (path) ->
+           b = (/^vendor\/tests/).test path
+           return b
       # Defines compilation order.
       # `vendor` files will be compiled before other ones
       # even if they are not present here.
