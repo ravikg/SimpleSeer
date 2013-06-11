@@ -60,15 +60,19 @@ class SimpleSeerProjectTemplate(Template):
         # Create package.json
         package = json.loads((src_brunch / 'package.json').text())
         package['name'] = vars['package']
-        print "creating package.json in {0}".format(tgt_brunch)
+        #print "creating package.json in {0}".format(tgt_brunch)
         (tgt_brunch / 'package.json').write_text(
             json.dumps(package, indent=2))
 
         # Copy (built) seer.js & seer.css
         dn = open("/dev/null")
+        subprocess.call(['git','rm','--cached',tgt_brunch / 'vendor/javascripts/unittest.js'],stderr=dn)
         subprocess.call(['git','rm','--cached',tgt_brunch / 'vendor/javascripts/seer.js'],stderr=dn)
         subprocess.call(['git','rm','--cached',tgt_brunch / 'vendor/stylesheets/seer.css'],stderr=dn)
         subprocess.call(['git','rm','--cached','-r',tgt_public],stderr=dn)
+        overwrite(
+            src_public / 'javascripts/unittest.js',
+            tgt_brunch / 'vendor/javascripts/unittest.js')
         overwrite(
             src_public / 'javascripts/seer.js',
             tgt_brunch / 'vendor/javascripts/seer.js')
@@ -110,7 +114,7 @@ class SimpleSeerProjectTemplate(Template):
 def overwrite(src, dst):
     if dst.exists(): dst.remove()
     if not dst.parent.exists(): dst.parent.makedirs()
-   
+
     src.copy(dst)
 
 def overlay(src, dst, force=False):
