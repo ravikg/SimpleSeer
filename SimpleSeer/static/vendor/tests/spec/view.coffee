@@ -2,7 +2,6 @@ View = require("views/core/view")
 SubView = require("views/core/subview")
 
 describe "View", ->
-
   v = new View()
 
   it "should extend Backbone.View", ->
