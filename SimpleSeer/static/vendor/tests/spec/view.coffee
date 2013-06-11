@@ -22,4 +22,3 @@ describe "View", ->
   it "should be able to remove a subview", ->
     v.clearSubviews()
     expect(JSON.stringify(v.subviews)).toEqual "{}"
-

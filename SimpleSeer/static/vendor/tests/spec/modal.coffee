@@ -43,5 +43,3 @@ describe "Modal", ->
 
     it "should run the error callbacks", ->
       expect(options.error).toHaveBeenCalled()
-
-
