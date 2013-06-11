@@ -19,6 +19,6 @@ describe "SubView", ->
     v.addSubview title, SubView
     expect(v.subviews[title]).toBeDefined()
 
-  it "should be able to remove subviews", ->
+  it "should be able to remove a subview", ->
     v.clearSubviews()
     expect(JSON.stringify(v.subviews)).toEqual "{}"
