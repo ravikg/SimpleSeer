@@ -61,6 +61,10 @@ def index():
       print MD5Hashes
     return render_template("index.html",params = dict(MD5Hashes=MD5Hashes),settings=settings)    
 
+@route('/testing')
+def testing():
+    return render_template("testing.html", settings=settings)    
+
 @route('/log/<type>', methods=['POST'])
 def jsLogger(type):
     levels = {"CRITICAL":50, "ERROR":40, "WARNING":30, "INFO":20, "DEBUG":10}
