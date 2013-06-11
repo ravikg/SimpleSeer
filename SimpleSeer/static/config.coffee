@@ -59,9 +59,6 @@ exports.config =
           # Unit Testing
           'vendor/scripts/jasmine.js',
           'vendor/scripts/jasmine-html.js',
-          'vendor/tests/spec/modal.coffee',
-          'vendor/tests/spec/view.coffee',
-          'vendor/tests/spec/subview.coffee'
         ]
 
     stylesheets:
