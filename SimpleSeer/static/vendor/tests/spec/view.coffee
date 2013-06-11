@@ -2,7 +2,6 @@ View = require("views/core/view")
 SubView = require("views/core/subview")
 
 describe "View", ->
-
   v = new View()
 
   it "should extend Backbone.View", ->
@@ -23,4 +22,3 @@ describe "View", ->
   it "should be able to remove a subview", ->
     v.clearSubviews()
     expect(JSON.stringify(v.subviews)).toEqual "{}"
-
