@@ -26,12 +26,12 @@ exports.config =
       # even if they are not present here.
       order:
         before: [
+          # Everything else
           'vendor/scripts/console-helper.js',
           'vendor/scripts/jquery-1.7.2.js',
           'vendor/scripts/underscore-1.3.1.js',
           'vendor/scripts/backbone-0.9.2.js',
           'vendor/scripts/bootstrap.js',
-          #'vendor/scripts/jquery.jqplot.min.js',
           'vendor/scripts/highcharts.src.js',
           'vendor/scripts/ui/jquery.ui.core.js',
           'vendor/scripts/ui/jquery.ui.widget.js',
@@ -54,7 +54,12 @@ exports.config =
           'vendor/scripts/chosen.jquery.min.js',
           'vendor/scripts/jquery.ui.touch-punch.min.js',
           'vendor/scripts/jquery.shapeshift.min.js',
-          'vendor/scripts/md5.js']
+          'vendor/scripts/md5.js',
+
+          # Unit Testing
+          'vendor/scripts/jasmine.js',
+          'vendor/scripts/jasmine-html.js',
+        ]
 
     stylesheets:
       defaultExtension: 'less'

@@ -60,7 +60,7 @@ class SimpleSeerProjectTemplate(Template):
         # Create package.json
         package = json.loads((src_brunch / 'package.json').text())
         package['name'] = vars['package']
-        print "creating package.json in {0}".format(tgt_brunch)
+        #print "creating package.json in {0}".format(tgt_brunch)
         (tgt_brunch / 'package.json').write_text(
             json.dumps(package, indent=2))
 
@@ -82,6 +82,9 @@ class SimpleSeerProjectTemplate(Template):
         overwrite(
             src_templates / 'index.html',
             tgt_templates / 'seer_index.html')
+        overwrite(
+            src_templates / 'testing.html',
+            tgt_templates / 'testing.html')
 
         # Build and copy cloud.js if applicable
 
