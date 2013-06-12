@@ -7,7 +7,7 @@ servies:
   - rabbitmq
   - mongodb
 before_script:
-  - "chmod +x ./.ci.sh; ./.ci.sh"
+  - "chmod +x ./.ci.sh; source .ci.sh"
   - "npm i -g jasmine-node"
   - "npm i -g jasmine-jquery"
   - "npm i -g brunch"
