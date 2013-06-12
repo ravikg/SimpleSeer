@@ -71,14 +71,14 @@ class SimpleSeerProjectTemplate(Template):
         subprocess.call(['git','rm','--cached',tgt_brunch / 'vendor/stylesheets/seer.css'],stderr=dn)
         subprocess.call(['git','rm','--cached','-r',tgt_public],stderr=dn)
         overwrite(
-            src_public / 'javascripts/unittest.js',
-            tgt_brunch / 'vendor/javascripts/unittest.js')
-        overwrite(
             src_public / 'javascripts/seer.js',
             tgt_brunch / 'vendor/javascripts/seer.js')
         overwrite(
             src_public / 'stylesheets/seer.css',
             tgt_brunch / 'vendor/stylesheets/seer.css')
+        overwrite(
+            src_public / 'javascripts/tests.js',
+            tgt_brunch / 'vendor/javascripts/seertest.js')
         overwrite(
             src_templates / 'index.html',
             tgt_templates / 'seer_index.html')
@@ -103,6 +103,9 @@ class SimpleSeerProjectTemplate(Template):
             overwrite(
                 cloud_brunch / 'public/stylesheets/cloud.css',
                 tgt_brunch / 'vendor/stylesheets/cloud.css')
+            overwrite(
+                cloud_brunch / 'public/javascripts/tests.js',
+                tgt_brunch / 'vendor/javascripts/cloudtest.js')
 
         # Link the app
         #with tgt_brunch:

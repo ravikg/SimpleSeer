@@ -18,9 +18,10 @@ exports.config =
         'javascripts/seer.js': (path) ->
            e = (/^vendor\/tests/).test path
            return !e
-        'javascripts/unittest.js': (path) ->
+        'javascripts/seertest.js': (path) ->
            b = (/^vendor\/tests/).test path
            return b
+
       # Defines compilation order.
       # `vendor` files will be compiled before other ones
       # even if they are not present here.
