@@ -77,7 +77,7 @@ class SimpleSeerProjectTemplate(Template):
             src_public / 'stylesheets/seer.css',
             tgt_brunch / 'vendor/stylesheets/seer.css')
         overwrite(
-            src_public / 'javascripts/tests.js',
+            src_public / 'javascripts/seertest.js',
             tgt_brunch / 'vendor/javascripts/seertest.js')
         overwrite(
             src_templates / 'index.html',
@@ -104,7 +104,7 @@ class SimpleSeerProjectTemplate(Template):
                 cloud_brunch / 'public/stylesheets/cloud.css',
                 tgt_brunch / 'vendor/stylesheets/cloud.css')
             overwrite(
-                cloud_brunch / 'public/javascripts/tests.js',
+                cloud_brunch / 'public/javascripts/cloudtest.js',
                 tgt_brunch / 'vendor/javascripts/cloudtest.js')
 
         # Link the app
