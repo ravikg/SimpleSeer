@@ -16,11 +16,15 @@ exports.config =
       # * map of ('outputFilePath': function that takes input path)
       joinTo:
         'javascripts/seer.js': (path) ->
-           e = (/^vendor\/tests/).test path
-           return !e
+           a = (/^vendor\/tests/).test path
+           b = path.indexOf("/jasmine.js") == -1
+           c = path.indexOf("/jasmine-html.js") == -1
+           return !a && b && c
         'javascripts/seertest.js': (path) ->
-           b = (/^vendor\/tests/).test path
-           return b
+           a = (/^vendor\/tests/).test path
+           b = path.indexOf("/jasmine.js") > -1
+           c = path.indexOf("/jasmine-html.js") > -1
+           return a || b || c
 
       # Defines compilation order.
       # `vendor` files will be compiled before other ones
