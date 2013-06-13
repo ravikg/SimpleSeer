@@ -149,6 +149,7 @@ def OPCCommand(self):
 class MaintenanceCommand(Command):
 
     def __init__(self, subparser):
+        subparser.add_argument('--message', default=None, help='Message to show the user')
         pass
 
     def run(self):
@@ -173,17 +174,22 @@ class MaintenanceCommand(Command):
         template_folder = tpath
         app = Flask(__name__,template_folder=template_folder)
 
+        if self.options.message:
+            message = self.options.message
+        else:
+            message = ''
+
         @app.route("/")
         def maintenance():
-            return render_template("maintenance.html", params = dict(start_time=start_time))
+            return render_template("maintenance.html", params = dict(start_time=start_time, message=message))
 
         @app.errorhandler(404)
         def page_not_found(e):
-            return render_template('maintenance.html', params = dict(start_time=start_time))
+            return render_template('maintenance.html', params = dict(start_time=start_time, message=message))
 
         @app.errorhandler(500)
         def internal_server_error(e):
-            return render_template('maintenance.html', params = dict(start_time=start_time))
+            return render_template('maintenance.html', params = dict(start_time=start_time, message=message))
         
         try:
             app.run(port=port)
