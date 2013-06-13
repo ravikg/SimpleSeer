@@ -66,7 +66,8 @@ class SimpleSeerProjectTemplate(Template):
 
         # Copy (built) seer.js & seer.css
         dn = open("/dev/null")
-        subprocess.call(['git','rm','--cached',tgt_brunch / 'vendor/javascripts/unittest.js'],stderr=dn)
+        subprocess.call(['rm',tgt_brunch / 'vendor/javascripts/cloudtest.js'],stderr=dn)
+        subprocess.call(['rm',tgt_brunch / 'vendor/javascripts/seertest.js'],stderr=dn)
         subprocess.call(['git','rm','--cached',tgt_brunch / 'vendor/javascripts/seer.js'],stderr=dn)
         subprocess.call(['git','rm','--cached',tgt_brunch / 'vendor/stylesheets/seer.css'],stderr=dn)
         subprocess.call(['git','rm','--cached','-r',tgt_public],stderr=dn)
@@ -77,7 +78,7 @@ class SimpleSeerProjectTemplate(Template):
             src_public / 'stylesheets/seer.css',
             tgt_brunch / 'vendor/stylesheets/seer.css')
         overwrite(
-            src_public / 'javascripts/tests.js',
+            src_public / 'javascripts/seertest.js',
             tgt_brunch / 'vendor/javascripts/seertest.js')
         overwrite(
             src_templates / 'index.html',
@@ -96,7 +97,6 @@ class SimpleSeerProjectTemplate(Template):
             cloud_brunch = path(pkg_resources.resource_filename('SeerCloud', 'static'))
             with cloud_brunch:
                 print subprocess.check_output(['brunch', 'build'])
-            #subprocess.call(['git','rm','--cached',tgt_brunch / 'vendor/javascripts/seer.js'],stderr=dn)
             overwrite(
                 cloud_brunch / 'public/javascripts/cloud.js',
                 tgt_brunch / 'vendor/javascripts/cloud.js')
@@ -104,7 +104,7 @@ class SimpleSeerProjectTemplate(Template):
                 cloud_brunch / 'public/stylesheets/cloud.css',
                 tgt_brunch / 'vendor/stylesheets/cloud.css')
             overwrite(
-                cloud_brunch / 'public/javascripts/tests.js',
+                cloud_brunch / 'public/javascripts/cloudtest.js',
                 tgt_brunch / 'vendor/javascripts/cloudtest.js')
 
         # Link the app

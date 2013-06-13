@@ -9,19 +9,28 @@
   <script type="text/javascript" src="/javascripts/tests.js"></script>
   <script type="text/javascript" src="/plugins.js"></script>
   <script type="text/javascript">
-	var jasmineEnv = jasmine.getEnv();
-	jasmineEnv.updateInterval = 1000;
 
-	var htmlReporter = new jasmine.HtmlReporter();
-	jasmineEnv.addReporter(htmlReporter);
-	jasmineEnv.specFilter = function(spec) { return htmlReporter.specFilter(spec) }
-
-	var currentWindowOnload = window.onload;
-	window.onload = function() {
-	  require('initialize');
-	  if (currentWindowOnload) {currentWindowOnload();}
-	  jasmineEnv.execute();
+	function waitForSeer() {
+		if( window.SimpleSeer ) {
+			initialize();
+		} else {
+			setTimeout(waitForSeer, 300)
+		}
 	};
+
+	function initialize() {
+		var currentWindowOnload = window.onload;
+		var htmlReporter = new jasmine.HtmlReporter();
+		var jasmineEnv = jasmine.getEnv();
+		jasmineEnv.updateInterval = 1000;
+		jasmineEnv.addReporter(htmlReporter);
+		jasmineEnv.specFilter = function(spec) { return htmlReporter.specFilter(spec) }
+		jasmineEnv.execute();
+	};
+
+	require('initialize');
+	waitForSeer();
+
   </script>
 </head>
 </html>
