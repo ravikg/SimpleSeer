@@ -2,21 +2,38 @@ View = require("views/core/view")
 SubView = require("views/core/subview")
 
 describe "SubView", ->
-  v = parent = undefined
-  beforeEach ->
-    v = new SubView()
+  v = undefined
+  parent = undefined
+
+  setupTest = (o={}) ->
+    v = new SubView(o)
     parent = $("<div/>")
     parent.append(v.el)
 
-  afterEach ->
-    v.remove()
+  beforeEach -> setupTest()
+  afterEach -> v.remove()
 
   it "should extend View", ->
     expect(v instanceof View).toBe true
 
   describe "#events", ->
-    it "should ", ->
-      expect()
+    evt = "event-0"
+    fn = jasmine.createSpy()
+
+    it "should be able to add custom events", ->
+      v.addCustomEvent(evt, fn)
+      expect(v.events[evt]).toEqual(fn)
+
+    it "should be able to fire custom events", ->
+      v.customEvent(evt)
+      expect(fn).toHaveBeenCalled()
+
+  describe "#context", ->
+    it "should set application context if context passed in options", ->
+      v.remove()
+      spyOn(SimpleSeer, 'loadContext')
+      setupTest({context: "blank"})
+      expect(SimpleSeer.loadContext).toHaveBeenCalledWith("blank")
 
   describe "#rendering", ->
     it "should not have rendered yet", ->
