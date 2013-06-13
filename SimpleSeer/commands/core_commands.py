@@ -146,6 +146,50 @@ def OPCCommand(self):
         ChannelManager().publish('opc/', data)
         counter = tagcounter
 
+class MaintenanceCommand(Command):
+
+    def __init__(self, subparser):
+        pass
+
+    def run(self):
+        'Run the maintenance web server'
+        from flask import request, make_response, Response, redirect, render_template, Flask
+        import flask
+        from SimpleSeer.Session import Session
+        from datetime import datetime
+
+        start_time = str(datetime.now())
+
+        print "Maintenance mode started at {0}".format(start_time)
+
+        yaml_config = Session.read_config()
+
+        pstring = yaml_config['web']['address'].split(":")
+        if len(pstring) is 2:
+            port = int(pstring[1])
+        else:
+            port = 5000
+        tpath = path("{0}/{1}".format(yaml_config['web']['static']['/'], '../templates')).abspath()
+        template_folder = tpath
+        app = Flask(__name__,template_folder=template_folder)
+
+        @app.route("/")
+        def maintenance():
+            return render_template("maintenance.html", params = dict(start_time=start_time))
+
+        @app.errorhandler(404)
+        def page_not_found(e):
+            return render_template('maintenance.html', params = dict(start_time=start_time))
+
+        @app.errorhandler(500)
+        def internal_server_error(e):
+            return render_template('maintenance.html', params = dict(start_time=start_time))
+        
+        try:
+            app.run(port=port)
+        except KeyboardInterrupt as e:
+            print "Interrupted by user"
+
 
 class ScrubCommand(Command):
     use_gevent = False

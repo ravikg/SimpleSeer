@@ -63,7 +63,7 @@ def index():
 
 @route('/testing')
 def testing():
-    return render_template("testing.html", settings=settings)    
+    return render_template("testing.html", settings=settings)
 
 @route('/log/<type>', methods=['POST'])
 def jsLogger(type):
