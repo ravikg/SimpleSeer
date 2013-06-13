@@ -1,0 +1,36 @@
+<!doctype html>
+  <!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+  <!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+  <!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=480">
+    <title>{% block title %}Sight Machine Maintenance{% endblock %}</title>
+    <style type="text/css">
+      body {
+        font-family: Arial;
+      }
+      .title {
+        font-size: 12px;
+        color: #333;
+      }
+      small {
+        color: #888;
+        font-size: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div style="width: 500px; height: 300px; position:absolute; top: 50%; left:50%; margin-left: -250px; margin-top: -150px; text-align: center;">
+      <div>
+        <img width="454" height="91" src="data:image/png;base64,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" /></div>
+      <div>
+        <h2>Undergoing Maintenance<h2>
+        <div class="title">{{ params.message }}</div>
+        <small>Maintenance Started: {{ params.start_time }}</small>
+      </div>
+    </div>
+  </body>
+</html>
