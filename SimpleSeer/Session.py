@@ -57,9 +57,9 @@ class Session():
         if yaml_config_dir == "." and not os.path.isfile(yaml_config):
             yaml_config_dir = "/etc/simpleseer"
             yaml_config = path(yaml_config_dir) / "simpleseer.cfg"
-
-        return yaml.load(open(yaml_config))
-        
+        retVal = yaml.load(open(yaml_config))
+        retVal['config_directory'] = yaml_config
+        return retVal
     
     def configure(self, d):
         from .models.base import SONScrub
