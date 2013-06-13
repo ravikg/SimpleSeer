@@ -36,7 +36,7 @@ class Session():
             return  #return the existing shared context
 
         config_dict = self.read_config(yaml_config_dir)
-        log.info("Loaded configuration from %s" % yaml_config)
+        log.info("Loaded configuration from %s" % config_dict['yaml_config'])
         
         # Look for alternate config files with name hostname_simpleseer.cfg
         alt_config_filename = gethostname() + '_simpleseer.cfg'
@@ -58,7 +58,7 @@ class Session():
             yaml_config_dir = "/etc/simpleseer"
             yaml_config = path(yaml_config_dir) / "simpleseer.cfg"
         retVal = yaml.load(open(yaml_config))
-        retVal['config_directory'] = yaml_config
+        retVal['yaml_config'] = yaml_config
         return retVal
     
     def configure(self, d):
