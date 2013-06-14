@@ -390,3 +390,7 @@ def BuildCommand(self):
     cwd = os.path.realpath(os.getcwd())
     print "Updating " + cwd
     sst.SimpleSeerProjectTemplate("").post("", cwd, { "package": cwd.split("/")[-1] })
+
+def ChangeCommand():
+    subprocess.call(['sudo','python','SimpleSeer/setup.py','develop'])
+

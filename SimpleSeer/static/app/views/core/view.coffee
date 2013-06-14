@@ -3,7 +3,6 @@
 
 # Main application reference
 application = require 'application'
-
 module.exports = class View extends Backbone.View
   subviews: {}
   events: {}
