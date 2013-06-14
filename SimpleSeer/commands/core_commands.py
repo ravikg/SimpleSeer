@@ -159,7 +159,7 @@ class MaintenanceCommand(Command):
         from SimpleSeer.Session import Session
         from datetime import datetime
 
-        start_time = str(datetime.now())
+        start_time = str(datetime.now().strftime("%B %d, %Y at %H:%M (EST)"))
 
         print "Maintenance mode started at {0}".format(start_time)
 
