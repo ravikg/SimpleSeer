@@ -5,6 +5,7 @@
 
 require 'lib/view_helper'
 require 'lib/transitions'
+$.getScript("plugins.js")
 
 module.exports = SeerApplication =
   settings: {}

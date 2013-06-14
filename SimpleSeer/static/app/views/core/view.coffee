@@ -2,8 +2,8 @@
 # - - -
 
 # Main application reference
+console.log console.trace()
 application = require 'application'
-
 module.exports = class View extends Backbone.View
   subviews: {}
   events: {}
