@@ -5,20 +5,6 @@ module.exports = class Frame extends Model
   urlRoot: "/api/frame"
 
   parse: (response) =>
-    ###
-    if response.results and response.results.length
-      for r in response.features
-        try
-          plugin = require "plugins/feature/"+r.inspection_name.toLowerCase()
-          #console.log "plugins/feature/"+r.inspection_name.toLowerCase(), plugin
-          if !response.features[r.inspection_name]?
-            response.features[r.inspection_name] = new plugin()
-          response.features[r.inspection_name].addTrait(r)
-        catch e
-          if application.debug
-            console.info "Error loading javascript plugin feature:"
-            console.error e
-    ###
     features = response.features
     response.features = {}
     if features and features.length
@@ -26,8 +12,9 @@ module.exports = class Frame extends Model
         name = f.featuretype.toLowerCase()
         try
           plugin = require "plugins/feature/"+name
-          if !response.features[name]?
-            response.features[name] = new plugin(f)
+          if !response.features[name]
+            response.features[name] = []
+          response.features[name].push(new plugin(f))
         catch e
           if application.debug
             console.info "Error loading javascript plugin feature #{name}:"
