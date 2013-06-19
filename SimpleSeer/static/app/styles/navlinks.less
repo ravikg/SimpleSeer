@@ -9,7 +9,6 @@
 	li {
 		height: 26px;
 		line-height: 24px;
-		padding-left: 24px;
 		position: relative;
 		background: transparent;
 		-webkit-transition: background 150ms linear;
@@ -20,8 +19,9 @@
 		}
 
 		a {
-			box-sizing: border-box;
-			-moz-box-sizing: border-box;
+			padding-left: 31px;
+			box-sizing: border-box !important;
+			-moz-box-sizing: border-box !important;
 			display: inline-block;
 			width: 100%;
 			color: #111;
@@ -30,7 +30,8 @@
 			text-decoration: none;
 			cursor: pointer;
 			padding-top: 2px;
-			padding-left: 8px;
+			background-repeat: no-repeat;
+			background-position: 7px 5px;
 
 			&:hover {
 				text-decoration: none;
