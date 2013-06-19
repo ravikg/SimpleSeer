@@ -391,6 +391,7 @@ def BuildCommand(self):
     print "Updating " + cwd
     sst.SimpleSeerProjectTemplate("").post("", cwd, { "package": cwd.split("/")[-1] })
 
-def ChangeCommand():
-    subprocess.call(['sudo','python','SimpleSeer/setup.py','develop'])
+@ManageCommand.simple()
+def BaseCommand(self):
+    subprocess.call(['sudo','SimpleSeer/scripts/base.sh'])
 
