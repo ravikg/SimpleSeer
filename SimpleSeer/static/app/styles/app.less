@@ -1,5 +1,5 @@
 body {
-  font-family: Helvetica, Arial, sans-serif;
+  font-family: 'Open Sans', Helvetica, Arial, sans-serif !important;
   font-size: 13px;
   line-height: 18px;
   color: #000;
@@ -16,7 +16,6 @@ input[type=text], input[type=number], textarea {
   border: 1px solid #ddd;
   border-top-color: #cecece;
 
-  font-family: Helvetica, Arial, sans-serif;
   font-size: 11px;
   font-weight: normal;
 }
@@ -243,7 +242,7 @@ select{
   }
 }
 
-a { font-size: 13px; color: #08C; font-family: Helvetica, Arial, sans-serif; }
+a { font-size: 13px; color: #08C; }
 
 #config{
   position: fixed;
@@ -501,7 +500,6 @@ html[xmlns] .clearfix {
   color: #333333;
   cursor: pointer;
   display: inline-block;
-  font-family: 'Helvetica',sans-serif;
   font-size: 12px;
   line-height: 150%;
   margin-right: 3px;
@@ -609,4 +607,13 @@ div.fillImageCont {
 
 .chzn-container-multi .chzn-choices {
   border-color: #777 !important;
+}
+
+select + .chzn-container, .chzn-drop {
+  width: 100% !important;
+}
+
+.chzn-choices > .search-field > input {
+  font-family: "Open Sans";
+  width: 100% !important;
 }
