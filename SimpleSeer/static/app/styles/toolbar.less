@@ -48,13 +48,22 @@
   }
 
   .toolset {
+    .set.blue + .set.yellow,
+    .set.blue + .set.red,
+    .set.yellow + .set.red {
+      border-top: 5px solid #1B1C1E;
+    }
+
+    .set.blue + .set.red {
+      border-top: 5px solid #1B1C1E;
+    }
+
     .set {
       background: #999;
       border-bottom: 1px solid #2c2d30;
       display: block;
 
       &.blue {
-        border-bottom: 5px solid #1B1C1E;
         box-shadow: inset 0px 5px 0px #006B9D;
       }
 
@@ -148,4 +157,21 @@
 
 #toolbar.expanded + .controlPane {
   width: 234px;
+}
+
+.oneLine input[type=text] {
+  padding: 5px;
+  width: 100%;
+  height: 29px;
+  border-color: #777;
+  color: #000;
+  font-family: "Open Sans";
+  box-sizing: border-box !important;
+  -moz-box-sizing: border-box !important;
+  background-color: #FFF;
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, color-stop(1%, #EEE), color-stop(15%, #FFF));
+  background-image: -webkit-linear-gradient(top, #EEE 1%, #FFF 15%);
+  background-image: -moz-linear-gradient(top, #EEE 1%, #FFF 15%);
+  background-image: -o-linear-gradient(top, #EEE 1%, #FFF 15%);
+  background-image: linear-gradient(#EEE 1%, #FFF 15%);
 }
