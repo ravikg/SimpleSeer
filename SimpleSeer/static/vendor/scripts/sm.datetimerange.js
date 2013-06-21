@@ -127,7 +127,7 @@ $.widget("ui.datetimerange", {
 
         var goBackMonth = $('<button class="controlButton">&laquo;</button>;').addClass("switch").appendTo(this.leftSide);
 
-        for(var e=0; e<3; e++) {
+        for(var e=0; e<2; e++) {
             self.calendarViews[e] = $("<div></div>")
                                         .addClass("ss-calendar")
                                         .appendTo(this.leftSide);
@@ -305,11 +305,11 @@ $.widget("ui.datetimerange", {
         self.window.css({
             "top": element.offset().top + element.height() - $(window).scrollTop(),
             "left": element.offset().left
-        }).show();
+        }).fadeIn(150);
     },
 
     disappear: function(e, ui) {
-        this.window.hide();
+        this.window.fadeOut(150);
     }
 });
 
