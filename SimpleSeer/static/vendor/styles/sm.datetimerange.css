@@ -17,12 +17,7 @@
 }
 
 .ui-datetimerange .right {
-  margin-left: 14px;
-  padding-left: 14px;
-  padding-top: 3px;
-  padding-right: 3px;
-
-  border-left: 1px solid #b3b3b3;
+  margin-left: 11px;
   box-sizing: border-box;
 }
 
@@ -40,13 +35,17 @@
   margin-left: 6px;
 }
 
+.ui-datetimerange .bottom button:last-child {
+  margin-right: 0px;
+}
+
 .ui-datetimerange .bottom button[disabled] {
   opacity: 0.1 !important;
   cursor: default;
 }
 
 .ui-datetimerange .bottom {
-  margin-top: 27px;
+  margin-top: 30px;
   text-align: right;
 }
 
