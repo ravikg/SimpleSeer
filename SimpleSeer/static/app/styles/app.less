@@ -1,9 +1,26 @@
 body {
-  font-family: Helvetica, Arial, sans-serif;
+  font-family: 'Open Sans', Helvetica, Arial, sans-serif !important;
   font-size: 13px;
   line-height: 18px;
   color: #000;
   overflow: hidden;
+
+  *::-webkit-scrollbar {
+    width: 12px;
+    background-color: #414141;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: #888 url("/img/grippy.png") no-repeat -2px center;
+    border: 1px solid #444;
+    border-width: 0 0px 0px 1px;
+  }
+
+  *::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.16);
+    border-left: 1px solid #555;
+    background-color: #d1d1d1;
+  }
 }
 
 p { margin: 0; padding: 0px; }
@@ -16,7 +33,6 @@ input[type=text], input[type=number], textarea {
   border: 1px solid #ddd;
   border-top-color: #cecece;
 
-  font-family: Helvetica, Arial, sans-serif;
   font-size: 11px;
   font-weight: normal;
 }
@@ -243,7 +259,7 @@ select{
   }
 }
 
-a { font-size: 13px; color: #08C; font-family: Helvetica, Arial, sans-serif; }
+a { font-size: 13px; color: #08C; }
 
 #config{
   position: fixed;
@@ -462,167 +478,6 @@ html[xmlns] .clearfix {
 #stage div.ui-tabs-panel { border: none !important; }
 .dashboardGrid { width: 100%;}
 
-#widget_grid {
-  position: relative;
-  z-index: 0;
-  padding: 10px;
-  width: 100%;
-  box-sizing: border-box;
-  -moz-box-sizing: border-box;
-}
-
-#widget_grid .widget_container {
-  float: left;
-  width: 100%;
-  height: 200px;
-  box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  padding: 8px;
-
-  &:only-child {
-    padding: 0px;
-  }
-}
-
-@media screen and (max-width: 700px) {
-  #widget_grid .widget_container {
-    float: left;
-    width: 100% !important;
-  }
-}
-
-.widget {
-  height: 100%;
-  position: relative;
-  border-radius: 2px;
-  box-shadow: 0px 0px 8px #60B2DB;
-  -webkit-transition: box-shadow 150ms;
-
-  &.pushed { background-color: #ffeeee; }
-
-  & > .header {
-    z-index: 1029;
-    position: absolute;
-    top: 0;
-    left: 0;
-    background: url("../img/MT_999999.png") repeat;
-    height: 33px;
-    width: 100%;
-    border-radius: 2px 2px 0px 0px;
-    border: 1px solid #1B1C1E;
-
-    h2 {
-      vertical-align: top;
-      display: inline-block;
-      font-weight: bold;
-      font-size: 18px;
-      line-height: 31px;
-      height: 31px;
-      color: #ffffff;
-      background: #2D2E31;
-      padding: 0px 9px 0 8px;
-      white-space: nowrap;
-      max-width: 100%;
-      text-overflow: ellipsis;
-      overflow: hidden;
-    }
-
-    .toggle {
-      font-size: 17px;
-      margin-left: -4px;
-      vertical-align: top;
-      display: inline-block;
-      width: 17px;
-      text-align: center;
-      height: 31px;
-      line-height: 29px;
-      background: #777;
-      color: #222;
-      border: 1px solid #1A1B1C;
-      border-width: 0px 1px;
-      cursor: pointer;
-    }
-
-    .buttons {
-      float: right;
-
-      .button {
-        cursor: pointer;
-        float: right;
-        border-left: 1px solid #1A1B1C;
-        width: 34px;
-        height: 31px;
-        background-position: 12px 9px;
-        background-repeat: no-repeat;
-
-        &.config { background-position: 8px 12px !important; background-image: url("../img/arrow_context_dropdown_dark.png"); }
-        &.upsize { background-image: url("../img/arrow_dashboarditem_right.png"); }
-        &.downsize { background-image: url("../img/arrow_dashboarditem_left.png"); }
-        &.close { background-image: url("../img/Trash.png"); background-position: 8px 8px; }
-      }
-    }
-  }
-
-  .content-frame {
-    width: 100%;
-    height: 100%;
-    padding-top: 33px;
-
-    .content {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: white /*url("../img/MT_FFFFFF.png") repeat*/;
-      border: 1px solid #1A1B1C;
-      border-width: 0 1px 1px 1px;
-      border-radius: 0px 0px 2px 2px;
-      position:relative;
-    }
-  }
-}
-
-.widget.mini {
-  box-shadow: none;
-  -webkit-transition: box-shadow 0ms;
-
-  & > .header {
-    background: none;
-    border-width: 0;
-
-    h2 {
-      height: 32px;
-      border: 1px solid #1A1B1C;
-      border-width: 1px 1px 0 1px;
-      border-radius: 2px 0 0 0;
-
-      &.full {
-        border-radius: 2px 2px 0 0;
-      }
-    }
-
-    h2 + .toggle {
-      border-width: 1px 1px 0 0;
-    }
-
-    .toggle {
-      border-radius: 0 2px 0 0;
-      border-width: 1px 1px 0px 1px;
-      height: 32px;
-    }
-
-    .buttons { display: none; }
-  }
-
-  .content-frame {
-    padding-top: 32px;
-
-    .content {
-      border-width: 1px;
-      border-radius: 0 2px 2px 2px;
-    }
-  }
-}
-
 .controlButton,
 .ok-button,
 .cancel-button {
@@ -633,8 +488,8 @@ html[xmlns] .clearfix {
   color: #333333;
   cursor: pointer;
   display: inline-block;
-  font-family: 'Helvetica',sans-serif;
   font-size: 12px;
+  font-family: "Open Sans";
   line-height: 150%;
   margin-right: 3px;
   padding: 3px 15px 2px;
@@ -723,7 +578,7 @@ div.fillImageCont {
   width: 13px;
   height: 13px;
   position: absolute;
-  top: 38px;
+  top: 40px;
   right: 15px;
   background: url('/img/chosen-sprite.png') right top no-repeat;
   cursor: pointer;
@@ -741,4 +596,13 @@ div.fillImageCont {
 
 .chzn-container-multi .chzn-choices {
   border-color: #777 !important;
+}
+
+select + .chzn-container, .chzn-drop {
+  width: 100% !important;
+}
+
+.chzn-choices > .search-field > input {
+  font-family: "Open Sans";
+  width: 100% !important;
 }
