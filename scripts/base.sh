@@ -2,6 +2,7 @@
 echo "--------------------------------------------------------"
 echo "- Installing SimpleSeer                                -"
 echo "--------------------------------------------------------"
+git submodule update
 cd SimpleSeer
 python setup.py develop
 cd ..
