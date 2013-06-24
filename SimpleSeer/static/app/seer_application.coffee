@@ -16,11 +16,18 @@ module.exports = SeerApplication =
   inAnim: false
   browser: {}
   loading: true
+  _keyCodes:
+    'alt':1
+    'shift':2
+    'ctrl':4
 
   # Set up the application and include the
   # necessary modules. Configures the page
   # and
   _init: (settings) ->
+    @_keyBindings = {}
+    $("html").keyup @_keyPress
+     
     @settings = _.extend @settings, settings
 
     if @settings.mongo.is_slave
@@ -72,6 +79,20 @@ module.exports = SeerApplication =
       console.log r
     @router.route route, name, callback
 
+  _keyPress: (e) ->
+    key = 0
+    if e.altKey
+      key += SimpleSeer._keyCodes['alt']
+    if e.ctrlKey
+      key += SimpleSeer._keyCodes['ctrl']
+    if e.shiftKey
+      key += SimpleSeer._keyCodes['shift']
+    key += "_"+ e.which
+    
+    if SimpleSeer._keyBindings[key]
+      for i,o of SimpleSeer._keyBindings[key]
+        for event in o
+          event()
 
   # Sends an alert window to the client
   # with the specified message and severity.
