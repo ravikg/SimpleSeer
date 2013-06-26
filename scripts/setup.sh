@@ -61,6 +61,7 @@ install_requirements() {
 
 install_pip_requirements() {
   echo "installing PIP requirements"
+  sudo pip install `grep pandas pip.requirements`
   sudo pip install -r pip.requirements
   #TODO make sure it completes
 }
