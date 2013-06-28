@@ -394,4 +394,5 @@ def BuildCommand(self):
 @ManageCommand.simple()
 def BaseCommand(self):
     subprocess.call(['sudo','SimpleSeer/scripts/base.sh'])
+    BuildCommand("").run()
 
