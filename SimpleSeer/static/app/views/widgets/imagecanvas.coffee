@@ -40,7 +40,7 @@ module.exports = class ImageCanvas extends SubView
     #@canvas = @$("canvas")
     @canvas = @$el.find("canvas")
     if @options.stealth then @hideMarkup()
-    @image = @$("img")
+    #@image = @$("img")
     @image = @$el.find("img")
     @image.load =>
       @image.attr("data-w", @image.get(0).width)
