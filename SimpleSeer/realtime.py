@@ -124,30 +124,31 @@ class ChannelManager(object):
             channel = self.safeChannel(conn)
             
             if not callback_queue:
-                (callback_queue, msgs, consumers) = channel.queue_declare(durable=True)
+                (callback_queue, msgs, consumers) = channel.queue_declare(exclusive=True)
                 
             channel.basic_consume(callback=on_response, no_ack=True, queue=callback_queue)
             return channel, callback_queue
         
         channel, callback_queue = setup_channel(None)
+        channel.basic_consume(callback=on_response, no_ack=True, queue=callback_queue)
         
         msg = amqp.Message(jsonencode(request))
         msg.properties['correlation_id'] = corrid
         msg.properties['reply_to'] = callback_queue
         
         self.safePublish(channel, msg=msg, exchange='', routing_key=workQueue)
-        
+                
         while self._response[corrid] is None:
             try:
-                channel.basic_consume(callback=on_response, no_ack=True, queue=callback_queue)
                 channel.wait()
                 log.info('RPC request on %s' % workQueue)
             except (socket.error, IOError) as e:
                 log.warn('Socket error: {}.  Will try to reconnect.'.format(e))
                 conn = self.connect()
                 channel, callback_queue = setup_channel(callback_queue)
+                channel.basic_consume(callback=on_response, no_ack=True, queue=callback_queue)
+        
                 
-        channel.queue_delete(callback_queue)
         return self._response.pop(corrid)
     
     def rpcRecvRequest(self, workQueue, callback):
@@ -162,6 +163,7 @@ class ChannelManager(object):
             resMsg.properties['correlation_id'] = msg.properties['correlation_id']
             
             self.safePublish(msg.channel, msg=resMsg, exchange='', routing_key=msg.properties['reply_to'])
+            msg.channel.basic_ack(delivery_tag=msg.delivery_tag)
             
         def setup_channel():
             channel = self.safeChannel(conn)
