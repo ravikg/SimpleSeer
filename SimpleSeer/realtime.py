@@ -1,8 +1,9 @@
-#from pika import BlockingConnection, ConnectionParameters, BasicProperties
 from amqplib import client_0_8 as amqp
 
 from socketio.namespace import BaseNamespace
 import gevent
+from time import sleep
+import socket
 
 from .Session import Session
 from .base import jsonencode, jsondecode
@@ -12,6 +13,8 @@ log = logging.getLogger(__name__)
 
 class ChannelManager(object):
     
+    socketRetryWait = 5
+    
     def __init__(self, shareConnection=True):
         self._init = True
         self._config = Session()
@@ -20,21 +23,59 @@ class ChannelManager(object):
         # Greenlets don't like shared connections
         self._shareConnection = shareConnection
         if shareConnection:
-            self._connection = amqp.Connection(host=self._config.rabbitmq)
+            self._connection = self.connect()
             
     def __repr__(self):
         return '<ChannelManager>' 
         
+    def connect(self):
+        while True:
+            try:
+                return amqp.Connection(host=self._config.rabbitmq)
+            except Exception as e:
+                log.warn('Socket connection error: {}.  Waiting {} seconds.'.format(e, self.socketRetryWait))
+                sleep(self.socketRetryWait)
+        
+    def safePublish(self, channel, **kwargs):
+        # Handle disconnection errors when publishing message
+        pubed = False
+        
+        while not pubed:
+            try:
+                channel.basic_publish(**kwargs)
+                pubed = True
+            except (socket.error, IOError) as e:
+                log.warn('Error when publishing request: {}.  Reconnecting'.format(e))
+                conn = self.connect()
+                
+                if self._shareConnection:
+                    self._connection = conn
+                
+                channel = self.safeChannel(conn)
+                
+    def safeChannel(self, conn):
+        # Handle disconnection errors when requesting channel
+        
+        while True:
+            try:
+                return conn.channel()
+            except (socket.error, IOError) as e:
+                log.warn('Error when creating channel: {}.  Reconnecting'.format(e))
+                conn = self.connect()
+                
+                if self._shareConnection:
+                    self._connection = conn
+                
     def publish(self, exchange, message):
         if not self._shareConnection:
-            conn = amqp.Connection(host=self._config.rabbitmq)
+            conn = self.connect()
         else:
             conn = self._connection
-        channel = conn.channel()
+        channel = self.safeChannel(conn)
         channel.exchange_declare(exchange=exchange, type='fanout')
         msg = amqp.Message(jsonencode(message))
         
-        channel.basic_publish(msg, exchange=exchange, routing_key='')
+        self.safePublish(channel, msg=msg, exchange=exchange, routing_key='')
         channel.close()
         
     def subscribe(self, exchange, callback):
@@ -44,56 +85,75 @@ class ChannelManager(object):
         else:
             conn = self._connection        
         
-        channel = conn.channel()
+        def setup_channel():
+            channel = self.safeChannel(conn)
+            
+            channel.exchange_declare(exchange=exchange, type='fanout')
+            (queue_name, msgs, consumers) = channel.queue_declare(exclusive=True)
+            
+            channel.queue_bind(exchange=exchange, queue=queue_name)
+            channel.basic_consume(callback=callback, queue=queue_name)
+            return channel
+            
+        channel = setup_channel()
         
-        channel.exchange_declare(exchange=exchange, type='fanout')
-        (queue_name, msgs, consumers) = channel.queue_declare(exclusive=True)
-        
-        channel.queue_bind(exchange=exchange, queue=queue_name)
-        channel.basic_consume(callback=callback, queue=queue_name)
-        
-        try:    
-            while True:
+        while True:
+            try:
                 channel.wait()
-        except:
-            channel.close()
+            except (socket.error, IOError) as e:
+                log.warn('Socket error: {}.  Will try to reconnect.'.format(e))
+                conn = self.connect()
+                channel = setup_channel()
     
     def rpcSendRequest(self, workQueue, request):
         from random import choice
         
         if not self._shareConnection:
-            conn = amqp.Connection(host=self._config.rabbitmq)
+            conn = self.connect()
         else:
             conn = self._connection
         
         corrid = ''.join([ choice('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ') for i in range(20) ])
         self._response[corrid] = None
         
-        
         def on_response(msg):
             if corrid == msg.properties['correlation_id']:
                 self._response[corrid] = jsondecode(msg.body)
                 
-        channel = conn.channel()
-        (callback_queue, msgs, consumers) = channel.queue_declare(exclusive=True)
+        def setup_channel(callback_queue):
+            channel = self.safeChannel(conn)
+            
+            if not callback_queue:
+                (callback_queue, msgs, consumers) = channel.queue_declare(exclusive=True)
+                
+            channel.basic_consume(callback=on_response, no_ack=True, queue=callback_queue)
+            return channel, callback_queue
         
+        channel, callback_queue = setup_channel(None)
         channel.basic_consume(callback=on_response, no_ack=True, queue=callback_queue)
         
         msg = amqp.Message(jsonencode(request))
         msg.properties['correlation_id'] = corrid
         msg.properties['reply_to'] = callback_queue
         
-        channel.basic_publish(msg, exchange='', routing_key=workQueue)
-        
+        self.safePublish(channel, msg=msg, exchange='', routing_key=workQueue)
+                
         while self._response[corrid] is None:
-            channel.wait()
-            log.info('RPC request on %s' % workQueue)
-            
+            try:
+                channel.wait()
+                log.info('RPC request on %s' % workQueue)
+            except (socket.error, IOError) as e:
+                log.warn('Socket error: {}.  Will try to reconnect.'.format(e))
+                conn = self.connect()
+                channel, callback_queue = setup_channel(callback_queue)
+                channel.basic_consume(callback=on_response, no_ack=True, queue=callback_queue)
+        
+                
         return self._response.pop(corrid)
     
     def rpcRecvRequest(self, workQueue, callback):
         if not self._shareConnection:
-            conn = amqp.Connection(host=self._config.rabbitmq)
+            conn = self.connect()
         else:
             conn = self._connection
                     
@@ -102,29 +162,39 @@ class ChannelManager(object):
             resMsg = amqp.Message(jsonencode(res))
             resMsg.properties['correlation_id'] = msg.properties['correlation_id']
             
-            msg.channel.basic_publish(resMsg, exchange='', routing_key=msg.properties['reply_to'])
+            self.safePublish(msg.channel, msg=resMsg, exchange='', routing_key=msg.properties['reply_to'])
             msg.channel.basic_ack(delivery_tag=msg.delivery_tag)
-        
-        channel = conn.channel()
-        channel.queue_declare(queue=workQueue)
             
-        channel.basic_qos(prefetch_size=0, prefetch_count=1, a_global=False)
-        channel.basic_consume(callback=on_request, queue=workQueue)
-        
+        def setup_channel():
+            channel = self.safeChannel(conn)
+            channel.queue_declare(queue=workQueue)
+                
+            channel.basic_qos(prefetch_size=0, prefetch_count=1, a_global=False)
+            channel.basic_consume(callback=on_request, queue=workQueue)
+            
+            return channel
+            
+        channel = setup_channel()
+            
         log.info('RPC worker waiting on %s' % workQueue)
         while True:
-            channel.wait()
-        
+            try:
+                channel.wait()
+            except (socket.error, IOError) as e:
+                log.warn('Socket error: {}.  Will try to reconnect.'.format(e))
+                conn = self.connect()
+                channel = setup_channel()
+                        
     def exchangeExists(self, name):    
         exists = True
         inUse = False
         
         if not self._shareConnection:
-            conn = amqp.Connection(host=self._config.rabbitmq)
+            conn = self.connect()
         else:
             conn = self._connection
         
-        channel = conn.channel()
+        channel = self.safeChannel(conn)
         
         try:
             channel.exchange_delete(exchange=name, if_unused=True)
