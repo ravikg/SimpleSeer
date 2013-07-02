@@ -112,8 +112,6 @@ module.exports = class ImageCanvas extends SubView
     [w1, h1] = [@image.width(), @image.height()]
     @_process()
     @processing.size w, h
-    #@processing.scale w1 / @options.model.get("width")
-    #onsole.log @image.attr "data-w"
     @processing.scale w1 / @image.attr "data-w"
     @processing.background 0, 0
     engine(@processing, @options, [w1, h1])
