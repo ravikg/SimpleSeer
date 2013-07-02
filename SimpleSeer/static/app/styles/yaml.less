@@ -1,0 +1,77 @@
+.yaml {
+  
+  strong {
+    font-weight: 700;
+  }
+
+  small {
+    font-size: 9px;
+  }
+
+  .content {
+    width: 100%;
+
+    .buttons {
+      float: right;
+      display: none;
+
+      .button {
+        border: 1px solid #ccc;
+        border-radius: 2px;
+        padding: 0px 5px;
+        margin: 0px 2px;
+
+        &.add {
+          background-color: rgba(100,255,100,.5);
+        }
+        &.edit {
+          background-color: rgba(255,255,153,1);
+        }
+        &.delete {
+          background-color: rgba(255,100,100,.5);
+        }
+        &:hover {
+          cursor: pointer
+        }
+      }
+    }
+
+    .tree {
+      border: 1px solid #aaa;
+      padding: 6px 8px;
+      margin: 5px;
+      background: #fff;
+
+      &:hover {
+        border: 1px solid rgba(0,0,0,.1);
+        background-color: rgba(0,0,0,.1);
+
+        > .buttons {
+          display: block;
+        }
+      }
+    }
+
+    .item {
+        width: auto;
+        min-width: 500px;
+        float: left;
+        padding: 5px;
+        margin: 10px 20px 10px 0px;
+        border: 1px solid #666;
+        background-color: #FFF;
+
+        .title {
+          font-weight: 700;
+        }
+
+        .key {
+          font-weight: 700;
+          margin-right: 5px;
+        }
+        .value {
+
+        }
+    }
+  }
+}
