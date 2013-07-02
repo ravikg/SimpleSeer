@@ -6,10 +6,15 @@ application = require 'application'
 module.exports = class View extends Backbone.View
   subviews: {}
   events: {}
+  keyBindings:
+    "alt+ctrl+shift+73":"moopy"
+    "73":"methodName2"
   firstRender:true
 
   initialize: (options={}) =>
     super()
+    #application._keyBindings
+      
 
     if @options.context?
       # Load any context attached to view
@@ -19,6 +24,29 @@ module.exports = class View extends Backbone.View
       application.loadContext(@options.context)
     #@on "uiFocus", @focus
     @subviews = {}
+
+  moopy: =>
+    console.log "pooopymoops!"
+    
+  methodName2: =>
+    console.log 'another keypress!'
+
+  _bindKeys: =>
+    id = if typeof @id == "function" then @id() else @id 
+    
+    if id and @keyBindings
+      for i,o of @keyBindings
+        key = 0
+        for _key in i.split("+")
+          if _key == "alt" or _key == "ctrl" or _key == "shift"
+            key += application._keyCodes[_key]
+          else
+            key += "_" + _key
+        if !application._keyBindings[key]?
+          application._keyBindings[key] = {}
+        if !application._keyBindings[key][id]?
+          application._keyBindings[key][id] = []
+        application._keyBindings[key][id].push @[o]
 
   _setScroll: (el=@$el) =>
     el.infiniteScroll
@@ -95,6 +123,7 @@ module.exports = class View extends Backbone.View
 
   # Renders view using effects if defined
   render: =>
+    @_bindKeys()
     #console.log 'render'
     callback = =>
       @$el.html @template @getRenderData()
