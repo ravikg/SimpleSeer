@@ -72,6 +72,7 @@ exports.config =
         'stylesheets/seer.css': (path) -> true
       order:
         before: [
+          'app/styles/fonts.less',
           'vendor/styles/gridsystem.css',
           'vendor/styles/bootstrap.css'
         ]

@@ -8,15 +8,18 @@ poll_rate: 0.5
 
 in_cloud : 0
 
-web: 
+web:
   address: localhost:8080
   static: ${static}
 
-mongo: 
+mongo:
   host: 127.0.0.1
   port: 27017
 
 database: ${project}
+rabbitmq: localhost
+
+ui_pagename: ${project}
 
 pub_uri: ipc:///tmp/${project}-pub
 sub_uri: ipc:///tmp/${project}-sub

@@ -5,10 +5,10 @@ $ ->
   loadUI = ->
     $.getJSON '/settings', (data) ->
       _.templateSettings = {interpolate : /\{\{(.+?)\}\}/g}
-  
+
       window.SimpleSeer = application
       application._init(data.settings)
-  
+
         # Instantiate the router.
       application.router = new Router()
         # Load cloud libs if applicable & available
@@ -35,6 +35,7 @@ $ ->
       paragraph2: ""
       close: close
       beforeClose: loadUI
+      imagePath: '/img/seer/'
 
   b = $.browser
   if application.browser[b.name]?
@@ -46,5 +47,5 @@ $ ->
       loadUI()
   else
     loadUI()
-  
+
 
