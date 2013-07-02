@@ -28,6 +28,7 @@
 .ui-datetimerange .right .block label {
   margin-bottom: 3px;
   display: block;
+  color: #222;
 }
 
 .ui-datetimerange .bottom button {
@@ -64,6 +65,7 @@
 }
 
 .ui-datetimerange input {
+  color: #333;
   font-family: "Open Sans";
   font-size: 12px;
   padding: 5px;
@@ -109,8 +111,6 @@
   color: #333;
   border-bottom: 1px solid #a0a0a0;
   font-size: 12px;
-  font-weight: 600;
-
   background-image: linear-gradient(top, rgb(248,248,248) 0%, rgb(230,230,230) 100%);
   background-image: -o-linear-gradient(top, rgb(248,248,248) 0%, rgb(230,230,230) 100%);
   background-image: -moz-linear-gradient(top, rgb(248,248,248) 0%, rgb(230,230,230) 100%);
