@@ -19,7 +19,7 @@ mongo:
 database: ${project}
 rabbitmq: localhost
 
-ui-pagename: ${project}
+ui_pagename: ${project}
 
 pub_uri: ipc:///tmp/${project}-pub
 sub_uri: ipc:///tmp/${project}-sub
