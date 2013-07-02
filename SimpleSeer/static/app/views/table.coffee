@@ -524,7 +524,7 @@ module.exports = class Table extends SubView
     # Shows the row if there is no data
     if @noData
       cols = @tableCols.length
-      $(".table.static tbody").prepend('<tr><td class="td showhidden" colspan="'+cols+'">There was no data. Try expanding your filters.</td></tr>')
+      $(".table.static tbody").prepend('<tr><td class="td showhidden" colspan="'+cols+'">No data to display. Try expanding your filters.</td></tr>')
 
   reflow: =>
     super()
