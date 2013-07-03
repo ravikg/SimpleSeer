@@ -7,7 +7,7 @@ module.exports = class Yaml extends SubView
   depth: 0
   hover: undefined
   html: ''
-  data: ''
+  location: ''
   json: [
     obj:
       id: "511417bf3ea38e38957456d0"
@@ -68,35 +68,33 @@ module.exports = class Yaml extends SubView
 
   clickButton: (e) =>
     e.preventDefault();
-    ctd = $(e.currentTarget).attr('data')
-    td = $(e.target).attr('data')
+    ctd = $(e.currentTarget).attr('location')
+    td = $(e.target).attr('location')
     action = $(e.target).attr('action')
     if ctd == td
-      @data = []
+      @location = []
       $(e.target).parents(".tree").each (o, i)=>
-        @data.unshift($(i).attr('data'))
-      value = @getValue(@data)
+        @location.unshift($(i).attr('location'))
+      value = @getValue(@location)
 
       if action == "add"
         if ctd == "type"
-          console.log "Adding new object"
-          @json.push(@addition)
-          @render()
-        else if @data
-          console.log "Adding item into", @data
+          console.log "Adding a new yaml object"
+        else if @location
+          console.log "Adding item into", @location
 
       if action == "edit"
-        if @data
-          console.log "Editing item @ ", @data
+        if @location
+          console.log "Editing item @ ", @location
 
       if action == "delete"
-        if @data
-          console.log "Deleting item @ ", @data
+        if @location
+          console.log "Deleting item @ ", @location
 
 
-  getValue: (data) =>
+  getValue: (location) =>
     loopy = @json
-    _.each data, (i) =>
+    _.each location, (i) =>
       if !loopy?
         loopy = @json[i]
       else
@@ -130,27 +128,27 @@ module.exports = class Yaml extends SubView
           ret += @formatObject(obj[key], 1)
         else
           i++
-          ret += '<div class="tree" data="' + String(key) + '">'
+          ret += '<div class="tree" location="' + String(key) + '">'
           ret += '<span class="key">' + String(key) + '</span>' + ' <small>(' + typeof obj[key] + ')</small>'
-          ret += '<div class="buttons"><span class="button add" action="add" data="' + String(key) + '">A</span>' + '<span class="button edit" action="edit" data="' + String(key) + '">E</span>' + '<span class="button delete" action="delete" data="' + String(key) + '">D</span></div>'
+          ret += '<div class="buttons"><span class="button add" action="add" location="' + String(key) + '">A</span>' + '<span class="button edit" action="edit" location="' + String(key) + '">E</span>' + '<span class="button delete" action="delete" location="' + String(key) + '">D</span></div>'
           ret += @formatObject(obj[key], i)
           ret += '</div>'
       else
         if String(key) == 'type'
           # Removed "type" and placed at main container
         else
-          ret += '<div class="tree" data="' + String(key) + '">'
+          ret += '<div class="tree" location="' + String(key) + '">'
           ret += '<span class="key">' + String(key) + ':</span><span class="value">' + String(obj[key]) + "</span>"
-          ret += '<div class="buttons">' + '<span class="button edit" action="edit" data="' + String(key) + '">E</span>' + '<span class="button delete" action="delete" data="' + String(key) + '">D</span></div>'
+          ret += '<div class="buttons">' + '<span class="button edit" action="edit" location="' + String(key) + '">E</span>' + '<span class="button delete" action="delete" location="' + String(key) + '">D</span></div>'
           ret += '</div>'
     ret
 
   formatHTML: (json) =>
     html = ''
     for key, o of json
-      html += '<div class="item tree" data="' + key + '">'
+      html += '<div class="item tree" location="' + key + '">'
       html += '<strong>' + o.type + '</strong>'
-      html += '<div class="buttons"><span class="button add" action="add" data="' + String(key) + '">A</span>' + '<span class="button edit" action="edit" data="' + String(key) + '">E</span>' + '<span class="button delete" action="delete" data="' + String(key) + '">D</span></div>'
+      html += '<div class="buttons"><span class="button add" action="add" location="' + String(key) + '">A</span>' + '<span class="button edit" action="edit" location="' + String(key) + '">E</span>' + '<span class="button delete" action="delete" location="' + String(key) + '">D</span></div>'
       html += @formatObject(o)
       html += '</div>'
     return html
