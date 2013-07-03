@@ -8,6 +8,7 @@ module.exports = class Yaml extends SubView
   hover: undefined
   html: ''
   location: ''
+  chosen: false
   json: [
     obj:
       id: "511417bf3ea38e38957456d0"
@@ -28,7 +29,6 @@ module.exports = class Yaml extends SubView
       context: "stats"
       navbar: "left-main"
       path: "stats"
-
     type: "TabContainer"
   ,
     obj:
@@ -45,7 +45,6 @@ module.exports = class Yaml extends SubView
       locked: true
       cols: 1
       id: "5047bc49fb920a538c000001"
-
     type: "Dashboard"
   ,
     obj:
@@ -57,9 +56,7 @@ module.exports = class Yaml extends SubView
           exists: 1
         ]
         logic: "and"
-
       name: "All"
-
     type: "OLAP"
   ,
     obj:
@@ -76,7 +73,6 @@ module.exports = class Yaml extends SubView
       locked: true
       cols: 1
       id: "5047bc49fb920a538c000001"
-
     type: "Dashboard"
   ,
     obj:
@@ -88,9 +84,7 @@ module.exports = class Yaml extends SubView
           exists: 1
         ]
         logic: "and"
-
       name: "All"
-
     type: "OLAP"
   ,
     obj:
@@ -112,7 +106,6 @@ module.exports = class Yaml extends SubView
       context: "stats"
       navbar: "left-main"
       path: "stats"
-
     type: "TabContainer"
   ,
     obj:
@@ -129,7 +122,6 @@ module.exports = class Yaml extends SubView
       locked: true
       cols: 1
       id: "5047bc49fb920a538c000001"
-
     type: "Dashboard"
   ,
     obj:
@@ -141,14 +133,25 @@ module.exports = class Yaml extends SubView
           exists: 1
         ]
         logic: "and"
-
       name: "All"
-
     type: "OLAP"
   ]
 
   events: =>
     'click .button':'clickButton'
+
+  saveJSON: (options) =>
+    console.log "options", options
+
+  showAddTypeModal: =>
+    application.modal.show
+      title: "Add Object"
+      message:'Hello There!'
+      okMessage:'Save'
+      cancelMessage:'Cancel'
+      inputMessage:"A Value"
+      throbber:false
+      success:(options) => @saveJSON(options)
 
   clickButton: (e) =>
     e.preventDefault();
@@ -162,8 +165,8 @@ module.exports = class Yaml extends SubView
       value = @getValue(@location)
 
       if action == "add"
-        if ctd == "type"
-          console.log "Adding a new yaml object"
+        if @location.length == 0
+          @showAddTypeModal()
         else if @location
           console.log "Adding item into", @location
 
@@ -245,8 +248,29 @@ module.exports = class Yaml extends SubView
     'html': @html
 
   afterRender: =>
-    console.log "Initializing masonry"
-    $container = $('#widget_grid .content .yaml')
+    @chosenInits()
+    $container = $('#widget_grid .content')
     $container.masonry
       columnWidth: 530
       itemSelector: ".item"
+
+
+  createObject: (type) =>
+    # @TODO: Faux data object addition, would actually ping database, create new object
+    # and return the actual id and model of the object.
+    @json.unshift
+      obj:
+        id: "511417bf3ea38e38957456d0"
+      type: type
+
+    @render()
+
+  chosenInits: =>
+    # New Object
+    $('#new').chosen({
+      no_results_text: "No results matched"
+    }).change((event, ui) =>
+      if (ui is undefined) then (ui = {selected: "_"})
+      v = ui.selected
+      @createObject(v)
+    )
