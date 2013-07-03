@@ -198,7 +198,10 @@ module.exports = class Yaml extends SubView
         $(o.target).children('.buttons').css('display', 'block')
       else
         $('body').find('.tree .buttons').css('display', 'none')
-        $(o.target).children('.buttons').css('display', 'block')
+        if c != "tree"
+          $(o.target).parent('.tree').children('.buttons').css('display', 'block')
+        else
+          $(o.target).children('.buttons').css('display', 'block')
 
     $('body').on 'mouseleave', '.tree', (o) ->
       c = $(o.target).attr('class')
@@ -216,7 +219,11 @@ module.exports = class Yaml extends SubView
         else
           i++
           ret += '<div class="tree" location="' + String(key) + '">'
-          ret += '<span class="key">' + String(key) + '</span>' + ' <small>(' + typeof obj[key] + ')</small>'
+          if !isNaN(key)
+            type = "list-item"
+          else
+            type = typeof obj[key]
+          ret += '<span class="key">' + String(key) + '</span>' + ' <small>(' + type + ')</small>'
           ret += '<div class="buttons"><span class="button add" action="add" location="' + String(key) + '">A</span>' + '<span class="button edit" action="edit" location="' + String(key) + '">E</span>' + '<span class="button delete" action="delete" location="' + String(key) + '">D</span></div>'
           ret += @formatObject(obj[key], i)
           ret += '</div>'
@@ -226,7 +233,8 @@ module.exports = class Yaml extends SubView
         else
           ret += '<div class="tree" location="' + String(key) + '">'
           ret += '<span class="key">' + String(key) + ':</span><span class="value">' + String(obj[key]) + "</span>"
-          ret += '<div class="buttons">' + '<span class="button edit" action="edit" location="' + String(key) + '">E</span>' + '<span class="button delete" action="delete" location="' + String(key) + '">D</span></div>'
+          if String(key) != 'id'
+            ret += '<div class="buttons">' + '<span class="button edit" action="edit" location="' + String(key) + '">E</span>' + '<span class="button delete" action="delete" location="' + String(key) + '">D</span></div>'
           ret += '</div>'
     ret
 
