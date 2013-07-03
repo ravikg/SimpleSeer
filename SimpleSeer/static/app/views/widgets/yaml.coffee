@@ -5,6 +5,9 @@ application = require 'application'
 module.exports = class Yaml extends SubView
   template: template
   depth: 0
+  hover: undefined
+  html: ''
+  data: ''
   json: [
     obj:
       id: "511417bf3ea38e38957456d0"
@@ -59,24 +62,6 @@ module.exports = class Yaml extends SubView
 
     type: "OLAP"
   ]
-  addition:
-    obj:
-      rowHeight: 100
-      name: "Image View"
-      widgets: [
-        name: "Frames"
-        canAlter: false
-        model: 'null'
-        view: "/widgets/yaml"
-        cols: 1
-        id: "50d0b12c3ea38e249ed47b12"
-      ]
-      locked: true
-      cols: 1
-      id: "5047bc49fb920a538c000001"
-    type: "Dashboard"
-  html: ''
-  data: ''
 
   events: =>
     'click .button':'clickButton'
@@ -100,6 +85,14 @@ module.exports = class Yaml extends SubView
         else if @data
           console.log "Adding item into", @data
 
+      if action == "edit"
+        if @data
+          console.log "Editing item @ ", @data
+
+      if action == "delete"
+        if @data
+          console.log "Deleting item @ ", @data
+
 
   getValue: (data) =>
     loopy = @json
@@ -113,6 +106,19 @@ module.exports = class Yaml extends SubView
 
   initialize: =>
     super()
+
+    $('body').on 'mouseover', '.tree', (o) ->
+      c = $(o.target).attr('class')
+      if c == "button" or c == "button add" or c == "button edit" or c == "button delete" or c == "buttons"
+        $(o.target).children('.buttons').css('display', 'block')
+      else
+        $('body').find('.tree .buttons').css('display', 'none')
+        $(o.target).children('.buttons').css('display', 'block')
+
+    $('body').on 'mouseleave', '.tree', (o) ->
+      c = $(o.target).attr('class')
+      $('body').find('.tree .buttons').css('display', 'none')
+
     @render()
 
 
