@@ -1,16 +1,20 @@
-require 'lib/slide_replace'
-application = require 'application'
-#Frame = require "../models/frame"
-#FrameDetailView = require "views/framedetail_view"
-#FramelistView = require "views/framelist_view"
-#TabContainer = require "core/views/tabcontainer_view"
+[Application, TabContainer, Dashboard] = [
+  require("application"),
+  require("models/core/tab_container"),
+  require("views/core/dashboard")
+]
 
 module.exports = class SeerRouter extends Backbone.Router
-  routes: application.settings['ui_routes'] || {"":"home", "frames": "framelist", "frame/:id": "frame"}
+  routes =
+    "admin": "admin"
 
-  initialize: () =>
-    application.pages
-    #loop through paths to draw link menu
-  
-  home: ->
-    return ""
+  initialize: =>
+    #panel = new TabContainer()
+    #Application.tabs.add(panel)
+    for route, handler of routes
+      @route(route, handler)
+
+  admin: ->
+    Application.modal.clear()
+    #yaml = new Dashboard()
+    #yaml.select()
