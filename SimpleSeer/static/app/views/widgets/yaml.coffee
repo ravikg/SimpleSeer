@@ -217,7 +217,7 @@ module.exports = class Yaml extends SubView
           i++
           ret += '<div class="tree" location="' + String(key) + '">'
           if !isNaN(key)
-            type = "array"
+            type = "list-item"
           else
             type = typeof obj[key]
           ret += '<span class="key">' + String(key) + '</span>' + ' <small>(' + type + ')</small>'
