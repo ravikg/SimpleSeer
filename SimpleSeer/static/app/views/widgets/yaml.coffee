@@ -61,6 +61,90 @@ module.exports = class Yaml extends SubView
       name: "All"
 
     type: "OLAP"
+  ,
+    obj:
+      rowHeight: 100
+      name: "Image View"
+      widgets: [
+        name: "Frames"
+        canAlter: false
+        model: 'null'
+        view: "/widgets/yaml"
+        cols: 1
+        id: "50d0b12c3ea38e249ed47b12"
+      ]
+      locked: true
+      cols: 1
+      id: "5047bc49fb920a538c000001"
+
+    type: "Dashboard"
+  ,
+    obj:
+      id: "5089a6d31d41c855e4628fb1"
+      olapFilter:
+        criteria: [
+          type: "frame"
+          name: "capturetime_epoch"
+          exists: 1
+        ]
+        logic: "and"
+
+      name: "All"
+
+    type: "OLAP"
+  ,
+    obj:
+      id: "511417bf3ea38e38957456d0"
+      tabs: [
+        model_id: "5047bc49fb920a538c000000"
+        selected: 'true'
+        name: "Image View"
+        icon: "/img/imageview.png"
+        view: "dashboard"
+      ,
+        model_id: "5047bc49fb920a538c000001"
+        selected: false
+        name: "Admin"
+        icon: "/img/imageview.png"
+        view: "dashboard"
+      ]
+      name: "Stats"
+      context: "stats"
+      navbar: "left-main"
+      path: "stats"
+
+    type: "TabContainer"
+  ,
+    obj:
+      rowHeight: 100
+      name: "Image View"
+      widgets: [
+        name: "Frames"
+        canAlter: false
+        model: 'null'
+        view: "/widgets/yaml"
+        cols: 1
+        id: "50d0b12c3ea38e249ed47b12"
+      ]
+      locked: true
+      cols: 1
+      id: "5047bc49fb920a538c000001"
+
+    type: "Dashboard"
+  ,
+    obj:
+      id: "5089a6d31d41c855e4628fb1"
+      olapFilter:
+        criteria: [
+          type: "frame"
+          name: "capturetime_epoch"
+          exists: 1
+        ]
+        logic: "and"
+
+      name: "All"
+
+    type: "OLAP"
   ]
 
   events: =>
@@ -159,3 +243,10 @@ module.exports = class Yaml extends SubView
 
   getRenderData: =>
     'html': @html
+
+  afterRender: =>
+    console.log "Initializing masonry"
+    $container = $('#widget_grid .content .yaml')
+    $container.masonry
+      columnWidth: 530
+      itemSelector: ".item"
