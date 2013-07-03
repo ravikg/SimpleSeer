@@ -198,7 +198,10 @@ module.exports = class Yaml extends SubView
         $(o.target).children('.buttons').css('display', 'block')
       else
         $('body').find('.tree .buttons').css('display', 'none')
-        $(o.target).children('.buttons').css('display', 'block')
+        if c != "tree"
+          $(o.target).parent('.tree').children('.buttons').css('display', 'block')
+        else
+          $(o.target).children('.buttons').css('display', 'block')
 
     $('body').on 'mouseleave', '.tree', (o) ->
       c = $(o.target).attr('class')
