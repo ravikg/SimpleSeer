@@ -350,15 +350,15 @@ module.exports = class Yaml extends SubView
 
   createObject: (type) =>
     if type == 'Dashboard'
-      @dashboards.push({'id': '000000000000' + @t, 'name': 'Temporary-' + @t, 'type': 'Dashboard'})
+      @dashboards.push({'id': 'A000000000000' + @t, 'name': 'Temporary-' + @t, 'type': 'Dashboard'})
     if type == 'TabContainer'
-      @dashboards.push({'id': '000000000000' + @t, 'name': 'Temporary-' + @t, 'type': 'TabContainer'})
+      @tabcontainers.push({'id': 'A000000000000' + @t, 'name': 'Temporary-' + @t, 'type': 'TabContainer'})
     if type == 'OLAP'
-      @dashboards.push({'id': '000000000000' + @t, 'name': 'Temporary-' + @t, 'type': 'OLAP'})
+      @olaps.push({'id': 'A000000000000' + @t, 'name': 'Temporary-' + @t, 'type': 'OLAP'})
     if type == 'Inspection'
-      @dashboards.push({'id': '000000000000' + @t, 'name': 'Temporary-' + @t, 'type': 'Inspection'})
+      @inspections.push({'id': 'A000000000000' + @t, 'name': 'Temporary-' + @t, 'type': 'Inspection'})
     if type == 'Measurement'
-      @dashboards.push({'id': '000000000000' + @t, 'name': 'Temporary-' + @t, 'type': 'Measurement'}) 
+      @measurements.push({'id': 'A000000000000' + @t, 'name': 'Temporary-' + @t, 'type': 'Measurement'}) 
     @t++
     @render()
 
