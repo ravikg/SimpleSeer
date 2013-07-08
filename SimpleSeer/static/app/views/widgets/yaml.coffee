@@ -1,150 +1,62 @@
-SubView = require 'views/core/subview'
-template = require './templates/yaml'
-application = require 'application'
+SubView = require("views/core/subview")
+Template = require("./templates/yaml")
+Application = require("application")
 
 module.exports = class Yaml extends SubView
-  template: template
+  template: Template
   depth: 0
   hover: undefined
   html: ''
   location: ''
   chosen: false
-  json: [
-    obj:
-      id: "511417bf3ea38e38957456d0"
-      tabs: [
-        model_id: "5047bc49fb920a538c000000"
-        selected: 'true'
-        name: "Image View"
-        icon: "/img/imageview.png"
-        view: "dashboard"
-      ,
-        model_id: "5047bc49fb920a538c000001"
-        selected: false
-        name: "Admin"
-        icon: "/img/imageview.png"
-        view: "dashboard"
-      ]
-      name: "Stats"
-      context: "stats"
-      navbar: "left-main"
-      path: "stats"
-    type: "TabContainer"
-  ,
-    obj:
-      rowHeight: 100
-      name: "Image View"
-      widgets: [
-        name: "Frames"
-        canAlter: false
-        model: 'null'
-        view: "/widgets/yaml"
-        cols: 1
-        id: "50d0b12c3ea38e249ed47b12"
-      ]
-      locked: true
-      cols: 1
-      id: "5047bc49fb920a538c000001"
-    type: "Dashboard"
-  ,
-    obj:
-      id: "5089a6d31d41c855e4628fb1"
-      olapFilter:
-        criteria: [
-          type: "frame"
-          name: "capturetime_epoch"
-          exists: 1
-        ]
-        logic: "and"
-      name: "All"
-    type: "OLAP"
-  ,
-    obj:
-      rowHeight: 100
-      name: "Image View"
-      widgets: [
-        name: "Frames"
-        canAlter: false
-        model: 'null'
-        view: "/widgets/yaml"
-        cols: 1
-        id: "50d0b12c3ea38e249ed47b12"
-      ]
-      locked: true
-      cols: 1
-      id: "5047bc49fb920a538c000001"
-    type: "Dashboard"
-  ,
-    obj:
-      id: "5089a6d31d41c855e4628fb1"
-      olapFilter:
-        criteria: [
-          type: "frame"
-          name: "capturetime_epoch"
-          exists: 1
-        ]
-        logic: "and"
-      name: "All"
-    type: "OLAP"
-  ,
-    obj:
-      id: "511417bf3ea38e38957456d0"
-      tabs: [
-        model_id: "5047bc49fb920a538c000000"
-        selected: 'true'
-        name: "Image View"
-        icon: "/img/imageview.png"
-        view: "dashboard"
-      ,
-        model_id: "5047bc49fb920a538c000001"
-        selected: false
-        name: "Admin"
-        icon: "/img/imageview.png"
-        view: "dashboard"
-      ]
-      name: "Stats"
-      context: "stats"
-      navbar: "left-main"
-      path: "stats"
-    type: "TabContainer"
-  ,
-    obj:
-      rowHeight: 100
-      name: "Image View"
-      widgets: [
-        name: "Frames"
-        canAlter: false
-        model: 'null'
-        view: "/widgets/yaml"
-        cols: 1
-        id: "50d0b12c3ea38e249ed47b12"
-      ]
-      locked: true
-      cols: 1
-      id: "5047bc49fb920a538c000001"
-    type: "Dashboard"
-  ,
-    obj:
-      id: "5089a6d31d41c855e4628fb1"
-      olapFilter:
-        criteria: [
-          type: "frame"
-          name: "capturetime_epoch"
-          exists: 1
-        ]
-        logic: "and"
-      name: "All"
-    type: "OLAP"
+  json: []
+
+  collections: [
+    require("collections/inspections"),
+    require("collections/measurements"),
+    require("collections/OLAPs"),
+    #require("collections/tab_container"),
+    require("collections/dashboards"),
+    require("collections/chart")
   ]
+
+  initialize: =>
+    super()
+
+    $('body').on 'mouseover', '.tree', (o) ->
+      c = $(o.target).attr('class')
+      if c == "button" or c == "button add" or c == "button edit" or c == "button delete" or c == "buttons"
+        $(o.target).children('.buttons').css('display', 'block')
+      else
+        $('body').find('.tree .buttons').css('display', 'none')
+        if c == "tree" or c == "item tree"
+          $(o.target).children('.buttons').css('display', 'block')
+        else
+          $(o.target).parent('.tree').children('.buttons').css('display', 'block')
+
+    $('body').on 'mouseleave', '.tree', (o) ->
+      c = $(o.target).attr('class')
+      $('body').find('.tree .buttons').css('display', 'none')
+
+    stuff = []
+    console.log "Called"
+    for collection in @collections
+      e = new collection({bootstrap: false})
+      e.fetch({success: @postFetch})
+      stuff.push e
+    @render()
 
   events: =>
     'click .button':'clickButton'
+
+  postFetch:(collection) =>
+    console.log collection.models
 
   saveJSON: (options) =>
     console.log "options", options
 
   showAddTypeModal: =>
-    application.modal.show
+    Application.modal.show
       title: "Add Object"
       message:'Hello There!'
       okMessage:'Save'
@@ -187,28 +99,6 @@ module.exports = class Yaml extends SubView
       else
         loopy = loopy[i]
     return loopy
-
-
-  initialize: =>
-    super()
-
-    $('body').on 'mouseover', '.tree', (o) ->
-      c = $(o.target).attr('class')
-      if c == "button" or c == "button add" or c == "button edit" or c == "button delete" or c == "buttons"
-        $(o.target).children('.buttons').css('display', 'block')
-      else
-        $('body').find('.tree .buttons').css('display', 'none')
-        if c == "tree" or c == "item tree"
-          $(o.target).children('.buttons').css('display', 'block')
-        else
-          $(o.target).parent('.tree').children('.buttons').css('display', 'block')
-
-    $('body').on 'mouseleave', '.tree', (o) ->
-      c = $(o.target).attr('class')
-      $('body').find('.tree .buttons').css('display', 'none')
-
-    @render()
-
 
   formatObject: (obj, i = 0) =>
     ret = ''
