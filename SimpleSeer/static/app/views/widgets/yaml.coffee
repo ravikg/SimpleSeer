@@ -259,39 +259,66 @@ module.exports = class Yaml extends SubView
       $('body').find('.tree .buttons').css('display', 'none')
 
 
-    @dashboards = new Collection([{'id':'ABC123', 'name':'Human', 'type': 'Dashboard'}, {'id':'DEF456', 'name':'Readable', 'type': 'Dashboard'}])
+    @dashboards = new Collection([{'id':'ABC123', 'name':'Human', 'type': 'Dashboard'}, {'id':'DEF456', 'name':'Readable', 'type': 'Dashboard'}, {'id': "5047bc49fb920a538c000001",'rowHeight': 100,'name': "Image View",'widgets': [{'name' : "hello", 'id':'aaa12312312'},{'name': "Frames",'canAlter': false,'model': 'null','view': "/widgets/yaml",'cols': 1,'id': "50d0b12c3ea38e249ed47b12"}],'locked': true,'cols': 1,'type': "Dashboard"}])
     @tabcontainers = new Collection([{'id':'GHI789', 'name':'Text', 'type':'TabContainer'}])
     @olaps = new Collection([])
     @inspections = new Collection([])
     @measurements = new Collection([])
+
+    console.log @schema
   
     @render()
 
-  formatObject: (obj, i = 0) =>
+  getButtons: (key, obj, parent) =>
+    type = undefined
+    # @TODO: Check schema for what buttons should be allowed.
+    # AHHHHHHHHHHHHHHHHHHHHHHHHHHH RECURRSION!
+    ret = '<div class="buttons">'
+    if String(key) != 'id'
+
+      type = parent.type
+      if type
+        s = @schema[type]
+        if s[key]?.type?
+          otype = s[key].type
+          console.log key, s, otype
+        else
+          console.log key, s, "list-item"
+
+        #if s.type == 'Object' or s.type == 'Array'
+        #  ret += '<span class="button add" action="add" location="' + String(key) + '">A</span>'
+        #ret += '<span class="button edit" action="edit" location="' + String(key) + '">E</span>'
+        #if !s.required
+        #  ret += '<span class="button delete" action="delete" location="' + String(key) + '">D</span>'
+
+
+      else
+        #console.log "Cannot find type!!"
+
+
+    ret += '</div>'
+    return ret
+
+  formatObject: (obj, parent, i = 0) =>
     ret = ''
     for key of obj
       if typeof obj[key] is "object"
-        if i == 0
-          ret += @formatObject(obj[key], 1)
+        ret += '<div class="tree" location="' + String(key) + '">'
+        if !isNaN(key)
+          type = "list-item"
         else
-          i++
-          ret += '<div class="tree" location="' + String(key) + '">'
-          if !isNaN(key)
-            type = "list-item"
-          else
-            type = typeof obj[key]
-          ret += '<span class="key">' + String(key) + '</span>' + ' <small>(' + type + ')</small>'
-          ret += '<div class="buttons"><span class="button add" action="add" location="' + String(key) + '">A</span>' + '<span class="button edit" action="edit" location="' + String(key) + '">E</span>' + '<span class="button delete" action="delete" location="' + String(key) + '">D</span></div>'
-          ret += @formatObject(obj[key], i)
-          ret += '</div>'
+          type = typeof obj[key]
+        ret += '<span class="key">' + String(key) + '</span>' + ' <small>(' + type + ')</small>'
+        ret += @getButtons(key, obj, parent)
+        ret += @formatObject(obj[key], parent, i)
+        ret += '</div>'
       else
         if String(key) == 'type'
           # Removed "type" and placed at main container
         else
           ret += '<div class="tree" location="' + String(key) + '">'
           ret += '<span class="key">' + String(key) + ':</span><span class="value">' + String(obj[key]) + "</span>"
-          if String(key) != 'id'
-            ret += '<div class="buttons">' + '<span class="button edit" action="edit" location="' + String(key) + '">E</span>' + '<span class="button delete" action="delete" location="' + String(key) + '">D</span></div>'
+          ret += @getButtons(key, obj, parent)
           ret += '</div>'
     ret
 
@@ -301,7 +328,7 @@ module.exports = class Yaml extends SubView
       html += '<div class="item tree" collection="' + o.type + '" location="' + o.id + '">'
       html += '<strong>' + o.type + '</strong>'
       html += '<div class="buttons"><span class="button add" action="add" location="' + String(o.id) + '">A</span>' + '<span class="button edit" action="edit" location="' + String(o.id) + '">E</span>' + '<span class="button delete" action="delete" location="' + String(o.id) + '">D</span></div>'
-      html += @formatObject(o)
+      html += @formatObject(o, o)
       html += '</div>'
     return html
 
