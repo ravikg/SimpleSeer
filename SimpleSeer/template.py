@@ -66,6 +66,10 @@ class SimpleSeerProjectTemplate(Template):
 
         # Copy (built) seer.js & seer.css
         dn = open("/dev/null")
+
+        subprocess.call(['git','submodule','add', 'git@github.com:sightmachine/SimpleSeer.git', 'SimpleSeer'],stderr=dn)
+        subprocess.call(['git','submodule','add', 'git@github.com:sightmachine/SeerCloud.git', 'SeerCloud'],stderr=dn)
+
         subprocess.call(['rm',tgt_brunch / 'vendor/javascripts/cloudtest.js'],stderr=dn)
         subprocess.call(['rm',tgt_brunch / 'vendor/javascripts/seertest.js'],stderr=dn)
         subprocess.call(['git','rm','--cached',tgt_brunch / 'vendor/javascripts/seer.js'],stderr=dn)
