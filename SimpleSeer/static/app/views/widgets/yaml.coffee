@@ -186,14 +186,16 @@ module.exports = class Yaml extends SubView
 
   clickButton: (e) =>
     e.preventDefault();
-    ctd = $(e.currentTarget).attr('location')
-    td = $(e.target).attr('location')
+    ctlocation = $(e.currentTarget).attr('location')
+    tlocation = $(e.target).attr('location')
     action = $(e.target).attr('action')
-    if ctd == td
+    if ctlocation == tlocation
       @location = []
       $(e.target).parents(".tree").each (o, i)=>
         @location.unshift($(i).attr('location'))
       value = @getValue(@location)
+
+      collection = $(e.target).parents('.item.tree').attr('collection')
 
       if action == "add"
         if @location.length == 0
@@ -207,7 +209,27 @@ module.exports = class Yaml extends SubView
 
       if action == "delete"
         if @location
-          console.log "Deleting item @ ", @location
+          if @location.length == 1
+            if collection == 'Dashboard'
+              foo = @dashboards.get(@location[0])
+              @dashboards.remove(foo)
+              @render()
+            if collection == 'TabContainer'
+              foo = @tabcontainers.get(@location[0])
+              @tabcontainers.remove(foo)
+              @render()
+            if collection == 'OLAP'
+              foo = @olaps.get(@location[0])
+              @olaps.remove(foo)
+              @render()
+            if collection == 'Inspection'
+              foo = @inspections.get(@location[0])
+              @inspections.remove(foo)
+              @render()
+            if collection == 'Measurement'
+              foo = @measurements.get(@location[0])
+              @measurements.remove(foo)
+              @render()
 
 
   getValue: (location) =>
@@ -276,7 +298,7 @@ module.exports = class Yaml extends SubView
   formatHTML: (json) =>
     html = ''
     for key, o of json
-      html += '<div class="item tree" location="' + o.id + '">'
+      html += '<div class="item tree" collection="' + o.type + '" location="' + o.id + '">'
       html += '<strong>' + o.type + '</strong>'
       html += '<div class="buttons"><span class="button add" action="add" location="' + String(o.id) + '">A</span>' + '<span class="button edit" action="edit" location="' + String(o.id) + '">E</span>' + '<span class="button delete" action="delete" location="' + String(o.id) + '">D</span></div>'
       html += @formatObject(o)
@@ -305,6 +327,9 @@ module.exports = class Yaml extends SubView
       ret.push(i.attributes)
     _.each @measurements.models, (i) =>
       ret.push(i.attributes)
+
+    #console.log @dashboards
+    #console.log ret
       
     return ret
 
