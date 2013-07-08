@@ -237,7 +237,7 @@ module.exports = class Yaml extends SubView
 
 
     @dashboards = new Collection([{'id':'ABC123', 'name':'Human', 'type': 'Dashboard'}, {'id':'DEF456', 'name':'Readable', 'type': 'Dashboard'}])
-    @tabcontainers = new Collection([])
+    @tabcontainers = new Collection([{'id':'GHI789', 'name':'Text', 'type':'TabContainer'}])
     @olaps = new Collection([])
     @inspections = new Collection([])
     @measurements = new Collection([])
@@ -296,7 +296,15 @@ module.exports = class Yaml extends SubView
     # Iterate through each object type and append to ret
     _.each @dashboards.models, (i) =>
       ret.push(i.attributes)
-
+    _.each @tabcontainers.models, (i) =>
+      ret.push(i.attributes)
+    _.each @olaps.models, (i) =>
+      ret.push(i.attributes)
+    _.each @inspections.models, (i) =>
+      ret.push(i.attributes)
+    _.each @measurements.models, (i) =>
+      ret.push(i.attributes)
+      
     return ret
 
   render: =>
