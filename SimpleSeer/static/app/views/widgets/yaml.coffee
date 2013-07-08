@@ -171,6 +171,7 @@ module.exports = class Yaml extends SubView
         extras: false
       help: "OLAP's contain a filtering object for data retreival"
       extras: false
+  t: 0
 
   events: =>
     'click .button':'clickButton'
@@ -323,8 +324,17 @@ module.exports = class Yaml extends SubView
       itemSelector: ".item"
 
   createObject: (type) =>
-    # @TODO: Faux data object addition, would actually ping database, create new object
-    # and return the actual id and model of the object.
+    if type == 'Dashboard'
+      @dashboards.push({'id': '000000000000' + @t, 'name': 'Temporary-' + @t, 'type': 'Dashboard'})
+    if type == 'TabContainer'
+      @dashboards.push({'id': '000000000000' + @t, 'name': 'Temporary-' + @t, 'type': 'TabContainer'})
+    if type == 'OLAP'
+      @dashboards.push({'id': '000000000000' + @t, 'name': 'Temporary-' + @t, 'type': 'OLAP'})
+    if type == 'Inspection'
+      @dashboards.push({'id': '000000000000' + @t, 'name': 'Temporary-' + @t, 'type': 'Inspection'})
+    if type == 'Measurement'
+      @dashboards.push({'id': '000000000000' + @t, 'name': 'Temporary-' + @t, 'type': 'Measurement'}) 
+    @t++
     @render()
 
   chosenInits: =>
