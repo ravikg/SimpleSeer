@@ -1,6 +1,7 @@
 SubView = require 'views/core/subview'
 template = require './templates/yaml'
 application = require 'application'
+Collection = require 'collections/collection'
 
 module.exports = class Yaml extends SubView
   template: template
@@ -10,85 +11,7 @@ module.exports = class Yaml extends SubView
   location: ''
   init: true
   chosen: false
-  json: [
-    obj:
-      id: "511417bf3ea38e38957456d0"
-      tabs: [
-        model_id: "5047bc49fb920a538c000000"
-        selected: 'true'
-        name: "Image View"
-        icon: "/img/imageview.png"
-        view: "dashboard"
-      ,
-        model_id: "5047bc49fb920a538c000001"
-        selected: false
-        name: "Admin"
-        icon: "/img/imageview.png"
-        view: "dashboard"
-      ]
-      name: "Stats"
-      context: "stats"
-      navbar: "left-main"
-      path: "stats"
-    type: "TabContainer"
-  ,
-    obj:
-      id: "5047bc49fb920a538c000001"
-      rowHeight: 100
-      name: "Image View"
-      widgets: [
-        name: "Frames"
-        canAlter: false
-        model: 'null'
-        view: "/widgets/yaml"
-        cols: 1
-        id: "50d0b12c3ea38e249ed47b12"
-      ]
-      locked: true
-      cols: 1
-    type: "Dashboard"
-  ,
-    obj:
-      id: "5089a6d31d41c855e4628fb1"
-      olapFilter:
-        criteria: [
-          type: "frame"
-          name: "capturetime_epoch"
-          exists: 1
-        ]
-        logic: "and"
-      name: "All"
-    type: "OLAP"
-  ,
-    obj:
-      id: "5047bc49fb920a538c000001"
-      rowHeight: 100
-      name: "Image View"
-      widgets: [
-        name: "Frames"
-        canAlter: false
-        model: 'null'
-        view: "/widgets/yaml"
-        cols: 1
-        id: "50d0b12c3ea38e249ed47b12"
-      ]
-      locked: true
-      cols: 1
-    type: "Dashboard"
-  ,
-    obj:
-      id: "5089a6d31d41c855e4628fb1"
-      olapFilter:
-        criteria: [
-          type: "frame"
-          name: "capturetime_epoch"
-          exists: 1
-        ]
-        logic: "and"
-      name: "All"
-    type: "OLAP"
-  ]
-
+  json: []
   schema:
     Dashboard:
       type: 'Object'
@@ -252,19 +175,6 @@ module.exports = class Yaml extends SubView
   events: =>
     'click .button':'clickButton'
 
-  saveJSON: (options) =>
-    console.log "options", options
-
-  showAddTypeModal: =>
-    application.modal.show
-      title: "Add Object"
-      message:'Hello There!'
-      okMessage:'Save'
-      cancelMessage:'Cancel'
-      inputMessage:"A Value"
-      throbber:false
-      success:(options) => @saveJSON(options)
-
   firstTimeModal: =>
     application.modal.show
       title: "Willkommen!"
@@ -310,8 +220,6 @@ module.exports = class Yaml extends SubView
 
 
   initialize: =>
-    super()
-
     $('body').on 'mouseover', '.tree', (o) ->
       c = $(o.target).attr('class')
       if c == "button" or c == "button add" or c == "button edit" or c == "button delete" or c == "buttons"
@@ -327,8 +235,14 @@ module.exports = class Yaml extends SubView
       c = $(o.target).attr('class')
       $('body').find('.tree .buttons').css('display', 'none')
 
-    @render()
 
+    @dashboards = new Collection([{'id':'ABC123', 'name':'Human', 'type': 'Dashboard'}, {'id':'DEF456', 'name':'Readable', 'type': 'Dashboard'}])
+    @tabcontainers = new Collection([])
+    @olaps = new Collection([])
+    @inspections = new Collection([])
+    @measurements = new Collection([])
+  
+    @render()
 
   formatObject: (obj, i = 0) =>
     ret = ''
@@ -361,9 +275,9 @@ module.exports = class Yaml extends SubView
   formatHTML: (json) =>
     html = ''
     for key, o of json
-      html += '<div class="item tree" location="' + o.obj.id + '">'
+      html += '<div class="item tree" location="' + o.id + '">'
       html += '<strong>' + o.type + '</strong>'
-      html += '<div class="buttons"><span class="button add" action="add" location="' + String(o.obj.id) + '">A</span>' + '<span class="button edit" action="edit" location="' + String(o.obj.id) + '">E</span>' + '<span class="button delete" action="delete" location="' + String(o.obj.id) + '">D</span></div>'
+      html += '<div class="buttons"><span class="button add" action="add" location="' + String(o.id) + '">A</span>' + '<span class="button edit" action="edit" location="' + String(o.id) + '">E</span>' + '<span class="button delete" action="delete" location="' + String(o.id) + '">D</span></div>'
       html += @formatObject(o)
       html += '</div>'
     return html
@@ -371,24 +285,23 @@ module.exports = class Yaml extends SubView
   getSchema: =>
     return @schema
 
-  getYAML: =>
+  getData: =>
+    ret = []
     # Check connection to the database, see if anything exists in the database.
     # If nothing -- then alert the user this is the first time building the application.
 
     # @TODO: HANDLE THE CONNECTION ATTEMPT TO THE DATABASE HERE
     #        IF THERE IS DATA, THEN BUILD THE COLLECTION OBJECT
 
-    if @init
-      @firstTimeModal()
-      @json = []
-      json = []
-    else
-      json = @json
-    return json
+    # Iterate through each object type and append to ret
+    _.each @dashboards.models, (i) =>
+      ret.push(i.attributes)
+
+    return ret
 
   render: =>
     #console.log "Schema:", @getSchema()
-    @html = @formatHTML(@getYAML())
+    @html = @formatHTML(@getData())
     super()
 
   getRenderData: =>
@@ -404,11 +317,6 @@ module.exports = class Yaml extends SubView
   createObject: (type) =>
     # @TODO: Faux data object addition, would actually ping database, create new object
     # and return the actual id and model of the object.
-    @json.unshift
-      obj:
-        id: "511417bf3ea38e38957456d0"
-      type: type
-
     @render()
 
   chosenInits: =>
