@@ -91,6 +91,15 @@ class SimpleSeerProjectTemplate(Template):
             src_templates / 'testing.html',
             tgt_templates / 'testing.html')
 
+        # Copy image assets
+        try:
+            shutil.rmtree(tgt_brunch / 'app/assets/img/seer', True)
+            shutil.copytree(
+                src_brunch / 'app/assets/img/',
+                tgt_brunch / 'app/assets/img/seer/')
+        except OSError:
+            pass
+
         # Build and copy cloud.js if applicable
 
         #TODO:
@@ -110,6 +119,15 @@ class SimpleSeerProjectTemplate(Template):
             overwrite(
                 cloud_brunch / 'public/javascripts/cloudtest.js',
                 tgt_brunch / 'vendor/javascripts/cloudtest.js')
+
+            try:
+                shutil.rmtree(tgt_brunch / 'app/assets/img/cloud', True)
+                shutil.copytree(
+                    cloud_brunch / 'app/assets/img/',
+                    tgt_brunch / 'app/assets/img/cloud/')
+            except OSError:
+                pass
+
 
         # Link the app
         #with tgt_brunch:
