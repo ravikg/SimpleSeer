@@ -8,6 +8,7 @@ module.exports = class Yaml extends SubView
   hover: undefined
   html: ''
   location: ''
+  init: true
   chosen: false
   json: [
     obj:
@@ -264,6 +265,14 @@ module.exports = class Yaml extends SubView
       throbber:false
       success:(options) => @saveJSON(options)
 
+  firstTimeModal: =>
+    application.modal.show
+      title: "Willkommen!"
+      message: "Hey there, just wanted to let you know this is your first time building this application :)"
+      okMessage: 'Continue'
+      throbber: false
+      success: (options) => return
+
   clickButton: (e) =>
     e.preventDefault();
     ctd = $(e.currentTarget).attr('location')
@@ -359,9 +368,27 @@ module.exports = class Yaml extends SubView
       html += '</div>'
     return html
 
+  getSchema: =>
+    return @schema
+
+  getYAML: =>
+    # Check connection to the database, see if anything exists in the database.
+    # If nothing -- then alert the user this is the first time building the application.
+
+    # @TODO: HANDLE THE CONNECTION ATTEMPT TO THE DATABASE HERE
+    #        IF THERE IS DATA, THEN BUILD THE COLLECTION OBJECT
+
+    if @init
+      @firstTimeModal()
+      @json = []
+      json = []
+    else
+      json = @json
+    return json
+
   render: =>
-    console.log "Schema:", @getSchema()
-    @html = @formatHTML(@json)
+    #console.log "Schema:", @getSchema()
+    @html = @formatHTML(@getYAML())
     super()
 
   getRenderData: =>
@@ -373,9 +400,6 @@ module.exports = class Yaml extends SubView
     $container.masonry
       columnWidth: 530
       itemSelector: ".item"
-
-  getSchema: =>
-    return @schema
 
   createObject: (type) =>
     # @TODO: Faux data object addition, would actually ping database, create new object
