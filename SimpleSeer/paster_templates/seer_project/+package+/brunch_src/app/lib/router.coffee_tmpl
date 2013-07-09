@@ -8,9 +8,10 @@ module.exports = class Router extends SeerRouter
   	'':'main'
 
   initialize: =>
+    super()
     application.addMenuBar("toolbar",{id:"left-main"})
 
   main: =>
   	application.modal.onSuccess()
-  	
-  
+
+
