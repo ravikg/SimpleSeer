@@ -26,6 +26,11 @@ module.exports = class Dashboard extends Model
       required: true
       default: 1
       help: "How many grid columns the dashboard spans"
+    brooks:
+      type: 'String'
+      required: false
+      default: 'is Fun'
+      help: "Hello!"
     rowHeight:
       type: 'Int'
       required: false

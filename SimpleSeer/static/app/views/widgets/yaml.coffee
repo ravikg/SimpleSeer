@@ -129,6 +129,8 @@ module.exports = class Yaml extends SubView
 
   insertValue: (options, locArray) =>
 
+    console.log locArray
+
     cln = _.clone locArray
     cln.splice(1, 1)
     target = @schema
@@ -138,6 +140,8 @@ module.exports = class Yaml extends SubView
       else
         target = target[key]
     s = target[cln[cln.length-1]]
+
+    console.log s
 
     z = 0
     if s.type == 'Array'
@@ -155,7 +159,10 @@ module.exports = class Yaml extends SubView
         obj[options.key] = options.value
         tar[locArray[locArray.length-1]].push(obj)
       else
-        tar[locArray[locArray.length-1]][options.key] = options.value
+        if locArray.length == 2
+          tar[options.key] = options.value
+        else if locArray.length > 2
+          tar[locArray[locArray.length-1]][options.key] = options.value
 
       foo.save()
       @collections[locArray[0]].fetch()
@@ -168,7 +175,11 @@ module.exports = class Yaml extends SubView
       target = foo.attributes
       for key in locArray.slice(2, -1)
         target = target[key]
-      delete(target[locArray[locArray.length-1]])
+      if !isNaN(locArray[locArray.length - 1])
+        target.splice(target.indexOf(target[locArray[locArray.length-1]]), 1)
+      else
+        delete(target[locArray[locArray.length-1]])
+
       foo.save()
     @collections[locArray[0]].fetch()
 
