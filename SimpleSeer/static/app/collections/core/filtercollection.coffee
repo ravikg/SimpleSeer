@@ -43,13 +43,13 @@ module.exports = class FilterCollection extends Collection
     @callbackStack['pre'] = []
 
     # [The mute param](#section-5 "jump to mute examples")
-    if params.mute?
+    if params?.mute?
       @mute = params.mute
 
     # The clearOnFetch param:
     # true: (default) clears collection on fetch.
     # false: retains data in collection (for pagination)
-    if params.clearOnFetch?
+    if params?.clearOnFetch?
       @clearOnFetch = params.clearOnFetch
 
     # init bound collections in private space
@@ -60,7 +60,7 @@ module.exports = class FilterCollection extends Collection
 
     super(models,params)
 
-    if params.viewid?
+    if params?.viewid?
       olap = require 'models/OLAP'
       @dataview = new olap({id:params.viewid})
       @dataview.fetch({async:false})
@@ -74,7 +74,7 @@ module.exports = class FilterCollection extends Collection
     #   > 5 other FilterCollections bound to the initial instance.
     #   > when you change the initial FilterCollection, all others
     #   > refresh with filter settings
-    if params.bindFilter
+    if params?.bindFilter
       #@bindTo params.bindFilter.subCollection
       params.bindFilter.subCollection @
       @bindFilter = params.bindFilter
