@@ -1,6 +1,6 @@
 SubView = require 'views/core/subview'
-template = require './templates/yaml'
-application = require 'application'
+Template = require './templates/yaml'
+Application = require 'application'
 Collection = require 'collections/collection'
 
 module.exports = class Yaml extends SubView
