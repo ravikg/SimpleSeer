@@ -71,7 +71,7 @@ module.exports = SeerApplication =
   _preinitialize: ->
     tc = require 'collections/tab_container'
     @tabs = new tc()
-    @loadAdmin()
+    #@loadAdmin()
     @tabs.fetch()
 
 
