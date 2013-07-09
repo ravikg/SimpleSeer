@@ -60,13 +60,85 @@ module.exports = class Yaml extends SubView
         foo = @measurements.get(locArray[1])
 
       if locArray.length == 3
-        foo.attributes[locArray[2]] = options.userInput
+        foo.attributes[locArray[2]] = options.value
       if locArray.length == 4
-        foo.attributes[locArray[2]][locArray[3]] = options.userInput
+        foo.attributes[locArray[2]][locArray[3]] = options.value
       if locArray.length == 5
-        foo.attributes[locArray[2]][locArray[3]][locArray[4]] = options.userInput
+        foo.attributes[locArray[2]][locArray[3]][locArray[4]] = options.value
       if locArray.length == 6
-        foo.attributes[locArray[2]][locArray[3]][locArray[4]][locArray[5]] = options.userInput
+        foo.attributes[locArray[2]][locArray[3]][locArray[4]][locArray[5]] = options.value
+
+      @render()
+
+  addValue: (locArray) =>
+    Application.modal.show
+      title: "Add Value"
+      okMessage: 'Save'
+      cancelMessage: 'Cancel'
+      keyMessage: 'Key'
+      inputMessage: 'Value'
+      throbber: false
+      success: (options) => @insertValue(options, locArray)
+
+  insertValue: (options, locArray) =>
+    z = 0
+    if locArray.length == 3
+      s = @schema[locArray[0]][locArray[2]]
+      if s.type == 'Object' or s.type == 'Array'
+        z++
+
+    if locArray.length == 4
+      s1 = @schema[locArray[0]][locArray[2]]
+      if s1.type == "Array"
+        z++
+
+    if locArray.length == 5
+      s1 = @schema[locArray[0]][locArray[2]]
+      if s1.type == "Array"
+        z++
+
+    if locArray
+      if locArray[0] == 'Dashboard'
+        foo = @dashboards.get(locArray[1])
+      if locArray[0] == 'TabContainer'
+        foo = @tabcontainers.get(locArray[1])
+      if locArray[0] == 'OLAP'
+        foo = @olaps.get(locArray[1])
+      if locArray[0] == 'Inspection'
+        foo = @inspections.get(locArray[1])
+      if locArray[0] == 'Measurement'
+        foo = @measurements.get(locArray[1])
+
+      if locArray.length == 2
+        foo.attributes[options.key] = options.value
+      if locArray.length == 3
+        if z
+          obj = {}
+          obj[options.key] = options.value
+          foo.attributes[locArray[2]].push(obj)
+        else
+          foo.attributes[locArray[2]][options.key] = options.value
+      if locArray.length == 4
+        if z
+          obj = {}
+          obj[options.key] = options.value
+          foo.attributes[locArray[2]][locArray[3]].push(obj)
+        else
+          foo.attributes[locArray[2]][locArray[3]][options.key] = options.value
+      if locArray.length == 5
+        if z
+          obj = {}
+          obj[options.key] = options.value
+          foo.attributes[locArray[2]][locArray[3]][locArray[4]].push(obj)
+        else
+          foo.attributes[locArray[2]][locArray[3]][locArray[4]][options.key] = options.value
+      if locArray.length == 6
+        if z
+          obj = {}
+          obj[options.key] = options.value
+          foo.attributes[locArray[2]][locArray[3]][locArray[4]][locArray[5]].push(obj)
+        else
+          foo.attributes[locArray[2]][locArray[3]][locArray[4]][locArray[5]][options.key] = options.value
 
       @render()
 
@@ -81,7 +153,7 @@ module.exports = class Yaml extends SubView
 
       if action == "add"
         if locArray
-          console.log "Adding item into", locArray
+          @addValue(locArray)
 
       if action == "edit"
         if locArray
