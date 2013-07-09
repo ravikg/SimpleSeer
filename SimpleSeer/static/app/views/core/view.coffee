@@ -44,7 +44,8 @@ module.exports = class View extends Backbone.View
           application._keyBindings[key] = {}
         if !application._keyBindings[key][id]?
           application._keyBindings[key][id] = []
-        application._keyBindings[key][id].push @[o]
+        if @[o] not in application._keyBindings[key][id]
+          application._keyBindings[key][id].push @[o]
 
   _setScroll: (el=@$el) =>
     el.infiniteScroll

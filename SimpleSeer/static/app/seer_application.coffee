@@ -27,7 +27,7 @@ module.exports = SeerApplication =
   _init: (settings) ->
     @_keyBindings = {}
     $("html").keyup @_keyPress
-     
+
     @settings = _.extend @settings, settings
 
     if @settings.mongo.is_slave
@@ -71,7 +71,21 @@ module.exports = SeerApplication =
   _preinitialize: ->
     tc = require 'collections/tab_container'
     @tabs = new tc()
+    #@loadAdmin()
     @tabs.fetch()
+
+
+  loadAdmin:() ->
+    TabCon = require "models/core/tab_container"
+    SimpleSeer.tabs.push new TabCon
+      id: "__admindash__"
+      navbar: "left-main"
+      path: "admin"
+      tabs: [{
+        name: "db"
+        view: "admin"
+        inNavigation: false
+      }]
 
   route: (route, name=false, callback= =>) ->
     console.log route,name,callback
@@ -88,7 +102,6 @@ module.exports = SeerApplication =
     if e.shiftKey
       key += SimpleSeer._keyCodes['shift']
     key += "_"+ e.which
-    
     if SimpleSeer._keyBindings[key]
       for i,o of SimpleSeer._keyBindings[key]
         for event in o
