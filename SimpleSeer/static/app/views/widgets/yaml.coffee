@@ -99,12 +99,15 @@ module.exports = class Yaml extends SubView
       s = target[cln[cln.length-1]]
       if s
         if s.type == "Boolean"
-          value = Boolean(options.value)
+          if options.value.toLowerCase() is "true"
+            value = true
+          else if options.value.toLowerCase() is "false"
+            value = false
         if s.type == "String"
           value = String(options.value)
         if s.type == "Int"
           value = parseInt(options.value, 10)
-        if value
+        if value?
           target = foo.attributes
           for key in locArray.slice(2, -1)
             target = target[key]
