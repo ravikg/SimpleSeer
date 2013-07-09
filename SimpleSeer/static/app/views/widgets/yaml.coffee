@@ -22,7 +22,6 @@ module.exports = class Yaml extends SubView
   location: ''
   chosen: false
   json: []
-  fetched: false
 
   schema:
     Dashboard: model_dashboard.schema
@@ -58,14 +57,11 @@ module.exports = class Yaml extends SubView
       $('body').find('.tree .buttons').css('display', 'none')
 
     @preFetch()
-    @render()
 
   preFetch: =>
-    if @fetched then return
     for key, collection of @collections
       collection.on 'reset', @render
       collection.fetch()
-    @fetched = true
 
   firstTimeModal: =>
     Application.modal.show
@@ -84,38 +80,39 @@ module.exports = class Yaml extends SubView
       throbber: false
       success: (options) => @updateValue(options, locArray)
 
+  buildPath: (locArray, obj, parent) =>
+    for i in locArray
+      obj = obj[@buildPath(locArray, obj, parent)]
+    return obj
+
   updateValue: (options, locArray) =>
     if locArray
       foo = @collections[locArray[0]].get(locArray[1])
-
-      if locArray.length == 3
-        s = @schema[locArray[0]][locArray[2]]
-      if locArray.length == 4
-        s = @schema[locArray[0]][locArray[2]][locArray[3]]
-      if locArray.length == 5
-        s = @schema[locArray[0]][locArray[2]][locArray[4]]
-      
+      cln = _.clone locArray
+      cln.splice(1, 1)
+      target = @schema
+      for key in cln.slice(0, -1)
+        if !isNaN(key)
+          target = target['item']
+        else
+          target = target[key]
+      s = target[cln[cln.length-1]]
       if s
         if s.type == "Boolean"
-          value = Boolean(options.value)
+          if options.value.toLowerCase() is "true"
+            value = true
+          else if options.value.toLowerCase() is "false"
+            value = false
         if s.type == "String"
           value = String(options.value)
         if s.type == "Int"
           value = parseInt(options.value, 10)
-
-        if value
-          if locArray.length == 3
-            foo.attributes[locArray[2]] = value
-          if locArray.length == 4
-            foo.attributes[locArray[2]][locArray[3]] = value
-          if locArray.length == 5
-            foo.attributes[locArray[2]][locArray[3]][locArray[4]] = value
-          if locArray.length == 6
-            foo.attributes[locArray[2]][locArray[3]][locArray[4]][locArray[5]] = value
-
-      foo.save()
-
-      @render()
+        if value?
+          target = foo.attributes
+          for key in locArray.slice(2, -1)
+            target = target[key]
+          target[locArray[locArray.length-1]] = value
+      foo.save(null, {success: => @collections[locArray[0]].fetch()})
 
   addValue: (locArray) =>
     Application.modal.show
@@ -128,89 +125,66 @@ module.exports = class Yaml extends SubView
       success: (options) => @insertValue(options, locArray)
 
   insertValue: (options, locArray) =>
-    z = 0
-    if locArray.length == 3
-      s = @schema[locArray[0]][locArray[2]]
-      if s.type == 'Array'
-        z++
+    cln = _.clone locArray
+    cln.splice(1, 1)
+    target = @schema
+    for key in cln.slice(0, -1)
+      if !isNaN(key)
+        target = target['item']
+      else
+        target = target[key]
+    s = target[cln[cln.length-1]]
 
-    if locArray.length == 5
-      s = @schema[locArray[0]][locArray[2]][locArray[4]]
-      if s.type == 'Array'
-        z++
+    z = 0
+    if s.type == 'Array' then z++
 
     if locArray
       foo = @collections[locArray[0]].get(locArray[1])
+      tar = foo.attributes
+      for key in locArray.slice(2, -1)
+        tar = tar[key]
 
-      if locArray.length == 2
-        foo.attributes[options.key] = options.value
-      if locArray.length == 3
-        if z
-          obj = {}
-          obj[options.key] = options.value
-          foo.attributes[locArray[2]].push(obj)
-        else
-          foo.attributes[locArray[2]][options.key] = options.value
-      if locArray.length == 4
-        if z
-          obj = {}
-          obj[options.key] = options.value
-          foo.attributes[locArray[2]][locArray[3]].push(obj)
-        else
-          foo.attributes[locArray[2]][locArray[3]][options.key] = options.value
-      if locArray.length == 5
-        if z
-          obj = {}
-          obj[options.key] = options.value
-          foo.attributes[locArray[2]][locArray[3]][locArray[4]].push(obj)
-        else
-          foo.attributes[locArray[2]][locArray[3]][locArray[4]][options.key] = options.value
-      if locArray.length == 6
-        if z
-          obj = {}
-          obj[options.key] = options.value
-          foo.attributes[locArray[2]][locArray[3]][locArray[4]][locArray[5]].push(obj)
-        else
-          foo.attributes[locArray[2]][locArray[3]][locArray[4]][locArray[5]][options.key] = options.value
+      if z
+        obj = {}
+        obj[options.key] = options.value
+        tar[locArray[locArray.length-1]].push(obj)
+      else
+        if locArray.length == 2
+          tar[options.key] = options.value
+        else if locArray.length > 2
+          tar[locArray[locArray.length-1]][options.key] = options.value
 
-      foo.save()
+      foo.save(null, {success: => @collections[locArray[0]].fetch()})
 
-      @render()
+
+  deleteValue:(locArray) =>
+    foo = @collections[locArray[0]].get(locArray[1])
+    if locArray.length == 2
+      foo.destroy()
+      @collections[locArray[0]].fetch()
+    else if locArray.length > 2
+      target = foo.attributes
+      for key in locArray.slice(2, -1)
+        target = target[key]
+      if !isNaN(locArray[locArray.length - 1])
+        target.splice(target.indexOf(target[locArray[locArray.length-1]]), 1)
+      else
+        delete(target[locArray[locArray.length-1]])
+      foo.save(null, {success: => @collections[locArray[0]].fetch()})
 
   clickButton: (e) =>
     e.preventDefault();
     ctlocation = $(e.currentTarget).attr('location')
     tlocation = $(e.target).attr('location')
     action = $(e.target).attr('action')
-
     if ctlocation == tlocation
       locArray = tlocation.split("-")
-
       if action == "add"
-        if locArray
-          @addValue(locArray)
-
+        if locArray then @addValue(locArray)
       if action == "edit"
-        if locArray
-          @editValue(locArray)
-
+        if locArray then @editValue(locArray)
       if action == "delete"
-        if locArray
-          foo = @collections[locArray[0]].get(locArray[1])
-          if locArray.length == 2
-            foo.destroy()
-            @collections[locArray[0]].fetch()
-          if locArray.length == 3
-            delete(foo.attributes[locArray[2]])
-          if locArray.length == 4
-            delete(foo.attributes[locArray[2]][locArray[3]])
-          if locArray.length == 5
-            delete(foo.attributes[locArray[2]][locArray[3]][locArray[4]])
-          if locArray.length == 6
-            delete(foo.attributes[locArray[2]][locArray[3]][locArray[4]][locArray[5]])
-          if locArray.length > 2
-            foo.save()
-          @render()
+        if locArray then @deleteValue(locArray)
 
   getValue: (location) =>
     loopy = @json
