@@ -190,45 +190,39 @@ module.exports = class Yaml extends SubView
     ctlocation = $(e.currentTarget).attr('location')
     tlocation = $(e.target).attr('location')
     action = $(e.target).attr('action')
-    if ctlocation == tlocation
-      @location = []
-      $(e.target).parents(".tree").each (o, i)=>
-        @location.unshift($(i).attr('location'))
-      value = @getValue(@location)
 
-      collection = $(e.target).parents('.item.tree').attr('collection')
+    if ctlocation == tlocation
+      locArray = tlocation.split("-")
 
       if action == "add"
-        if @location.length == 0
-          @showAddTypeModal()
-        else if @location
-          console.log "Adding item into", @location
+        if locArray
+          console.log "Adding item into", locArray
 
       if action == "edit"
-        if @location
-          console.log "Editing item @ ", @location
+        if locArray
+          console.log "Editing item @ ", locArray
 
       if action == "delete"
-        if @location
-          if @location.length == 1
-            if collection == 'Dashboard'
-              foo = @dashboards.get(@location[0])
+        if locArray
+          if locArray.length == 2
+            if locArray[0] == 'Dashboard'
+              foo = @dashboards.get(locArray[1])
               @dashboards.remove(foo)
               @render()
-            if collection == 'TabContainer'
-              foo = @tabcontainers.get(@location[0])
+            if locArray[0] == 'TabContainer'
+              foo = @tabcontainers.get(locArray[1])
               @tabcontainers.remove(foo)
               @render()
-            if collection == 'OLAP'
-              foo = @olaps.get(@location[0])
+            if locArray[0] == 'OLAP'
+              foo = @olaps.get(locArray[1])
               @olaps.remove(foo)
               @render()
-            if collection == 'Inspection'
-              foo = @inspections.get(@location[0])
+            if locArray[0] == 'Inspection'
+              foo = @inspections.get(locArray[1])
               @inspections.remove(foo)
               @render()
-            if collection == 'Measurement'
-              foo = @measurements.get(@location[0])
+            if locArray[0] == 'Measurement'
+              foo = @measurements.get(locArray[1])
               @measurements.remove(foo)
               @render()
 
@@ -344,7 +338,7 @@ module.exports = class Yaml extends SubView
       loc = o.type + "-" + o.id
       html += '<div class="item tree" collection="' + '" location="' + loc + '">'
       html += '<strong>' + o.type + '</strong>'
-      html += '<div class="buttons"><span class="button add" action="add" location="' + String(o.id) + '">A</span>' + '<span class="button delete" action="delete" location="' + String(o.id) + '">D</span></div>'
+      html += '<div class="buttons"><span class="button add" action="add" location="' + loc + '">A</span>' + '<span class="button delete" action="delete" location="' + loc + '">D</span></div>'
       html += @formatObject(o, loc)
       html += '</div>'
     return html
@@ -365,7 +359,7 @@ module.exports = class Yaml extends SubView
       ret.push(i.attributes)
     _.each @measurements.models, (i) =>
       ret.push(i.attributes)
-      
+
     return ret
 
   render: =>
