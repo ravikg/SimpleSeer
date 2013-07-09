@@ -103,6 +103,7 @@ module.exports = class modal extends View
       ele.attr('value', "")
       ele.attr('placeholder',options.inputMessage)
       ele.show()
+      ele.focus()
     else
       ele.hide()
 
@@ -112,13 +113,16 @@ module.exports = class modal extends View
       ele.attr('value', "")
       ele.attr('placeholder', options.keyMessage)
       ele.show()
+      ele.focus()
     else
       ele.hide()
 
     #show modal
     @$el.show("fade")
     if options.inputMessage?
-      ele.get(0).focus()
+      @$el.find('input.value').focus()
+    if options.keyMessage?
+      @$el.find('input.key').focus()
     return
 
   addCallback:(type,func) =>
