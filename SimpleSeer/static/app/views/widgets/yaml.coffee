@@ -89,13 +89,29 @@ module.exports = class Yaml extends SubView
       foo = @collections[locArray[0]].get(locArray[1])
 
       if locArray.length == 3
-        foo.attributes[locArray[2]] = options.value
+        s = @schema[locArray[0]][locArray[2]]
       if locArray.length == 4
-        foo.attributes[locArray[2]][locArray[3]] = options.value
+        s = @schema[locArray[0]][locArray[2]][locArray[3]]
       if locArray.length == 5
-        foo.attributes[locArray[2]][locArray[3]][locArray[4]] = options.value
-      if locArray.length == 6
-        foo.attributes[locArray[2]][locArray[3]][locArray[4]][locArray[5]] = options.value
+        s = @schema[locArray[0]][locArray[2]][locArray[4]]
+      
+      if s
+        if s.type == "Boolean"
+          value = Boolean(options.value)
+        if s.type == "String"
+          value = String(options.value)
+        if s.type == "Int"
+          value = parseInt(options.value, 10)
+
+        if value
+          if locArray.length == 3
+            foo.attributes[locArray[2]] = value
+          if locArray.length == 4
+            foo.attributes[locArray[2]][locArray[3]] = value
+          if locArray.length == 5
+            foo.attributes[locArray[2]][locArray[3]][locArray[4]] = value
+          if locArray.length == 6
+            foo.attributes[locArray[2]][locArray[3]][locArray[4]][locArray[5]] = value
 
       foo.save()
 
@@ -115,17 +131,12 @@ module.exports = class Yaml extends SubView
     z = 0
     if locArray.length == 3
       s = @schema[locArray[0]][locArray[2]]
-      if s.type == 'Object' or s.type == 'Array'
-        z++
-
-    if locArray.length == 4
-      s1 = @schema[locArray[0]][locArray[2]]
-      if s1.type == "Array"
+      if s.type == 'Array'
         z++
 
     if locArray.length == 5
-      s1 = @schema[locArray[0]][locArray[2]]
-      if s1.type == "Array"
+      s = @schema[locArray[0]][locArray[2]][locArray[4]]
+      if s.type == 'Array'
         z++
 
     if locArray
