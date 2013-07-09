@@ -259,13 +259,18 @@ module.exports = class Yaml extends SubView
       $('body').find('.tree .buttons').css('display', 'none')
 
 
+    @model = require 'models/model'
     @dashboards = new Collection([{'id':'ABC123', 'name':'Human', 'type': 'Dashboard'}, {'id':'DEF456', 'name':'Readable', 'type': 'Dashboard'}, {'id': "5047bc49fb920a538c000001",'rowHeight': 100,'name': "Image View",'widgets': [{'name' : "hello", 'id':'aaa12312312'},{'name': "Frames",'canAlter': false,'model': 'null','view': "/widgets/yaml",'cols': 1,'id': "50d0b12c3ea38e249ed47b12"}],'locked': true,'cols': 1,'type': "Dashboard"}])
+    #@dashboards = new Collection([], {model:@model, url:'api/dashboard'})
+    #@dashboards.url = 'api/dashboard'
+    #@dashboards.fetch()
+    #console.log "first", @dashboards.length, @dashboards.models
     @tabcontainers = new Collection([{'id':'GHI789', 'name':'Text', 'type':'TabContainer'}])
     @olaps = new Collection([])
     @inspections = new Collection([])
     @measurements = new Collection([])
 
-    console.log @schema
+    #console.log @schema
   
     @render()
 
@@ -281,9 +286,9 @@ module.exports = class Yaml extends SubView
         s = @schema[type]
         if s[key]?.type?
           otype = s[key].type
-          console.log key, s, otype
+          #console.log key, s, otype
         else
-          console.log key, s, "list-item"
+          #console.log key, s, "list-item"
 
         #if s.type == 'Object' or s.type == 'Array'
         #  ret += '<span class="button add" action="add" location="' + String(key) + '">A</span>'
@@ -344,6 +349,7 @@ module.exports = class Yaml extends SubView
     #        IF THERE IS DATA, THEN BUILD THE COLLECTION OBJECT
 
     # Iterate through each object type and append to ret
+    #console.log "Second", @dashboards.length, @dashboards.models
     _.each @dashboards.models, (i) =>
       ret.push(i.attributes)
     _.each @tabcontainers.models, (i) =>
@@ -374,6 +380,8 @@ module.exports = class Yaml extends SubView
     $container.masonry
       columnWidth: 530
       itemSelector: ".item"
+
+    #console.log "Third", @dashboards.length, @dashboards.models
 
   createObject: (type) =>
     if type == 'Dashboard'
