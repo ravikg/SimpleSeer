@@ -71,23 +71,21 @@ module.exports = SeerApplication =
   _preinitialize: ->
     tc = require 'collections/tab_container'
     @tabs = new tc()
-    @loadAdmin()
+    #@loadAdmin()
     @tabs.fetch()
 
 
   loadAdmin:() ->
-    tc = require("models/core/tab_container")
-    SimpleSeer.tabs.push new tc({
+    TabCon = require "models/core/tab_container"
+    SimpleSeer.tabs.push new TabCon
       id: "__admindash__"
       navbar: "left-main"
       path: "admin"
       tabs: [{
         name: "db"
-        view: "../widgets/yaml"
+        view: "admin"
         inNavigation: false
       }]
-    })
-
 
   route: (route, name=false, callback= =>) ->
     console.log route,name,callback
