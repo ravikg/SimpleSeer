@@ -7,6 +7,11 @@ model_tabcontainer = require 'models/core/tab_container'
 model_olap = require 'models/OLAP'
 model_inspection = require 'models/inspection'
 model_measurement = require 'models/measurement'
+collection_dashboard = require 'collections/dashboards'
+collection_tabcontainer = require 'collections/tab_container'
+collection_olap = require 'collections/OLAPs'
+collection_inspection = require 'collections/inspections'
+collection_measurement = require 'collections/measurements'
 
 module.exports = class Yaml extends SubView
   template: Template
@@ -17,6 +22,7 @@ module.exports = class Yaml extends SubView
   location: ''
   chosen: false
   json: []
+  fetched: false
 
   schema:
     Dashboard: model_dashboard.schema
@@ -24,10 +30,42 @@ module.exports = class Yaml extends SubView
     OLAP: model_olap.schema
     Inspection: model_inspection.schema
     Measurement: model_measurement.schema
-  t: 0
+
+  collections:
+    Dashboard: new collection_dashboard()
+    #TabContainer: new collection_tabcontainer()
+    OLAP: new collection_olap()
+    Inspection: new collection_inspection()
+    Measurement: new collection_measurement()
 
   events: =>
     'click .button':'clickButton'
+
+  initialize: =>
+    $('body').on 'mouseover', '.tree', (o) ->
+      c = $(o.target).attr('class')
+      if c == "button" or c == "button add" or c == "button edit" or c == "button delete" or c == "buttons"
+        $(o.target).children('.buttons').css('display', 'block')
+      else
+        $('body').find('.tree .buttons').css('display', 'none')
+        if c == "tree" or c == "item tree"
+          $(o.target).children('.buttons').css('display', 'block')
+        else
+          $(o.target).parent('.tree').children('.buttons').css('display', 'block')
+
+    $('body').on 'mouseleave', '.tree', (o) ->
+      c = $(o.target).attr('class')
+      $('body').find('.tree .buttons').css('display', 'none')
+
+    @preFetch()
+    @render()
+
+  preFetch: =>
+    if @fetched then return
+    for key, collection of @collections
+      collection.on 'reset', @render
+      collection.fetch()
+    @fetched = true
 
   firstTimeModal: =>
     application.modal.show
@@ -88,33 +126,6 @@ module.exports = class Yaml extends SubView
         loopy = loopy[i]
     return loopy
 
-  initialize: =>
-
-    $('body').on 'mouseover', '.tree', (o) ->
-      c = $(o.target).attr('class')
-      if c == "button" or c == "button add" or c == "button edit" or c == "button delete" or c == "buttons"
-        $(o.target).children('.buttons').css('display', 'block')
-      else
-        $('body').find('.tree .buttons').css('display', 'none')
-        if c == "tree" or c == "item tree"
-          $(o.target).children('.buttons').css('display', 'block')
-        else
-          $(o.target).parent('.tree').children('.buttons').css('display', 'block')
-
-    $('body').on 'mouseleave', '.tree', (o) ->
-      c = $(o.target).attr('class')
-      $('body').find('.tree .buttons').css('display', 'none')
-
-
-
-    @dashboards = new Collection([{'id':'ABC123', 'name':'Human', 'type': 'Dashboard'}, {'id':'DEF456', 'name':'Readable', 'type': 'Dashboard'}, {'id': "5047bc49fb920a538c000001",'rowHeight': 100,'name': "Image View",'widgets': [{'name' : "hello", 'id':'aaa12312312'},{'name': "Frames",'canAlter': false,'model': 'null','view': "/widgets/yaml",'cols': 1,'id': "50d0b12c3ea38e249ed47b12"}],'locked': true,'cols': 1,'type': "Dashboard"}])
-    @tabcontainers = new Collection([{'id':'GHI789', 'name':'Text', 'type':'TabContainer'}])
-    @olaps = new Collection([])
-    @inspections = new Collection([])
-    @measurements = new Collection([])
-
-    @render()
-
   getButtons: (key, loc) =>
     type = undefined
     a = 0
@@ -145,12 +156,17 @@ module.exports = class Yaml extends SubView
         s1 = @schema[locArray[0]][locArray[2]]
         if s1.type == "Array"
           s = @schema[locArray[0]][locArray[2]]['item'][locArray[4]]
-          if s.type == 'Object' or s.type == 'Array'
-            a++
-          b++
-          if !s.required
-            c++
-          
+          if !s?
+            if @schema[locArray[0]][locArray[2]]['item'].extras
+              b++
+              c++
+          else
+            if s.type == 'Object' or s.type == 'Array'
+              a++
+            b++
+            if !s.required
+              c++
+
       if a
         ret += '<span class="button add" action="add" location="' + dest + '">A</span>'
       if b
@@ -190,7 +206,7 @@ module.exports = class Yaml extends SubView
     html = ''
     for key, o of json
       loc = o.type + "-" + o.id
-      html += '<div class="item tree" collection="' + '" location="' + loc + '">'
+      html += '<div class="item tree" location="' + loc + '">'
       html += '<strong>' + o.type + '</strong>'
       html += '<div class="buttons"><span class="button add" action="add" location="' + loc + '">A</span>' + '<span class="button delete" action="delete" location="' + loc + '">D</span></div>'
       html += @formatObject(o, loc)
@@ -202,18 +218,10 @@ module.exports = class Yaml extends SubView
 
   getData: =>
     ret = []
-
-    _.each @dashboards.models, (i) =>
-      ret.push(i.attributes)
-    _.each @tabcontainers.models, (i) =>
-      ret.push(i.attributes)
-    _.each @olaps.models, (i) =>
-      ret.push(i.attributes)
-    _.each @inspections.models, (i) =>
-      ret.push(i.attributes)
-    _.each @measurements.models, (i) =>
-      ret.push(i.attributes)
-
+    for key, collection of @collections
+      _.each collection.models, (i) =>
+        i.attributes.type = i.__proto__.constructor.name
+        ret.push(i.attributes)
     return ret
 
   render: =>
@@ -227,22 +235,13 @@ module.exports = class Yaml extends SubView
     @chosenInits()
     $container = $('#widget_grid .content')
     $container.masonry
-      columnWidth: 530
+      columnWidth: 520
       itemSelector: ".item"
 
   createObject: (type) =>
-    if type == 'Dashboard'
-      @dashboards.push({'id': 'A000000000000' + @t, 'name': 'Temporary-' + @t, 'type': 'Dashboard'})
-    if type == 'TabContainer'
-      @tabcontainers.push({'id': 'A000000000000' + @t, 'name': 'Temporary-' + @t, 'type': 'TabContainer'})
-    if type == 'OLAP'
-      @olaps.push({'id': 'A000000000000' + @t, 'name': 'Temporary-' + @t, 'type': 'OLAP'})
-    if type == 'Inspection'
-      @inspections.push({'id': 'A000000000000' + @t, 'name': 'Temporary-' + @t, 'type': 'Inspection'})
-    if type == 'Measurement'
-      @measurements.push({'id': 'A000000000000' + @t, 'name': 'Temporary-' + @t, 'type': 'Measurement'})
-    @t++
-    @render()
+    collect = @collections[type]
+    item = collect.create()
+    collect.fetch()
 
   chosenInits: =>
     $('#new').chosen({
