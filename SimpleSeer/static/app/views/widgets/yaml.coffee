@@ -86,16 +86,7 @@ module.exports = class Yaml extends SubView
 
   updateValue: (options, locArray) =>
     if locArray
-      if locArray[0] == 'Dashboard'
-        foo = @dashboards.get(locArray[1])
-      if locArray[0] == 'TabContainer'
-        foo = @tabcontainers.get(locArray[1])
-      if locArray[0] == 'OLAP'
-        foo = @olaps.get(locArray[1])
-      if locArray[0] == 'Inspection'
-        foo = @inspections.get(locArray[1])
-      if locArray[0] == 'Measurement'
-        foo = @measurements.get(locArray[1])
+      foo = @collections[locArray[0]].get(locArray[1])
 
       if locArray.length == 3
         foo.attributes[locArray[2]] = options.value
@@ -105,6 +96,8 @@ module.exports = class Yaml extends SubView
         foo.attributes[locArray[2]][locArray[3]][locArray[4]] = options.value
       if locArray.length == 6
         foo.attributes[locArray[2]][locArray[3]][locArray[4]][locArray[5]] = options.value
+
+      foo.save()
 
       @render()
 
@@ -136,16 +129,7 @@ module.exports = class Yaml extends SubView
         z++
 
     if locArray
-      if locArray[0] == 'Dashboard'
-        foo = @dashboards.get(locArray[1])
-      if locArray[0] == 'TabContainer'
-        foo = @tabcontainers.get(locArray[1])
-      if locArray[0] == 'OLAP'
-        foo = @olaps.get(locArray[1])
-      if locArray[0] == 'Inspection'
-        foo = @inspections.get(locArray[1])
-      if locArray[0] == 'Measurement'
-        foo = @measurements.get(locArray[1])
+      foo = @collections[locArray[0]].get(locArray[1])
 
       if locArray.length == 2
         foo.attributes[options.key] = options.value
@@ -178,6 +162,8 @@ module.exports = class Yaml extends SubView
         else
           foo.attributes[locArray[2]][locArray[3]][locArray[4]][locArray[5]][options.key] = options.value
 
+      foo.save()
+
       @render()
 
   clickButton: (e) =>
@@ -199,27 +185,10 @@ module.exports = class Yaml extends SubView
 
       if action == "delete"
         if locArray
-          if locArray[0] == 'Dashboard'
-            foo = @dashboards.get(locArray[1])
-            if locArray.length == 2
-              @dashboards.remove(foo)
-          if locArray[0] == 'TabContainer'
-            foo = @tabcontainers.get(locArray[1])
-            if locArray.length == 2
-              @tabcontainers.remove(foo)
-          if locArray[0] == 'OLAP'
-            foo = @olaps.get(locArray[1])
-            if locArray.length == 2
-              @olaps.remove(foo)
-          if locArray[0] == 'Inspection'
-            foo = @inspections.get(locArray[1])
-            if locArray.length == 2
-              @inspections.remove(foo)
-          if locArray[0] == 'Measurement'
-            foo = @measurements.get(locArray[1])
-            if locArray.length == 2
-              @measurements.remove(foo)
-
+          foo = @collections[locArray[0]].get(locArray[1])
+          if locArray.length == 2
+            foo.destroy()
+            @collections[locArray[0]].fetch()
           if locArray.length == 3
             delete(foo.attributes[locArray[2]])
           if locArray.length == 4
@@ -228,9 +197,9 @@ module.exports = class Yaml extends SubView
             delete(foo.attributes[locArray[2]][locArray[3]][locArray[4]])
           if locArray.length == 6
             delete(foo.attributes[locArray[2]][locArray[3]][locArray[4]][locArray[5]])
-
+          if locArray.length > 2
+            foo.save()
           @render()
-
 
   getValue: (location) =>
     loopy = @json
@@ -335,8 +304,8 @@ module.exports = class Yaml extends SubView
     ret = []
     for key, collection of @collections
       _.each collection.models, (i) =>
-        i.attributes.type = i.__proto__.constructor.name
-        ret.push(i.attributes)
+        ret.push(_.clone i.attributes)
+        ret[ret.length-1].type = i.__proto__.constructor.name
     return ret
 
   render: =>
