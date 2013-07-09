@@ -102,11 +102,10 @@ module.exports = SeerApplication =
     if e.shiftKey
       key += SimpleSeer._keyCodes['shift']
     key += "_"+ e.which
-
     if SimpleSeer._keyBindings[key]
       for i,o of SimpleSeer._keyBindings[key]
         for event in o
-          event()
+          event(e)
 
   # Sends an alert window to the client
   # with the specified message and severity.
