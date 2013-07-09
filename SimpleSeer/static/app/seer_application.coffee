@@ -92,7 +92,7 @@ module.exports = SeerApplication =
     if SimpleSeer._keyBindings[key]
       for i,o of SimpleSeer._keyBindings[key]
         for event in o
-          event()
+          event(e)
 
   # Sends an alert window to the client
   # with the specified message and severity.

@@ -6,10 +6,14 @@ application = require 'application'
 module.exports = class View extends Backbone.View
   subviews: {}
   events: {}
-  keyBindings:
-    "alt+ctrl+shift+73":"moopy"
-    "73":"methodName2"
+  #keyBindings:
+  #  "alt+ctrl+shift+73":"keyfireTest"
+  #  "73":"keyfireTest"
   firstRender:true
+
+  #keyfireTest:(e) =>
+  #  console.log "keyfire!"
+  #  console.log e
 
   initialize: (options={}) =>
     super()
@@ -24,12 +28,6 @@ module.exports = class View extends Backbone.View
       application.loadContext(@options.context)
     #@on "uiFocus", @focus
     @subviews = {}
-
-  moopy: =>
-    console.log "pooopymoops!"
-    
-  methodName2: =>
-    console.log 'another keypress!'
 
   _bindKeys: =>
     id = if typeof @id == "function" then @id() else @id 
