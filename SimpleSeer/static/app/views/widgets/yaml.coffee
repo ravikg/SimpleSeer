@@ -68,12 +68,117 @@ module.exports = class Yaml extends SubView
     @fetched = true
 
   firstTimeModal: =>
-    application.modal.show
+    Application.modal.show
       title: "Willkommen!"
       message: "Hey there, just wanted to let you know this is your first time building this application :)"
       okMessage: 'Continue'
       throbber: false
       success: (options) => return
+
+  editValue: (locArray) =>
+    Application.modal.show
+      title: "Edit Value"
+      okMessage: 'Save'
+      cancelMessage: 'Cancel'
+      inputMessage: 'New value'
+      throbber: false
+      success: (options) => @updateValue(options, locArray)
+
+  updateValue: (options, locArray) =>
+    if locArray
+      if locArray[0] == 'Dashboard'
+        foo = @dashboards.get(locArray[1])
+      if locArray[0] == 'TabContainer'
+        foo = @tabcontainers.get(locArray[1])
+      if locArray[0] == 'OLAP'
+        foo = @olaps.get(locArray[1])
+      if locArray[0] == 'Inspection'
+        foo = @inspections.get(locArray[1])
+      if locArray[0] == 'Measurement'
+        foo = @measurements.get(locArray[1])
+
+      if locArray.length == 3
+        foo.attributes[locArray[2]] = options.value
+      if locArray.length == 4
+        foo.attributes[locArray[2]][locArray[3]] = options.value
+      if locArray.length == 5
+        foo.attributes[locArray[2]][locArray[3]][locArray[4]] = options.value
+      if locArray.length == 6
+        foo.attributes[locArray[2]][locArray[3]][locArray[4]][locArray[5]] = options.value
+
+      @render()
+
+  addValue: (locArray) =>
+    Application.modal.show
+      title: "Add Value"
+      okMessage: 'Save'
+      cancelMessage: 'Cancel'
+      keyMessage: 'Key'
+      inputMessage: 'Value'
+      throbber: false
+      success: (options) => @insertValue(options, locArray)
+
+  insertValue: (options, locArray) =>
+    z = 0
+    if locArray.length == 3
+      s = @schema[locArray[0]][locArray[2]]
+      if s.type == 'Object' or s.type == 'Array'
+        z++
+
+    if locArray.length == 4
+      s1 = @schema[locArray[0]][locArray[2]]
+      if s1.type == "Array"
+        z++
+
+    if locArray.length == 5
+      s1 = @schema[locArray[0]][locArray[2]]
+      if s1.type == "Array"
+        z++
+
+    if locArray
+      if locArray[0] == 'Dashboard'
+        foo = @dashboards.get(locArray[1])
+      if locArray[0] == 'TabContainer'
+        foo = @tabcontainers.get(locArray[1])
+      if locArray[0] == 'OLAP'
+        foo = @olaps.get(locArray[1])
+      if locArray[0] == 'Inspection'
+        foo = @inspections.get(locArray[1])
+      if locArray[0] == 'Measurement'
+        foo = @measurements.get(locArray[1])
+
+      if locArray.length == 2
+        foo.attributes[options.key] = options.value
+      if locArray.length == 3
+        if z
+          obj = {}
+          obj[options.key] = options.value
+          foo.attributes[locArray[2]].push(obj)
+        else
+          foo.attributes[locArray[2]][options.key] = options.value
+      if locArray.length == 4
+        if z
+          obj = {}
+          obj[options.key] = options.value
+          foo.attributes[locArray[2]][locArray[3]].push(obj)
+        else
+          foo.attributes[locArray[2]][locArray[3]][options.key] = options.value
+      if locArray.length == 5
+        if z
+          obj = {}
+          obj[options.key] = options.value
+          foo.attributes[locArray[2]][locArray[3]][locArray[4]].push(obj)
+        else
+          foo.attributes[locArray[2]][locArray[3]][locArray[4]][options.key] = options.value
+      if locArray.length == 6
+        if z
+          obj = {}
+          obj[options.key] = options.value
+          foo.attributes[locArray[2]][locArray[3]][locArray[4]][locArray[5]].push(obj)
+        else
+          foo.attributes[locArray[2]][locArray[3]][locArray[4]][locArray[5]][options.key] = options.value
+
+      @render()
 
   clickButton: (e) =>
     e.preventDefault();
@@ -86,35 +191,45 @@ module.exports = class Yaml extends SubView
 
       if action == "add"
         if locArray
-          console.log "Adding item into", locArray
+          @addValue(locArray)
 
       if action == "edit"
         if locArray
-          console.log "Editing item @ ", locArray
+          @editValue(locArray)
 
       if action == "delete"
         if locArray
-          if locArray.length == 2
-            if locArray[0] == 'Dashboard'
-              foo = @dashboards.get(locArray[1])
+          if locArray[0] == 'Dashboard'
+            foo = @dashboards.get(locArray[1])
+            if locArray.length == 2
               @dashboards.remove(foo)
-              @render()
-            if locArray[0] == 'TabContainer'
-              foo = @tabcontainers.get(locArray[1])
+          if locArray[0] == 'TabContainer'
+            foo = @tabcontainers.get(locArray[1])
+            if locArray.length == 2
               @tabcontainers.remove(foo)
-              @render()
-            if locArray[0] == 'OLAP'
-              foo = @olaps.get(locArray[1])
+          if locArray[0] == 'OLAP'
+            foo = @olaps.get(locArray[1])
+            if locArray.length == 2
               @olaps.remove(foo)
-              @render()
-            if locArray[0] == 'Inspection'
-              foo = @inspections.get(locArray[1])
+          if locArray[0] == 'Inspection'
+            foo = @inspections.get(locArray[1])
+            if locArray.length == 2
               @inspections.remove(foo)
-              @render()
-            if locArray[0] == 'Measurement'
-              foo = @measurements.get(locArray[1])
+          if locArray[0] == 'Measurement'
+            foo = @measurements.get(locArray[1])
+            if locArray.length == 2
               @measurements.remove(foo)
-              @render()
+
+          if locArray.length == 3
+            delete(foo.attributes[locArray[2]])
+          if locArray.length == 4
+            delete(foo.attributes[locArray[2]][locArray[3]])
+          if locArray.length == 5
+            delete(foo.attributes[locArray[2]][locArray[3]][locArray[4]])
+          if locArray.length == 6
+            delete(foo.attributes[locArray[2]][locArray[3]][locArray[4]][locArray[5]])
+
+          @render()
 
 
   getValue: (location) =>
