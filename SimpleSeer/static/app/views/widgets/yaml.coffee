@@ -8,6 +8,7 @@ module.exports = class Yaml extends SubView
   depth: 0
   hover: undefined
   html: ''
+  loc: undefined
   location: ''
   chosen: false
   json: []
@@ -258,81 +259,93 @@ module.exports = class Yaml extends SubView
       $('body').find('.tree .buttons').css('display', 'none')
 
 
-    @model = require 'models/model'
     @dashboards = new Collection([{'id':'ABC123', 'name':'Human', 'type': 'Dashboard'}, {'id':'DEF456', 'name':'Readable', 'type': 'Dashboard'}, {'id': "5047bc49fb920a538c000001",'rowHeight': 100,'name': "Image View",'widgets': [{'name' : "hello", 'id':'aaa12312312'},{'name': "Frames",'canAlter': false,'model': 'null','view': "/widgets/yaml",'cols': 1,'id': "50d0b12c3ea38e249ed47b12"}],'locked': true,'cols': 1,'type': "Dashboard"}])
-    #@dashboards = new Collection([], {model:@model, url:'api/dashboard'})
-    #@dashboards.url = 'api/dashboard'
-    #@dashboards.fetch()
-    #console.log "first", @dashboards.length, @dashboards.models
     @tabcontainers = new Collection([{'id':'GHI789', 'name':'Text', 'type':'TabContainer'}])
     @olaps = new Collection([])
     @inspections = new Collection([])
     @measurements = new Collection([])
 
-    #console.log @schema
-
     @render()
 
-  getButtons: (key, obj, parent) =>
+  getButtons: (key, loc) =>
     type = undefined
-    # @TODO: Check schema for what buttons should be allowed.
-    # AHHHHHHHHHHHHHHHHHHHHHHHHHHH RECURRSION!
+    a = 0
+    b = 0
+    c = 0
     ret = '<div class="buttons">'
+    dest = loc + "-" + key
     if String(key) != 'id'
 
-      type = parent.type
-      if type
-        s = @schema[type]
-        if s[key]?.type?
-          otype = s[key].type
-          #console.log key, s, otype
+      locArray = dest.split("-")
+
+      if locArray.length == 3
+        s = @schema[locArray[0]][locArray[2]]
+        if s.type == 'Object' or s.type == 'Array'
+          a++
         else
-          #console.log key, s, "list-item"
+          b++
+        if !s.required
+          c++
 
-        #if s.type == 'Object' or s.type == 'Array'
-        #  ret += '<span class="button add" action="add" location="' + String(key) + '">A</span>'
-        #ret += '<span class="button edit" action="edit" location="' + String(key) + '">E</span>'
-        #if !s.required
-        #  ret += '<span class="button delete" action="delete" location="' + String(key) + '">D</span>'
+      if locArray.length == 4
+        s1 = @schema[locArray[0]][locArray[2]]
+        if s1.type == "Array"
+          a++
+          c++
 
-
-      else
-        #console.log "Cannot find type!!"
-
+      if locArray.length == 5
+        s1 = @schema[locArray[0]][locArray[2]]
+        if s1.type == "Array"
+          s = @schema[locArray[0]][locArray[2]]['item'][locArray[4]]
+          if s.type == 'Object' or s.type == 'Array'
+            a++
+          b++
+          if !s.required
+            c++
+          
+      if a
+        ret += '<span class="button add" action="add" location="' + dest + '">A</span>'
+      if b
+        ret += '<span class="button edit" action="edit" location="' + dest + '">E</span>'
+      if c
+        ret += '<span class="button delete" action="delete" location="' + dest + '">D</span>'
 
     ret += '</div>'
     return ret
 
-  formatObject: (obj, parent, i = 0) =>
+  formatObject: (obj, loc, inherit = false, key) =>
+    if inherit and key
+      loc += "-" + key
     ret = ''
     for key of obj
       if typeof obj[key] is "object"
-        ret += '<div class="tree" location="' + String(key) + '">'
+        ret += '<div class="tree" location="' + loc + '-' + String(key) + '">'
         if !isNaN(key)
           type = "list-item"
         else
           type = typeof obj[key]
         ret += '<span class="key">' + String(key) + '</span>' + ' <small>(' + type + ')</small>'
-        ret += @getButtons(key, obj, parent)
-        ret += @formatObject(obj[key], parent, i)
+        ret += @getButtons(key, loc)
+        ret += @formatObject(obj[key], loc, true, String(key))
         ret += '</div>'
       else
         if String(key) == 'type'
           # Removed "type" and placed at main container
         else
-          ret += '<div class="tree" location="' + String(key) + '">'
+          ret += '<div class="tree" location="' + loc + "-" + String(key) + '">'
           ret += '<span class="key">' + String(key) + ':</span><span class="value">' + String(obj[key]) + "</span>"
-          ret += @getButtons(key, obj, parent)
+          ret += @getButtons(key, loc)
           ret += '</div>'
     ret
 
   formatHTML: (json) =>
     html = ''
     for key, o of json
-      html += '<div class="item tree" collection="' + o.type + '" location="' + o.id + '">'
+      loc = o.type + "-" + o.id
+      html += '<div class="item tree" collection="' + '" location="' + loc + '">'
       html += '<strong>' + o.type + '</strong>'
-      html += '<div class="buttons"><span class="button add" action="add" location="' + String(o.id) + '">A</span>' + '<span class="button edit" action="edit" location="' + String(o.id) + '">E</span>' + '<span class="button delete" action="delete" location="' + String(o.id) + '">D</span></div>'
-      html += @formatObject(o, o)
+      html += '<div class="buttons"><span class="button add" action="add" location="' + String(o.id) + '">A</span>' + '<span class="button delete" action="delete" location="' + String(o.id) + '">D</span></div>'
+      html += @formatObject(o, loc)
       html += '</div>'
     return html
 
@@ -341,14 +354,7 @@ module.exports = class Yaml extends SubView
 
   getData: =>
     ret = []
-    # Check connection to the database, see if anything exists in the database.
-    # If nothing -- then alert the user this is the first time building the application.
 
-    # @TODO: HANDLE THE CONNECTION ATTEMPT TO THE DATABASE HERE
-    #        IF THERE IS DATA, THEN BUILD THE COLLECTION OBJECT
-
-    # Iterate through each object type and append to ret
-    #console.log "Second", @dashboards.length, @dashboards.models
     _.each @dashboards.models, (i) =>
       ret.push(i.attributes)
     _.each @tabcontainers.models, (i) =>
@@ -359,14 +365,10 @@ module.exports = class Yaml extends SubView
       ret.push(i.attributes)
     _.each @measurements.models, (i) =>
       ret.push(i.attributes)
-
-    #console.log @dashboards
-    #console.log ret
-
+      
     return ret
 
   render: =>
-    #console.log "Schema:", @getSchema()
     @html = @formatHTML(@getData())
     super()
 
@@ -379,8 +381,6 @@ module.exports = class Yaml extends SubView
     $container.masonry
       columnWidth: 530
       itemSelector: ".item"
-
-    #console.log "Third", @dashboards.length, @dashboards.models
 
   createObject: (type) =>
     if type == 'Dashboard'
@@ -397,7 +397,6 @@ module.exports = class Yaml extends SubView
     @render()
 
   chosenInits: =>
-    # New Object
     $('#new').chosen({
       no_results_text: "No results matched"
     }).change((event, ui) =>
