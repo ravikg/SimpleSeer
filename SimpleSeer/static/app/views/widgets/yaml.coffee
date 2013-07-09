@@ -22,7 +22,6 @@ module.exports = class Yaml extends SubView
   location: ''
   chosen: false
   json: []
-  fetched: false
 
   schema:
     Dashboard: model_dashboard.schema
@@ -58,14 +57,11 @@ module.exports = class Yaml extends SubView
       $('body').find('.tree .buttons').css('display', 'none')
 
     @preFetch()
-    @render()
 
   preFetch: =>
-    if @fetched then return
     for key, collection of @collections
       collection.on 'reset', @render
       collection.fetch()
-    @fetched = true
 
   firstTimeModal: =>
     Application.modal.show
@@ -100,7 +96,6 @@ module.exports = class Yaml extends SubView
           target = target['item']
         else
           target = target[key]
-        console.log target, key
       s = target[cln[cln.length-1]]
       if s
         if s.type == "Boolean"
@@ -114,8 +109,7 @@ module.exports = class Yaml extends SubView
           for key in locArray.slice(2, -1)
             target = target[key]
           target[locArray[locArray.length-1]] = value
-      foo.save()
-      @render()
+      foo.save(null, {success: => @collections[locArray[0]].fetch()})
 
   addValue: (locArray) =>
     Application.modal.show
@@ -128,9 +122,6 @@ module.exports = class Yaml extends SubView
       success: (options) => @insertValue(options, locArray)
 
   insertValue: (options, locArray) =>
-
-    console.log locArray
-
     cln = _.clone locArray
     cln.splice(1, 1)
     target = @schema
@@ -141,15 +132,11 @@ module.exports = class Yaml extends SubView
         target = target[key]
     s = target[cln[cln.length-1]]
 
-    console.log s
-
     z = 0
-    if s.type == 'Array'
-      z++
+    if s.type == 'Array' then z++
 
     if locArray
       foo = @collections[locArray[0]].get(locArray[1])
-
       tar = foo.attributes
       for key in locArray.slice(2, -1)
         tar = tar[key]
@@ -164,13 +151,14 @@ module.exports = class Yaml extends SubView
         else if locArray.length > 2
           tar[locArray[locArray.length-1]][options.key] = options.value
 
-      foo.save()
-      @collections[locArray[0]].fetch()
+      foo.save(null, {success: => @collections[locArray[0]].fetch()})
+
 
   deleteValue:(locArray) =>
     foo = @collections[locArray[0]].get(locArray[1])
     if locArray.length == 2
       foo.destroy()
+      @collections[locArray[0]].fetch()
     else if locArray.length > 2
       target = foo.attributes
       for key in locArray.slice(2, -1)
@@ -179,9 +167,7 @@ module.exports = class Yaml extends SubView
         target.splice(target.indexOf(target[locArray[locArray.length-1]]), 1)
       else
         delete(target[locArray[locArray.length-1]])
-
-      foo.save()
-    @collections[locArray[0]].fetch()
+      foo.save(null, {success: => @collections[locArray[0]].fetch()})
 
   clickButton: (e) =>
     e.preventDefault();
@@ -305,7 +291,6 @@ module.exports = class Yaml extends SubView
     return ret
 
   render: =>
-    console.log "Hit Render"
     @html = @formatHTML(@getData())
     super()
 
