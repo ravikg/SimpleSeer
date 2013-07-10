@@ -3,6 +3,15 @@
 {{#if header}}
   {{{header}}}
 {{/if}}
+<div class="show-hide">
+  <div class="items">
+  {{#each cols}}
+    <div class="item">
+      <input type="checkbox" id="show-hide-{{this.key}}" name="show-hide-{{this.key}}" value="{{this.key}}" class="show-hide-checkbox" checked/><label for="show-hide-{{this.key}}">{{this.title}}</label>
+    </div>
+  {{/each}}
+  </div>
+</div>
 <table class="{{classes}} static">
     <thead class="thead">
 	   {{#each cols}}

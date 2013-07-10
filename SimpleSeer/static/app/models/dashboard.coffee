@@ -68,6 +68,21 @@ module.exports = class Dashboard extends Model
           required: true
           default: 1
           help: "How many grid columns the widget spans"
+        blackList:
+          type: 'Object'
+          required: false
+          fields:
+            type: 'Array'
+            required: false
+            help: "Fields to exclude"
+            extras: true
+          metadata:
+            type: 'Array'
+            required: false
+            help: "Metadata fields to exclude"
+            extras: true
+          help: "An object that contains lists of fields that should be excluded"
+          extras: true
         help: "A widget item"
         extras: false
       help: "A list of widgets that the dashboard contains"

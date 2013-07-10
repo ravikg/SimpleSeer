@@ -33,14 +33,23 @@ module.exports = class Table extends SubView
   showHidden: false
   hasHidden: false
   noData: false
+  showHideCols: {}
   scrollElem: '#content #slides'
   viewid: "5089a6d31d41c855e4628fb0"
 
   events: =>
     "click th.sortable":"sortByColumn"
-    "change input":"changeCell"
+    'change input[type="text"]':'changeCell'
     "click .showhidden .controlButton":"showHiddenEvent"
     "click .downloads .controlButton":"downloadData"
+    "click .show-hide-button":"showHideEvent"
+    "click .show-hide-checkbox":"showHideCheckboxEvent"
+
+  showHideEvent: (e) =>
+    $('.show-hide').toggle()
+
+  showHideCheckboxEvent: (e) =>
+    $("th[data-key=\"#{$(e.target).val()}\"], td.#{$(e.target).val()}").toggle()
 
   getColumnKeyByTitle: (title) =>
     key = null
@@ -166,6 +175,9 @@ module.exports = class Table extends SubView
     # @Todo: Standardize and push this up the chain
     @msie = $.browser.hasOwnProperty('msie')
     @firefox = $.browser.hasOwnProperty('mozilla')
+
+    #$(document).on 'click', (e) =>
+    #  console.log "Document clicked"
 
     @rows = []
     @getOptions()
@@ -429,6 +441,16 @@ module.exports = class Table extends SubView
   render: =>
     super()
 
+  initializeShowHide: (data) =>
+    cols = {}
+    for o in @tableCols
+      cols[o.key] = 0
+    for o in data
+      for k,v of o
+        if v and cols[k]? and !isNaN(cols[k])
+          cols[k]++
+    @showHideCols = cols
+
   updateData: =>
     if @cof == true
       @scroll.scrollTop(0)
@@ -451,6 +473,8 @@ module.exports = class Table extends SubView
       @tableData = @collection.models
     data = @formatData(@tableData)
     if !@noData
+      # figure out which columns should just simply not render
+      @initializeShowHide(data)
       _.each data, (model) =>
         @insertRow(model, @insertDirection)
     @render()
@@ -460,6 +484,11 @@ module.exports = class Table extends SubView
       @left = undefined
       @collection.setParam('skip', (@collection.getParam('skip') + @limit))
       @collection.fetch()
+
+  updateShowHide: =>
+    for k,v of @showHideCols
+      if !v
+        $("input#show-hide-#{k}").click()
 
   updateHeader: =>
     if @persistentHeader
@@ -513,6 +542,7 @@ module.exports = class Table extends SubView
     if !@scroll
       @scroll = $(@scrollElem)
 
+    @updateShowHide()
     @updateHeader()
     @scrollPage(0)
 
