@@ -71,8 +71,8 @@ module.exports = class Table extends SubView
     @rows = []
     @getOptions()
     @getCollection()
-    if @infiniteScroll
-      @on 'page', @infinitePage
+    #if @infiniteScrollEnabled
+      #@on 'page', @infinitePage
     #@scroll = $(@scrollElem)
     if @persistentHeader
       @on 'scroll', @scrollPage
@@ -97,7 +97,7 @@ module.exports = class Table extends SubView
     if @options.persistentHeader?
       @persistentHeader = @options.persistentHeader
     if @options.infiniteScroll?
-      @infiniteScroll = @options.infiniteScroll
+      @infiniteScrollEnabled = @options.infiniteScroll
     if @options.sortKey?
       @sortKey = @options.sortKey
     if @options.sortDirection?
@@ -482,7 +482,7 @@ module.exports = class Table extends SubView
 
     keys = {}
 
-    @$("table.table.static thead th").each (i, o)-> 
+    @$("table.table.static thead th").each (i, o)->
       keys[$(o).data('key')] = 0
 
     i = 1

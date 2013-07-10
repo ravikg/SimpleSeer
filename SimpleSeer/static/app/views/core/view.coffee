@@ -49,12 +49,8 @@ module.exports = class View extends Backbone.View
 
   _setScroll: (el=@$el) =>
     el.infiniteScroll
-      onScroll:(per) =>
-        console.log "scroll";
-        return; @trigger('scroll', per)
-      onPage: =>
-        console.log "page"
-        return; @trigger('page')
+      onScroll:(per) => @trigger('scroll', per)
+      #onPage: => @trigger('page')
 
   focus:(back=false) =>
     #console.info 'in focus'
