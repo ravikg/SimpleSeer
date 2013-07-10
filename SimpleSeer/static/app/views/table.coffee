@@ -442,16 +442,6 @@ module.exports = class Table extends SubView
   formatData:(data) =>
     return data
 
-  initializeShowHide: (data) =>
-    cols = {}
-    for o in @tableCols
-      cols[o.key] = 0
-    for o in data
-      for k,v of o
-        if v and cols[k]? and !isNaN(cols[k])
-          cols[k]++
-    @showHideCols = cols
-
   updateData: =>
     if @cof == true
       @scroll.scrollTop(0)
@@ -474,8 +464,6 @@ module.exports = class Table extends SubView
       @tableData = @collection.models
     data = @formatData(@tableData)
     if !@noData
-      # figure out which columns should just simply not render
-      @initializeShowHide(data)
       _.each data, (model) =>
         @insertRow(model, @insertDirection)
     @render()
@@ -487,13 +475,25 @@ module.exports = class Table extends SubView
       @collection.fetch()
 
   updateShowHide: =>
-    for k,v of @showHideCols
+
+    keys = {}
+
+    @$("table.table.static thead th").each (i, o)-> 
+      keys[$(o).data('key')] = 0
+
+    i = 1
+    for k,v of keys
+      total = $("table.table.static td:nth-child(#{i})").length
+      empty = $("table.table.static td:nth-child(#{i}):empty").length
+      if total == empty
+        keys[k] = 1
+      i++
+
+    for k,v of keys
       if @showHideColsSelected[k]
         $("input#show-hide-#{k}").click()
-        #console.log "Hiding " + k + " because of user toggle"
-      else if !v
+      else if v
         $("input#show-hide-#{k}").click()
-        #console.log "Hiding " + k + " because of auto toggle"
 
   updateHeader: =>
     if @persistentHeader
