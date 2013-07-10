@@ -4,7 +4,7 @@ echo "- Installing SimpleSeer                                -"
 echo "--------------------------------------------------------"
 git submodule update
 cd SimpleSeer
-python setup.py develop
+sudo python setup.py develop
 cd ..
 if [ -d SeerCloud ]
   then
@@ -12,5 +12,5 @@ if [ -d SeerCloud ]
     echo "- Installing SeerCloud                                 -"
     echo "--------------------------------------------------------"
     cd SeerCloud
-    python setup.py develop
+    sudo python setup.py develop
 fi
