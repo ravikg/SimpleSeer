@@ -21,7 +21,9 @@ module.exports = class imageList extends SubView
 
     @filtercollection.setParam 'limit', @options.parent.options.widget.custom_limit 
     @filtercollection.setParam 'skip', 0
-    @filtercollection.fetch success: @render
+    #@filtercollection.fetch success: @render
+    @filtercollection.on("reset",@render)
+    @filtercollection.fetch()
     @filtercollection.subscribe('frame',@receive)
     @on "page", @loadMore
 
@@ -30,14 +32,13 @@ module.exports = class imageList extends SubView
   loadMore: (evt)=>
     if @filtercollection.lastavail == 20 
       @filtercollection.setParam('skip', (@filtercollection.getParam('skip') + @filtercollection._defaults.limit))
-      @filtercollection.fetch success:@render
+      @filtercollection.fetch()# success:@render
     return
     
   addObjs: =>
     @render()
     
   receive: (data) =>
-    console.dir data.data
     #@filtercollection.add data.data
     @render()
 

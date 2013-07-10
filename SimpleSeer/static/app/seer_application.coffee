@@ -5,6 +5,7 @@
 
 require 'lib/view_helper'
 require 'lib/transitions'
+$.getScript("plugins.js")
 
 module.exports = SeerApplication =
   settings: {}
@@ -15,11 +16,18 @@ module.exports = SeerApplication =
   inAnim: false
   browser: {}
   loading: true
+  _keyCodes:
+    'alt':1
+    'shift':2
+    'ctrl':4
 
   # Set up the application and include the
   # necessary modules. Configures the page
   # and
   _init: (settings) ->
+    @_keyBindings = {}
+    $("html").keyup @_keyPress
+
     @settings = _.extend @settings, settings
 
     if @settings.mongo.is_slave
@@ -33,6 +41,7 @@ module.exports = SeerApplication =
 
     # Set up the client name.
     $('#client-name').html(window.SimpleSeer.settings.ui_pagename || "")
+    document.title = window.SimpleSeer.settings.ui_pagename || ""
 
     if window.WebSocket?
       @socket = io.connect '/rt'
@@ -62,7 +71,21 @@ module.exports = SeerApplication =
   _preinitialize: ->
     tc = require 'collections/tab_container'
     @tabs = new tc()
+    #@loadAdmin()
     @tabs.fetch()
+
+
+  loadAdmin:() ->
+    TabCon = require "models/core/tab_container"
+    SimpleSeer.tabs.push new TabCon
+      id: "__admindash__"
+      navbar: "left-main"
+      path: "admin"
+      tabs: [{
+        name: "db"
+        view: "admin"
+        inNavigation: false
+      }]
 
   route: (route, name=false, callback= =>) ->
     console.log route,name,callback
@@ -70,6 +93,19 @@ module.exports = SeerApplication =
       console.log r
     @router.route route, name, callback
 
+  _keyPress: (e) ->
+    key = 0
+    if e.altKey
+      key += SimpleSeer._keyCodes['alt']
+    if e.ctrlKey
+      key += SimpleSeer._keyCodes['ctrl']
+    if e.shiftKey
+      key += SimpleSeer._keyCodes['shift']
+    key += "_"+ e.which
+    if SimpleSeer._keyBindings[key]
+      for i,o of SimpleSeer._keyBindings[key]
+        for event in o
+          event(e)
 
   # Sends an alert window to the client
   # with the specified message and severity.

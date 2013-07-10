@@ -27,7 +27,7 @@ Paste==1.7.5.1
 PasteDeploy==1.5.0
 PasteScript==1.7.5
 path.py==2.3
-statsmodels
+statsmodels==0.5.0
 patsy==0.1.0
 celery==3.0.12
 amqplib==1.0.2
@@ -36,3 +36,5 @@ amqplib==1.0.2
 #https://github.com/ingenuitas/pyfirmata/zipball/master
 #-e svn+https://guppy-pe.svn.sourceforge.net/svnroot/guppy-pe/trunk/guppy@90#egg=guppy-dev_r90
 #https://github.com/ingenuitas/pyvpx/zipball/master
+boto==2.9.6
+psutil==0.7.1

@@ -35,14 +35,8 @@ class Session():
         if not yaml_config_dir:
             return  #return the existing shared context
 
-        yaml_config = path(yaml_config_dir) / "simpleseer.cfg"
-
-        if yaml_config_dir == "." and not os.path.isfile(yaml_config):
-            yaml_config_dir = "/etc/simpleseer"
-            yaml_config = path(yaml_config_dir) / "simpleseer.cfg"
-
-        config_dict = yaml.load(open(yaml_config))
-        log.info("Loaded configuration from %s" % yaml_config)
+        config_dict = self.read_config(yaml_config_dir)
+        log.info("Loaded configuration from %s" % config_dict['yaml_config'])
         
         # Look for alternate config files with name hostname_simpleseer.cfg
         alt_config_filename = gethostname() + '_simpleseer.cfg'
@@ -55,7 +49,18 @@ class Session():
         self.configure(config_dict)
         if not self.procname:
             self.procname = procname
-        
+    
+    @staticmethod
+    def read_config(yaml_config_dir=''):
+        yaml_config = path(yaml_config_dir) / "simpleseer.cfg"
+
+        if yaml_config_dir == "." and not os.path.isfile(yaml_config):
+            yaml_config_dir = "/etc/simpleseer"
+            yaml_config = path(yaml_config_dir) / "simpleseer.cfg"
+        retVal = yaml.load(open(yaml_config))
+        retVal['yaml_config'] = yaml_config
+        return retVal
+    
     def configure(self, d):
         from .models.base import SONScrub
         self._config = d
@@ -78,7 +83,10 @@ class Session():
 
     def __getattr__(self, name):
         return self._config.get(name, '')
-
+    
+    def set_config(self,name,value):
+        self._config[name] = value
+    
     def __repr__(self):
         return "SimpleSeer Session Object"
 

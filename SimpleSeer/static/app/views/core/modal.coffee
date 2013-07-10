@@ -98,18 +98,31 @@ module.exports = class modal extends View
       ele.hide()
 
     #inputMessage
-    ele = @$el.find('input')
+    ele = @$el.find('input.value')
     if options.inputMessage?
-      ele.attr('value', "");
+      ele.attr('value', "")
       ele.attr('placeholder',options.inputMessage)
       ele.show()
+      ele.focus()
+    else
+      ele.hide()
+
+    #keyMessage
+    ele = @$el.find('input.key')
+    if options.keyMessage?
+      ele.attr('value', "")
+      ele.attr('placeholder', options.keyMessage)
+      ele.show()
+      ele.focus()
     else
       ele.hide()
 
     #show modal
     @$el.show("fade")
     if options.inputMessage?
-      ele.get(0).focus()
+      @$el.find('input.value').focus()
+    if options.keyMessage?
+      @$el.find('input.key').focus()
     return
 
   addCallback:(type,func) =>
@@ -128,7 +141,11 @@ module.exports = class modal extends View
     if !values.action?
       values.action = 'DEFAULT'
     if !values.userInput?
-      values.userInput = @$el.find('input').val()
+      values.userInput = @$el.find('input.value').val()
+    if !values.key?
+      values.key = @$el.find('input.key').val()
+    if !values.value?
+      values.value = @$el.find('input.value').val()
     for f in @_callbacks['success']
       r = f(values)
     if r != true

@@ -15,12 +15,17 @@
       float: left;
       width: 100%;
       height: 100%;
-      padding: 16px 7px;
+      padding: 20px 7px 16px 7px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       padding-right: 43px;
-      box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.15);
+      background-color: #FFF;
+      background-image: -webkit-gradient(linear, 0 0, 0 100%, color-stop(1%, #EEE), color-stop(15%, #FFF));
+      background-image: -webkit-linear-gradient(top, #EEE 1%, #FFF 15%);
+      background-image: -moz-linear-gradient(top, #EEE 1%, #FFF 15%);
+      background-image: -o-linear-gradient(top, #EEE 1%, #FFF 15%);
+      background-image: linear-gradient(#EEE 1%, #FFF 15%);
 
       &.no-padding {
         padding: 0px;
@@ -28,6 +33,7 @@
       }
 
       input {
+        font-family: "Open Sans";
         font-size: 36px;
         background-color: #FFFF66;
         border: 4px solid #FFD600;
@@ -73,12 +79,12 @@
       }
 
       &.edit {
-        background-image: url('/img/pencil_icon&16.png');
+        background-image: url('/img/seer/pencil_icon&16.png');
       }
 
       &.submit {
         display: none;
-        background-image: url('/img/checkmark_icon&16.png');
+        background-image: url('/img/seer/checkmark_icon&16.png');
         background-color: #38AA3D;
         border-left-color: #2C7029;
         box-shadow: inset 0 1px 0 0 #5CDB4B;

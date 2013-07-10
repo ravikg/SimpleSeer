@@ -1,9 +1,6 @@
 .navLinks {
 	display: none;
-	margin: 8px 0px;
-	border-top: 1px solid #62656B;
-	border-bottom: 1px solid #62656B;
-	box-shadow: inset 0px 1px 0px #C9CCD1, 0px 1px 0px #C9CCD1;
+	margin: 5px 0px;
 
 	&:first-child {
 		display: block;
@@ -12,7 +9,6 @@
 	li {
 		height: 26px;
 		line-height: 24px;
-		padding-left: 24px;
 		position: relative;
 		background: transparent;
 		-webkit-transition: background 150ms linear;
@@ -22,22 +18,19 @@
 			background: #CCC;
 		}
 
-		&:first-child:hover {
-			box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.7);
-		}
-
 		a {
-			box-sizing: border-box;
-			-moz-box-sizing: border-box;
+			padding-left: 31px;
+			box-sizing: border-box !important;
+			-moz-box-sizing: border-box !important;
 			display: inline-block;
 			width: 100%;
-			color: #111;
+			color: #222;
 			font-size: 12px;
-			font-family: Arial, sans-serif;
 			text-decoration: none;
 			cursor: pointer;
-			padding-top: 2px;
-			padding-left: 2px;
+			padding-top: 1px;
+			background-repeat: no-repeat;
+			background-position: 7px 5px;
 
 			&:hover {
 				text-decoration: none;
@@ -46,7 +39,7 @@
 
 		.icon {
 			position: absolute;
-			top: 1px; left: 1px;
+			top: 1px; left: 4px;
 			width: 24px;
 			height: 24px;
 			background: transparent no-repeat center center;
@@ -68,7 +61,6 @@
 	box-sizing: border-box !important;
 	-moz-box-sizing: border-box !important;
 	width: 100%;
-	font-weight: bold;
 	font-size: 13px;
 	color: #222;
 	padding-top: 1px;
