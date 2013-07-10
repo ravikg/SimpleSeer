@@ -520,6 +520,7 @@ module.exports = class Table extends SubView
       @hider.css('left', @head.offset().left - 10)
 
       key = undefined
+      last = undefined
       w = undefined
       _.each @static.find('.th'), (column) =>
         col = $(column)
@@ -532,9 +533,12 @@ module.exports = class Table extends SubView
         ppadright = parseInt(p.css('padding-right'), 10)
         w = pwidth + ppadleft + ppadright + 1 + extras.w
         h = col.height() + extras.h
+        if col.is(":visible")
+          last = key
         @floater.find(".th[data-key=#{key}]").css('width', w).css('height', h - 2)
 
-      @floater.find(".th[data-key=#{key}]").css('width', w - 2)
+      if last 
+        @floater.find(".th[data-key=#{key}]").css('width', w - 2)
       @table.css('position', 'relative').css('top', 36)
 
   afterRender: =>
