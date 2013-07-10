@@ -48,7 +48,11 @@ module.exports = class Table extends SubView
     "click .show-hide-checkbox":"showHideCheckboxEvent"
 
   showHideEvent: (e) =>
-    $('.show-hide').toggle()
+    box = $('.show-hide')
+    if box.is(":visible")
+      box.fadeOut(150)
+    else
+      box.fadeIn(150)
 
   showHideCheckboxEvent: (e) =>
     key = $(e.target).val()
@@ -537,8 +541,9 @@ module.exports = class Table extends SubView
           last = key
         @floater.find(".th[data-key=#{key}]").css('width', w).css('height', h - 2)
 
-      if last 
-        @floater.find(".th[data-key=#{key}]").css('width', w - 2)
+      if last
+        item = @floater.find(".th[data-key=#{last}]")
+        item.css('width', item.width() - 2)
       @table.css('position', 'relative').css('top', 36)
 
   afterRender: =>

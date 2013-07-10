@@ -18,7 +18,7 @@ module.exports = class View extends Backbone.View
   initialize: (options={}) =>
     super()
     #application._keyBindings
-      
+
 
     if @options.context?
       # Load any context attached to view
@@ -30,8 +30,8 @@ module.exports = class View extends Backbone.View
     @subviews = {}
 
   _bindKeys: =>
-    id = if typeof @id == "function" then @id() else @id 
-    
+    id = if typeof @id == "function" then @id() else @id
+
     if id and @keyBindings
       for i,o of @keyBindings
         key = 0
@@ -49,8 +49,12 @@ module.exports = class View extends Backbone.View
 
   _setScroll: (el=@$el) =>
     el.infiniteScroll
-      onScroll:(per) => @trigger('scroll', per)
-      #onPage: => @trigger('page')
+      onScroll:(per) =>
+        console.log "scroll";
+        return; @trigger('scroll', per)
+      onPage: =>
+        console.log "page"
+        return; @trigger('page')
 
   focus:(back=false) =>
     #console.info 'in focus'
