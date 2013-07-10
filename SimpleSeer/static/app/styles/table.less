@@ -36,17 +36,18 @@
 }
 
 .header {
-  border: 1px solid #555;
-  background-color: #fff;
+  background: #fff;
+  border: 1px solid transparent;
   z-index: 99999;
   position: fixed;
 
   .float {
     float: left;
+    height: 24px;
   }
 
   .downloads {
-    float: right;
+    float: left;
     padding: 5px;
     height: 36px;
   }
@@ -147,10 +148,12 @@
     }
 
     &.showhidden {
-      padding: 8px;
+      box-shadow: inset 0px -1px 0px #7A7A7A;
+      background: #E0E0FF;
+      padding: 8px 8px 5px 8px;
       text-align: center;
       color: #888;
-      font-weight: 700;
+      font-family: "OpenSansBold";
     }
 
   }

@@ -51,6 +51,21 @@ module.exports = class Table extends SubView
   showHideCheckboxEvent: (e) =>
     $("th[data-key=\"#{$(e.target).val()}\"], td.#{$(e.target).val()}").toggle()
 
+  initialize: =>
+    super()
+    # @Todo: Standardize and push this up the chain
+    @msie = $.browser.hasOwnProperty('msie')
+    @firefox = $.browser.hasOwnProperty('mozilla')
+
+    @rows = []
+    @getOptions()
+    @getCollection()
+    #if @infiniteScroll
+      #@on 'page', @infinitePage
+    #@scroll = $(@scrollElem)
+    if @persistentHeader
+      @on 'scroll', @scrollPage
+
   getColumnKeyByTitle: (title) =>
     key = null
     _.each @tableCols, (col) =>
@@ -169,24 +184,6 @@ module.exports = class Table extends SubView
         if !application.subscriptions["Chart/#{namePath}"]
           #console.info "subscribing to: #{@subscribePath}/#{namePath}"
           application.subscriptions["Chart/#{namePath}"] = application.socket.emit 'subscribe', "Chart/#{namePath}"
-
-  initialize: =>
-    super()
-    # @Todo: Standardize and push this up the chain
-    @msie = $.browser.hasOwnProperty('msie')
-    @firefox = $.browser.hasOwnProperty('mozilla')
-
-    #$(document).on 'click', (e) =>
-    #  console.log "Document clicked"
-
-    @rows = []
-    @getOptions()
-    @getCollection()
-    if @infiniteScroll
-      @on 'page', @infinitePage
-    @scroll = $(@scrollElem)
-    if @persistentHeader
-      @on 'scroll', @scrollPage
 
   getRenderData: =>
     classes: @tableClasses
@@ -527,7 +524,7 @@ module.exports = class Table extends SubView
         ppadright = parseInt(p.css('padding-right'), 10)
         w = pwidth + ppadleft + ppadright + 1 + extras.w
         h = col.height() + extras.h
-        @floater.find(".th[data-key=#{key}]").css('width', w).css('height', h)
+        @floater.find(".th[data-key=#{key}]").css('width', w).css('height', h - 2)
 
       @floater.find(".th[data-key=#{key}]").css('width', w - 2)
       @table.css('position', 'relative').css('top', @head.height() - @floater.height() + extras.t)
