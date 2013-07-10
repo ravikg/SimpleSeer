@@ -60,8 +60,8 @@ module.exports = class Table extends SubView
     @rows = []
     @getOptions()
     @getCollection()
-    #if @infiniteScroll
-      #@on 'page', @infinitePage
+    if @infiniteScroll
+      @on 'page', @infinitePage
     #@scroll = $(@scrollElem)
     if @persistentHeader
       @on 'scroll', @scrollPage
@@ -508,7 +508,7 @@ module.exports = class Table extends SubView
       @hider = @$('.hider')
 
       @hider.width(@static.width() + 12)
-      @head.width(@static.width() + 1)
+      @head.width(@static.width() + 1).css('top', 68)
       @hider.css('left', @head.offset().left - 10)
 
       key = undefined
@@ -527,7 +527,7 @@ module.exports = class Table extends SubView
         @floater.find(".th[data-key=#{key}]").css('width', w).css('height', h - 2)
 
       @floater.find(".th[data-key=#{key}]").css('width', w - 2)
-      @table.css('position', 'relative').css('top', @head.height() - @floater.height() + extras.t)
+      @table.css('position', 'relative').css('top', 36)
 
   afterRender: =>
 
