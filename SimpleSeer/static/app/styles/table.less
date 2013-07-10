@@ -5,10 +5,38 @@
   margin-top: -10px;
 }
 
+.preheader {
+  position: fixed;
+  top: 33px;
+  height: 36px;
+  z-index: 999999;
+  background: #fff;
+  width: 100%;
+  padding: 0px;
+  padding-right: 236px;
+
+  div {
+    float: left;
+  }
+
+  .show-hide-button {
+    background-image: url('/img/seer/gear.png');
+    width: 36px;
+    height: 36px;
+    float: right;
+    background-position: -3px -2px;
+    cursor: pointer;
+  }
+
+  .downloads {
+    margin: 5px;
+  }
+}
+
 .show-hide {
   position: fixed;
   top: 75px;
-  left: 260px;
+  right: 5px;
   z-index: 99999;
   background: rgba(255,255,255,.9);
   padding: 5px;
@@ -26,17 +54,8 @@
   }
 }
 
-.show-hide-button {
-  background-image: url('/img/seer/gear.png');
-  width: 36px;
-  height: 36px;
-  position: absolute;
-  background-position: -3px -2px;
-  cursor: pointer;
-}
-
 .header {
-  background: #fff;
+  background: transparent;
   border: 1px solid transparent;
   z-index: 99999;
   position: fixed;
