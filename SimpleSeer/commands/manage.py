@@ -393,6 +393,6 @@ def BuildCommand(self):
 
 @ManageCommand.simple()
 def BaseCommand(self):
-    subprocess.call(['SimpleSeer/scripts/base.sh'])
+    subprocess.call(['sh', 'SimpleSeer/scripts/base.sh'])
     BuildCommand("").run()
 

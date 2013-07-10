@@ -12,5 +12,5 @@ if [ -d SeerCloud ]
     echo "- Installing SeerCloud                                 -"
     echo "--------------------------------------------------------"
     cd SeerCloud
-    python setup.py develop
+    sudo python setup.py develop
 fi
