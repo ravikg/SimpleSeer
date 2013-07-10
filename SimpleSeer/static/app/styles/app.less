@@ -492,9 +492,29 @@ html[xmlns] .clearfix {
   font-family: "Open Sans";
   line-height: 150%;
   margin-right: 3px;
-  padding: 3px 15px 2px;
+  padding: 3px 15px 3px;
   text-align: center;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+
+  &.special {
+    position: relative;
+    padding-left: 25px;
+    padding-right: 9px;
+  }
+
+  div.badge {
+    width: 16px;
+    height: 16px;
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.22);
+    background-color: rgba(0, 0, 0, 0.13);
+    border-radius: 1px;
+    box-shadow: 0px 0px 1px 1px rgba(255, 255, 255, 0.19);
+
+    &.download { background-image: url("/img/seer/download_arrow.png"); }
+  }
 }
 
 .controlButton:hover,
