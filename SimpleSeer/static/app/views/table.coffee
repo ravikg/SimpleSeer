@@ -48,7 +48,11 @@ module.exports = class Table extends SubView
     "click .show-hide-checkbox":"showHideCheckboxEvent"
 
   showHideEvent: (e) =>
-    $('.show-hide').toggle()
+    box = $('.show-hide')
+    if box.is(":visible")
+      box.fadeOut(150)
+    else
+      box.fadeIn(150)
 
   showHideCheckboxEvent: (e) =>
     key = $(e.target).val()
@@ -67,8 +71,8 @@ module.exports = class Table extends SubView
     @rows = []
     @getOptions()
     @getCollection()
-    if @infiniteScroll
-      @on 'page', @infinitePage
+    #if @infiniteScrollEnabled
+      #@on 'page', @infinitePage
     #@scroll = $(@scrollElem)
     if @persistentHeader
       @on 'scroll', @scrollPage
@@ -93,7 +97,7 @@ module.exports = class Table extends SubView
     if @options.persistentHeader?
       @persistentHeader = @options.persistentHeader
     if @options.infiniteScroll?
-      @infiniteScroll = @options.infiniteScroll
+      @infiniteScrollEnabled = @options.infiniteScroll
     if @options.sortKey?
       @sortKey = @options.sortKey
     if @options.sortDirection?
@@ -478,7 +482,7 @@ module.exports = class Table extends SubView
 
     keys = {}
 
-    @$("table.table.static thead th").each (i, o)-> 
+    @$("table.table.static thead th").each (i, o)->
       keys[$(o).data('key')] = 0
 
     i = 1
@@ -537,8 +541,9 @@ module.exports = class Table extends SubView
           last = key
         @floater.find(".th[data-key=#{key}]").css('width', w).css('height', h - 2)
 
-      if last 
-        @floater.find(".th[data-key=#{key}]").css('width', w - 2)
+      if last
+        item = @floater.find(".th[data-key=#{last}]")
+        item.css('width', item.width() - 2)
       @table.css('position', 'relative').css('top', 36)
 
   afterRender: =>

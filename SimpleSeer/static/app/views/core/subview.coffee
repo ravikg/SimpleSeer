@@ -16,7 +16,7 @@ module.exports = class SubView extends View
     className = @className || ''
     # Use `append` when creating a subview to append subview to an html element
     if @options.append
-      # Use `@htmltags` to pass key-pair values in as tags  
+      # Use `@htmltags` to pass key-pair values in as tags
       # ie:  `{style:'width:100%;'}` becomes `style="width:100%;"`
       tags = ''
       for i,o of @htmltags
@@ -28,7 +28,7 @@ module.exports = class SubView extends View
       el = $ @options.selector
       foo = @setElement el
       el.addClass className
-      # Use `@htmltags` to pass key-pair values in as tags  
+      # Use `@htmltags` to pass key-pair values in as tags
       # ie:  `{style:'width:100%;'}` becomes `style="width:100%;"`
       for i,o of @htmltags
         el.attr i,o
