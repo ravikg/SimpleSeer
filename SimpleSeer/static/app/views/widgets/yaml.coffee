@@ -206,7 +206,31 @@ module.exports = class Yaml extends SubView
 
       locArray = dest.split("-")
 
-      if locArray.length == 3
+      cln = _.clone locArray
+      cln.splice(1, 1)
+      target = @schema
+      for key in cln.slice(0, -1)
+        if !isNaN(key)
+          target = target['item']
+        else
+          target = target[key]
+      s = target[cln[cln.length-1]]
+
+      console.log locArray, s
+
+      if !isNaN(key)
+        a++
+        c++
+      if s?
+        if s.type == "Array" or s.type == "Object"
+          if !s.required
+            c++
+        else if s.type == "String" or s.type == "Int"
+          if !s.required
+            b++
+            c++
+
+      ###if locArray.length == 3
         s = @schema[locArray[0]][locArray[2]]
         if s.type == 'Object' or s.type == 'Array'
           a++
@@ -234,7 +258,7 @@ module.exports = class Yaml extends SubView
               a++
             b++
             if !s.required
-              c++
+              c++###
 
       if a
         ret += '<span class="button add" action="add" location="' + dest + '">A</span>'
