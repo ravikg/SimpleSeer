@@ -442,16 +442,6 @@ module.exports = class Table extends SubView
   formatData:(data) =>
     return data
 
-  initializeShowHide: (data) =>
-    cols = {}
-    for o in @tableCols
-      cols[o.key] = 0
-    for o in data
-      for k,v of o
-        if v and cols[k]? and !isNaN(cols[k])
-          cols[k]++
-    @showHideCols = cols
-
   updateData: =>
     if @cof == true
       @scroll.scrollTop(0)
@@ -474,8 +464,6 @@ module.exports = class Table extends SubView
       @tableData = @collection.models
     data = @formatData(@tableData)
     if !@noData
-      # figure out which columns should just simply not render
-      #@initializeShowHide(data)
       _.each data, (model) =>
         @insertRow(model, @insertDirection)
     @render()
