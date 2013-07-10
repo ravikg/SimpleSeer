@@ -34,7 +34,9 @@ module.exports = class Table extends SubView
   hasHidden: false
   noData: false
   showHideCols: {}
+  showHideColsSelected: {}
   scrollElem: '#content #slides'
+  afterRenderCounter: 0
   viewid: "5089a6d31d41c855e4628fb0"
 
   events: =>
@@ -49,7 +51,12 @@ module.exports = class Table extends SubView
     $('.show-hide').toggle()
 
   showHideCheckboxEvent: (e) =>
-    $("th[data-key=\"#{$(e.target).val()}\"], td.#{$(e.target).val()}").toggle()
+    key = $(e.target).val()
+    if $(e.target).attr('checked')
+      @showHideColsSelected[key] = 0
+    else
+      @showHideColsSelected[key] = 1
+    $("th[data-key=\"#{key}\"], td.#{key}").toggle()
 
   initialize: =>
     super()
@@ -60,8 +67,8 @@ module.exports = class Table extends SubView
     @rows = []
     @getOptions()
     @getCollection()
-    #if @infiniteScroll
-      #@on 'page', @infinitePage
+    if @infiniteScroll
+      @on 'page', @infinitePage
     #@scroll = $(@scrollElem)
     if @persistentHeader
       @on 'scroll', @scrollPage
@@ -435,9 +442,6 @@ module.exports = class Table extends SubView
   formatData:(data) =>
     return data
 
-  render: =>
-    super()
-
   initializeShowHide: (data) =>
     cols = {}
     for o in @tableCols
@@ -484,8 +488,12 @@ module.exports = class Table extends SubView
 
   updateShowHide: =>
     for k,v of @showHideCols
-      if !v
+      if @showHideColsSelected[k]
         $("input#show-hide-#{k}").click()
+        #console.log "Hiding " + k + " because of user toggle"
+      else if !v
+        $("input#show-hide-#{k}").click()
+        #console.log "Hiding " + k + " because of auto toggle"
 
   updateHeader: =>
     if @persistentHeader
@@ -508,7 +516,7 @@ module.exports = class Table extends SubView
       @hider = @$('.hider')
 
       @hider.width(@static.width() + 12)
-      @head.width(@static.width() + 1)
+      @head.width(@static.width() + 1).css('top', 68)
       @hider.css('left', @head.offset().left - 10)
 
       key = undefined
@@ -527,9 +535,11 @@ module.exports = class Table extends SubView
         @floater.find(".th[data-key=#{key}]").css('width', w).css('height', h - 2)
 
       @floater.find(".th[data-key=#{key}]").css('width', w - 2)
-      @table.css('position', 'relative').css('top', @head.height() - @floater.height() + extras.t)
+      @table.css('position', 'relative').css('top', 36)
 
   afterRender: =>
+
+    @afterRenderCounter++
 
     @$el.find(".th[data-key=#{@sortKey}]")
       .removeClass("sort-asc sort-desc")
@@ -539,7 +549,8 @@ module.exports = class Table extends SubView
     if !@scroll
       @scroll = $(@scrollElem)
 
-    @updateShowHide()
+    if @afterRenderCounter >= 2
+      @updateShowHide()
     @updateHeader()
     @scrollPage(0)
 
