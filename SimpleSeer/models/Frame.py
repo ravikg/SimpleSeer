@@ -70,11 +70,11 @@ class Frame(SimpleDoc, mongoengine.Document):
     }
     
     
-    def __init__(self):
+    def __init__(self, **kwargs):
         from .base import checkPreSignal, checkPostSignal
         from SimpleSeer.Session import Session
         
-        super(Frame, self).__init__()
+        super(Frame, self).__init__(**kwargs)
         
         app = Session._Session__shared_state['appname']
         

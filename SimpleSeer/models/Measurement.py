@@ -360,11 +360,11 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
         return charts
 
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         from .base import checkPreSignal, checkPostSignal
         from SimpleSeer.Session import Session
         
-        super(Measurement, self).__init__()
+        super(Measurement, self).__init__(**kwargs)
         
         app = Session._Session__shared_state['appname']
         
