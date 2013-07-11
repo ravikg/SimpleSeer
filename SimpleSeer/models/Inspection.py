@@ -85,11 +85,11 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
         'indexes': ['name']
     }
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         from .base import checkPreSignal, checkPostSignal
         from SimpleSeer.Session import Session
         
-        super(Inspection, self).__init__()
+        super(Inspection, self).__init__(**kwargs)
         
         app = Session._Session__shared_state['appname']
         
