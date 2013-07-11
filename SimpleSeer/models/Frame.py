@@ -1,6 +1,7 @@
 from cStringIO import StringIO
 from calendar import timegm
 import mongoengine
+from mongoengine import signals as sig
 
 from SimpleSeer.base import Image, pil, pygame
 from SimpleSeer import util
@@ -67,6 +68,21 @@ class Frame(SimpleDoc, mongoengine.Document):
     meta = {
         'indexes': ["capturetime", "camera", "-capturetime", ('camera', '-capturetime'), "-capturetime_epoch", "capturetime_epoch", "results", "results.state", "metadata"]
     }
+    
+    
+    def __init__(self):
+        from .base import checkPreSignal, checkPostSignal
+        from SimpleSeer.Session import Session
+        
+        super(Frame, self).__init__()
+        
+        app = Session._Session__shared_state['appname']
+        
+        for pre in checkPreSignal('Frame', app):
+            sig.pre_save.connect(pre, sender=Frame, weak=False)
+        
+        for post in checkPostSignal('Frame', app):
+            sig.post_save.connect(post, sender=Frame, weak=False)
     
     @classmethod
     #which fields we care about for Filter.py
@@ -343,3 +359,4 @@ class Frame(SimpleDoc, mongoengine.Document):
             if earliest_frame:
                 earliest_date = earliest_frame.capturetime
         return total_frames, chosen_frames, earliest_date
+

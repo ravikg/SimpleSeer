@@ -1,6 +1,8 @@
 from copy import deepcopy
 
 import mongoengine
+from mongoengine import signals as sig
+
 from formencode import validators as fev
 from formencode import schema as fes
 import formencode as fe
@@ -82,6 +84,21 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
     meta = {
         'indexes': ['name']
     }
+
+    def __init__(self):
+        from .base import checkPreSignal, checkPostSignal
+        from SimpleSeer.Session import Session
+        
+        super(Inspection, self).__init__()
+        
+        app = Session._Session__shared_state['appname']
+        
+        for pre in checkPreSignal('Inspection', app):
+            sig.pre_save.connect(pre, sender=Frame, weak=False)
+        
+        for post in checkPostSignal('Inspection', app):
+            sig.post_save.connect(post, sender=Frame, weak=False)
+
 
     def __repr__(self):
       return "<%s: %s>" % (self.__class__.__name__, self.name)
