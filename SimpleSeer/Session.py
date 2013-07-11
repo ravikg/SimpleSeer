@@ -51,7 +51,7 @@ class Session():
             self.procname = procname
     
         self.appname = self.get_app_name('.')
-
+        self._known_triggers = {}
     
     @staticmethod
     def read_config(yaml_config_dir=''):
@@ -93,6 +93,20 @@ class Session():
                 return d
                 
         return ''
+        
+    def get_triggers(self, app, model, pre):
+        from .models.base import checkPreSignal, checkPostSignal
+        
+        import ipdb;ipdb.set_trace()
+        
+        if not (app, model, pre) in self._known_triggers:
+            if pre == 'pre':
+                self._known_triggers[(app, model, pre)] = checkPreSignal(model, app)
+            elif pre == 'post':
+                self._known_triggers[(app, model, pre)] = checkPostSignal(model, app)
+                
+        return self._known_triggers[(app, model, pre)]
+            
 
     def get_config(self):
         return self._config

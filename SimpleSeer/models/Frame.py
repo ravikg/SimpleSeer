@@ -76,12 +76,12 @@ class Frame(SimpleDoc, mongoengine.Document):
         
         super(Frame, self).__init__(**kwargs)
         
-        app = Session._Session__shared_state['appname']
+        app = Session()._Session__shared_state['appname']
         
-        for pre in checkPreSignal('Frame', app):
+        for pre in Session().get_triggers(app, 'Frame', 'pre'):
             sig.pre_save.connect(pre, sender=Frame, weak=False)
         
-        for post in checkPostSignal('Frame', app):
+        for post in Session().get_triggers(app, 'Frame', 'post'):
             sig.post_save.connect(post, sender=Frame, weak=False)
     
     @classmethod
