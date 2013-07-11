@@ -147,6 +147,7 @@ module.exports = class modal extends View
     if !values.value?
       values.value = @$el.find('input.value').val()
     for f in @_callbacks['success']
+      console.log @_callbacks['success'].indexOf f
       r = f(values)
     if r != true
       @$el.hide("fade")

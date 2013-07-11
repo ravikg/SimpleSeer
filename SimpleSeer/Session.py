@@ -96,9 +96,7 @@ class Session():
         
     def get_triggers(self, app, model, pre):
         from .models.base import checkPreSignal, checkPostSignal
-        
-        import ipdb;ipdb.set_trace()
-        
+                
         if not (app, model, pre) in self._known_triggers:
             if pre == 'pre':
                 self._known_triggers[(app, model, pre)] = checkPreSignal(model, app)

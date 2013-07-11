@@ -368,10 +368,10 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
         
         app = Session._Session__shared_state['appname']
         
-        for pre in Session().get_triggers(app, 'Measurement', 'pre')::
+        for pre in Session().get_triggers(app, 'Measurement', 'pre'):
             sig.pre_save.connect(pre, sender=Frame, weak=False)
         
-        for post in Session().get_triggers(app, 'Measurement', 'post')::
+        for post in Session().get_triggers(app, 'Measurement', 'post'):
             sig.post_save.connect(post, sender=Frame, weak=False)
 
     def __repr__(self):
