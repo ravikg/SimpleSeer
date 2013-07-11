@@ -7,12 +7,28 @@ import calendar
 import bson
 import mongoengine
 import pkg_resources
+import sys
 from pymongo.son_manipulator import SONManipulator
 
 from SimpleCV import Image
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
+
+
+# Look for entry ponts for pre- and post-save functions
+def checkPreSignal(model, app):
+    return checkSignal(model, app, 'presave')
+
+def checkPostSignal(model, app):
+    return checkSignal(model, app, 'postsave')
+
+def checkSignal(model, app, pre):
+    mods = []
+    for ep in pkg_resources.iter_entry_points('{}.{}.triggers.{}'.format(app, model, pre)):
+        mods.append(__import__(ep.module_name, globals(), locals(), [ep.name]).__getattribute__(ep.attrs[0])())
+        
+    return mods
 
 class Picklable(object):
     _jsonignore = [None]
