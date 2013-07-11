@@ -543,7 +543,7 @@ module.exports = class Table extends SubView
 
       if last
         item = @floater.find(".th[data-key=#{last}]")
-        item.css('width', item.width() - 2)
+        item.css('width', item.width() - 1)
       @table.css('position', 'relative').css('top', 36)
 
   afterRender: =>

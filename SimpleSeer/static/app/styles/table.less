@@ -20,11 +20,12 @@
   }
 
   .show-hide-button {
-    background-image: url('/img/seer/gear.png');
-    width: 36px;
-    height: 36px;
     float: right;
-    background-position: -3px -2px;
+    width: 45px;
+    height: 37px;
+    background-repeat: no-repeat;
+    background-image: url('/img/seer/gear.png');
+    background-position: center center;
     cursor: pointer;
   }
 
@@ -35,15 +36,26 @@
 
 .show-hide {
   position: fixed;
-  top: 75px;
-  right: 5px;
-  z-index: 99999;
+  top: 73px;
+  right: 2px;
+  z-index: 99999999;
   background: #ECECEC;
-  padding: 10px;
-  border-radius: 2px;
+  padding: 9px 10px;
+  border-radius: 1px;
   box-shadow: 0px 8px 28px rgba(0, 0, 0, 0.5);
   border: 1px solid #727272;
   display: none;
+
+  &:before {
+    position: absolute;
+    top: -9px;
+    right: 10px;
+    z-index: 9999999;
+    width: 15px;
+    height: 9px;
+    background: url("/img/seer/grey_arrow.png") no-repeat;
+    content: " ";
+  }
 
   h2 {
     font-family: "OpenSansLight";
@@ -59,11 +71,9 @@
   }
 
   label {
-    color: #222;
+    color: #444;
     font-size: 12px;
-    font-family: "OpenSansLight";
     margin-left: 5px;
-    font-weight: bold;
     cursor: pointer;
   }
 
@@ -243,11 +253,11 @@ white-space: nowrap; }
 }
 
 .table .th .placeholder {
-  padding: 4px 5px;
+  padding: 3px 5px 4px 5px;
 }
 
 .table .th.sortable .placeholder {
-  padding: 4px 20px 4px 5px;
+  padding: 3px 20px 4px 5px;
 }
 
 .table {
