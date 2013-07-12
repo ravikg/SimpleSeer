@@ -60,7 +60,7 @@ module.exports = class Table extends SubView
       @showHideColsSelected[key] = 0
     else
       @showHideColsSelected[key] = 1
-    $("th[data-key=\"#{key}\"], td.#{key}").toggle()
+    $("th[data-key=\"#{key}\"], td.#{key}:nth-child(2)").toggleClass('hidden')
 
   initialize: =>
     super()
@@ -465,10 +465,9 @@ module.exports = class Table extends SubView
     else
       @noData = false
     if @collection and @collection.models
-      @tableData = @collection.models
-    data = @formatData(@tableData)
+      @tableData = @formatData @collection.models
     if !@noData
-      _.each data, (model) =>
+      _.each @tableData, (model) =>
         @insertRow(model, @insertDirection)
     @render()
 
@@ -486,19 +485,21 @@ module.exports = class Table extends SubView
     @$("table.table.static thead th").each (i, o)->
       keys[$(o).data('key')] = 0
 
-    i = 1
-    for k,v of keys
-      total = $("table.table.static td:nth-child(#{i})").length
-      empty = $("table.table.static td:nth-child(#{i}):empty").length
-      if total == empty
-        keys[k] = 1
-      i++
+    for row in @tableData
+      for key,value of keys
+        if row[key]
+          delete keys[key]
+
+    #i = 1
+    #for k,v of keys
+    #  total = $("table.table.static td:nth-child(#{i})").length
+    #  empty = $("table.table.static td:nth-child(#{i}):empty").length
+    #  if total == empty
+    #    keys[k] = 1
+    #  i++
 
     for k,v of keys
-      if @showHideColsSelected[k]
-        $("input#show-hide-#{k}").click()
-      else if v
-        $("input#show-hide-#{k}").click()
+      $("input#show-hide-#{k}").click()
 
   updateHeader: =>
     if @persistentHeader
