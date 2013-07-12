@@ -56,12 +56,14 @@ module.exports = class Table extends SubView
 
   showHideCheckboxEvent: (e) =>
     key = $(e.target).val()
-    if $(e.target).attr('checked')
+    checked = $(e.target).attr('checked') 
+    if checked
       @showHideColsSelected[key] = 0
     else
       @showHideColsSelected[key] = 1
     $("th[data-key=\"#{key}\"], td.#{key}").toggleClass('hidden')
-    $(window).resize()
+    if e.originalEvent?
+      $(window).resize()
 
   initialize: =>
     super()
