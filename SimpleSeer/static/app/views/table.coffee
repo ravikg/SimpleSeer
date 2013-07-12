@@ -60,7 +60,8 @@ module.exports = class Table extends SubView
       @showHideColsSelected[key] = 0
     else
       @showHideColsSelected[key] = 1
-    $("th[data-key=\"#{key}\"], td.#{key}:nth-child(2)").toggleClass('hidden')
+    $("th[data-key=\"#{key}\"], td.#{key}").toggleClass('hidden')
+    $(window).resize()
 
   initialize: =>
     super()
