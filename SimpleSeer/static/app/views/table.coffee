@@ -71,8 +71,8 @@ module.exports = class Table extends SubView
     @rows = []
     @getOptions()
     @getCollection()
-    #if @infiniteScrollEnabled
-      #@on 'page', @infinitePage
+    if @infiniteScrollEnabled
+      @on 'page', @infinitePage
     #@scroll = $(@scrollElem)
     if @persistentHeader
       @on 'scroll', @scrollPage
@@ -477,6 +477,7 @@ module.exports = class Table extends SubView
       @left = undefined
       @collection.setParam('skip', (@collection.getParam('skip') + @limit))
       @collection.fetch()
+    return    
 
   updateShowHide: =>
 
