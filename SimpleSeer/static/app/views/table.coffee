@@ -468,9 +468,12 @@ module.exports = class Table extends SubView
     else
       @noData = false
     if @collection and @collection.models
-      @tableData = @formatData @collection.models
+      data = @formatData @collection.models
+    else
+      data = @formatData @tableData
+    @data = data
     if !@noData
-      _.each @tableData, (model) =>
+      _.each data, (model) =>
         @insertRow(model, @insertDirection)
     @render()
 
@@ -488,7 +491,7 @@ module.exports = class Table extends SubView
     @$("table.table.static thead th").each (i, o)->
       keys[$(o).data('key')] = 0
 
-    for row in @tableData
+    for row in @data
       for key,value of keys
         if row[key]
           delete keys[key]
