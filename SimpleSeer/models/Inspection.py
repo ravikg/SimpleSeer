@@ -93,10 +93,10 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
         
         app = Session._Session__shared_state['appname']
         
-        for pre in checkPreSignal('Inspection', app):
+        for pre in Session().get_triggers(app, 'Inspection', 'pre'):
             sig.pre_save.connect(pre, sender=Frame, weak=False)
         
-        for post in checkPostSignal('Inspection', app):
+        for post in Session().get_triggers(app, 'Inspection', 'post'):
             sig.post_save.connect(post, sender=Frame, weak=False)
 
 
