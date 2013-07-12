@@ -41,7 +41,6 @@ module.exports = class Table extends SubView
 
   events: =>
     "click th.sortable":"sortByColumn"
-    'change input[type="text"]':'changeCell'
     "click .showhidden .controlButton":"showHiddenEvent"
     "click .downloads .controlButton":"downloadData"
     "click .show-hide-button":"showHideEvent"
