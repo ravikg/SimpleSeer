@@ -37,11 +37,9 @@ module.exports = class ImageCanvas extends SubView
       @_markup(@options.engine)
 
   afterRender: =>
-    #@canvas = @$("canvas")
-    @canvas = @$el.find("canvas")
+    @canvas = @$("canvas")
     if @options.stealth then @hideMarkup()
-    #@image = @$("img")
-    @image = @$el.find("img")
+    @image = @$("img")
     @image.load =>
       @image.attr("data-w", @image.get(0).width)
       @image.attr("data-h", @image.get(0).height)
@@ -136,3 +134,8 @@ module.exports = class ImageCanvas extends SubView
     @options.feature = feature
     @afterLoad()
 
+  setImage:(image) =>
+    @loaded = false
+    @processing = undefined
+    @options.image = image
+    @render()
