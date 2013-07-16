@@ -39,9 +39,9 @@ module.exports = class Measurements extends Collection
       tolerance.criteria['Part Number'] = data.id
     if data.subkey
       if data.subkey == "min"
-        tolerance.rule.operator = '<'
-      else if data.subkey == "max"
         tolerance.rule.operator = '>'
+      else if data.subkey == "max"
+        tolerance.rule.operator = '<'
     if data.value
       tolerance.rule.value = data.value
 
