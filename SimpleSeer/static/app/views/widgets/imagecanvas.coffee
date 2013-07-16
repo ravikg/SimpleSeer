@@ -41,11 +41,12 @@ module.exports = class ImageCanvas extends SubView
     if @options.stealth then @hideMarkup()
     @image = @$("img")
     @image.load =>
-      @image.attr("data-w", @image.get(0).width)
-      @image.attr("data-h", @image.get(0).height)
-      @loaded = true
-      @image.show()
-      @afterLoad()
+      if @image.get(0)?
+        @image.attr("data-w", @image.get(0).width)
+        @image.attr("data-h", @image.get(0).height)
+        @loaded = true
+        @image.show()
+        @afterLoad()
 
   _process: =>
     if !@processing?
