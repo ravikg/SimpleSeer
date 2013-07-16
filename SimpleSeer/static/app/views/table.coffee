@@ -108,6 +108,8 @@ module.exports = class Table extends SubView
         @sortDirection = 'asc'
       else
         @sortDirection = 'desc'
+    if @options.sortType?
+      @sortType = @options.sortType
     if @options.tableKey?
       @tableKey = @options.tableKey
     if @options.editable?
@@ -152,7 +154,7 @@ module.exports = class Table extends SubView
       if model? then model.attributes = data.data
       else @collection.add(data.data, {at: 0})
     @updateData()
-    @render()
+    #@render()
 
   emptyData: =>
     if @emptyCollection
@@ -388,50 +390,77 @@ module.exports = class Table extends SubView
     return false
 
   sortByColumn:(e, set) =>
-    key = $(e.currentTarget).data('key')
-    direction = $(e.currentTarget).attr('direction') || "desc"
-    if @lastSortKey and key != @lastSortKey
-      @showHidden = false
-    if key
-      @lastSortKey = key
-    k = @getSortKey(key)
-    if !set
-      @collection.setParam 'sortkey', k
-    @sortKey = key
-    if direction == "asc"
-      @collection.setParam 'sortorder', -1
-      @sortDirection = 'desc'
-      @direction = -1
-    else
-      @collection.setParam 'sortorder', 1
-      @sortDirection = 'asc'
-      @direction = 1
-    @cof = true
-    query = @collection.getParam 'query'
-    if @showHidden
-      if query.criteria
-        _.each query.criteria, (criteria, id) =>
-          if criteria.isset
-            delete(query.criteria[id])
-      query.criteria = _.compact(query.criteria)
-      @collection.setParam 'query', query
-      @collection.fetch({'filtered':true})
-    else
-      if query
+    if @sortType is 'collection'
+      key = $(e.currentTarget).data('key')
+      direction = $(e.currentTarget).attr('direction') || "desc"
+      if @lastSortKey and key != @lastSortKey
+        @showHidden = false
+      if key
+        @lastSortKey = key
+      k = @getSortKey(key)
+      if !set
+        @collection.setParam 'sortkey', k
+      @sortKey = key
+      if direction == "asc"
+        @collection.setParam 'sortorder', -1
+        @sortDirection = 'desc'
+        @direction = -1
+      else
+        @collection.setParam 'sortorder', 1
+        @sortDirection = 'asc'
+        @direction = 1
+      @cof = true
+      query = @collection.getParam 'query'
+      if @showHidden
         if query.criteria
           _.each query.criteria, (criteria, id) =>
             if criteria.isset
               delete(query.criteria[id])
-          query.criteria.push({"type":"frame","isset":1,"name":k})
-          query.criteria = _.compact(query.criteria)
+        query.criteria = _.compact(query.criteria)
+        @collection.setParam 'query', query
+        @collection.fetch({'filtered':true})
+      else
+        if query
+          if query.criteria
+            _.each query.criteria, (criteria, id) =>
+              if criteria.isset
+                delete(query.criteria[id])
+            query.criteria.push({"type":"frame","isset":1,"name":k})
+            query.criteria = _.compact(query.criteria)
+          else
+            query = {"logic":"and","criteria":[{"type":"frame","isset":1,"name":k}]}
+          @collection.setParam 'query', query
         else
           query = {"logic":"and","criteria":[{"type":"frame","isset":1,"name":k}]}
-        @collection.setParam 'query', query
+          @collection.setParam 'query', query
+        cquery = $.extend(true, {}, query);
+        @getEmptyCollection(k, cquery)
+    else if @sortType is 'js'
+      key = $(e.currentTarget).data('key')
+      direction = $(e.currentTarget).attr('direction') || "desc"
+      if key
+        @lastSortKey = key
+      @sortKey = key
+      k = @getSortKey(key)
+      if direction == "asc"
+        @sortDirection = 'desc'
+        @direction = -1
       else
-        query = {"logic":"and","criteria":[{"type":"frame","isset":1,"name":k}]}
-        @collection.setParam 'query', query
-      cquery = $.extend(true, {}, query);
-      @getEmptyCollection(k, cquery)
+        @sortDirection = 'asc'
+        @direction = 1
+      if @model
+        if @direction == 1
+          @collection.comparator = (@model) =>
+            String.fromCharCode.apply String, _.map(@model.get(k).split(""), (c) ->
+                c.charCodeAt() - 0xffff 
+              )
+        else if @direction == -1
+          @collection.comparator = (@model) =>
+            String.fromCharCode.apply String, _.map(@model.get(k).split(""), (c) ->
+                0xffff - c.charCodeAt()
+              )
+        @collection.sort()
+        @updateData()
 
   showHiddenEvent: (e) =>
     @showHidden = true
