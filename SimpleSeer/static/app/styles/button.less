@@ -1,0 +1,74 @@
+button {
+  display: inline-block;
+  margin-right: 3px;
+  padding: 3px 15px;
+  border-radius: 1px;
+  font-size: 12px;
+  font-family: "Open Sans";
+  line-height: 150%;
+  text-align: center;
+  cursor: pointer;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+
+  background: #fff;
+  border: 1px solid #888;
+  color: #333333;
+  box-shadow: 0 -27px 27px -19px rgba(0, 0, 0, 0.25) inset;
+  &:hover { box-shadow: 0 -20px 27px -19px rgba(0, 0, 0, 0.25) inset; }
+  &:active { box-shadow: 0 27px 27px -19px rgba(0, 0, 0, 0.25) inset; }
+}
+
+button[data-color=yellow] {
+  background-color: #FFFAC2;
+  border-color: #807C4F;
+  color: #464127;
+  box-shadow: inset 0px -27px 27px -19px #B1A970;
+  &:hover { box-shadow: inset 0px -20px 27px -19px #CCCC8A; }
+  &:active { box-shadow: inset 0px 27px 27px -19px #B6AE77; }
+}
+
+button[data-color=green] {
+  background-color: #C9FFC2;
+  border-color: #55804F;
+  color: #27462F;
+  box-shadow: inset 0px -27px 27px -19px #77B170;
+  &:hover { box-shadow: inset 0px -20px 27px -19px #92CC8A; }
+  &:active { box-shadow: inset 0px 27px 27px -19px #7EB677; }
+}
+
+button[data-color=red] {
+  background-color: #FFC2C2;
+  border-color: #804F4F;
+  color: #462727;
+  box-shadow: inset 0px -27px 27px -19px #B17070;
+  &:hover { box-shadow: inset 0px -20px 27px -19px #CC8A8A; }
+  &:active { box-shadow: inset 0px 27px 27px -19px #B67777; }
+}
+
+button[data-color=blue] {
+  background-color: #C2E4FF;
+  border-color: #4F7280;
+  color: #273546;
+  box-shadow: inset 0px -27px 27px -19px #709CB1;
+  &:hover { box-shadow: inset 0px -20px 27px -19px #8ABACC; }
+  &:active { box-shadow: inset 0px 27px 27px -19px #77A4B6; }
+}
+
+button.special {
+  position: relative;
+  padding-left: 25px;
+  padding-right: 9px;
+
+  div.badge {
+    width: 16px;
+    height: 16px;
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.22);
+    background-color: rgba(0, 0, 0, 0.13);
+    box-shadow: 0px 0px 1px 1px rgba(255, 255, 255, 0.19);
+
+    &.download { background-image: url("/img/seer/download_arrow.png"); }
+  }
+}
