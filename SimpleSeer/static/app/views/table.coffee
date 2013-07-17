@@ -33,14 +33,51 @@ module.exports = class Table extends SubView
   showHidden: false
   hasHidden: false
   noData: false
+  showHideCols: {}
+  showHideColsSelected: {}
   scrollElem: '#content #slides'
+  afterRenderCounter: 0
   viewid: "5089a6d31d41c855e4628fb0"
 
   events: =>
     "click th.sortable":"sortByColumn"
-    "change input":"changeCell"
     "click .showhidden .controlButton":"showHiddenEvent"
     "click .downloads .controlButton":"downloadData"
+    "click .show-hide-button":"showHideEvent"
+    "click .show-hide-checkbox":"showHideCheckboxEvent"
+
+  showHideEvent: (e) =>
+    box = $('.show-hide')
+    if box.is(":visible")
+      box.fadeOut(150)
+    else
+      box.fadeIn(150)
+
+  showHideCheckboxEvent: (e) =>
+    key = $(e.target).val()
+    checked = $(e.target).attr('checked') 
+    if checked
+      @showHideColsSelected[key] = 0
+    else
+      @showHideColsSelected[key] = 1
+    $("th[data-key=\"#{key}\"], td.#{key}").toggleClass('hidden')
+    if e.originalEvent?
+      $(window).resize()
+
+  initialize: =>
+    super()
+    # @Todo: Standardize and push this up the chain
+    @msie = $.browser.hasOwnProperty('msie')
+    @firefox = $.browser.hasOwnProperty('mozilla')
+
+    @rows = []
+    @getOptions()
+    @getCollection()
+    if @infiniteScrollEnabled
+      @on 'page', @infinitePage
+    #@scroll = $(@scrollElem)
+    if @persistentHeader
+      @on 'scroll', @scrollPage
 
   getColumnKeyByTitle: (title) =>
     key = null
@@ -61,6 +98,8 @@ module.exports = class Table extends SubView
   getOptions: =>
     if @options.persistentHeader?
       @persistentHeader = @options.persistentHeader
+    if @options.infiniteScroll?
+      @infiniteScrollEnabled = @options.infiniteScroll
     if @options.sortKey?
       @sortKey = @options.sortKey
     if @options.sortDirection?
@@ -69,6 +108,8 @@ module.exports = class Table extends SubView
         @sortDirection = 'asc'
       else
         @sortDirection = 'desc'
+    if @options.sortType?
+      @sortType = @options.sortType
     if @options.tableKey?
       @tableKey = @options.tableKey
     if @options.editable?
@@ -86,6 +127,9 @@ module.exports = class Table extends SubView
       @_model = require "models/frame"
       @_url = "api/frame"
 
+  getCollectionExtras: =>
+    return
+
   getCollection: =>
     bindFilter = Application.context[@options.parent.dashboard.options.parent.options.context].filtercollection
     @collection = new @_collection([],{bindFilter:bindFilter,model:@_model,clearOnFetch:@cof,url:@_url,viewid:@viewid})
@@ -93,9 +137,24 @@ module.exports = class Table extends SubView
       @collection.setParam 'sortkey', @getSortKey(@sortKey)
       @collection.setParam 'sortorder', @direction
       @collection.setParam 'limit', @limit
+    @getCollectionExtras()
+    @collection.subscribePath = "frameupdate"
+    @collection.subscribe(false,@receive)
+    @collection.subscribePath = "framedelete"
+    @collection.subscribe(false,@receive)
     @collection.on('reset',@updateData)
     @collection.fetch()
     @subscribe()
+
+  receive: (data) =>
+    poo = @collection.where({id: data.data.id})[0]
+    if data.channel == "framedelete/"
+      if model? then @collection.remove(model)
+    if data.channel == "frameupdate/"
+      if model? then model.attributes = data.data
+      else @collection.add(data.data, {at: 0})
+    @updateData()
+    #@render()
 
   emptyData: =>
     if @emptyCollection
@@ -124,7 +183,7 @@ module.exports = class Table extends SubView
         _.each cquery.criteria, (criteria, id) =>
           if criteria.isset
             cquery.criteria[id].isset = 0
-      else 
+      else
         cquery = {"logic":"and","criteria":[{"type":"frame","isset":0,"name":key}]}
 
       @emptyCollection.setParam 'query', cquery
@@ -140,20 +199,6 @@ module.exports = class Table extends SubView
         if !application.subscriptions["Chart/#{namePath}"]
           #console.info "subscribing to: #{@subscribePath}/#{namePath}"
           application.subscriptions["Chart/#{namePath}"] = application.socket.emit 'subscribe', "Chart/#{namePath}"
-
-  initialize: =>
-    super()
-    # @Todo: Standardize and push this up the chain
-    @msie = $.browser.hasOwnProperty('msie')
-    @firefox = $.browser.hasOwnProperty('mozilla')
-
-    @rows = []
-    @getOptions()
-    @getCollection()
-    @on 'page', @infinitePage
-    @scroll = $(@scrollElem)
-    if @persistentHeader
-      @on 'scroll', @scrollPage
 
   getRenderData: =>
     classes: @tableClasses
@@ -209,7 +254,7 @@ module.exports = class Table extends SubView
   # Returns the tableCol given a key
   getTableCol: (cols, key) =>
     col = null
-    _.each cols, (a, b) =>  
+    _.each cols, (a, b) =>
       if a.key == key
         col = a
     return col
@@ -243,7 +288,7 @@ module.exports = class Table extends SubView
               $.each args, (k, v) =>
                 html += k + '="' + v + '" '
               html += "/>"
-        else 
+        else
           col = tableCol
           if col.editable # Sub column is editable
             value = ''
@@ -303,6 +348,7 @@ module.exports = class Table extends SubView
   renderRow:(row) =>
     values = []
     classes = if row.classes then row.classes else {}
+    titles = if row.titles then row.titles else {}
     id = if row.id then row.id else ''
 
     _.each @tableCols, (v, k) =>
@@ -310,9 +356,12 @@ module.exports = class Table extends SubView
       val = row[v.key]
       value = @renderCell(val, key)
       cls = v.key
+      title = ""
       if classes and classes[key]
         cls += ' ' + classes[key]
-      values.push {'class' : cls, 'value' : value}
+      if titles and titles[key]
+        title = titles[key]
+      values.push {'class' : cls, 'value' : value, 'title' : title}
 
     return {id: row.id, values: values}
 
@@ -341,50 +390,77 @@ module.exports = class Table extends SubView
     return false
 
   sortByColumn:(e, set) =>
-    key = $(e.currentTarget).data('key')
-    direction = $(e.currentTarget).attr('direction') || "desc"
-    if @lastSortKey and key != @lastSortKey
-      @showHidden = false
-    if key
-      @lastSortKey = key
-    k = @getSortKey(key)
-    if !set
-      @collection.setParam 'sortkey', k
-    @sortKey = key
-    if direction == "asc"
-      @collection.setParam 'sortorder', -1
-      @sortDirection = 'desc'
-      @direction = -1
-    else
-      @collection.setParam 'sortorder', 1
-      @sortDirection = 'asc'
-      @direction = 1
-    @cof = true
-    query = @collection.getParam 'query'
-    if @showHidden
-      if query.criteria
-        _.each query.criteria, (criteria, id) =>
-          if criteria.isset
-            delete(query.criteria[id])
-      query.criteria = _.compact(query.criteria)
-      @collection.setParam 'query', query
-      @collection.fetch({'filtered':true})
-    else
-      if query
+    if @sortType is 'collection'
+      key = $(e.currentTarget).data('key')
+      direction = $(e.currentTarget).attr('direction') || "desc"
+      if @lastSortKey and key != @lastSortKey
+        @showHidden = false
+      if key
+        @lastSortKey = key
+      k = @getSortKey(key)
+      if !set
+        @collection.setParam 'sortkey', k
+      @sortKey = key
+      if direction == "asc"
+        @collection.setParam 'sortorder', -1
+        @sortDirection = 'desc'
+        @direction = -1
+      else
+        @collection.setParam 'sortorder', 1
+        @sortDirection = 'asc'
+        @direction = 1
+      @cof = true
+      query = @collection.getParam 'query'
+      if @showHidden
         if query.criteria
           _.each query.criteria, (criteria, id) =>
             if criteria.isset
               delete(query.criteria[id])
-          query.criteria.push({"type":"frame","isset":1,"name":k})
-          query.criteria = _.compact(query.criteria)
-        else 
-          query = {"logic":"and","criteria":[{"type":"frame","isset":1,"name":k}]}
+        query.criteria = _.compact(query.criteria)
         @collection.setParam 'query', query
+        @collection.fetch({'filtered':true})
       else
-        query = {"logic":"and","criteria":[{"type":"frame","isset":1,"name":k}]}
-        @collection.setParam 'query', query
-      cquery = $.extend(true, {}, query);
-      @getEmptyCollection(k, cquery)
+        if query
+          if query.criteria
+            _.each query.criteria, (criteria, id) =>
+              if criteria.isset
+                delete(query.criteria[id])
+            query.criteria.push({"type":"frame","isset":1,"name":k})
+            query.criteria = _.compact(query.criteria)
+          else
+            query = {"logic":"and","criteria":[{"type":"frame","isset":1,"name":k}]}
+          @collection.setParam 'query', query
+        else
+          query = {"logic":"and","criteria":[{"type":"frame","isset":1,"name":k}]}
+          @collection.setParam 'query', query
+        cquery = $.extend(true, {}, query);
+        @getEmptyCollection(k, cquery)
+    else if @sortType is 'js'
+      key = $(e.currentTarget).data('key')
+      direction = $(e.currentTarget).attr('direction') || "desc"
+      if key
+        @lastSortKey = key
+      @sortKey = key
+      k = @getSortKey(key)
+      if direction == "asc"
+        @sortDirection = 'desc'
+        @direction = -1
+      else
+        @sortDirection = 'asc'
+        @direction = 1
+      if @model
+        if @direction == 1
+          @collection.comparator = (@model) =>
+            String.fromCharCode.apply String, _.map(@model.get(k).split(""), (c) ->
+                c.charCodeAt() - 0xffff 
+              )
+        else if @direction == -1
+          @collection.comparator = (@model) =>
+            String.fromCharCode.apply String, _.map(@model.get(k).split(""), (c) ->
+                0xffff - c.charCodeAt()
+              )
+        @collection.sort()
+        @updateData()
 
   showHiddenEvent: (e) =>
     @showHidden = true
@@ -400,9 +476,6 @@ module.exports = class Table extends SubView
 
   formatData:(data) =>
     return data
-
-  render: =>
-    super()
 
   updateData: =>
     if @cof == true
@@ -423,8 +496,10 @@ module.exports = class Table extends SubView
     else
       @noData = false
     if @collection and @collection.models
-      @tableData = @collection.models
-    data = @formatData(@tableData)
+      data = @formatData @collection.models
+    else
+      data = @formatData @tableData
+    @data = data
     if !@noData
       _.each data, (model) =>
         @insertRow(model, @insertDirection)
@@ -435,6 +510,30 @@ module.exports = class Table extends SubView
       @left = undefined
       @collection.setParam('skip', (@collection.getParam('skip') + @limit))
       @collection.fetch()
+    return    
+
+  updateShowHide: =>
+
+    keys = {}
+
+    @$("table.table.static thead th").each (i, o)->
+      keys[$(o).data('key')] = 0
+
+    for row in @data
+      for key,value of keys
+        if row[key]
+          delete keys[key]
+
+    #i = 1
+    #for k,v of keys
+    #  total = $("table.table.static td:nth-child(#{i})").length
+    #  empty = $("table.table.static td:nth-child(#{i}):empty").length
+    #  if total == empty
+    #    keys[k] = 1
+    #  i++
+
+    for k,v of keys
+      $("input#show-hide-#{k}").click()
 
   updateHeader: =>
     if @persistentHeader
@@ -446,7 +545,7 @@ module.exports = class Table extends SubView
       @table = @$(".table.static")
       @controls = @table.hasClass('controls')
 
-      # Some extra nudging 
+      # Some extra nudging
       extras = {'w':0, 'h':0, 't':0, 'l':0}
       if @controls
         extras.w = 4
@@ -457,10 +556,11 @@ module.exports = class Table extends SubView
       @hider = @$('.hider')
 
       @hider.width(@static.width() + 12)
-      @head.width(@static.width() + 1)
+      @head.width(@static.width() + 1).css('top', 68)
       @hider.css('left', @head.offset().left - 10)
 
       key = undefined
+      last = undefined
       w = undefined
       _.each @static.find('.th'), (column) =>
         col = $(column)
@@ -473,12 +573,18 @@ module.exports = class Table extends SubView
         ppadright = parseInt(p.css('padding-right'), 10)
         w = pwidth + ppadleft + ppadright + 1 + extras.w
         h = col.height() + extras.h
-        @floater.find(".th[data-key=#{key}]").css('width', w).css('height', h)
+        if col.is(":visible")
+          last = key
+        @floater.find(".th[data-key=#{key}]").css('width', w).css('height', h - 2)
 
-      @floater.find(".th[data-key=#{key}]").css('width', w - 2)
-      @table.css('position', 'relative').css('top', @head.height() - @floater.height() + extras.t)
+      if last
+        item = @floater.find(".th[data-key=#{last}]")
+        item.css('width', item.width() - 1)
+      @table.css('position', 'relative').css('top', 36)
 
   afterRender: =>
+
+    @afterRenderCounter++
 
     @$el.find(".th[data-key=#{@sortKey}]")
       .removeClass("sort-asc sort-desc")
@@ -488,6 +594,8 @@ module.exports = class Table extends SubView
     if !@scroll
       @scroll = $(@scrollElem)
 
+    if @afterRenderCounter >= 2
+      @updateShowHide()
     @updateHeader()
     @scrollPage(0)
 
@@ -499,7 +607,7 @@ module.exports = class Table extends SubView
     # Shows the row if there is no data
     if @noData
       cols = @tableCols.length
-      $(".table.static tbody").prepend('<tr><td class="td showhidden" colspan="'+cols+'">There was no data. Try expanding your filters.</td></tr>')
+      $(".table.static tbody").prepend('<tr><td class="td showhidden" colspan="'+cols+'">No data to display. Try expanding your filters.</td></tr>')
 
   reflow: =>
     super()
@@ -525,7 +633,8 @@ module.exports = class Table extends SubView
         @head.removeClass('shadow')
 
   scrollPage: (per) =>
-    if !@scroll
-      @scroll = $(@scrollElem)
-    @scrollLeft(per)
-    @scrollDown(per)
+    if @persistentHeader
+      if !@scroll
+        @scroll = $(@scrollElem)
+      @scrollLeft(per)
+      @scrollDown(per)

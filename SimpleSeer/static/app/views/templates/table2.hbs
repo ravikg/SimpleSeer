@@ -3,7 +3,18 @@
 {{#if header}}
   {{{header}}}
 {{/if}}
-<table class="{{classes}} static">
+<div class="show-hide">
+  <h2>Show / Hide Columns</h2>
+  <hr>
+  <div class="items">
+  {{#each cols}}
+    <div class="item">
+      <input type="checkbox" id="show-hide-{{this.key}}" name="show-hide-{{this.key}}" value="{{this.key}}" class="show-hide-checkbox" checked/><label for="show-hide-{{this.key}}">{{this.title}}</label>
+    </div>
+  {{/each}}
+  </div>
+</div>
+<table class="{{classes}} static" style="border-width: 0px 1px !important;">
     <thead class="thead">
 	   {{#each cols}}
 	       <th class="th {{#if this.sortable}}sortable{{/if}}" title="{{this.title}}" data-key="{{this.key}}">

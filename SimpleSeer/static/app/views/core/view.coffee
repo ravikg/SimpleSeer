@@ -3,14 +3,22 @@
 
 # Main application reference
 application = require 'application'
-
 module.exports = class View extends Backbone.View
   subviews: {}
   events: {}
+  #keyBindings:
+  #  "alt+ctrl+shift+73":"keyfireTest"
+  #  "73":"keyfireTest"
   firstRender:true
+
+  #keyfireTest:(e) =>
+  #  console.log "keyfire!"
+  #  console.log e
 
   initialize: (options={}) =>
     super()
+    #application._keyBindings
+
 
     if @options.context?
       # Load any context attached to view
@@ -20,6 +28,24 @@ module.exports = class View extends Backbone.View
       application.loadContext(@options.context)
     #@on "uiFocus", @focus
     @subviews = {}
+
+  _bindKeys: =>
+    id = if typeof @id == "function" then @id() else @id
+
+    if id and @keyBindings
+      for i,o of @keyBindings
+        key = 0
+        for _key in i.split("+")
+          if _key == "alt" or _key == "ctrl" or _key == "shift"
+            key += application._keyCodes[_key]
+          else
+            key += "_" + _key
+        if !application._keyBindings[key]?
+          application._keyBindings[key] = {}
+        if !application._keyBindings[key][id]?
+          application._keyBindings[key][id] = []
+        if @[o] not in application._keyBindings[key][id]
+          application._keyBindings[key][id].push @[o]
 
   _setScroll: (el=@$el) =>
     el.infiniteScroll
@@ -69,6 +95,9 @@ module.exports = class View extends Backbone.View
         application.subscriptions[channel] = application.socket.emit('subscribe', channel)
       application.socket.on("message:#{channel}", handler)
 
+  socketPublish:(channel, data) =>
+    application.socket.emit("publish", channel, data)
+
   #### Transition is way to call a method with a transition in and out.
   # > __callback__ : Function to call between __in__ and __out__ effects
   #
@@ -93,6 +122,7 @@ module.exports = class View extends Backbone.View
 
   # Renders view using effects if defined
   render: =>
+    @_bindKeys()
     #console.log 'render'
     callback = =>
       @$el.html @template @getRenderData()

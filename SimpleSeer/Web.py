@@ -21,8 +21,9 @@ DEBUG = True
 
 log = logging.getLogger(__name__)
 
-def make_app():
+def make_app(*args,**kwargs):
     settings = Session()
+    settings.set_config("test",kwargs.get('test',None))
     tpath = path("{0}/{1}".format(settings.get_config()['web']['static']['/'], '../templates')).abspath()
     print "Setting template path to {0}".format(tpath)
     template_folder=tpath

@@ -41,11 +41,12 @@ module.exports = class ImageCanvas extends SubView
     if @options.stealth then @hideMarkup()
     @image = @$("img")
     @image.load =>
-      @image.attr("data-w", @image.get(0).width)
-      @image.attr("data-h", @image.get(0).height)
-      @loaded = true
-      @image.show()
-      @afterLoad()
+      if @image.get(0)?
+        @image.attr("data-w", @image.get(0).width)
+        @image.attr("data-h", @image.get(0).height)
+        @loaded = true
+        @image.show()
+        @afterLoad()
 
   _process: =>
     if !@processing?
@@ -110,7 +111,10 @@ module.exports = class ImageCanvas extends SubView
     [w1, h1] = [@image.width(), @image.height()]
     @_process()
     @processing.size w, h
-    @processing.scale w1 / @options.model.get("width")
+    if @model
+      @processing.scale w1 / @model.get("width")
+    else
+      @processing.scale w1 / @image.attr "data-w"
     @processing.background 0, 0
     engine(@processing, @options, [w1, h1])
 
@@ -131,3 +135,8 @@ module.exports = class ImageCanvas extends SubView
     @options.feature = feature
     @afterLoad()
 
+  setImage:(image) =>
+    @loaded = false
+    @processing = undefined
+    @options.image = image
+    @render()

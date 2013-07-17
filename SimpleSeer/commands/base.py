@@ -16,10 +16,10 @@ class Command(object):
     def configure(self, options):
         self.options = options
         if self.use_gevent:
-            import gevent_zeromq
+            #import gevent_zeromq
             from gevent import monkey
             monkey.patch_all()
-            gevent_zeromq.monkey_patch()
+            #gevent_zeromq.monkey_patch()
         # These imports need to happen *after* monkey patching
         from SimpleSeer.Session import Session
         from SimpleSeer import models as M

@@ -27,14 +27,14 @@ module.exports = class FilterCollection extends Collection
     groupfns:{}
   # `url` is the path to the restful filter object
   url:"/getFrames"
-  # `subscribePath` is the channel the `subscribe` method (websocket/pubsub) uses to listen for events 
+  # `subscribePath` is the channel the `subscribe` method (websocket/pubsub) uses to listen for events
   subscribePath:"Frame"
-  # if `mute` is true, altering the query params will not fire a request to the server.  This is typically used for parent level filtercollections that have other filtercollection bound to it  
+  # if `mute` is true, altering the query params will not fire a request to the server.  This is typically used for parent level filtercollections that have other filtercollection bound to it
   mute:false
   # if clearOnFetch is true, the filtercollection will clear its models list for every request (page by page, or changing filters).
   # if clearOnFetch is false, the filtercollection will retain its models list, and add newly fetched values on to its stack (endless scroll pagination)
   clearOnFetch:true
-  
+
   #initialize / constructor
   initialize: (models,params) =>
     # Create callback stack for functions to be called before and after a fetch
@@ -43,13 +43,13 @@ module.exports = class FilterCollection extends Collection
     @callbackStack['pre'] = []
 
     # [The mute param](#section-5 "jump to mute examples")
-    if params.mute?
+    if params?.mute?
       @mute = params.mute
-    
+
     # The clearOnFetch param:
     # true: (default) clears collection on fetch.
     # false: retains data in collection (for pagination)
-    if params.clearOnFetch?
+    if params?.clearOnFetch?
       @clearOnFetch = params.clearOnFetch
 
     # init bound collections in private space
@@ -59,13 +59,13 @@ module.exports = class FilterCollection extends Collection
     @_sortParams = _.clone @_defaults
 
     super(models,params)
-    
-    if params.viewid?
+
+    if params?.viewid?
       olap = require 'models/OLAP'
       @dataview = new olap({id:params.viewid})
       @dataview.fetch({async:false})
       params.url = "chart/data/#{@dataview.get('id')}"
-    
+
     # ###bindFilter:
     #   An instance of FilterCollection that when changed, bubbles the filter
     #   up through all bound filters.
@@ -74,7 +74,7 @@ module.exports = class FilterCollection extends Collection
     #   > 5 other FilterCollections bound to the initial instance.
     #   > when you change the initial FilterCollection, all others
     #   > refresh with filter settings
-    if params.bindFilter
+    if params?.bindFilter
       #@bindTo params.bindFilter.subCollection
       params.bindFilter.subCollection @
       @bindFilter = params.bindFilter
@@ -82,7 +82,7 @@ module.exports = class FilterCollection extends Collection
       @_sortParams = @bindFilter.getSettings()
     else
       @bindFilter = false
-    
+
     # Set baseUrl off of default url.  url is changed, baseUrl remains root url
     if params.url?
       @_url = params.url
@@ -90,7 +90,7 @@ module.exports = class FilterCollection extends Collection
     else
       @baseUrl = @url
     @_lastUrl = ''
-    
+
     # Load filter widgets
     # TODO: make these collections
     if !@filters?
@@ -104,7 +104,7 @@ module.exports = class FilterCollection extends Collection
     collection.subCollection @
     @bindFilter = collection
     #@bindFilter
-    @_sortParams = @bindFilter.getSettings()    
+    @_sortParams = @bindFilter.getSettings()
 
   # Add sub collection
   subCollection: (collection) =>
@@ -142,11 +142,11 @@ module.exports = class FilterCollection extends Collection
       at = (@models.length)
     @add _obj, {at:at}
     return _obj
-    
+
   # Set sort param.  Bubble up through bound FiltersCollections
   setParam: (key,val) =>
     if key != "skip"
-      @resetParam("skip") 
+      @resetParam("skip")
     @_sortParams[key] = val
     for o in @_boundCollections
       o.setParam key, val
@@ -172,7 +172,7 @@ module.exports = class FilterCollection extends Collection
   # Get filter library from application
   loadFilter: (name) ->
     application.filters[name]
-  
+
   # Get bound filters and mix-in bound FilterCollection filters
   getFilters: () =>
     _filters = @filters
@@ -188,7 +188,7 @@ module.exports = class FilterCollection extends Collection
         @setParam('sortorder', sortorder)
         @setParam('sorttype', sorttype)
     return
-  
+
   # builds a query based on all bound filter widgets
   alterFilters:() =>
     criteria = []
@@ -201,8 +201,8 @@ module.exports = class FilterCollection extends Collection
       _json = {logic:'and',criteria:criteria}
     @setParam 'query', _json
     return
-  
-  #returns prepared object for query  
+
+  #returns prepared object for query
   getSettings: (total=false, addParams) =>
     if total
       skip = 0
@@ -217,7 +217,7 @@ module.exports = class FilterCollection extends Collection
         type: @getParam 'sorttype', ''
         name: @getParam 'sortkey', 'capturetime_epoch'
         order: @getParam 'sortorder'
-        
+
     if limit != false
       if @dataview?
         _json['limit'] = skip + limit
@@ -228,8 +228,8 @@ module.exports = class FilterCollection extends Collection
     if addParams
       _json = _.extend _json, addParams
     return _json
-  
-  # gets url with full db query  
+
+  # gets url with full db query
   # TODO: map .error to params.error
   getUrl: (total=false, addParams, dataSet=false)=>
     if !dataSet
@@ -238,7 +238,7 @@ module.exports = class FilterCollection extends Collection
       dataSet.sortinfo.name = encodeURIComponent dataSet.sortinfo.name
     "/"+JSON.stringify dataSet
 
-  # trigger fired before the fetch method makes request to server 
+  # trigger fired before the fetch method makes request to server
   preFetch:(params)=>
     if params.modal and !@mute
       application.modal.show(params.modal)
@@ -249,8 +249,8 @@ module.exports = class FilterCollection extends Collection
         o()
     @callbackStack['pre'] = []
     return
-  
-  # trigger fired after the fetch method makes request to server 
+
+  # trigger fired after the fetch method makes request to server
   postFetch:()=>
     application.modal.onSuccess()
     if !@clearOnFetch
@@ -284,7 +284,7 @@ module.exports = class FilterCollection extends Collection
         #console.log "resetting: ",_skip,_limit
         @setParam('skip',_skip)
         @setParam('limit',_limit)
-      
+
     @fetch({force:true,filtered:true,modal:false,success:callback})
 
   setRaw: (response) =>
@@ -312,7 +312,7 @@ module.exports = class FilterCollection extends Collection
     total = params.total || false
     _url = @baseUrl+@getUrl(total,params['params']||false)
     for o in @_boundCollections
-      #TODO: TRACE WHERE THIS DAMN PARAM IS COMING FROM 
+      #TODO: TRACE WHERE THIS DAMN PARAM IS COMING FROM
       delete params.success
       o.fetch(params)
     if !@mute
@@ -328,7 +328,7 @@ module.exports = class FilterCollection extends Collection
         super(params)
       else if params.success
         params.success()
-  
+
   # parses data returned by `fetch`.  (after `preFetch` and `fetch`, but before `postFetch`)
   parse: (response) =>
     # check for new olap request
