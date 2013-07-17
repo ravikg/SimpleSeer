@@ -42,7 +42,7 @@ module.exports = class Table extends SubView
   events: =>
     "click th.sortable":"sortByColumn"
     "click .showhidden .controlButton":"showHiddenEvent"
-    "click .downloads .controlButton":"downloadData"
+    "click .downloads button":"downloadData"
     "click .show-hide-button":"showHideEvent"
     "click .show-hide-checkbox":"showHideCheckboxEvent"
 
@@ -55,7 +55,7 @@ module.exports = class Table extends SubView
 
   showHideCheckboxEvent: (e) =>
     key = $(e.target).val()
-    checked = $(e.target).attr('checked') 
+    checked = $(e.target).attr('checked')
     if checked
       @showHideColsSelected[key] = 0
     else
@@ -452,7 +452,7 @@ module.exports = class Table extends SubView
         if @direction == 1
           @collection.comparator = (@model) =>
             String.fromCharCode.apply String, _.map(@model.get(k).split(""), (c) ->
-                c.charCodeAt() - 0xffff 
+                c.charCodeAt() - 0xffff
               )
         else if @direction == -1
           @collection.comparator = (@model) =>
@@ -510,7 +510,7 @@ module.exports = class Table extends SubView
       @left = undefined
       @collection.setParam('skip', (@collection.getParam('skip') + @limit))
       @collection.fetch()
-    return    
+    return
 
   updateShowHide: =>
 
