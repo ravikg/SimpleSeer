@@ -32,7 +32,7 @@ class ChannelManager(object):
         while True:
             try:
                 return amqp.Connection(host=self._config.rabbitmq)
-            except Exception as e:
+            except (socket.error, IOError) as e:
                 log.warn('Socket connection error: {}.  Waiting {} seconds.'.format(e, self.socketRetryWait))
                 sleep(self.socketRetryWait)
         

@@ -491,6 +491,8 @@ class ImportImagesCommand(Command):
         else:
             frame.camera = "File"
         
+        frame.localtz = self.session.cameras[0].get('timezone', 'UTC')
+        
         frame.metadata.update(metadata)
         frame.image = Image(filename)
         
