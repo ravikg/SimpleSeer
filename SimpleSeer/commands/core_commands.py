@@ -201,6 +201,8 @@ class ScrubCommand(Command):
     use_gevent = False
     def __init__(self, subparser):
         subparser.add_argument("-t", "--thumbnails", dest="thumbnails", default=False, action="store_true")
+        subparser.add_argument("-o", "--orphans", dest="orphans", default=False, action="store_true")
+
         
     def run(self):
         from SimpleSeer.realtime import ChannelManager
@@ -214,6 +216,32 @@ class ScrubCommand(Command):
                 f.thumbnail_file.delete()
                 f.thumbnail_file = None
                 f.save(publish = False)
+            return
+        
+        if self.options.orphans:
+            self.log.info("Scrubbing orphaned gridfs file objects")
+            db = M.Frame._get_db()
+            import gridfs
+            fs = gridfs.GridFS(db)
+            fileids = db.fs.files.find(fields = ['_id'])
+            thumbnails = db.frame.find(fields = ['thumbnail_file'])
+            images = db.frame.find(fields = ['imgfile'])
+            
+            parented = {}
+            for t in thumbnails:
+                parented[t['thumbnail_file']] = 1
+            
+            for i in images:
+                parented[i['imgfile']] = 1
+            
+            deletedfiles = 0
+            for f in fileids:
+                if not parented.get(f['_id'], False):
+                    #delete the orphan
+                    fs.delete(f['_id'])
+                    deletedfiles += 1
+            
+            self.log.info("Deleted {} orphaned files".format(deletedfiles))
             return
         
         

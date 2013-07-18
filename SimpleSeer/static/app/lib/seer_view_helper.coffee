@@ -191,6 +191,7 @@ Handlebars.registerHelper "resultlist", (results, blacklist) ->
     for result in results
       unless ~blacklist.fields.indexOf(result.measurement_name)
         value = result.numeric or ""
+        value = value or result.string
         unless value is undefined
           obj = result.mmm
           label = "#{obj.get('label')}"

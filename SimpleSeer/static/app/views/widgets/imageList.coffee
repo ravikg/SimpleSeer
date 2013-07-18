@@ -24,7 +24,8 @@ module.exports = class imageList extends SubView
     #@filtercollection.fetch success: @render
     @filtercollection.on("reset",@render)
     @filtercollection.fetch()
-    @filtercollection.subscribe('frame',@receive)
+    @filtercollection.subscribePath = 'frame'
+    @filtercollection.subscribe('',@receive)
     @on "page", @loadMore
 
     return @
@@ -39,7 +40,7 @@ module.exports = class imageList extends SubView
     @render()
     
   receive: (data) =>
-    #@filtercollection.add data.data
+    @filtercollection.add data.data, {at:0}
     @render()
 
   getRenderData: =>
