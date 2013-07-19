@@ -167,7 +167,7 @@ Handlebars.registerHelper "log", (value) ->
   console.log "Handlebars Log: ", value
   return new Handlebars.SafeString ""
 
-Handlebars.registerHelper "resultlist", (results, blacklist) ->
+Handlebars.registerHelper "resultlist", (results, blacklist,text="No Results") ->
   tpl = ""
 
   r = 0
@@ -176,7 +176,7 @@ Handlebars.registerHelper "resultlist", (results, blacklist) ->
       r++
 
   if !results or results.length is 0 or !r
-    tpl += "<div data-use=\"no-results\" class=\"centered\">No Results</div>"
+    tpl += "<div data-use=\"no-results\" class=\"centered\">#{text}</div>"
   else
 
     results.map  ((item) => item.mmm = SimpleSeer.measurements.where({name:item.measurement_name})[0])
