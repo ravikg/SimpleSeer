@@ -38,6 +38,7 @@ module.exports = class Table extends SubView
   scrollElem: '#content #slides'
   afterRenderCounter: 0
   viewid: "5089a6d31d41c855e4628fb0"
+  noRender: false
 
   events: =>
     "click th.sortable":"sortByColumn"

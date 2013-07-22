@@ -50,7 +50,9 @@ class Session():
         if not self.procname:
             self.procname = procname
     
-        self.appname = self.get_app_name('.')
+        #self.appname = self.get_app_name('.')
+
+        self.appname = self.database
         self._known_triggers = {}
     
     @staticmethod
