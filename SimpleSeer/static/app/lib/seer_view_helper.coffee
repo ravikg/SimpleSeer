@@ -52,6 +52,9 @@ Handlebars.registerHelper "nl2br", (text) ->
   nl2br = (text + "").replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, "$1" + "<br>" + "$2")
   new Handlebars.SafeString(nl2br)
 
+Handlebars.registerHelper "raw", (text) ->
+  new Handlebars.SafeString(text)
+
 Handlebars.registerHelper 'epoch', (epoch) ->
   d = new Date parseInt epoch * 1000
 
@@ -229,3 +232,34 @@ Handlebars.registerHelper "tolstate", (results) ->
     return "fail"
   else
     return "pass"
+
+Handlebars.registerHelper "formbuilder", (form) ->
+  str = ""
+  for element in form
+    str += "<div>"
+    switch element.type
+      when "text"
+        str += "<label>#{element.label}:</label>"
+        str += "<input type=\"text\" data-key=\"#{element.id}\" value=\"#{element.value or ''}\">"
+      when "password"
+        str += "<label>#{element.label}:</label>"
+        str += "<input type=\"password\" data-key=\"#{element.id}\" value=\"#{element.value or ''}\">"
+      when "textarea"
+        str += "<label>#{element.label}:</label><br>"
+        str += "<textarea data-key=\"#{element.id}\">#{element.value or ''}</textarea>"
+      when "radio"
+        str += "<label>#{element.label}:</label><br>"
+        for option in element.values
+          str += "<input type=\"radio\" name=\"#{element.id}\" data-key=\"#{element.id}\" value=\"#{option.value}\"> #{option.name}<br>"
+      when "checkbox"
+        str += "<label>#{element.label}:</label><br>"
+        for option in element.values
+          str += "<input type=\"checkbox\" name=\"#{element.id}\" data-key=\"#{element.id}\" value=\"#{option.value}\"> #{option.name}<br>"
+      when "select"
+        str += "<label>#{element.label}:</label><br>"
+        str += "<select data-key=\"#{element.id}\" #{if element.multiple then "multiple=\"multiple\"" else ""}>"
+        for option in element.values
+          str += "<option value=\"#{option.value}\">#{option.name}</option>"
+        str += "</select>"
+    str += "</div>"
+  return new Handlebars.SafeString str

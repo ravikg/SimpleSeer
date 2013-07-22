@@ -252,7 +252,7 @@ module.exports = class FilterCollection extends Collection
 
   # trigger fired after the fetch method makes request to server
   postFetch:()=>
-    application.modal.onSuccess()
+    application.modal.clear()
     if !@clearOnFetch
       if @getParam('sortorder') == -1
         at = 0
