@@ -206,8 +206,6 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
         from .Frame import Frame
         from .Alert import Alert
         from ..realtime import ChannelManager
-    
-        return
         
         #NJO, we shouldn't be doing this, but we need something to trigger
         #and our REST stuff is a little too static
