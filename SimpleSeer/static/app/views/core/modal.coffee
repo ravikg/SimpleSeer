@@ -45,6 +45,10 @@ module.exports = class Modal extends View
     @render()
     @$el.fadeIn(120).parents("#modal").addClass("visible")
 
+  afterRender: =>
+    if @options.form
+      $(@$(".form input[type=text]").get(0)).focus()
+
   clear: =>
     @$el.fadeOut(120).parents("#modal").removeClass("visible")
     @reset()
