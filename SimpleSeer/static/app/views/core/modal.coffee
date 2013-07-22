@@ -10,10 +10,6 @@ module.exports = class Modal extends View
   className: "modal-body"
   template: Template
   options: {}
-  defaults:
-    submitText: "OK"
-    cancelText: "Cancel"
-    gutter: false
   callbacks:
     submit: []
     cancel: []
@@ -27,21 +23,21 @@ module.exports = class Modal extends View
     super()
 
   getRenderData: =>
-    options: _.extend @defaults, @options
+    options: @options
 
   reset: =>
-    for i of @_callbacks
-      @_callbacks[i] = []
+    for i of @callbacks
+      @callbacks[i] = []
 
-  addCallback: (type, fn) =>
+  addCallback: (type, func) =>
     if @callbacks[type]? and typeof func == 'function'
       @callbacks[type].push func
     return
 
   show:(options={}) =>
+    @reset()
     if !options.gutter? and options.submitText? or options.cancelText?
-      # Display buttons if text is specified
-      options.gutter = true
+      options.gutter = true # Display buttons if text is specified
     @options = options
     for i in ['submit','cancel']
       if options[i]?
@@ -56,22 +52,40 @@ module.exports = class Modal extends View
   getFormValues: =>
     values = {}
     for item in @options.form
-      values[item.id] = @$(".form *[data-key=#{item.id}]").val()
+      if item.type is "text" or item.type is "password"
+        values[item.id] = @$(".form *[data-key=#{item.id}]").val()
+      if item.type is "textarea"
+        values[item.id] = @$(".form *[data-key=#{item.id}]").html()
+      if item.type is "radio"
+        values[item.id] = @$(".form *[data-key=#{item.id}]:checked").val()
+      if item.type is "select"
+        if item.multiple is true
+          items = @$(".form *[data-key=#{item.id}] option:selected")
+          values[item.id] = []
+          for box in items
+            values[item.id].push $(box).val()
+        else
+          values[item.id] = @$(".form *[data-key=#{item.id}] option:selected").val()
+      if item.type is "checkbox"
+        items = @$(".form *[data-key=#{item.id}]:checked")
+        values[item.id] = []
+        for box in items
+          values[item.id].push $(box).val()
     return values
 
   handleSubmit: =>
-    console.log @getFormValues()
+    callbacks = _.clone @callbacks
     @clear()
-    for i in @callbacks['submit']
-      i()
+    for i in callbacks['submit']
+      i(@getFormValues())
 
   handleCancel: =>
+    callbacks = _.clone @callbacks
     @clear()
-    for i in @callbacks['cancel']
+    for i in callbacks['cancel']
       i()
 
-  onSuccess: =>
-
-  onCancel: =>
+  onSuccess: => @clear()
+  onCancel: => @clear()
 
 

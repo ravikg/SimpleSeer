@@ -66,17 +66,18 @@ module.exports = class Yaml extends SubView
   firstTimeModal: =>
     Application.modal.show
       title: "Willkommen!"
-      message: "Hey there, just wanted to let you know this is your first time building this application :)"
-      okMessage: 'Continue'
+      message: "<p class=\"center\">Hey there, just wanted to let you know this is your first time building this application :)</p>"
+      submitText: 'Continue'
+      cancelText: 'Cancel'
       throbber: false
       success: (options) => return
 
   editValue: (locArray) =>
     Application.modal.show
       title: "Edit Value"
-      okMessage: 'Save'
-      cancelMessage: 'Cancel'
-      inputMessage: 'New value'
+      submitText: 'Save'
+      cancelText: 'Cancel'
+      form: [{id: "value", type: "text", label: "Value"}]
       throbber: false
       success: (options) => @updateValue(options, locArray)
 
@@ -117,10 +118,12 @@ module.exports = class Yaml extends SubView
   addValue: (locArray) =>
     Application.modal.show
       title: "Add Value"
-      okMessage: 'Save'
-      cancelMessage: 'Cancel'
-      keyMessage: 'Key'
-      inputMessage: 'Value'
+      submitText: 'Save'
+      cancelText: 'Cancel'
+      form: [
+        {id: "key", type: "text", label: "Key"},
+        {id: "value", type: "text", label: "Value"}
+      ]
       throbber: false
       success: (options) => @insertValue(options, locArray)
 
