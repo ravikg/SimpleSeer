@@ -1,4 +1,6 @@
-.modal-body{
+#modal {
+
+  #simpleseer-modal {
     height: 100%;
     left: 0;
     position: fixed;
@@ -6,9 +8,9 @@
     width: 100%;
     background: rgba(0,0,0,0.5);
     z-index:10000;
-}
+  }
 
-#throbberBody{
+  #modal-body{
     background: #fff;
     border-radius: 2px;
     box-shadow: 0px 8px 28px rgba(0, 0, 0, 0.5);
@@ -18,42 +20,66 @@
     position: fixed;
     top: 50%;
     width: 45%;
-    padding: 15px;
 
     .title {
-        margin-top: -5px;
-        text-align: center;
-        border-bottom: 1px solid #CCC;
-        padding-bottom: 10px;
-        margin-bottom: 8px;
+      text-align: center;
+      border-bottom: 1px solid #CCC;
+      padding: 10px 0;
     }
 
-    .message { margin-top: 20px; }
-    .large { font-size: 20px; }
+    .message { margin: 10px 0; }
+    .large { font-size: 20px; padding: 10px; }
     .center { text-align: center; }
     input { width: 100%; margin-top:5px; }
-    button { margin-top:5px; float:right; }
+
+    .form {
+      border: 1px solid #bdbdbd;
+      padding: 10px 10%;
+      margin-top: 10px;
+      background: #EEE;
+      border-width: 1px 0;
+
+      & + .gutter { border-top: none; margin-top: 0; }
+    }
+
+    .gutter {
+      height: 46px;
+      margin-top: 10px;
+      padding: 10px;
+      border-top: 1px solid #CCC;
+      button { float: right; margin-right: 0px; margin-left: 5px; }
+    }
+
+    .throbber {
+      text-align: center;
+      padding: 10px;
+
+      &.hidden + .message {
+        padding-top: 0px;
+        margin-top: 0px;
+      }
+    }
+
+    .testPassed {
+      background: #00ff00;
+      color: #ffffff;
+      padding:4px;
+    }
+
+    .testFailed {
+      background: #ff0000;
+      color: #ffffff;
+      padding:4px;
+    }
+  }
 }
 
-.testPassed {
-  background: #00ff00;
-  color: #ffffff;
-  padding:4px;
+#effects {
+  -webkit-transition: all 300ms;
+  -webkit-filter: blur(0px);
 }
 
-.testFailed {
-  background: #ff0000;
-  color: #ffffff;
-  padding:4px;
-}
-
-.ok-button.capture {
-  display: block;
-  margin: 5px auto;
-  width: 120px;
-}
-
-#throbberGraphic.hidden + .message {
-  padding-top: 0px;
-  margin-top: 0px;
+#modal.visible + #effects {
+  -webkit-transition: all 300ms;
+  -webkit-filter: blur(2px);
 }

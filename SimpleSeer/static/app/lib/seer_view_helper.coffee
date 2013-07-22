@@ -52,6 +52,9 @@ Handlebars.registerHelper "nl2br", (text) ->
   nl2br = (text + "").replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, "$1" + "<br>" + "$2")
   new Handlebars.SafeString(nl2br)
 
+Handlebars.registerHelper "raw", (text) ->
+  new Handlebars.SafeString(text)
+
 Handlebars.registerHelper 'epoch', (epoch) ->
   d = new Date parseInt epoch * 1000
 
@@ -229,3 +232,15 @@ Handlebars.registerHelper "tolstate", (results) ->
     return "fail"
   else
     return "pass"
+
+Handlebars.registerHelper "formbuilder", (form) ->
+  str = ""
+  for element in form
+    switch element.type
+      when "text"
+        str += "<label>#{element.label}</label>"
+        str += "<input type=\"text\" data-key=\"#{element.id}\" value=\"#{element.value or ''}\">"
+      when "password"
+        str += "<label>#{element.label}</label>"
+        str += "<input type=\"password\" data-key=\"#{element.id}\" value=\"#{element.value or ''}\">"
+  return new Handlebars.SafeString str
