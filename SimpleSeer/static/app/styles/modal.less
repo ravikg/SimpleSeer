@@ -8,7 +8,6 @@
     width: 100%;
     background: rgba(0,0,0,0.5);
     z-index:10000;
-    overflow: hidden;
   }
 
   #modal-body{
@@ -21,6 +20,7 @@
     position: fixed;
     top: 30%;
     width: 45%;
+    overflow: hidden;
 
     .title {
       text-align: center;
@@ -52,7 +52,11 @@
 
       & + .gutter { border-top: none; margin-top: 0; }
 
-      label { color: #333; }
+      label {
+        color: #333;
+
+        span { color: red; font-style: italic; }
+      }
 
       input[type=text],
       input[type=password],
@@ -98,6 +102,7 @@
       padding: 5px;
       width: 200px;
       border-radius: 2px;
+      margin-bottom: 5px;
 
       &.testPassed {
         background: #A6EBA6;
