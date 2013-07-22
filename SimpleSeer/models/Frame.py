@@ -227,6 +227,7 @@ class Frame(SimpleDoc, mongoengine.Document):
         
     def save(self, *args, **kwargs):
         from .Inspection import Inspection
+        from .Measurement import Measurement
         
         #TODO: sometimes we want a frame with no image data, basically at this
         #point we're trusting that if that were the case we won't call .image
@@ -258,6 +259,10 @@ class Frame(SimpleDoc, mongoengine.Document):
         if 'publish' in kwargs:
             publish = kwargs.pop('publish')
         
+        for m in Measurement.objects:
+            m.tolerance(self, self.results)
+        
+
         super(Frame, self).save(*args, **kwargs)
         
         if newFrame and Session().framebuffer:
