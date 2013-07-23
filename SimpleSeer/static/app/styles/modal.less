@@ -54,7 +54,7 @@
 
       label {
         color: #333;
-
+        font-family: "OpenSansBold";
         span { color: red; font-style: italic; }
       }
 
@@ -62,14 +62,21 @@
       input[type=password],
       select,
       textarea {
+        color: #333;
         width: 100%;
         margin-top: 3px;
         margin-bottom: 5px;
-        border-color: #BDBDBD !important;
+        border-color: #BDBDBD;
+        font-family: "OpenSansBold";
       }
 
       input[type=radio], input[type=checkbox] {
         margin-left: 10px;
+      }
+
+      .invalid {
+        border-color: #C58181 !important;
+        background: #FFE0E0;
       }
     }
 
@@ -117,10 +124,6 @@
   }
 }
 
-/*#effects {
-  -webkit-filter: blur(0px);
-}
-
 #modal.visible + #effects {
-  -webkit-filter: blur(1px);
-}*/
+  -webkit-filter: grayscale(1);
+}
