@@ -55,13 +55,18 @@ module.exports = class Modal extends View
 
   getFormValues: =>
     values = {}
+
     for item in @options.form
+
       if item.type is "text" or item.type is "password"
         values[item.id] = @$(".form *[data-key=#{item.id}]").val()
+
       if item.type is "textarea"
         values[item.id] = @$(".form *[data-key=#{item.id}]").html()
+
       if item.type is "radio"
         values[item.id] = @$(".form *[data-key=#{item.id}]:checked").val()
+
       if item.type is "select"
         if item.multiple is true
           items = @$(".form *[data-key=#{item.id}] option:selected")
@@ -70,18 +75,24 @@ module.exports = class Modal extends View
             values[item.id].push $(box).val()
         else
           values[item.id] = @$(".form *[data-key=#{item.id}] option:selected").val()
+
       if item.type is "checkbox"
         items = @$(".form *[data-key=#{item.id}]:checked")
         values[item.id] = []
         for box in items
           values[item.id].push $(box).val()
+
     return values
 
   handleSubmit: =>
     callbacks = _.clone @callbacks
     @clear()
     for i in callbacks['submit']
-      i(@getFormValues())
+      vals = @getFormValues()
+      if vals is false
+        # Show errors
+      else
+        i(vals)
 
   handleCancel: =>
     callbacks = _.clone @callbacks
