@@ -97,7 +97,7 @@ module.exports = class Modal extends View
       callbacks = _.clone @callbacks
       @clear()
       for i in callbacks['submit']
-        i(valus)
+        i(values)
 
   handleCancel: =>
     callbacks = _.clone @callbacks
