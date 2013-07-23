@@ -55,18 +55,14 @@ module.exports = class Modal extends View
 
   getFormValues: =>
     values = {}
-
+    errors = []
     for item in @options.form
-
       if item.type is "text" or item.type is "password"
         values[item.id] = @$(".form *[data-key=#{item.id}]").val()
-
       if item.type is "textarea"
         values[item.id] = @$(".form *[data-key=#{item.id}]").html()
-
       if item.type is "radio"
         values[item.id] = @$(".form *[data-key=#{item.id}]:checked").val()
-
       if item.type is "select"
         if item.multiple is true
           items = @$(".form *[data-key=#{item.id}] option:selected")
@@ -75,24 +71,33 @@ module.exports = class Modal extends View
             values[item.id].push $(box).val()
         else
           values[item.id] = @$(".form *[data-key=#{item.id}] option:selected").val()
-
       if item.type is "checkbox"
         items = @$(".form *[data-key=#{item.id}]:checked")
         values[item.id] = []
         for box in items
           values[item.id].push $(box).val()
+      if item.required is true and (!values[item.id]? or values[item.id] is "")
+        errors.push item.id
+    return [values, errors]
 
-    return values
+  displayValidationErrors:(errors) =>
+    @$(".form .invalid").removeClass("invalid")
+    for item in errors
+      item = (_.where @options.form, {id: item})?[0]
+      if item.type is "text" or item.type is "password"
+        el = @$(".form *[data-key=#{item.id}]")
+        el.addClass("invalid")
+        el.focus()
 
   handleSubmit: =>
-    callbacks = _.clone @callbacks
-    @clear()
-    for i in callbacks['submit']
-      vals = @getFormValues()
-      if vals is false
-        # Show errors
-      else
-        i(vals)
+    [values, errors] = @getFormValues()
+    if errors.length
+      @displayValidationErrors(errors)
+    else
+      callbacks = _.clone @callbacks
+      @clear()
+      for i in callbacks['submit']
+        i(valus)
 
   handleCancel: =>
     callbacks = _.clone @callbacks
