@@ -1,30 +1,84 @@
 #### views.coffee is the base class for all views
 # - - -
 
-# Main application reference 
+# Main application reference
 application = require 'application'
-
 module.exports = class View extends Backbone.View
   subviews: {}
   events: {}
+  #keyBindings:
+  #  "alt+ctrl+shift+73":"keyfireTest"
+  #  "73":"keyfireTest"
   firstRender:true
 
-    
+  #keyfireTest:(e) =>
+  #  console.log "keyfire!"
+  #  console.log e
+
   initialize: (options={}) =>
     super()
-    if options.context?
-      # Load any context attached to view  
-      # For further details, see:  
-      # _SeerCloud/_ `models/core/context`  
+    #application._keyBindings
+
+
+    if @options.context?
+      # Load any context attached to view
+      # For further details, see:
+      # _SeerCloud/_ `models/core/context`
       # _SimpleSeer/_ `seer_application`
-      application.loadContext(options.context)
+      application.loadContext(@options.context)
+    #@on "uiFocus", @focus
     @subviews = {}
 
-  focus: =>
-    if !@$el.is(":visible")
-      @$el.show()
-    if @options.context
-      application.context[@options.context].activate()
+  _bindKeys: =>
+    id = if typeof @id == "function" then @id() else @id
+
+    if id and @keyBindings
+      for i,o of @keyBindings
+        key = 0
+        for _key in i.split("+")
+          if _key == "alt" or _key == "ctrl" or _key == "shift"
+            key += application._keyCodes[_key]
+          else
+            key += "_" + _key
+        if !application._keyBindings[key]?
+          application._keyBindings[key] = {}
+        if !application._keyBindings[key][id]?
+          application._keyBindings[key][id] = []
+        if @[o] not in application._keyBindings[key][id]
+          application._keyBindings[key][id].push @[o]
+
+  _setScroll: (el=@$el) =>
+    el.infiniteScroll
+      onScroll:(per) => @trigger('scroll', per)
+      #onPage: => @trigger('page')
+
+  focus:(back=false) =>
+    #console.info 'in focus'
+    #if !back and !@$el.is(":visible")
+    #  @$el.show()
+    if application.loading
+      #console.log 'loading...'
+      if @options.context
+        if back
+          application.loading = false
+        #console.log 'ACTIVATING CONTEXT!', @options.context
+        application.context[@options.context].activate()
+        back = false
+      else
+        back = true
+      if !back
+        for i,o of @subviews
+          o.focus()
+      else
+        if @options.parent?
+          @options.parent.focus(true)
+
+  unfocus: =>
+    #if @$el.is(":visible")
+    #  @$el.hide()
+    for i,o of @subviews
+      o.unfocus()
+
 
   # Override in child class.  Returns template handlebars function
   template: =>
@@ -41,21 +95,24 @@ module.exports = class View extends Backbone.View
         application.subscriptions[channel] = application.socket.emit('subscribe', channel)
       application.socket.on("message:#{channel}", handler)
 
-  #### Transition is way to call a method with a transition in and out.  
+  socketPublish:(channel, data) =>
+    application.socket.emit("publish", channel, data)
+
+  #### Transition is way to call a method with a transition in and out.
   # > __callback__ : Function to call between __in__ and __out__ effects
-  # 
-  # Valid translations are:  
-  # blind, bounce, clip, drop, explode, fade, fold, highlight, puff, pulsate, scale, shake, size, slide, transfer  
-  # __Example__:  
-  # effect:  
-  # &nbsp; callback: @myCallback  
-  # &nbsp; out:  
-  # &nbsp; &nbsp; type: 'slide'  
-  # &nbsp; &nbsp; options: { direction: "right" }  
-  # &nbsp; &nbsp; speed: 500  
-  # &nbsp; in:  
-  # &nbsp; &nbsp; type: 'slide'  
-  # &nbsp; &nbsp; options: { direction: "left" }  
+  #
+  # Valid translations are:
+  # blind, bounce, clip, drop, explode, fade, fold, highlight, puff, pulsate, scale, shake, size, slide, transfer
+  # __Example__:
+  # effect:
+  # &nbsp; callback: @myCallback
+  # &nbsp; out:
+  # &nbsp; &nbsp; type: 'slide'
+  # &nbsp; &nbsp; options: { direction: "right" }
+  # &nbsp; &nbsp; speed: 500
+  # &nbsp; in:
+  # &nbsp; &nbsp; type: 'slide'
+  # &nbsp; &nbsp; options: { direction: "left" }
   # &nbsp; &nbsp; speed: 500
   transition: (callback) =>
     @$el.hide @effect.out['type'], @effect.out['options'], @effect.out['speed'], =>
@@ -63,13 +120,25 @@ module.exports = class View extends Backbone.View
       @$el.show @effect.in['type'], @effect.in['options'], @effect.in['speed'], @effect['callback'] || => return
 
 
-  # Renders view using effects if defined 
+  # Renders view using effects if defined
   render: =>
+    @_bindKeys()
+    #console.log 'render'
     callback = =>
       @$el.html @template @getRenderData()
       @renderSubviews()
-      @focus()
+      #@focus()
+      #@trigger "uiFocus"
       @afterRender()
+      if @firstRender  && (@onScroll? || @onPage?)
+        _ele = @$el.find(@scrollElement)
+        if _ele.length == 0
+          _ele = @$el
+        @_setScroll(_ele)
+        if @onScroll?
+          @on "scroll", @onScroll
+        if @onPage?
+          @on "page", @onPage
       @firstRender = false
 
     if @effect? and !@firstRender and @$el.is(":visible")
@@ -92,6 +161,13 @@ module.exports = class View extends Backbone.View
     for name, subview of @subviews
       subview.render()
 
+  # Causes a chain reaction of reflows. Any place using this function
+  # needs to call super so that all sub-elements get a trigger as well
+  reflow: =>
+    for i,o of @subviews
+      o.reflow()
+    return
+
   # Adds a subview to the current view.
   #
   # -get rendered when the parent view is rendered
@@ -113,7 +189,7 @@ module.exports = class View extends Backbone.View
       parent:@
       selector:selector
     @subviews[name] = new viewClass(options)
-    
+
   # Recursively destroys subviews.  This is done automatically in `@remove`
   clearSubviews: =>
     for name, subview of @subviews

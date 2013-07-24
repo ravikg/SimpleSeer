@@ -63,7 +63,11 @@ def index():
       m.update(fHandler.read())
       MD5Hashes[baseUrl+f] = dict(path=m.hexdigest(),type=f.rsplit(".")[1])
       print MD5Hashes
-    return render_template("index.html",params = dict(MD5Hashes=MD5Hashes))    
+    return render_template("index.html",params = dict(MD5Hashes=MD5Hashes),settings=settings)    
+
+@route('/testing')
+def testing():
+    return render_template("testing.html", settings=settings)
 
 @route('/log/<type>', methods=['POST'])
 def jsLogger(type):
@@ -277,7 +281,7 @@ def thumbnail(frame_id):
     if not frame.thumbnail_file:
         t = frame.thumbnail
         if not "is_slave" in Session().mongo or not Session().mongo['is_slave']:
-            frame.save()
+            frame.save(publish = False)
         else:
             s = StringIO()
             t.save(s, "jpeg", quality = 75)

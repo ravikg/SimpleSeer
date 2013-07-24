@@ -16,7 +16,7 @@ from .Session import Session
 from path import path
 
 import pkg_resources
-    
+
 
 DEBUG = True
 
@@ -62,12 +62,13 @@ login_manager.refresh_view = "reauth"
 def load_user(id):
     return USERS.get(int(id))
 
-app = Flask(__name__)  
+app = Flask(__name__)
 DEBUG = True
 app.config.from_object(__name__)
 
-def make_app():
+def make_app(*args,**kwargs):
     settings = Session()
+    settings.set_config("test",kwargs.get('test',None))
     tpath = path("{0}/{1}".format(settings.get_config()['web']['static']['/'], '../templates')).abspath()
     print "Setting template path to {0}".format(tpath)
     template_folder=tpath
@@ -77,7 +78,7 @@ def make_app():
 
     app.secret_key = 'secretkey'
     login_manager.setup_app(app)
-      
+
     @app.teardown_request
     def teardown_request(exception):
         conn = mongoengine.connection.get_connection()
@@ -85,13 +86,13 @@ def make_app():
 
     views.route.register_routes(app)
     crud.register(app)
-    
+
     for ep in pkg_resources.iter_entry_points('seer.views'):
         mod = __import__(ep.module_name, globals(), locals(), [ep.name])
         getattr(mod, ep.attrs[0]).register_web(app)
-    
+
     return app
-        
+
 
 class WebServer(object):
     """
@@ -99,10 +100,10 @@ class WebServer(object):
     all it does is basically fire up a webserver to allow you
     to start interacting with Seer via a web interface
     """
-    
+
     web_interface = None
-    port = 8000 
-    
+    port = 8000
+
     def __init__(self, app):
         self.app = app
         session = Session()
@@ -124,5 +125,5 @@ class WebServer(object):
             policy_server=False)
         log.info('Web server running on %s:%s', self.host, self.port)
         server.serve_forever()
-        
+
 

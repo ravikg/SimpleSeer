@@ -384,7 +384,7 @@ class Filter():
         results = frame['results']
         newRes = []
         for r in results:
-            newRes.append(r['py/state'])
+            newRes.append(r)
         frame['results'] = newRes
         
         return frame
@@ -411,7 +411,7 @@ class Filter():
             tmpFrame = {'id': frame['id']}
             tmpFrame['capturetime_epoch'] = frame['capturetime_epoch']
             tmpFrame['capturetime'] = frame['capturetime']
-            tmpFrame['localtz'] = frame['localtz']
+            tmpFrame['localtz'] = frame.get('localtz', 'UTC')
             tmpFrame['camera'] = frame.get('camera', '')
         
             for filt in filters:

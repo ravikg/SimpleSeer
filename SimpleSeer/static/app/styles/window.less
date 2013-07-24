@@ -1,54 +1,53 @@
-@paneWidth: 239px;
+@paneWidth: 100%;
 
 .controlPane {
   display: none;
   cursor: default;
   position: relative;
-  top: 6px;
+  top: -1px;
   left: 34px;
   width: @paneWidth;
   height: auto;
   border: 1px solid #1B1C1E;
-  border-radius: 2px;
-  background: #999ca4;
+  background: #999;
   box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.4);
 
   &.showing {
     display: block;
-    width: 239px;
+    width: 240px;
   }
 
   &:before {
     position: absolute;
-    top: 4px;
+    top: 12px;
     left: -5px;
     z-index: 43;
     width: 5px;
     height: 10px;
-    background: url("../img/popout_arrow.png") no-repeat;
+    background: url("/img/seer/popout_arrow.png") no-repeat;
     content: " ";
   }
 
   .content {
     float: left;
-    width: @paneWidth - 2px;
+    width: 100%;
     height: auto;
     background: none;
-    .tab { width: @paneWidth - 2px; }
+    .tab { width: 100%; }
 
     /* Reset box model for chosen popups. */
     * {
       box-sizing: content-box;
       -moz-box-sizing: content-box;
     }
-  }  
+  }
 
   .bar {
     float: left;
-    width: @paneWidth - 2px;
+    width: @paneWidth;
     height: 21px;
-    box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.2), inset 0px -1px 0px rgba(0,0,0,.4);
-    background: url("../img/MT_666666.png") repeat;
+    box-shadow: inset 0px -1px 0px rgba(0,0,0,.4);
+    background: #666;
 
     .context {
       /* Drop-down in top right, not being
@@ -60,8 +59,8 @@
       height: 18px;
       margin-right: 4px;
       background:
-        url("../img/arrow_context_dropdown.png") no-repeat 1px 7px;
-    } 
+        url("/img/seer/arrow_context_dropdown.png") no-repeat 1px 7px;
+    }
 
     .tabs {
       display: inline-block;
@@ -74,42 +73,38 @@
         height: 100%;
         text-align: center;
         padding: 3px 11px 0px 7px;
-        font-size: 11px;
-        background: url("../img/MT_666666.png") repeat;
+        font-size: 12px;
+        color: #202020;
+        background: #666;
         border-right: 1px solid #1B1C1E;
         box-shadow: inset 0px 1px 0px rgba(255,255,255,0.4);
 
         -webkit-user-select: none;
         -moz-user-select: none;
-        -ms-user-select: none;     
+        -ms-user-select: none;
 
         &.active {
           cursor: default;
           padding: 4px 12px 0px 9px;
-          background:
-            /*url("../img/arrow_expand_v.png") no-repeat 5px 8px,*/
-            #999ca4;  
+          background: #999/*url("../img/arrow_expand_v.png") no-repeat 5px 8px,*/;
         }
 
         &.blue {
           box-shadow:
-            inset 0px 1px 0px #0090CD,
-            inset 0px 4px 0px #006B9D;
+            inset 0px 5px 0px #006B9D;
         }
 
         &.yellow {
           box-shadow:
-            inset 0px 1px 0px #C79800,
-            inset 0px 4px 0px #917100;
+            inset 0px 5px 0px #B67400;
         }
 
         &.red {
           box-shadow:
-            inset 0px 1px 0px #CB3500,
-            inset 0px 4px 0px #952500;
-        }     
-                       
+            inset 0px 5px 0px #952500;
+        }
+
       }
-    }    
+    }
   }
 }

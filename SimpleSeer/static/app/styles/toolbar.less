@@ -1,44 +1,58 @@
+.menu-widget {
+  padding:10px;
+  input {
+    width: 100%;
+  }
+  textarea {
+    width: 100%;
+  }
+}
+
 #toolbar {
   float: left;
   height: 100%;
   width: 32px;
-  background: url("../img/MT_666666.png") repeat;
-  box-shadow: 1px 0px 0px #000;
+  background: #666;
+  box-shadow: 1px 0px 0px #505050;
   z-index: 1;
-  position: relative;  
+  position: relative;
 
   #toolbar-toggle {
-    height: 21px; 
+    display: none;
+    height: 20px;
     cursor: pointer;
-    border-top: 1px solid #404040;
     border-bottom: 1px solid black;
-    background:
-      url("../img/arrow_expand_h_rev.png") no-repeat center center,
-      url("../img/MT_222222.png") repeat;
-  }   
+    background: #303030 url("/img/seer/arrow_expand_h_rev.png") no-repeat center center;
+  }
 
   .toolset {
+    .set.blue + .set.yellow,
+    .set.blue + .set.red,
+    .set.yellow + .set.red {
+      border-top: 5px solid #1B1C1E;
+    }
+
+    .set.blue + .set.red {
+      border-top: 5px solid #1B1C1E;
+    }
+
     .set {
-      background: #999ca4; 
-      border-top: 1px solid #B9BCC3;
+      background: #999;
       border-bottom: 1px solid #2c2d30;
+      display: block;
 
       &.blue {
-        border-top-color: #0090CD;
-        border-bottom: 4px solid #1B1C1E;
-        box-shadow: inset 0px 4px 0px #006B9D;
+        box-shadow: inset 0px 5px 0px #006B9D;
       }
 
       &.yellow {
-        border-top-color: #C79800;
-        box-shadow: inset 0px 4px 0px #917100;
+        box-shadow: inset 0px 5px 0px #B67400;
       }
 
       &.red {
-        border-top-color: #CB3500;
-        box-shadow: inset 0px 4px 0px #952500;
-      }        
-     
+        box-shadow: inset 0px 5px 0px #952500;
+      }
+
 
       &:first-child { border-top: 1px solid transparent; }
       &:last-child { border-bottom: 1px solid #2D2F32; margin-bottom: 0px; }
@@ -54,7 +68,7 @@
 
         &:first-child { border-top: none; }
         &:last-child { border-bottom: none; }
-        
+
         .shortcut {
           position: absolute;
           top: 0; left: 0;
@@ -68,23 +82,21 @@
           background: transparent no-repeat center center;
 
           img { cursor: pointer; }
-        }          
-      }      
-    }   
+        }
+      }
+    }
   }
 }
 
 #toolbar.expanded {
-  width: 237px;
+  width: 238px;
   overflow-y: auto;
-  overflow-x: hidden;  
+  overflow-x: hidden;
 
   #toolbar-toggle {
-    background:
-      url("../img/arrow_expand_h.png") no-repeat 225px center,
-      url("../img/MT_222222.png") repeat;  
+    background: #303030 url("/img/seer/arrow_expand_h.png") no-repeat 97% center;
   }
-  
+
   .toolset {
     .set {
       border-top: none;
@@ -99,24 +111,45 @@
         border-color: transparent;
 
         .shortcut { display: none; }
-      }      
+      }
     }
   }
-  
+
   .controlPane {
     display: block;
     left: 0px;
     top: 0px;
-    width: 237px;
+    /*width: 237px;*/
 
     border: none;
     border-radius: 0px;
     box-shadow: none;
-    
+
     &:before { background: none; }
   }
 }
 
 #toolbar.expanded + #content {
   padding-left: 238px;
+}
+
+#toolbar.expanded + .controlPane {
+  width: 234px;
+}
+
+.oneLine input[type=text] {
+  padding: 5px;
+  width: 100%;
+  height: 29px;
+  border-color: #777;
+  color: #000;
+  font-family: "Open Sans";
+  box-sizing: border-box !important;
+  -moz-box-sizing: border-box !important;
+  background-color: #FFF;
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, color-stop(1%, #EEE), color-stop(15%, #FFF));
+  background-image: -webkit-linear-gradient(top, #EEE 1%, #FFF 15%);
+  background-image: -moz-linear-gradient(top, #EEE 1%, #FFF 15%);
+  background-image: -o-linear-gradient(top, #EEE 1%, #FFF 15%);
+  background-image: linear-gradient(#EEE 1%, #FFF 15%);
 }

@@ -49,44 +49,11 @@ def ControlsCommand(self):
     if self.session.arduino:
        Controls(self.session).run()
 
-@Command.simple(use_gevent=True)
-def OlapCommand(self):
-    try:
-        from SeerCloud.OLAPUtils import ScheduledOLAP, RealtimeOLAP, OLAPData
-        from SeerCloud.backfill import MetaSchedule
-    except:
-        print 'Error starting OLAP schedules.  This requires Seer Cloud'
-        return 0
-    
-    from SimpleSeer.models.Inspection import Inspection, Measurement
-
-    try:
-        Inspection.register_plugins('seer.plugins.inspection')
-        Measurement.register_plugins('seer.plugins.measurement')
-
-        # The olap cache manager
-        od = OLAPData()
-        gevent.spawn_link_exception(od.listen)
-        
-        # Schedule olaps (olaps with stats)
-        so = ScheduledOLAP()
-        gevent.spawn_link_exception(so.runSked)
-        
-        # Backfill listener
-        ms = MetaSchedule()
-        gevent.spawn_link_exception(ms.run)
-        gevent.spawn_link_exception(ms.listen)
-        
-        ro = RealtimeOLAP()
-        ro.monitorRealtime()
-        
-    except KeyboardInterrupt as e:
-        print "Interrupted by user"
-
 class WebCommand(Command):
     
     def __init__(self, subparser):
         subparser.add_argument('--procname', default='web', help='give each process a name for tracking within session')
+        subparser.add_argument('--test', default=None, help='Run testing suite')
 
     def run(self):
         'Run the web server'
@@ -110,8 +77,7 @@ class WebCommand(Command):
             db.frame.ensure_index([('results.string', 1)])
         except:
             self.log.info('Could not create indexes')
-            
-        web = WebServer(make_app())
+        web = WebServer(make_app(test = self.options.test))
         
         from SimpleSeer.Backup import Backup
         Backup.importAll(None, False, True, True)
@@ -180,47 +146,152 @@ def OPCCommand(self):
         ChannelManager().publish('opc/', data)
         counter = tagcounter
 
-@Command.simple(use_gevent=False)
-def ScrubCommand(self):
-    from SimpleSeer.realtime import ChannelManager
-    
-    'Run the frame scrubber'
-    from SimpleSeer import models as M
-    retention = self.session.retention
-    if not retention:
-        self.log.info('No retention policy set, skipping cleanup')
-        return
-    while retention['interval']:
-        if not M.Frame._get_db().metaschedule.count():
-            q_csr = M.Frame.objects(imgfile__ne = None)
-            q_csr = q_csr.order_by('-capturetime')
-            q_csr = q_csr.skip(retention['maxframes'])
-            numframes = q_csr.count()
-            for f in q_csr:
-                # clean out the fs.files and .chunks
-                f.imgfile.delete()
-                f.imgfile = None
-        
-                if retention.get('purge',False):
-                    f.delete()
-                else:
-                    f.save(False)
-        
-            # Rebuild the cache
-            res = ChannelManager().rpcSendRequest('olap_req/', {'action': 'rebuild'})
-        
-            # This line of code needed to solve fragmentation bug in mongo
-            # Can run very slow when run on large collections
-            db = M.Frame._get_db()
-            if 'fs.files' in db.collection_names():
-                db.command({'compact': 'fs.files'})
-            if 'fs.chunks' in db.collection_names():
-                db.command({'compact': 'fs.chunks'})
-        
-            self.log.info('Purged %d frame files', numframes)
+class MaintenanceCommand(Command):
+
+    def __init__(self, subparser):
+        subparser.add_argument('--message', default=None, help='Message to show the user')
+        pass
+
+    def run(self):
+        'Run the maintenance web server'
+        from flask import request, make_response, Response, redirect, render_template, Flask
+        import flask
+        from SimpleSeer.Session import Session
+        from datetime import datetime
+
+        start_time = str(datetime.now().strftime("%B %d, %Y at %H:%M (EST)"))
+
+        print "Maintenance mode started at {0}".format(start_time)
+
+        yaml_config = Session.read_config()
+
+        pstring = yaml_config['web']['address'].split(":")
+        if len(pstring) is 2:
+            port = int(pstring[1])
         else:
-            self.log.info('Backfill running.  Waiting to scrub')
-        time.sleep(retention["interval"])
+            port = 5000
+        tpath = path("{0}/{1}".format(yaml_config['web']['static']['/'], '../templates')).abspath()
+        template_folder = tpath
+        app = Flask(__name__,template_folder=template_folder)
+
+        if self.options.message:
+            message = self.options.message
+        else:
+            message = ''
+
+        @app.route("/")
+        def maintenance():
+            return render_template("maintenance.html", params = dict(start_time=start_time, message=message))
+
+        @app.errorhandler(404)
+        def page_not_found(e):
+            return render_template('maintenance.html', params = dict(start_time=start_time, message=message))
+
+        @app.errorhandler(500)
+        def internal_server_error(e):
+            return render_template('maintenance.html', params = dict(start_time=start_time, message=message))
+        
+        try:
+            app.run(port=port)
+        except KeyboardInterrupt as e:
+            print "Interrupted by user"
+
+
+class ScrubCommand(Command):
+    use_gevent = False
+    def __init__(self, subparser):
+        subparser.add_argument("-t", "--thumbnails", dest="thumbnails", default=False, action="store_true")
+        subparser.add_argument("-o", "--orphans", dest="orphans", default=False, action="store_true")
+
+        
+    def run(self):
+        from SimpleSeer.realtime import ChannelManager
+        
+        'Run the frame scrubber'
+        from SimpleSeer import models as M
+        
+        if self.options.thumbnails:
+            self.log.info("Scrubbing cached thumbnails from Frame collection")
+            for f in M.Frame.objects(thumbnail_file__ne = None):
+                f.thumbnail_file.delete()
+                f.thumbnail_file = None
+                f.save(publish = False)
+            return
+        
+        if self.options.orphans:
+            self.log.info("Scrubbing orphaned gridfs file objects")
+            db = M.Frame._get_db()
+            import gridfs
+            fs = gridfs.GridFS(db)
+            fileids = db.fs.files.find(fields = ['_id'])
+            thumbnails = db.frame.find(fields = ['thumbnail_file'])
+            images = db.frame.find(fields = ['imgfile'])
+            
+            parented = {}
+            for t in thumbnails:
+                parented[t['thumbnail_file']] = 1
+            
+            for i in images:
+                parented[i['imgfile']] = 1
+            
+            deletedfiles = 0
+            for f in fileids:
+                if not parented.get(f['_id'], False):
+                    #delete the orphan
+                    fs.delete(f['_id'])
+                    deletedfiles += 1
+            
+            self.log.info("Deleted {} orphaned files".format(deletedfiles))
+            return
+        
+        
+        retention = self.session.retention
+        if not retention:
+            self.log.info('No retention policy set, skipping cleanup')
+            return
+            
+        first_capturetime = ''
+        while retention['interval']:
+            if not M.Frame._get_db().metaschedule.count():
+                q_csr = M.Frame.objects(imgfile__ne = None)
+                q_csr = q_csr.order_by('-capturetime')
+                q_csr = q_csr.skip(retention['maxframes'])
+                numframes = q_csr.count()
+                self.log.info("Preparing to scrub {} files".format(numframes))
+                index = 0
+                for f in q_csr:
+                    if not first_capturetime:
+                        first_capturetime = f.capturetime_epoch
+                    # clean out the fs.files and .chunks
+                    f.imgfile.delete()
+                    f.imgfile = None
+                    
+                    index += 1
+                    if retention.get('purge',False):
+                        f.delete(publish = False)
+                        if not index % 100:
+                            self.log.info("deleted {} frames".format(index))
+                    else:
+                        if not index % 100:
+                            self.log.info("deleted image from {} frames".format(index))
+                        f.save(False)
+            
+                # Rebuild the cache
+                if retention.get('purge', False):
+                    res = ChannelManager().rpcSendRequest('olap_req/', {'action': 'scrub', 'capturetime_epoch__lte': first_capturetime})
+            
+                # This line of code needed to solve fragmentation bug in mongo
+                # Can run very slow when run on large collections
+                db = M.Frame._get_db()
+                if 'fs.files' in db.collection_names():
+                    db.command({'compact': 'fs.files'})
+                if 'fs.chunks' in db.collection_names():
+                    db.command({'compact': 'fs.chunks'})
+            
+                self.log.info('Scrubbed %d frame files', numframes)
+            else:
+                self.log.info('Backfill in progress.  Waiting to scrub')
+            time.sleep(retention["interval"])
 
 @Command.simple(use_gevent=False)
 def ShellCommand(self):
@@ -246,10 +317,17 @@ class NotebookCommand(Command):
 
         
     def run(self):
+        from ..notebook import contextDict
         import subprocess
         import os, os.path
         if not os.path.exists(self.options.notebook_dir):
             os.makedirs(self.options.notebook_dir)
+        
+        # Since these errors will get swallowed by the ipython proc call, pre-test them:
+        try:
+            contextDict()
+        except Exception as e:
+            self.log.info('Error setting up notebook context: {}.  Continuting to load, but some globals will not be available.'.format(e))
         
         subprocess.call(["ipython", "notebook",
                 '--port', self.options.port,
@@ -413,6 +491,8 @@ class ImportImagesCommand(Command):
         else:
             frame.camera = "File"
         
+        frame.localtz = self.session.cameras[0].get('timezone', 'UTC')
+        
         frame.metadata.update(metadata)
         frame.image = Image(filename)
         
@@ -481,27 +561,3 @@ class ImportImagesCommand(Command):
             
             self.import_frame(f, metadata, template)
 
-class MRRCommand(Command):
-    # Measurement repeatability and reproducability
-    
-    def __init__(self, subparser):
-        subparser.add_argument("--filter", help="Frame filter query", default = '')
-        
-    def run(self):
-        from SeerCloud.Control import MeasurementRandR
-        from ast import literal_eval
-        mrr = MeasurementRandR()
-
-        query = []
-        if self.options.filter:
-            query = [literal_eval(self.options.filter)]
-
-        df, deg = mrr.getData(query)
-        repeat = mrr.repeatability(df, deg)
-        repro = mrr.reproducability(df, deg)
-
-        print '--- Repeatability ---'
-        print repeat.to_string()
-
-        print '--- Reproducability ---'
-        print repro.to_string()

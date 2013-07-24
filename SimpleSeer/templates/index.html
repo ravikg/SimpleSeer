@@ -6,71 +6,59 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="viewport" content="width=1200">
-    <script type="text/javascript">
-      cacheHashes = {{params.MD5Hashes|tojson|safe}}
-    </script>
+    <meta name="viewport" content="width=480">
+    <script type="text/javascript">cacheHashes = {{params.MD5Hashes|tojson|safe}}</script>
     {% for key, value in params.MD5Hashes.items() %}
       {%if value.type == "js"%}
-    <script type="text/javascript" src="{{key}}?v={{value.path}}"></script>
+        <script type="text/javascript" src="{{key}}?v={{value.path}}"></script>
       {%elif value.type == "css" %}
-    <link rel="stylesheet" href="{{key}}?v={{value.path}}">
+        <link rel="stylesheet" href="{{key}}?v={{value.path}}">
       {% endif %}
-    {% endfor %}  
-    <script type="text/javascript" src="/plugins.js"></script>
-    <style>
-    {% block style %}
-    {% endblock %}
-    </style>
+    {% endfor %}
+    <style>{% block style %}{% endblock %}</style>
     <script type="text/javascript">require('initialize');</script>
     <title>{% block title %}Sight Machine{% endblock %}</title>
   </head>
-  <body> 
+
+
+
+  <body>
+    {% block modal %}<div id="modal"></div>{% endblock %}
+    <div id="effects">
     {% block header %}
-  <header>
-      <nav>
-        <div class="left group">
-          <a class="brand" href="#"></a>
-          <div class="text"><div id="client-name"></div></div>
-        </div>
-  
-        <div id="systemTray" class="right group">
-          
-        </div>
-      </nav>
-  </header>
+      <header>
+          <nav>
+            <div class="left group">
+              <a class="brand" href="#"></a>
+              <div class="text">
+                <div id="client-name"></div>
+              </div>
+            </div>
+            <div id="systemTray" class="right group"></div>
+          </nav>
+      </header>
     {% endblock %}
 
     {% block content %}
       <section id="everything">
-        <section id="toolbar" class="expanded">
-        {% block left_toolbar %}
-        {% endblock %}
-        </section>
-      
+        <section id="toolbar" class="expanded">{% block left_toolbar %}{% endblock %}</section>
         <section id="content">
           <div id="slides">
-            <div id="main">
-            </div>
+            <div id="main"></div>
           </div>
         </section>
       </section>
-      
+
       <section id="controls">
-        {% block bottom_toolbar %}
-        {% endblock %}
+        {% block bottom_toolbar %}{% endblock %}
       </section>
     {% endblock %}
-    
+    </div>
+
     <!-- browser compatability check -->
-    <script type="text/javascript">setTimeout(function(){if(typeof SimpleSeer==="undefined"){$("#browser_fail").show()}else{$("#app_load").hide()}if($("#browser_fail").is(":visible")==true){$("#lost_connection, #app_load").hide()}},1e4)</script>
-    
+    <script type="text/javascript">setTimeout(function(){if(typeof SimpleSeer==="undefined"){$("#browser_fail").show()}else{$("#app_load").hide()}if($("#browser_fail").is(":visible")==true){$("#app_load").hide()}},1e4)</script>
+
     <!-- div where non-blocking pop-up messages are written.  Soon to be pushed in to modal logic, and removed. -->
     <div id="messages" class="span10 offset1"></div>
-    
-    {% block modal %}
-    <div id="modal"></div>
-    {% endblock %}
-    <div id="lost_connection" title="Error"></div>
   </body>
 </html>
