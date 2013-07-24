@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+
+{% block body %}
+  <body class="login">
+  <div id="login">
+    <div id="branding">
+      <a href="/"><img src="img/header_logo.png" width="200" height="66" border="0" alt="Sight Machine Logo"></a>
+    </div>
+    <form action="" method="POST">
+      <input id="user" name="username" type="text" placeholder="Username">
+      <input id="pass" name="password" type="password" placeholder="Password">
+      <div class="floater">Remember Me:<input type=checkbox name=remember value=yes></div>
+      <div class="floater"><input type="submit" value="Login"></div>
+    </form>
+    <div class="dividerLight"></div>
+    <div id="copyrightLight">© 2012 Sight Machine</div>
+  </div>
+  </body>
+{% endblock %}
