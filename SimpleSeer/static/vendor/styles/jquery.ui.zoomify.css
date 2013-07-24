@@ -1,68 +1,96 @@
 .ui-zoomify {
-  padding: 10px;
-  margin-bottom: 10px;
-  background: #f8f8f8;
-  border: 1px solid #bbb;
+  padding: 9px 8px;
   color: #000;
 }
 
 .ui-zoomify .window {
-  padding-bottom: 10px;
-  border-bottom: 1px solid #ccc;
+
 }
 
 .ui-zoomify .window .view {
+  overflow: hidden;
   padding: 0px;
   width: 100%;
   border: 1px solid #000;
   position: relative;
+  background: black;
   box-sizing: border-box;
   -moz-box-sizing: border-box;
 }
 
 .ui-zoomify .window .view .frame {
+  z-index: 1;
+  cursor: move;
   position: absolute;
   top: 0px;
   left: 0px;
   width: 100%;
   height: 100%;
-  border: 2px solid rgba(255,0,0,.9);
+  border: 2px solid rgba(0, 133, 255, .9);
   box-sizing: border-box;
   -moz-box-sizing: border-box;
-  background: rgba(255,0,0,.3);
-  z-index: 1;
+  background: rgba(0, 122, 255, .3);
+  box-shadow: 0px 0px 25px rgba(0, 0, 0, .6);
 }
 
 .ui-zoomify .window .view .display{
   position: absolute;
   top: 0;
   left: 0;
-  
   width: 100%;
   z-index: 0;
-}    
+}
 
 .ui-zoomify .settings {
-  padding-top: 9px;
+  padding-top: 8px;
   height: 23px;
 }
 
-.ui-zoomify .settings input {
-  font-size: 11px;
-  height: 12px;
+.ui-zoomify .settings input[type=text] {
+  margin-top: 1px;
+  font-size: 13px;
+  height: 11px;
   margin-bottom: 0;
-  padding: 5px;
-  width: 45px;  
+  padding: 3px 4px 5px 4px;
+  width: 45px;
+  border: 1px solid #5F5F5F;
+  border-radius: 2px;
+  color: #000;
+  font-family: Arial, sans-serif;
 }
 
 .ui-zoomify .settings .slider {
-  height: 8px;
-  float: right;
-  margin-right: 1px;
+  width: 140px !important;
+  height: 6px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: #727272;
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px #838383;
   margin-top: 7px;
+  border: 1px solid #383838;
 }
 
 .ui-zoomify .settings .slider .ui-slider-handle {
-  width: 15px;
-  height: 15px;
+  width: 6px;
+  height: 17px;
+  border: 1px solid #3F3F3F;
+  border-top-left-radius: 0px;
+  border-top-right-radius: 0px;
+  border-bottom-right-radius: 0px;
+  border-bottom-left-radius: 0px;
+  background-color: #D1D1D1;
+  top: -6px;
+  cursor: move;
+  border-radius: 1px;
+}
+
+.ui-zoomify .settings .sliderHolder {
+  float: right;
+  width: 143px;
+  height: 22px;
+}
+
+.ui-zoomify .settings .slider.mozilla {
+  margin-top: 1px;
 }

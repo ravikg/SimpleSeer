@@ -5,6 +5,7 @@ import logging
 import calendar
 from datetime import datetime
 from cStringIO import StringIO
+import hashlib
 
 import bson.json_util
 import gevent
@@ -16,7 +17,6 @@ import flask
 from . import models as M
 from . import util
 from .realtime import RealtimeNamespace, ChannelManager
-from .service import SeerProxy2
 from .Session import Session
 from .Filter import Filter
 
@@ -38,18 +38,6 @@ class route(object):
         for func, path, kwargs in cls.routes:
             app.route(path, **kwargs)(func)
 
-def fromJson(string):
-    from .base import jsondecode
-    from HTMLParser import HTMLParser
-    
-    # filter_params should be in the form of a json encoded dicts
-    # that probably was also html encoded 
-    p = HTMLParser()
-    string = str(p.unescape(string))
-    string = jsondecode(string)
-    return string
-
-
 @route('/socket.io/<path:path>')
 def sio(path):
     socketio_manage(
@@ -59,7 +47,23 @@ def sio(path):
     
 @route('/')
 def index():
-    return render_template("index.html",foo='bar')
+    files= ["javascripts/app.js","javascripts/vendor.js","stylesheets/app.css"]
+    baseUrl = ''
+    MD5Hashes = {}
+    settings = Session().get_config()
+    if settings.get('in_cdn',False):
+        baseUrl = "http://cdn.demo.sightmachine.com/"
+    for f in files:
+      fHandler = open("{0}/{1}".format(settings['web']['static']['/'],f), 'r')
+      m = hashlib.md5()
+      m.update(fHandler.read())
+      MD5Hashes[baseUrl+f] = dict(path=m.hexdigest(),type=f.rsplit(".")[1])
+      print MD5Hashes
+    return render_template("index.html",params = dict(MD5Hashes=MD5Hashes),settings=settings)    
+
+@route('/testing')
+def testing():
+    return render_template("testing.html", settings=settings)
 
 @route('/log/<type>', methods=['POST'])
 def jsLogger(type):
@@ -83,23 +87,55 @@ def getContext(name):
     
 @route('/plugins.js')
 def plugins():
-    seer = SeerProxy2()
-    result = []
-    for ptype, plugins in seer.plugins.items():
-        for name, plugin in plugins.items():
-            if 'coffeescript' in dir(plugin):
-                for requirement, cs in plugin.coffeescript():
-                    result.append('(function(plugin){')
-                    try:
-                        result.append(coffeescript.compile(cs, True))
-                    except Exception, e:
 
-                        print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-                        print "COFFEE SCRIPT ERROR"
-                        print e
-                        print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-                    result.append('}).call(require(%r), require("lib/plugin"));\n' % requirement)
-    resp = make_response("\n".join(result), 200)
+    useCache = False
+    if os.path.exists('./cached.js'):
+        cacheTime = os.path.getmtime('./cached.js')
+        
+        useCache = True
+        for ptype, plugins in util.all_plugins().items():
+            for name, plugin in plugins.items():
+                stem = plugin.__name__.split('.')[-1]
+                plugin_path = __import__(plugin.__module__).__file__
+                s = plugin_path.split('/')
+                plugin_path = plugin_path[0:len(plugin_path)-len(s[-1])] #pull of the filename
+                plugin_path = plugin_path + "plugins/"+stem+"/cs/"+stem #add the plugin name
+                mpath = plugin_path+"Inspection.coffee"
+                if os.path.exists(mpath):
+                    plugTime = os.path.getmtime(mpath)
+                    if plugTime > cacheTime:
+                        useCache = False
+    
+    if not useCache:
+        result = []
+        for ptype, plugins in util.all_plugins().items():
+            for name, plugin in plugins.items():
+                #print plugin.__name__, name
+                if 'coffeescript' in dir(plugin):
+                    for requirement, cs in plugin.coffeescript():
+                        #result.append('(function(plugin){')
+                        pluginType = requirement.split('/')[1]
+                        if True:
+                            result.append("window.require.define({{\"plugins/{0}/{1}\": function(exports, require, module) {{(function() {{".format(pluginType,name))
+                            try:
+                                result.append(coffeescript.compile(cs, True))
+                            except Exception, e:
+                                print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+                                print "COFFEE SCRIPT ERROR"
+                                print e
+                                print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+                            #result.append('}).call(require(%r), require("lib/plugin"));\n' % requirement)
+                            result.append("}).call(this);}});")
+        js = "\n".join(result)
+        f = open('./cached.js', 'w')
+        log.info('Writing new javascript cache')
+        f.write(js)
+    else:
+        f = open('./cached.js', 'r')
+        log.info('Reading javascript from cache')
+        js = f.read()
+        
+    resp = make_response(js, 200)
     resp.headers['Content-Type'] = "text/javascript"
     return resp
 
@@ -113,18 +149,6 @@ def test_json():
     return 'This is a test of the emergency broadcast system'
 
 
-@route('/frame', methods=['GET', 'POST'])
-def frame():
-    params = {
-        'index': -1,
-        'camera': 0,
-        }
-    params.update(request.values)
-    seer = SeerProxy2()
-    result = seer.get_image(**params)
-    resp = make_response(result['data'], 200)
-    resp.headers['Content-Type'] = result['content_type']
-    return resp
 
 @route('/frames', methods=['GET'])
 @util.jsonify
@@ -149,6 +173,7 @@ def frames():
 def getFrames(filter_params):
     from .base import jsondecode
     from HTMLParser import HTMLParser
+    from SeerCloud.OLAPUtils import OLAPFactory
     
     # filter_params should be in the form of a json encoded dicts
     # that probably was also html encoded 
@@ -157,20 +182,22 @@ def getFrames(filter_params):
     params = jsondecode(nohtml)
     
     skip = int(params.get('skip', 0))
-    limit = int(params.get('limit', 20))
-    
-    if 'sortinfo' in params:
-        sortinfo = params['sortinfo']
+    limit = params.get('limit', None)
+    if limit:
+        limit = int(limit)
     else:
-        sortinfo = {}
-        
+        log.info('No limit set.  Using 50k to prevent mongo errors')
+        limit = 50000
+    
+    sortinfo = params.get('sortinfo', {})
+    groupByField = params.get('groupByField',{})
     query = params['query']
     
     f = Filter()
-    #total_frames, frames = f.getFrames(f.negativeFilter(query), limit=limit, skip=skip, sortinfo=sortinfo)
-    total_frames, frames = f.getFrames(query, limit=limit, skip=skip, sortinfo=sortinfo)
+    total_frames, frames = f.getFrames(query, limit=limit, skip=skip, sortinfo=sortinfo, groupByField=groupByField)
+    #frames = OLAPFactory.filterToOLAP(query, limit=limit, skip=skip, sortinfo=sortinfo)
+    retVal = dict(frames=frames, total_frames=-1)
     
-    retVal = dict(frames=frames, total_frames=total_frames)
     
     if retVal:
         return retVal
@@ -250,7 +277,7 @@ def thumbnail(frame_id):
     if not frame.thumbnail_file:
         t = frame.thumbnail
         if not "is_slave" in Session().mongo or not Session().mongo['is_slave']:
-            frame.save()
+            frame.save(publish = False)
         else:
             s = StringIO()
             t.save(s, "jpeg", quality = 75)
@@ -262,253 +289,6 @@ def thumbnail(frame_id):
     resp.headers['Content-Type'] = frame.thumbnail_file.content_type
     return resp    
 
-
-@route('/latestimage-width<int:width>-camera<int:camera>.jpg', methods=['GET'])
-def latest_image(width=0, camera=0):
-    params = {
-        'width': width,
-        'index': -1,
-        'camera': camera,
-        }
-    params.update(request.values)
-
-    seer = SeerProxy2()
-    log.info('Getting latest image in greenlet %s', gevent.getcurrent())
-    img = seer.get_image(**params)
-    resp = make_response(img['data'], 200)
-    resp.headers['Content-Type'] = img['content_type']
-    resp.headers['Content-Length'] = len(img['data'])
-    return resp
-
-
-@route('/videofeed-width<int:width>-camera<int:camera>.mjpeg', methods=['GET'])
-def videofeed(width=0, camera=0):    
-    params = {
-        'width': width,
-        'index': -1,
-        'camera': camera,
-        }
-    params.update(request.values)
-    
-
-    seer = SeerProxy2()
-    log.info('Feeding video in greenlet %s', gevent.getcurrent())
-    def generate():        
-        socket = ChannelManager().subscribe("capture/")
-        
-        while True:
-            img = seer.get_image(**params)
-            yield '--BOUNDARYSTRING\r\n'
-            yield 'Content-Type: %s\r\n' % img['content_type']
-            yield 'Content-Length: %d\r\n' % len(img['data'])
-
-            yield '\r\n'
-            yield img['data']
-            yield '\r\n'
-            gevent.sleep(0)
-            socket.recv() #we actually ignore the message
-    return Response(
-        generate(),
-        headers=[
-            ('Connection', 'close'),
-            ('Max-Age', '0'),
-            ('Expires', '0'),
-            ('Cache-Control', 'no-cache, private'),
-            ('Pragma', 'no-cache'),
-            ('Content-Type',
-             "multipart/x-mixed-replace; boundary=--BOUNDARYSTRING") ])
-
-
-@route('/videofeed-width<int:width>.mjpeg', methods=['GET'])
-def videofeed_width_only(width=0):
-    return videofeed(width)
-
-@route('/videofeed-camera<int:camera>.mjpeg', methods=['GET'])
-def videofeed_camera_only(camera=0):
-    return videofeed(0,camera)
-
-@route('/videofeed.mjpeg', methods=['GET'])
-def videofeed_camera_res():
-    return videofeed()
-    
-
-@route('/frame_capture', methods=['GET', 'POST'])
-@util.jsonify
-def frame_capture():
-    seer = util.get_seer()
-    seer.capture()
-    seer.inspect()
-    seer.update()
-    return dict( capture = "ok" )
-
-@route('/frame_inspect', methods=['GET', 'POST'])
-@util.jsonify
-def frame_inspect():
-    seer = util.get_seer()
-    try:
-        seer.inspect()
-        seer.update()
-        return dict( inspect = "ok")
-    except:
-        return dict( inspect = "fail")
-
-@route('/histogram', methods=['GET', 'POST'])
-@util.jsonify
-def histogram():
-    params = dict(bins = 50, channel = '', focus = "",
-                  camera = 0, index = -1, frameid = '')
-    params.update(request.values.to_dict())
-    
-    frame = (util.get_seer().lastframes
-             [params['index']]
-             [params['camera']])
-    focus = params['focus']
-    if focus != "" and int(focus) < len(frame.features):
-        feature = frame.features[int(focus)].feature
-        feature.image = frame.image
-        img = feature.crop()
-    else:
-        img = frame.image
-
-    bins = params['bins']
-    return img.histogram(bins)
-
-
-@route('/inspection_add', methods=['GET', 'POST'])
-@util.jsonify
-def inspection_add():
-    params = request.values.to_dict()
-
-    try:
-        seer = util.get_seer()
-        M.Inspection(
-            name = params.get("name"),    
-            camera = params.get("camera"),
-            method = params.get("method"),
-            parameters = json.loads(params.get("parameters"))).save()
-        seer.reloadInspections()
-        seer.inspect()
-        #util.get_seer().update()
-        return seer.inspections()
-    except:
-        return dict(status = "fail")
-
-@route('/inspection_preview', methods=['GET', 'POST'])
-@util.jsonify
-def inspection_preview():
-    params = request.values.to_dict()
-    try:
-        insp = M.Inspection(
-            name = params.get("name"),
-            camera = params.get("camera"),
-            method = params.get("method"),
-            parameters = json.loads(params.get("parameters")))
-        #TODO fix for different cameras
-        #TODO catch malformed data
-        features = insp.execute(util.get_seer().lastframes[-1][0].image)
-        return { "inspection": insp, "features": features }
-    except:
-        return dict(status = "fail")
-
-
-
-@route('/inspection_remove', methods=['GET', 'POST'])
-@util.jsonify
-def inspection_remove():
-    params = request.values.to_dict()
-    seer = util.get_seer()
-    M.Inspection.objects(id = bson.ObjectId(params["id"])).delete()
-    #for m in Measurement.objects(inspection = bson.ObjectId(params["id"])):
-    M.Watcher.objects.delete() #todo narrow by measurement
-
-    M.Measurement.objects(inspection = bson.ObjectId(params["id"])).delete()
-    #M.Result.objects(inspection_id = bson.ObjectId(params["id"])).delete()
-    seer.reloadInspections()
-    seer.inspect()
-    #util.get_seer().update()
-
-
-    return seer.inspections
-  #except:
-  #  return dict(status = "fail")
-
-@route('/inspection_update', methods=['GET', 'POST'])
-@util.jsonify
-def inspection_update():
-    try:
-        params = request.values.to_dict()
-        results = M.Inspection.objects(id = bson.ObjectId(params["id"]))
-        if not len(results):
-            return { "error": "no inspection id"}
-
-        insp = results[0]
-
-        if params.has_key("name"):
-            insp.name = params["name"]
-
-        if params.has_key("parameters"):
-            insp.parameters = json.loads(params["parameters"])
-
-        #TODO, add sorts, filters etc
-        insp.save()
-        return util.get_seer().inspections
-    except:
-        return dict(status = "fail")
-
-@route('/measurement_add', methods=['GET', 'POST'])
-@util.jsonify
-def measurement_add():
-    try:
-        params = request.values.to_dict()
-        if not params.has_key('units'):
-            params['units'] = 'px';
-
-        m = M.Measurement(name = params["name"],
-                          label = params['label'],
-                          method = params['method'],
-                          featurecriteria = json.loads(params["featurecriteria"]),
-                          parameters = json.loads(params["parameters"]),
-                          units = params['units'],
-                          inspection = bson.ObjectId(params['inspection']))
-        m.save()
-
-        #backfill?
-        seer = util.get_seer()
-        seer.reloadInspections()
-        seer.inspect()
-        #util.get_seer().update()
-
-        return m
-    except:
-        return dict(status = "fail")
-
-@route('/measurement_remove', methods=['GET', 'POST'])
-@util.jsonify
-def measurement_remove():
-    try:
-        params = request.values.to_dict()
-        M.Measurement.objects(id = bson.ObjectId(params["id"])).delete()
-        #M.Result.objects(measurement_id = bson.ObjectId(params["id"])).delete()
-        M.Watcher.objects.delete() #todo narrow by measurement
-
-        util.get_seer().reloadInspections()
-        #util.get_seer().update()
-
-        return dict( remove = "ok")
-    except:
-        return dict(status = "fail")
-
-"""
-@route('/measurement_results', methods=['GET', 'POST'])
-@util.jsonify
-def measurement_results(self, **params):
-    try:
-        params = request.values.to_dict()
-        return list(M.Result.objects(measurement = bson.ObjectId(params["id"])).order_by("-capturetime"))
-    except:
-        return dict(status = "fail")
-"""
-
 @route('/ping', methods=['GET', 'POST'])
 @util.jsonify
 def ping():
@@ -519,44 +299,17 @@ def ping():
 @route('/settings', methods=['GET', 'POST'])
 @util.jsonify
 def settings():
+    util.ensure_plugins()
     text = Session().get_config()
-    return {"settings": text }
+    plugins = {'Inspection':[],'Measurement':[],'Watcher':[]}
+    for i in plugins:
+        try:
+            plugins[i] =  [o for o in eval("M.{0}._plugins".format(i))]
+        except AttributeError:
+            pass    
+    return {"settings": text, "plugins":plugins }
 
-@route('/start', methods=['GET', 'POST'])
-def start():
-    try:
-        util.get_seer().start()
-    except:
-        util.get_seer().resume()
-    return "OK"
 
-@route('/stop', methods=['GET', 'POST'])
-def stop():
-    util.get_seer().stop()
-    return "OK"
-
-@route('/watcher_add', methods=['GET', 'POST'])
-@util.jsonify
-def watcher_add():
-    params = request.values.to_dict()
-    M.Watcher(**params).save()
-
-    util.get_seer().reloadInspections()
-    return util.get_seer().watchers
-
-@route('/watcher_list_handlers', methods=['GET', 'POST'])
-@util.jsonify
-def watcher_list_handlers():
-    return [s for s in dir(M.Watcher) if re.match("handler_", s)]
-
-@route('/watch_remove', methods=['GET', 'POST'])
-@util.jsonify
-def watcher_remove():
-    params = request.values.to_dict()
-    M.Watcher.objects(id = bson.ObjectId(params["id"])).delete()
-    
-    util.get_seer().reloadInspections()
-    return util.get_seer().watchers
 
 @route('/_status', methods=['GET', 'POST'])
 def status():

@@ -1,40 +1,71 @@
-SubView = require '../subview'
-application = require '../../application'
+SubView = require 'views/core/subview'
+application = require 'application'
 template = require './templates/frameViewer'
+Frame = require 'models/frame'
 
 module.exports = class frameViewer extends SubView
   className:"frameViewer"
   tagName:"div"
   template:template
-  
-  initialize: =>
-    super()
-    application.socket.on "message:frame/", @capEvent
-    application.socket.emit 'subscribe', 'frame/'
+  realtime:true
+  useThumb: false
 
-  capEvent:(frame)=>
-    img = new Image()
-    img.src = frame.data.imgfile
-    $(img).load =>
-      @url = frame.data.imgfile
-      li = $(@imgs[@imgcurr])
-      @imgcurr=(@imgcurr+1)%@imglen
-      ci = $(@imgs[@imgcurr])
-      ci.attr('src',@url)
-      ci.css("display","inline-block")
-      li.css("display", "none")
-      #@$el.find('img').attr('src',@url)
-    
+  initialize: =>
+    @url = ''
+    super()
+    if @options.usethumb?
+      @useThumb = @options.usethumb
+    #todo: make camera dependent?
+    if @realtime == true
+      @subscribe()
+    @addCustomEvent("resize", => @setSize())
+    $(window).resize( => @setSize())
+
+  subscribe: =>
+    if application.socket
+      if !application.subscriptions["frame/"]?
+        application.subscriptions["frame/"] = application.socket.emit 'subscribe', "frame/"
+      application.socket.on "message:frame/", @receive
+
+  loaderToggle:(img)=>
+    @$el.find('.fillImage:visible').css("display", "none")
+    ci = $(img.target)
+    ci.css("display","inline-block")
+    @setSize(ci)
+
+  setSize:(ci=@$el.find(".fillImage:visible")) =>
+    ci.css("margin-top", ((@$el.find(".fillImageCont").height() / 2) - (ci.height() / 2) + "px"))
+
+  receive:(frame)=>
+    if !(frame instanceof Frame)
+      @frame = new Frame frame.data
+    else
+      @frame = frame
+    if @options.camera? and @frame.get("camera") != @options.camera
+      return
+    @url = "/grid/#{if @useThumb then "thumbnail_file" else "imgfile"}/#{@frame.get("id")}"
+    @imgcurr=(@imgcurr+1)%@imglen
+    ci = $(@imgs[@imgcurr])
+    ci.attr('src',@url)
+    return @frame
+
   render:=>
     super()
     @imgs = @$el.find('img')
+    for o in @imgs
+      o.onload = @loaderToggle
     @imglen = @imgs.length
     @imgcurr = 0
+    application.modal.onSuccess()
     return @
-  
+
   getRenderData: =>
     url:@url
-  
+
   onUpdate: (frame) =>
     @frame = frame
     @render()
+
+  reflow: =>
+    super()
+    @setSize()

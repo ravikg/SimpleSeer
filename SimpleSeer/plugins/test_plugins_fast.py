@@ -16,11 +16,9 @@ Session(config_file)
 from SimpleSeer.models.Inspection import Inspection
 from SimpleSeer.models.Inspection import Measurement 
 from SimpleSeer.models.OLAP import OLAP 
-from SimpleSeer.SimpleSeer import SimpleSeer
 
 from SimpleCV import *
 
-SimpleSeer()
 result = []
 print "testing blobs"
 

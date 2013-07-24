@@ -1,9 +1,8 @@
 import numpy as np
 
-from SimpleCV import *
+from SimpleCV import Image
 from SimpleSeer import models as M
 from SimpleSeer import util
-
 from SimpleSeer.plugins import base
 """
 Overly simplified template matching plugin
@@ -76,7 +75,6 @@ class KeypointTemplate(base.InspectionPlugin):
         break 
 
     if fs is not None:
-      fs.draw()
       for f in fs: # do the conversion from SCV featureset to SimpleSeer featureset
         f._homography = None
         f._template = None
@@ -84,11 +82,10 @@ class KeypointTemplate(base.InspectionPlugin):
         #print f._minRect
         #print type(f._minRect)
         f.contour = [f._minRect[0],f._minRect[1],f._minRect[2],f._minRect[3]]
-        ff = M.FrameFeature()
-        ff.setFeature(f)
-        retVal.append(ff)
+        retVal.append(f)
 
     if( params.has_key("saveFile") ):
+      fs.draw()
       image.save(params["saveFile"])
 
     return retVal 

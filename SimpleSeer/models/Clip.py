@@ -3,8 +3,6 @@ import fractions
 
 import mongoengine
 import cv
-import vpx
-import pyvpx
 
 from SimpleSeer.base import Image
 
@@ -22,7 +20,12 @@ class Clip(SimpleDoc, mongoengine.Document):
             self.width, self.height, self.rate, len(self.packets))
 
     @classmethod
-    def encoder(cls, width, height, rate, frames_per_clip=10, deadline=vpx.VPX_DL_REALTIME):
+    def encoder(cls, width, height, rate, frames_per_clip=10, deadline=None):
+        import vpx
+        import pyvpx
+        if not deadline:
+            deadline = vpx.VPX_DL_REALTIME
+
         def result(img_iter):
             packets, images = [], []
             encoder = pyvpx.Encoder(width, height)
@@ -61,7 +64,10 @@ class Clip(SimpleDoc, mongoengine.Document):
         return result
 
     @classmethod
-    def encode(cls, width, height, frame_iter, deadline=vpx.VPX_DL_REALTIME):
+    def encode(cls, width, height, frame_iter, deadline=None):
+        import vpx
+        if not deadline:
+            deadline = vpx.VPX_DL_REALTIME
         encoder = cls.encoder(width, height, frames_per_clip=None, deadline=deadline)
         return encoder(frame_iter).next()
 

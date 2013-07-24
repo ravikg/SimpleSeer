@@ -1,15 +1,14 @@
 import gevent
 
-import mmm
 
 from .base import Command
 
 class ReplicateCommand(Command):
     'Run the mmm replicator based on the "replication" info in the config file'
     use_gevent = True
-    remote_seer = True
 
     def run(self):
+        import mmm
         'Run the mmm replicator based on the "replication" info in the config file'
         self.servers = {}
         topology = self.session.replicate['topology']

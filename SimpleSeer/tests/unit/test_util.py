@@ -57,14 +57,6 @@ class TestUTFConvert(unittest.TestCase):
         encoded = util.utf8convert(x)
         assert encoded is x
 
-class TestGetSeer(unittest.TestCase):
-
-    @mock.patch('SimpleSeer.SimpleSeer.SimpleSeer')
-    def test_get_seer(self, cls):
-        result = util.get_seer()
-        cls.assert_called_with()
-        assert result is cls.return_value
-
 class TestClock(unittest.TestCase):
 
     def test_clock(self):

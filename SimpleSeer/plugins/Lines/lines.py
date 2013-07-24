@@ -64,17 +64,15 @@ class Lines(base.InspectionPlugin):
         fs = FeatureSet(f for f in fs if( f.angle()>=angle[0] and f.angle()<=angle[1]) ) # filter on the angles 
       if( length[1] is not None ): # we already know that we are greater than the min length
         fs = FeatureSet(f for f in fs if( f.length() <= length[1] ) )
-      fs.draw()
+      
   
       for f in fs: # do the conversion from SCV featureset to SimpleSeer featureset
         f.lineLength= int(f.length())
-        ff = M.FrameFeature()
-    
-        ff.setFeature(f)
-        retVal.append(ff)
+        retVal.append(f)
 
     if( params.has_key("saveFile") ):
-      image.save(params["saveFile"])
+        fs.draw()
+        image.save(params["saveFile"])
 
 
     return retVal 

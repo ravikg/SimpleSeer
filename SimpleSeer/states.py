@@ -7,14 +7,29 @@ from worker import ping_worker, execute_inspection
 import zmq
 import gevent
 
-from guppy import hpy
-
 from . import models as M
 from . import util
 from .base import jsondecode, jsonencode
 from .camera import StillCamera, VideoCamera
 
+from realtime import ChannelManager
+
 import logging
+log = logging.getLogger(__name__)
+
+def nextInInterval(frame, field, interval):
+    currentValue = 0
+    try:
+        currentValue = getattr(frame, field)
+    except:
+        currentValue = frame.metadata[field]
+        field = 'metadata__' + field
+    
+    roundValue = currentValue - (currentValue % interval)
+    kwargs = {'%s__gte' % field: roundValue, '%s__lt' % field: currentValue, 'camera': frame.camera}
+    if M.Frame.objects(**kwargs).count() == 0:
+        return True
+    return False
 
 
 class Core(object):
@@ -46,6 +61,7 @@ class Core(object):
         self.video_cameras = []
         self.log = logging.getLogger(__name__)
         self._mem_prof_ticker = 0
+        self._channel_manager = ChannelManager(shareConnection=False)
     
         for cinfo in config.cameras:
             cam = StillCamera(**cinfo)
@@ -59,13 +75,16 @@ class Core(object):
         util.load_plugins()
         self.reloadInspections()
         
-        if not self.config.skip_worker_check:
+        if not self.config.skip_worker_check and not self.config.framebuffer:
             self.workerCheck(5.0) #wait up to 5s for worker processes
+        
+        if self.config.framebuffer and not self.config.skip_worker_check:
+            log.warn("Framebuffer is active, while worker is enabled.  Workers can not handle framebuffer calls, so you should add skip_worker_check: 1 to the config")
         
         self.lastframes = deque()
         self.framecount = 0
         self.reset()
-
+        
     @classmethod
     def get(cls):
         return cls._instance
@@ -99,30 +118,21 @@ class Core(object):
         self.measurements = m
         self.watchers = w
 
-    def start_socket_communication(self):
-        '''Listens to ALL messages and trigger()s on them'''
-        context = zmq.Context.instance()
-        # Setup subscriber
-        sub_sock = context.socket(zmq.SUB)
-        sub_sock.connect(self._config.sub_uri)
-        sub_sock.setsockopt(zmq.SUBSCRIBE, '')
-        def g_listener():
-            while True:
-                name = sub_sock.recv()
-                raw_data = sub_sock.recv()
-                try:
-                    data = jsondecode(raw_data)
-                except:
-                    continue
-                self.trigger(name, data)
-        gevent.spawn_link_exception(g_listener)
-        # Setup publisher
-        self._pub_sock = context.socket(zmq.PUB)
-        self._pub_sock.connect(self._config.pub_uri)
-
+    def subscribe(self, name):
+        # Create thread that listens for event specified by name
+        # If message received, trigger that event 
+        
+        def callback(msg):
+            data = jsondecode(msg.body)
+            self.trigger(name, data)
+            
+        def listener():
+            self._channel_manager.subscribe(name, callback)
+        
+        gevent.spawn_link_exception(listener)
+    
     def publish(self, name, data):
-        self._pub_sock.send(name, zmq.SNDMORE)
-        self._pub_sock.send(jsonencode(data))
+        self._channel_manager.publish(name, data)
 
     def get_image(self, width, index, camera):
         frame = self.lastframes[index][camera]
@@ -146,12 +156,15 @@ class Core(object):
         self._states = dict(start=start)
         self._cur_state = start
 
-    def capture(self):
+    def capture(self, indexes = []):
         currentframes = []
         self.framecount += 1
 
-        currentframes = [
-            cam.getFrame() for cam in self.cameras ]
+        cameras = self.cameras
+        if len(indexes):
+            cameras = [ self.cameras[i] for i in indexes ]
+        
+        currentframes = [ cam.getFrame() for cam in cameras ]
 
         while len(self.lastframes) >= (self._config.max_frames or 30):
             self.lastframes.popleft()
@@ -160,8 +173,11 @@ class Core(object):
         new_frame_ids = []
         for frame in currentframes:
             new_frame_ids.append(frame.id)
-        self.publish('capture/', { "capture": 1, "frame_ids": new_frame_ids})
+
         return currentframes
+    
+    """
+    This is probably not used any more.  commenting out to make sure
         
     def inspect(self, frames = []):
         if not len(frames) and not len(self.lastframes):
@@ -187,26 +203,36 @@ class Core(object):
                     
             for watcher in self.watchers:
                 watcher.check(frame.results)
-
+    """
+    
+    
     def process(self, frame):
         if self._worker_enabled:
             async_results = self.process_async(frame)
-            return self.process_async_complete(async_results)
+            return self.process_async_complete(frame, async_results)
         
         frame.features = []
         frame.results = []
-            
+        
+        # all times are in seconds, not ms
+        ct_epoch = int(frame.capturetime.strftime("%s"))
         for inspection in M.Inspection.objects:
             if inspection.parent:
-                return
+                continue
             if inspection.camera and inspection.camera != frame.camera:
-                return
-            features = inspection.execute(frame.image)
+                continue
+            if 'interval' in inspection.parameters and not nextInInterval(frame, inspection.parameters['intervalField'], inspection.parameters['interval']):
+                continue
+            
+            features = inspection.execute(frame)
             frame.features += features
+            
             for m in inspection.measurements:
+                if 'interval' in m.parameters and not nextInInterval(frame, m.parameters['intervalField'], m.parameters['interval']):
+                    continue
+            
                 m.execute(frame, features)
-    
-    #DOES NOT WORK WITH NESTED INSPECTIONS RIGHT NOW
+            
     def process_async(self, frame):
         frame.features = []
         frame.results = []
@@ -214,26 +240,26 @@ class Core(object):
         #make sure the image is in gridfs (does nothing if already saved)
         
         results_async = []
-        
         inspections = list(M.Inspection.objects)
         #allocate each inspection to a celery task
-        for inspection in inspections:
+
+        # all times are in seconds, not ms
+        for inspection in M.Inspection.objects:
             if inspection.parent:
-                return
+                continue
             if inspection.camera and inspection.camera != frame.camera:
-                return
-                
-            results_async.append(execute_inspection.delay(inspection.id, frame.imgfile.grid_id))
+                continue
+            if 'interval' in inspection.parameters and not nextInInterval(frame, inspection.parameters['intervalField'], inspection.parameters['interval']):
+                continue
+            results_async.append(execute_inspection.delay(inspection.id, frame.imgfile.grid_id, frame.metadata))
         
-        #poll the tasks to see when they're complete, add them to the frame
-        #and take measurements
         return results_async
         
     def process_async_complete(self, frame, results_async):
-        inspections = list(M.Inspection.objects)
         
         #note that async results refer to Celery results, and not Frame results
         results_complete = []
+        ct_epoch = int(frame.capturetime.strftime("%s"))
         while not len(results_complete) == len(results_async):
             new_ready_results = []
             for index, r in enumerate(results_async):
@@ -241,22 +267,27 @@ class Core(object):
                     new_ready_results.append(index)
                     
             for result_index in new_ready_results:
-                scvfeatures = results_async[result_index].get()
+                (scvfeatures, inspection_id) = results_async[result_index].get()
+                insp = M.Inspection.objects.get(id=inspection_id)
                 features = []
+                
                 
                 for scvfeature in scvfeatures:
                     scvfeature.image = frame.image 
                     ff = M.FrameFeature()
                     ff.setFeature(scvfeature)
-                    ff.inspection = inspections[result_index].id
+                    ff.inspection = insp.id
                     features.append(ff)
                 
                 frame.features += features
-                
-                for m in inspections[result_index].measurements:
+                #import pdb;pdb.set_trace()
+                for m in insp.measurements:
+                    if 'interval' in m.parameters and not nextInInterval(frame, m.parameters['intervalField'], m.parameters['interval']):
+                        continue
                     m.execute(frame, features)
-            
+                    
             results_complete += new_ready_results
+            time.sleep(0.2)
                 
     @property
     def results(self):
@@ -270,12 +301,14 @@ class Core(object):
             
         return ret
 
+    """
     def get_inspection(self, name):
         return M.Inspection.objects(name=name).next()
 
     def get_measurement(self, name):
         return M.Measurement.objects(name=name).next()
-
+    """
+    
     def state(self, name):
         if name in self._states: return self._states[name]
         s = self._states[name] = State(self, name)
@@ -299,6 +332,7 @@ class Core(object):
 
     def on(self, state_name, event_name):
         state = self.state(state_name)
+        self.subscribe(event_name)
         return state.on(event_name)
 
     def run(self, audit=False):
@@ -325,6 +359,7 @@ class Core(object):
             cam.set_rate(rate_in_hz)
 
     def tick(self):
+        #~ from guppy import hpy
         self._handle_events()
         self._clock.tick()
             
@@ -332,9 +367,8 @@ class Core(object):
             self._mem_prof_ticker += 1
             if self._mem_prof_ticker == int(self.config.memprofile):
                 self._mem_prof_ticker = 0
-                self.log.info(hpy().heap())
+                #~ self.log.info(hpy().heap())
             
-
     def _handle_events(self):
         while True:
             try:

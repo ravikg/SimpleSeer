@@ -1,0 +1,31 @@
+<!DOCTYPE html>  <html> <head>   <title>slide_replace.coffee</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>            <div id="jump_to">         Jump To &hellip;         <div id="jump_wrapper">           <div id="jump_page">                                           <a class="source" href="plugin.html">                 plugin.coffee               </a>                                           <a class="source" href="seer_router.html">                 seer_router.coffee               </a>                                           <a class="source" href="seer_view_helper.html">                 seer_view_helper.coffee               </a>                                           <a class="source" href="slide_replace.html">                 slide_replace.coffee               </a>                                           <a class="source" href="transitions.html">                 transitions.coffee               </a>                                           <a class="source" href="ui_helper.html">                 ui_helper.coffee               </a>                        </div>         </div>       </div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               slide_replace.coffee             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre><span class="p">(</span><span class="nf">( $ )-&gt;</span>
+  <span class="nv">$.fn.slideReplace = </span><span class="nf">(content, direction)-&gt;</span>
+    <span class="k">if</span> <span class="nx">$</span><span class="p">.</span><span class="nx">trim</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">html</span><span class="p">())</span> <span class="o">==</span> <span class="s">&#39;&#39;</span> <span class="c1"># if the html is empty, no animate is needed</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">html</span> <span class="nx">content</span>
+    <span class="k">else</span>
+      <span class="nx">$</span><span class="p">(</span><span class="s">&quot;body&quot;</span><span class="p">).</span><span class="nx">css</span> <span class="s">&quot;overflow-x&quot;</span><span class="p">,</span> <span class="s">&quot;hidden&quot;</span>
+      <span class="k">if</span> <span class="nx">direction</span> <span class="o">==</span> <span class="s">&#39;left&#39;</span>
+        <span class="nv">dir = </span><span class="o">-</span><span class="mi">1</span>
+      <span class="k">else</span>
+        <span class="nv">dir = </span><span class="mi">1</span>
+      <span class="nv">target_pos = </span><span class="k">this</span><span class="p">.</span><span class="nx">offset</span><span class="p">().</span><span class="nx">left</span>
+      <span class="nv">tmp_holder = </span><span class="nx">$</span><span class="p">(</span><span class="s">&#39;&lt;div/&gt;&#39;</span><span class="p">).</span><span class="nx">css</span>
+        <span class="nv">width: </span><span class="k">this</span><span class="p">.</span><span class="nx">width</span><span class="p">()</span>
+        <span class="nv">height: </span><span class="k">this</span><span class="p">.</span><span class="nx">height</span><span class="p">()</span>
+        <span class="nv">position: </span><span class="s">&#39;absolute&#39;</span>
+        <span class="nv">top: </span><span class="k">this</span><span class="p">.</span><span class="nx">offset</span><span class="p">().</span><span class="nx">top</span>
+        <span class="nv">left: </span><span class="nx">target_pos</span><span class="o">+</span><span class="nx">dir</span><span class="o">*</span><span class="nx">$</span><span class="p">(</span><span class="nb">window</span><span class="p">).</span><span class="nx">width</span><span class="p">()</span>
+      <span class="nx">tmp_holder</span><span class="p">.</span><span class="nx">html</span><span class="p">(</span><span class="nx">content</span><span class="p">)</span>
+      <span class="nx">tmp_holder</span><span class="p">.</span><span class="nx">insertBefore</span><span class="p">(</span><span class="k">this</span><span class="p">)</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">animate</span>
+        <span class="nv">left: </span><span class="nx">target_pos</span><span class="o">+</span><span class="nx">dir</span><span class="o">*-</span><span class="mi">1</span><span class="o">*</span><span class="nx">$</span><span class="p">(</span><span class="nb">window</span><span class="p">).</span><span class="nx">width</span><span class="p">()</span>
+      <span class="nx">tmp_holder</span><span class="p">.</span><span class="nx">animate</span>
+        <span class="nx">left</span><span class="o">:</span><span class="nx">target_pos</span>
+        <span class="o">=&gt;</span>
+          <span class="k">this</span><span class="p">.</span><span class="nx">css</span><span class="p">({</span><span class="s">&#39;left&#39;</span><span class="o">:</span> <span class="mi">0</span><span class="p">}).</span><span class="nx">html</span> <span class="nx">content</span>
+          <span class="nx">tmp_holder</span><span class="p">.</span><span class="nx">remove</span><span class="p">()</span>
+          <span class="nx">$</span><span class="p">(</span><span class="s">&quot;body&quot;</span><span class="p">).</span><span class="nx">css</span> <span class="s">&quot;overflow-x&quot;</span><span class="p">,</span> <span class="s">&quot;auto&quot;</span>
+    <span class="k">return</span> <span class="k">this</span>
+<span class="p">)(</span> <span class="nx">jQuery</span> <span class="p">)</span>
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 

@@ -1,0 +1,32 @@
+<div id="records-list">
+  {{#each records}}
+  <div class="record-list-item">
+    <div class="body">
+      <div class="block image">
+        <img src="/grid/thumbnail_file/{{attributes.id}}">
+        <div class="camera">{{attributes.camera}} {{attributes.capturetime}}</div>
+      </div>
+      <div class="block content">
+        <div class="block attributes">
+        	<ul>
+          {{#key_value attributes}}
+            {{#not_in this needle=this.key haystack=../../blackList.fields }}
+            <li><span class="label">{{this.key}}:</span><span class="value">{{this.value}}</span></li>
+            {{/not_in}}
+          {{/key_value}}
+          </ul>
+        </div>
+        <div class="block metadata">
+          <ul>
+          {{#key_value attributes.metadata}}
+            {{#not_in this needle=this.key haystack=../../blackList.metadata }}
+              <li><span class="label">{{this.key}}:</span><span class="value">{{this.value}}</span></li>
+            {{/not_in}}
+          {{/key_value}}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  {{/each}}
+</div>

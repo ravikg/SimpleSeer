@@ -1,5 +1,5 @@
-SubView = require '../subview'
-application = require '../../application'
+SubView = require 'views/core/subview'
+application = require 'application'
 template = require './templates/tableView'
 
 # TableView is a wrapper for the jQuery UI Tablesorter
@@ -50,12 +50,14 @@ module.exports = class tableView extends SubView
     for i,o of row
       if typeof o == 'object'
         text = o.text
-        style = o.style
+        style = o.style 
+        tooltip = o.tooltip
         link = o.link
       else
         text = o
         style = false
         link = false
+        tooltop = ""
       if @isEmpty text
         text = @emptyCell
       newRow[i] = {text:text}
@@ -63,6 +65,8 @@ module.exports = class tableView extends SubView
         newRow[i].style = style
       if link
         newRow[i].link = link
+      if tooltip
+        newRow[i].tooltip = tooltip
     @tableData.push newRow
     
   # Pushes the table data into a hidden
@@ -98,6 +102,7 @@ module.exports = class tableView extends SubView
         
     js = @rows
     js.unshift @header
+    js = ((r.text for r in row) for row in @rows)
     $("input[name=rawdata]").attr('value',(JSON.stringify js).replace RegExp(@emptyCell,'g'), '' )
     @$el.find('.tablesorter').tablesorter
       widgets: @widgets,
@@ -172,7 +177,14 @@ module.exports = class tableView extends SubView
             arr = @innerHTML.split(',')
             str = ""
             for o, _i in arr
-              str += '<input editFieldIndex="'+i+"."+index+"."+_i+'" placeholder="'+_lab[_i]+'" type="text" value="'+o.trim()+'">'
+              args=
+                editFieldIndex:i+"."+index+"."+_i
+                placeholder:_lab[_i]
+                type:"text"
+                value:o.trim()
+              # TODO: i dont like this outerHTML stuff
+              foo = $('<input/>',args)
+              str += foo[0].outerHTML
             @innerHTML = str
             return
       ind = (cols[@widgetData.editableKey])+1

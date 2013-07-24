@@ -1,5 +1,5 @@
-SubView = require '../subview'
-application = require '../../application'
+SubView = require 'views/core/subview'
+application = require 'application'
 template = require './templates/markupImage'
 
 # MarkupImage is a subview / widget used for
@@ -11,47 +11,35 @@ module.exports = class markupImage extends SubView
   # Applied to the container that this
   # widget is initialized on.
   className:"widget-markupImage"
+  template: template
   
   # Define some working variables.
-  model: ''
-  pjs: ''
-  zoom: 1
-  template: template
+  pjs: null
+  img: null
+  size: [0,0]
 
-  # Returns a blank image url if a model
-  # if not defined yet. Otherwise, pull
-  # in the fullsize view from the model.
+  initialize:(options) =>
+    super()
+    if options.img
+      @img = options.img
+    return @
+
   getRenderData: =>
-    return {url: if @model then "/grid/imgfile/" + @model.get("id") else "" }
-    
-  # After the DOM is created we can play
-  # with the canvas.
+    url: @img
+
   afterRender: =>
     @renderProcessing()
-  
-  # If the model is defined and the DOM
-  # for the widget is initialized, call
-  # Processing.js and draw the features.
+
   renderProcessing: =>
-    if @model
-      scale = @$el.width() / @model.get("width")
-      
-      @pjs = new Processing(@$el.find("canvas").get 0)
-      @pjs.background(0,0)
-      @pjs.size @$el.width(), @model.get("height") * scale
-      @pjs.scale scale
-      
-      if @model.get('features').length
-        @model.get('features').each (f) => f.render(@pjs)
-  
-  # Setter function for the model. Will
-  # re-render the view automatically.
-  setModel: (model) =>
-    @model = model
+    canvas = @$el.find("canvas")
+    image = @$el.find("img")
+    $(canvas).width(@size[0]).height(@size[1])
+    $(image).css("min-width", @size[0]).css("min-height", @size[1])
+    @pjs = new Processing(canvas.get(0))
+    @pjs.background(0,0)
+    @pjs.size @size[0], @size[1]
+
+  setImage: (image, size) =>
+    @img = image
+    @size = size
     @render()
-  
-  # Setter function for the zoom level.
-  # Will re-render the canvas automatically.
-  setZoom: (zoom) =>
-    @zoom = zoom
-    @renderProcessing()

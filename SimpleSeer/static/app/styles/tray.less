@@ -1,0 +1,37 @@
+#system-tray {
+  margin-right: 5px;
+  height: 100%;
+
+  #toolbar-toggle {
+    display: none;
+  }
+
+  .set {
+    .item {
+      height: 22px;
+      background: #444;
+      margin-top: 6px;
+      padding: 0 6px 0 4px;
+      border-radius: 2px;
+      box-shadow: 0px -1px 0 #585858, 0px 1px 0 #141414;
+
+      .shortcut {
+        display: inline-block;
+        width: 19px; height: 19px;
+        vertical-align: top;
+        margin-right: 2px;
+        background: transparent no-repeat center center;
+      }
+
+      .content {
+        display: inline-block;
+        vertical-align: top;
+      }
+
+    }
+  }
+}
+
+#systemTray.expanded {
+  display: none;
+}

@@ -17,7 +17,7 @@ class Blobs(base.InspectionPlugin):
     @classmethod
     def reverseParams(cls):
         retVal = {}
-        retVal.update({'Color.' + col: 'color' for col in dir(Color)})
+        retVal.update({ str(getattr(Color,col)): 'color' for col in dir(Color) })
         retVal.update({'square': 'shape', 'circle': 'shape', 'rectangle': 'shape'})
         
         return retVal
@@ -200,10 +200,8 @@ class Blobs(base.InspectionPlugin):
         for b in reversed(blobs): #change sort order to big->small
             c = b.meanColor()
             b.mColor = (int(c[0]),int(c[1]),int(c[2]))
-            ff = M.FrameFeature()
             b.image = image
-            ff.setFeature(b)
-            feats.append(ff)
+            feats.append(b)
 
         if( params.has_key("saveFile") ):
             image.save(params["saveFile"])
@@ -211,27 +209,19 @@ class Blobs(base.InspectionPlugin):
         return feats
 
 class BlobLength(base.MeasurementPlugin):
-    """
-    Measurement(name =  "blob_length",
-        label = "Blob Area",
-        method = "blob_length",
-        parameters = dict(),
-        featurecriteria = dict( index = 0 ),
-        units =  "px",
-        inspection = Inspection.objects[0].id).save()
-    """
 
     def __call__(self, frame, featureset):
-        return [np.max(eval(featureset[0].featuredata["mMinRectangle"])[1])]
+        # the 1-th element of mMinRectangle is tuple of (width, height)
+        return [float(np.max(f.featuredata["mMinRectangle"][1])) for f in featureset]
 
 class BlobCount(base.MeasurementPlugin):
 
     def __call__(self, frame, featureset):
-        return [len(featureset)]
-
+        blob_features = [ f for f in featureset if f.featuretype == 'Blob']
+        return [len(blob_features)]
 
 class BlobRadius(base.MeasurementPlugin):
     
     def __call__(self, frame, featureset):
-        return [f.feature.radius() for f in featureset]
-
+        return [f.feature.radius() for f in featureset  if f.featuretype == 'Blob']
+        

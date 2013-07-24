@@ -1,0 +1,58 @@
+<!DOCTYPE html>  <html> <head>   <title>OLAP.coffee</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>            <div id="jump_to">         Jump To &hellip;         <div id="jump_wrapper">           <div id="jump_page">                                           <a class="source" href="OLAP.html">                 OLAP.coffee               </a>                                           <a class="source" href="dashboard.html">                 dashboard.coffee               </a>                                           <a class="source" href="frame.html">                 frame.coffee               </a>                                           <a class="source" href="frameset.html">                 frameset.coffee               </a>                                           <a class="source" href="inspection.html">                 inspection.coffee               </a>                                           <a class="source" href="measurement.html">                 measurement.coffee               </a>                                           <a class="source" href="model.html">                 model.coffee               </a>                        </div>         </div>       </div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               OLAP.coffee             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre><span class="nv">Model = </span><span class="nx">require</span> <span class="s">&quot;./model&quot;</span>
+
+<span class="nv">module.exports = </span><span class="k">class</span> <span class="nx">OLAP</span> <span class="k">extends</span> <span class="nx">Model</span>
+  <span class="nv">urlRoot: </span><span class="s">&quot;/api/chart&quot;</span>
+  <span class="nv">shift: </span><span class="kc">false</span>
+  
+  <span class="nx">save</span><span class="o">:</span><span class="nf">(a,b,c)=&gt;</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="nx">a</span><span class="p">,</span><span class="nx">b</span><span class="p">,</span><span class="nx">c</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="nx">@attributes</span><span class="p">.</span><span class="nx">dataMap</span>
+    <span class="k">super</span><span class="p">()</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="nx">@attributes</span><span class="p">.</span><span class="nx">dataMap</span>
+    
+
+  <span class="nx">setColor</span><span class="o">:</span><span class="nf">(title, value) =&gt;</span>
+    <span class="k">if</span> <span class="nx">title</span> <span class="o">==</span> <span class="s">&quot;chartColor&quot;</span>
+      <span class="nx">@set</span><span class="p">(</span><span class="s">&quot;color&quot;</span><span class="p">,</span> <span class="nx">value</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nx">title</span> <span class="o">==</span> <span class="s">&quot;chartLabelColor&quot;</span>
+      <span class="nx">@set</span><span class="p">(</span><span class="s">&quot;labelColor&quot;</span><span class="p">,</span> <span class="nx">value</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nx">title</span> <span class="o">==</span> <span class="s">&quot;chartTitleColor&quot;</span>
+      <span class="nx">@set</span><span class="p">(</span><span class="s">&quot;titleColor&quot;</span><span class="p">,</span> <span class="nx">value</span><span class="p">)</span>
+    <span class="k">return</span>  
+
+  <span class="nv">pointStack: </span><span class="p">()</span> <span class="nf">-&gt;</span>
+    <span class="nv">stack : </span><span class="p">[]</span>
+    <span class="nv">add: </span><span class="nf">(d,shift=@shift) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>_a = {x:d.x,y:d.y,id:d.id}</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="nx">@</span><span class="p">.</span><span class="nx">stack</span><span class="p">.</span><span class="nx">push</span> <span class="nx">d</span>
+      <span class="k">if</span> <span class="nx">shift</span>
+        <span class="nv">p = </span><span class="nx">@</span><span class="p">.</span><span class="nx">stack</span><span class="p">.</span><span class="nx">shift</span><span class="p">()</span>
+      <span class="k">return</span> <span class="nx">p</span>
+    <span class="nv">set: </span><span class="nf">(d) -&gt;</span>
+      <span class="vi">@stack = </span><span class="p">[]</span>
+      <span class="k">for</span> <span class="nx">o</span> <span class="k">in</span> <span class="nx">d</span>
+        <span class="nx">@</span><span class="p">.</span><span class="nx">add</span> <span class="nx">o</span><span class="p">,</span> <span class="kc">false</span>
+    <span class="nv">buildData: </span><span class="nf">(data) =&gt;</span>
+      <span class="k">if</span> <span class="o">!</span><span class="nx">data</span>
+        <span class="nv">data = </span><span class="nx">@</span><span class="p">.</span><span class="nx">view</span><span class="p">.</span><span class="nx">stack</span><span class="p">.</span><span class="nx">stack</span>
+      <span class="nv">dd = </span><span class="p">[]</span>
+      <span class="k">if</span> <span class="nx">@</span><span class="p">.</span><span class="nx">attributes</span><span class="p">.</span><span class="nx">labelmap</span>
+        <span class="k">for</span> <span class="nx">i</span> <span class="k">of</span> <span class="nx">@</span><span class="p">.</span><span class="nx">attributes</span><span class="p">.</span><span class="nx">labelmap</span>
+          <span class="nx">dd</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">x</span><span class="o">:</span><span class="nx">i</span><span class="p">,</span><span class="nx">id</span><span class="o">:</span><span class="nx">i</span><span class="p">,</span><span class="nx">y</span><span class="o">:</span><span class="mi">0</span><span class="p">}</span>
+          <span class="k">if</span> <span class="nx">@</span><span class="p">.</span><span class="nx">attributes</span><span class="p">.</span><span class="nx">colormap</span> <span class="o">&amp;&amp;</span> <span class="nx">@</span><span class="p">.</span><span class="nx">attributes</span><span class="p">.</span><span class="nx">colormap</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span>
+            <span class="nx">dd</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nv">color = </span><span class="nx">@</span><span class="p">.</span><span class="nx">attributes</span><span class="p">.</span><span class="nx">colormap</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span>
+      <span class="nv">_stk = </span><span class="p">[]</span>
+      <span class="k">for</span> <span class="nx">p</span> <span class="k">in</span> <span class="nx">data</span>
+        <span class="k">if</span> <span class="nx">dd</span><span class="p">[</span><span class="nx">p</span><span class="p">.</span><span class="nx">id</span><span class="p">]</span>
+          <span class="nv">p = </span><span class="nx">dd</span><span class="p">[</span><span class="nx">p</span><span class="p">.</span><span class="nx">id</span><span class="p">]</span>
+          <span class="nx">p</span><span class="p">.</span><span class="nx">y</span><span class="o">++</span>
+        <span class="k">else</span>
+          <span class="nv">p.y = </span><span class="mi">1</span>
+        <span class="nx">dd</span><span class="p">[</span><span class="nx">p</span><span class="p">.</span><span class="nx">id</span><span class="p">]</span> <span class="o">=</span> <span class="nx">p</span>
+        <span class="nx">_stk</span><span class="p">.</span><span class="nx">push</span> <span class="nx">p</span>
+      <span class="nv">_dd = </span><span class="p">[]</span>
+      <span class="k">for</span> <span class="nx">i</span> <span class="k">in</span> <span class="nx">dd</span>
+        <span class="k">if</span> <span class="nx">i</span>
+          <span class="nx">_dd</span><span class="p">.</span><span class="nx">push</span> <span class="nx">i</span>
+      <span class="nx">@</span><span class="p">.</span><span class="nx">view</span><span class="p">.</span><span class="nx">stack</span><span class="p">.</span><span class="nx">set</span> <span class="nx">_stk</span>
+      <span class="k">return</span> <span class="nx">_dd</span>
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 

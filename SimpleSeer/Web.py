@@ -14,13 +14,16 @@ from . import util
 from .Session import Session
 from path import path
 
+import pkg_resources
+    
 
 DEBUG = True
 
 log = logging.getLogger(__name__)
 
-def make_app():
+def make_app(*args,**kwargs):
     settings = Session()
+    settings.set_config("test",kwargs.get('test',None))
     tpath = path("{0}/{1}".format(settings.get_config()['web']['static']['/'], '../templates')).abspath()
     print "Setting template path to {0}".format(tpath)
     template_folder=tpath
@@ -34,14 +37,11 @@ def make_app():
     views.route.register_routes(app)
     crud.register(app)
     
-    if 'SeerCloud' in sys.modules:
-        checkCloud(app)
+    for ep in pkg_resources.iter_entry_points('seer.views'):
+        mod = __import__(ep.module_name, globals(), locals(), [ep.name])
+        getattr(mod, ep.attrs[0]).register_web(app)
     
     return app
-
-def checkCloud(app):
-    from SeerCloud.views import CloudViews
-    CloudViews.register_web(app)
         
 
 class WebServer(object):

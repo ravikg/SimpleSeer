@@ -36,8 +36,7 @@ class FrameFeature(SimpleEmbeddedDoc, mongoengine.EmbeddedDocument):
     featuretype = mongoengine.StringField()
     featuredata = mongoengine.DictField()  #this holds any type-specific feature data
     featureversion = mongoengine.FloatField(default = 0.0)
-    # featurepickle = mongoengine.BinaryField() #a pickle of the feature, for
-    # rendering out
+    exectime = mongoengine.FloatField(default = 0.0)
     featurepickle_b64 = mongoengine.StringField() #a pickle of the feature, for rendering out
     _featurebuffer = ''
     #this is incredibly sloppy, really -- but we're going to get away with it
@@ -73,14 +72,25 @@ class FrameFeature(SimpleEmbeddedDoc, mongoengine.EmbeddedDocument):
     def featurepickle(self, value):
         self.featurepickle_b64 = b2a_base64(value)
     
+    @property
+    def feature(self):
+        if not self._featurebuffer:
+            self._featurebuffer = pickle.loads(self.featurepickle)
+        return self._featurebuffer
+    
+    @classmethod
+    def wrap(cls, data):
+        ff = FrameFeature()
+        ff.setFeature(data)
+        return ff
+    
     #this converts a SimpleCV Feature object into a FrameFeature
     #clean this up a bit
     def setFeature(self, data):
-    
+        self._featurebuffer = data
         if 'VERSION' in dir(data):
             self.featureversion = data.VERSION
     
-        self._featurecache = data
         self.x = int(data.x)
         self.y = int(data.y)
         self.points = deepcopy(data.points)
@@ -89,15 +99,15 @@ class FrameFeature(SimpleEmbeddedDoc, mongoengine.EmbeddedDocument):
         self.width = data.width()
         self.height = data.height()
         self.angle = data.angle()
-
-        self.meancolor = data.meanColor()
+        if data.image:
+            self.meancolor = data.meanColor()
+        else:
+            self.meancolor = None
         self.featuretype = data.__class__.__name__
         
         data.image = ''
         self.featurepickle = pickle.dumps(data)
-
         
-
         datadict = {}
         if hasattr(data, "__getstate__"):
             datadict = data.__getstate__()
@@ -118,11 +128,7 @@ class FrameFeature(SimpleEmbeddedDoc, mongoengine.EmbeddedDocument):
             #here we need to handle all the cases for odd bits of data
             self.featuredata[k] = value
             
-    @property
-    def feature(self):
-        if not self._featurebuffer:
-            self._featurebuffer = pickle.loads(self.featurepickle)
-        return self._featurebuffer
+
     
 
     def __getstate__(self):

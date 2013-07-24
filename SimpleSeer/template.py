@@ -35,7 +35,7 @@ class SimpleSeerProjectTemplate(Template):
             'SimpleSeer', 'static')
         base_esc = base.replace('/', '\\/')
         static = json.dumps({
-                '/': (path(output_dir) / vars['package'] / 'static').abspath()})
+                '/': (path(vars['package']) / 'static')})
 
         vars.update(
             brunch_base=base,
@@ -60,11 +60,18 @@ class SimpleSeerProjectTemplate(Template):
         # Create package.json
         package = json.loads((src_brunch / 'package.json').text())
         package['name'] = vars['package']
+        #print "creating package.json in {0}".format(tgt_brunch)
         (tgt_brunch / 'package.json').write_text(
             json.dumps(package, indent=2))
 
         # Copy (built) seer.js & seer.css
         dn = open("/dev/null")
+
+        subprocess.call(['git','submodule','add', 'git@github.com:sightmachine/SimpleSeer.git', 'SimpleSeer'],stderr=dn)
+        subprocess.call(['git','submodule','add', 'git@github.com:sightmachine/SeerCloud.git', 'SeerCloud'],stderr=dn)
+
+        subprocess.call(['rm',tgt_brunch / 'vendor/javascripts/cloudtest.js'],stderr=dn)
+        subprocess.call(['rm',tgt_brunch / 'vendor/javascripts/seertest.js'],stderr=dn)
         subprocess.call(['git','rm','--cached',tgt_brunch / 'vendor/javascripts/seer.js'],stderr=dn)
         subprocess.call(['git','rm','--cached',tgt_brunch / 'vendor/stylesheets/seer.css'],stderr=dn)
         subprocess.call(['git','rm','--cached','-r',tgt_public],stderr=dn)
@@ -75,8 +82,23 @@ class SimpleSeerProjectTemplate(Template):
             src_public / 'stylesheets/seer.css',
             tgt_brunch / 'vendor/stylesheets/seer.css')
         overwrite(
+            src_public / 'javascripts/seertest.js',
+            tgt_brunch / 'vendor/javascripts/seertest.js')
+        overwrite(
             src_templates / 'index.html',
             tgt_templates / 'seer_index.html')
+        overwrite(
+            src_templates / 'testing.html',
+            tgt_templates / 'testing.html')
+
+        # Copy image assets
+        try:
+            shutil.rmtree(tgt_brunch / 'app/assets/img/seer', True)
+            shutil.copytree(
+                src_brunch / 'app/assets/img/',
+                tgt_brunch / 'app/assets/img/seer/')
+        except OSError:
+            pass
 
         # Build and copy cloud.js if applicable
 
@@ -88,13 +110,24 @@ class SimpleSeerProjectTemplate(Template):
             cloud_brunch = path(pkg_resources.resource_filename('SeerCloud', 'static'))
             with cloud_brunch:
                 print subprocess.check_output(['brunch', 'build'])
-            #subprocess.call(['git','rm','--cached',tgt_brunch / 'vendor/javascripts/seer.js'],stderr=dn)
             overwrite(
                 cloud_brunch / 'public/javascripts/cloud.js',
                 tgt_brunch / 'vendor/javascripts/cloud.js')
             overwrite(
                 cloud_brunch / 'public/stylesheets/cloud.css',
                 tgt_brunch / 'vendor/stylesheets/cloud.css')
+            overwrite(
+                cloud_brunch / 'public/javascripts/cloudtest.js',
+                tgt_brunch / 'vendor/javascripts/cloudtest.js')
+
+            try:
+                shutil.rmtree(tgt_brunch / 'app/assets/img/cloud', True)
+                shutil.copytree(
+                    cloud_brunch / 'app/assets/img/',
+                    tgt_brunch / 'app/assets/img/cloud/')
+            except OSError:
+                pass
+
 
         # Link the app
         #with tgt_brunch:
@@ -109,7 +142,7 @@ class SimpleSeerProjectTemplate(Template):
 def overwrite(src, dst):
     if dst.exists(): dst.remove()
     if not dst.parent.exists(): dst.parent.makedirs()
-   
+
     src.copy(dst)
 
 def overlay(src, dst, force=False):

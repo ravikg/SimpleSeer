@@ -1,20 +1,25 @@
 ---
 cameras:
-  - id: 0
+  - id: -1
     name: Default Camera
 
 record_all: 1
 poll_rate: 0.5
 
-web: 
+in_cloud : 0
+
+web:
   address: localhost:8080
   static: ${static}
 
-mongo: 
+mongo:
   host: 127.0.0.1
   port: 27017
 
 database: ${project}
+rabbitmq: localhost
+
+ui_pagename: ${project}
 
 pub_uri: ipc:///tmp/${project}-pub
 sub_uri: ipc:///tmp/${project}-sub

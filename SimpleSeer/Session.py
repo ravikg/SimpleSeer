@@ -29,20 +29,14 @@ class Session():
     __shared_state = dict(
         _config = {})
     
-    def __init__(self, yaml_config_dir = ''):
+    def __init__(self, yaml_config_dir = '', procname='simpleseer'):
         self.__dict__ = self.__shared_state
         
         if not yaml_config_dir:
             return  #return the existing shared context
 
-        yaml_config = path(yaml_config_dir) / "simpleseer.cfg"
-
-        if yaml_config_dir == "." and not os.path.isfile(yaml_config):
-            yaml_config_dir = "/etc/simpleseer"
-            yaml_config = path(yaml_config_dir) / "simpleseer.cfg"
-
-        config_dict = yaml.load(open(yaml_config))
-        log.info("Loaded configuration from %s" % yaml_config)
+        config_dict = self.read_config(yaml_config_dir)
+        log.info("Loaded configuration from %s" % config_dict['yaml_config'])
         
         # Look for alternate config files with name hostname_simpleseer.cfg
         alt_config_filename = gethostname() + '_simpleseer.cfg'
@@ -53,27 +47,76 @@ class Session():
             config_dict.update(alt_config_dict)
         
         self.configure(config_dict)
+        if not self.procname:
+            self.procname = procname
+    
+        #self.appname = self.get_app_name('.')
 
+        self.appname = self.database
+        self._known_triggers = {}
+    
+    @staticmethod
+    def read_config(yaml_config_dir=''):
+        yaml_config = path(yaml_config_dir) / "simpleseer.cfg"
+
+        if yaml_config_dir == "." and not os.path.isfile(yaml_config):
+            yaml_config_dir = "/etc/simpleseer"
+            yaml_config = path(yaml_config_dir) / "simpleseer.cfg"
+        retVal = yaml.load(open(yaml_config))
+        retVal['yaml_config'] = yaml_config
+        return retVal
+    
     def configure(self, d):
         from .models.base import SONScrub
         self._config = d
+        if self.mongo.get('master', False):
+            master = self.mongo.pop("master")
+            mongoengine.connect(self.database, **master)
         mongoengine.connect(self.database, **self.mongo)
         db = mongoengine.connection.get_db()
         db.add_son_manipulator(SONScrub())
         self.log = logging.getLogger(__name__)
-
+        
     def camera_name(self, camera_id):
         for cam in self.cameras:
             if cam['id'] == camera_id:
                 return cam['name']
         return None
 
+    def get_app_name(self, basedir='.'):
+        from os import listdir
+        from os.path import join, isdir
+        dirs = [ d for d in os.listdir(basedir) if isdir(join(basedir, d)) and d not in ['SimpleSeer', 'SeerCloud'] ]
+ 
+        for d in dirs:
+            path, localdirs, localfiles = os.walk(basedir + '/' + d).next()
+            
+            if '__init__.py' in localfiles:
+                return d
+                
+        return ''
+        
+    def get_triggers(self, app, model, pre):
+        from .models.base import checkPreSignal, checkPostSignal
+                
+        if not (app, model, pre) in self._known_triggers:
+            if pre == 'pre':
+                self._known_triggers[(app, model, pre)] = checkPreSignal(model, app)
+            elif pre == 'post':
+                self._known_triggers[(app, model, pre)] = checkPostSignal(model, app)
+                
+        return self._known_triggers[(app, model, pre)]
+            
+
     def get_config(self):
         return self._config
 
     def __getattr__(self, name):
         return self._config.get(name, '')
-
+    
+    def set_config(self,name,value):
+        self._config[name] = value
+    
     def __repr__(self):
         return "SimpleSeer Session Object"
 

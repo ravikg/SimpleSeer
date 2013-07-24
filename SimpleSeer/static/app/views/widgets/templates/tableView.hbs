@@ -4,7 +4,6 @@
   <input type="hidden" name='format' value='excel'>
   <input type="hidden" name="rawdata">
   <input type="submit" id="csv_button" value="csv">
-  <input type="submit" id="excel_button" value="excel">
 </form>
 </div>
 
@@ -21,7 +20,7 @@
       {{#each row}}
         <tr>
         {{#each this}}
-          <td style="{{this.style}}">
+          <td style="{{this.style}}" title="{{this.tooltip}}">
             {{#if this.link}}<a href="{{this.link}}">{{/if}}
             {{this.text}}
             {{#if this.link}}</a>{{/if}}
@@ -31,14 +30,4 @@
       {{/each}}
   </tbody>
 </table>
-</div>
-
-<div class="download-links">
-<div id="views-tabs-linkbar">Download </div>
-<form action="/downloadFrames" method=POST>
-  <input type="hidden" name='format' value='excel'>
-  <input type="hidden" name="rawdata">
-  <input type="submit" id="csv_button" value="csv">
-  <input type="submit" id="excel_button" value="excel">
-</form>
 </div>

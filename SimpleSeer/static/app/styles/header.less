@@ -1,0 +1,114 @@
+header {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  z-index: 2000;
+  width: 100%;
+  height: 33px;
+  padding: 0 0 0 7px;
+  background: #303030;
+  box-shadow: none;
+  border-bottom: 1px solid #000000;
+  white-space: nowrap;
+  overflow: hidden;
+
+  nav {
+    height: 100%;
+
+    .group {
+      display: inline-block;
+      height: 100%;
+
+      &.left {
+        position: absolute;
+        left: 6px;
+        white-space: nowrap;
+      }
+
+      &.right {
+        position: relative;
+        background: #303030;
+        padding-left: 5px;
+        float: right;
+        box-shadow: 0 0 12px 7px #303030;
+      }
+    }
+
+    #login-menu {
+      cursor: pointer;
+      display: inline-block;
+      vertical-align: top;
+      width: 27px;
+      height: 20px;
+      margin-left: -4px;
+      border-left: 1px solid black;
+      background: url("/img/seer/arrow_userrolls.png") no-repeat center center;
+    }
+
+    #login {
+      height: 20px;
+      vertical-align: top;
+      display: inline-block;
+      color: #999;
+      padding-right: 9px;
+      border-right: 1px solid #2F3133;
+
+      .username {
+        display: inline-block;
+        vertical-align: top;
+        font-size: 11px;
+        margin-top: 1px;
+      }
+
+      .tag {
+        margin-top: 2px;
+        height: 16px;
+        font-size: 9px;
+        display: inline-block;
+        text-align: center;
+        padding: 0px 7px;
+        color: #000;
+        background: #999;
+        border-radius: 2px;
+        line-height: 16px;
+        vertical-align: top;
+
+        &.blue {
+          color: #000;
+          background: #006EAD;
+        }
+      }
+    }
+  }
+
+  .text {
+    width: 400px;
+    display: inline-block;
+    vertical-align: top;
+    height: 100%;
+    margin-left: 9px;
+    overflow: hidden
+  }
+
+  .brand {
+    display: inline-block;
+    width: 145px;
+    height: 100%;
+    background: url("/img/seer/logo.svg") 0px 6px no-repeat;
+    background-size: contain;
+    vertical-align: top;
+    cursor: pointer;
+  }
+
+  #client-name {
+    display: block;
+    height: 100%;
+    color: #9B9B9B;
+    font-size: 15px;
+    font-family: "OpenSansBold";
+    line-height: 32px;
+    border-left: 1px solid #000;
+    text-shadow: 0 1px 1px #0F0F0F;
+    padding-left: 10px;
+  }
+}
