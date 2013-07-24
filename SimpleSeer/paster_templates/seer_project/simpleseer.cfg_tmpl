@@ -21,3 +21,11 @@ database: ${project}
 rabbitmq: localhost
 pub_uri: ipc:///tmp/${project}-pub
 sub_uri: ipc:///tmp/${project}-sub
+
+
+# To enable login just uncomment the following lines
+# you will also need to add @login_required decorator
+# to the view you want to force login for, see views.py
+#login:
+  #username: 'seer'
+  #password: 'seer'
