@@ -234,32 +234,73 @@ Handlebars.registerHelper "tolstate", (results) ->
     return "pass"
 
 Handlebars.registerHelper "formbuilder", (form) ->
-  str = ""
+  str = "<div data-formbuilder='1'>"
   for element in form
-    str += "<div>"
+    str += "<div data-id=\"#{element.id}\""
+    if element.required
+      str += " data-required=\"required\""
+    str += ">"
+    str += "<label>#{element.label}"
+    if element.required
+      str += "<span>*</span> "
+    str += ":</label><br>"
     switch element.type
       when "text"
-        str += "<label>#{element.label}:</label>"
         str += "<input type=\"text\" data-key=\"#{element.id}\" value=\"#{element.value or ''}\">"
       when "password"
-        str += "<label>#{element.label}:</label>"
         str += "<input type=\"password\" data-key=\"#{element.id}\" value=\"#{element.value or ''}\">"
       when "textarea"
-        str += "<label>#{element.label}:</label><br>"
         str += "<textarea data-key=\"#{element.id}\">#{element.value or ''}</textarea>"
       when "radio"
-        str += "<label>#{element.label}:</label><br>"
         for option in element.values
           str += "<input type=\"radio\" name=\"#{element.id}\" data-key=\"#{element.id}\" value=\"#{option.value}\"> #{option.name}<br>"
       when "checkbox"
-        str += "<label>#{element.label}:</label><br>"
         for option in element.values
           str += "<input type=\"checkbox\" name=\"#{element.id}\" data-key=\"#{element.id}\" value=\"#{option.value}\"> #{option.name}<br>"
       when "select"
-        str += "<label>#{element.label}:</label><br>"
         str += "<select data-key=\"#{element.id}\" #{if element.multiple then "multiple=\"multiple\"" else ""}>"
         for option in element.values
           str += "<option value=\"#{option.value}\">#{option.name}</option>"
         str += "</select>"
     str += "</div>"
+  str += "</div>"
   return new Handlebars.SafeString str
+
+window.FormBuilder = {
+  getValues:(element) =>
+    values = {}
+    errors = []
+    element = element.find("[data-formbuilder=1]")
+    if element[0]?
+      for item in element.find("[data-key]")
+        item = $(item)
+        id = item.data("key")
+        tag = item.get(0).tagName
+        type = tag
+        required = item.parent().data("required") is "required"
+        if tag is "INPUT"
+          type = item.attr("type")
+
+        if (type is "text" or item.type is "password")
+          values[id] = item.val()
+        if (type is "textarea")
+          values[id] = item.html()
+        if (type is "radio")
+          values[id] = item.parent().find("[data-key=#{id}]:checked").val()
+        if (type is "select")
+          if item.multiple is true
+            items = item.parent().find("[data-key=#{id}] option:selected")
+            values[id] = []
+            for box in items
+              values[id].push $(box).val()
+          else
+            values[id] = item.parent().find("[data-key=#{id}] option:selected").val()
+        if (type is "checkbox")
+          items = item.parent().find("[data-key=#{id}]:checked")
+          values[id] = []
+          for box in items
+            values[id].push $(box).val()
+        if (required is true and (!values[id]? or values[id] is ""))
+          errors.push id
+    return [values, errors]
+}
