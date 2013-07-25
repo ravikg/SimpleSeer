@@ -172,15 +172,14 @@ $.widget("ui.datetimerange", {
             self.updateCalendars();
         });
 
-        $(".ss-time-from, .ss-time-to").blur(function() {
+        /*$(".ss-time-from, .ss-time-to").blur(function() {
            $(this).attr("value", SimpleSeerDateHelper.flushtime($(this).attr("value")));
-        });
+        });*/
 
         $('.ss-time-from').timepicker({
             template: false,
             showInputs: false,
             minuteStep: 5,
-            showSeconds: true,
             showMeridian: false
         });
 
@@ -188,7 +187,6 @@ $.widget("ui.datetimerange", {
             template: false,
             showInputs: false,
             minuteStep: 5,
-            showSeconds: true,
             showMeridian: false
         });
 
@@ -224,7 +222,13 @@ $.widget("ui.datetimerange", {
             _ed = self.options.endDate;
 
             _st = SimpleSeerDateHelper.universalizeTime(self.window.find(".ss-time-from").attr("value")).split(":");
+            if(_st.length == 2) {
+                _st.push("00");
+            }
             _et = SimpleSeerDateHelper.universalizeTime(self.window.find(".ss-time-to").attr("value")).split(":");
+            if(_et.length == 2) {
+                _et.push("00");  
+            }
 
             self._trigger("onUpdate", null, {
                 startDate: new Date(_sd.getYear() + 1900, _sd.getMonth(), _sd.getDate(), _st[0], _st[1], _st[2]),
