@@ -177,11 +177,19 @@ $.widget("ui.datetimerange", {
         });
 
         $('.ss-time-from').timepicker({
-            showPeriodLabels: false,
+            template: false,
+            showInputs: false,
+            minuteStep: 5,
+            showSeconds: true,
+            showMeridian: false
         });
 
         $('.ss-time-to').timepicker({
-            showPeriodLabels: false,
+            template: false,
+            showInputs: false,
+            minuteStep: 5,
+            showSeconds: true,
+            showMeridian: false
         });
 
         goBackMonth.click(function() {
