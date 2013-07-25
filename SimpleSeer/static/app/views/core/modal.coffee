@@ -15,8 +15,7 @@ module.exports = class Modal extends View
     cancel: []
 
   events: =>
-    "click button[action=submit]": "handleSubmit"
-    "click button[action=cancel]": "handleCancel"
+    "click button[action]": "handleAction"
 
   initialize: =>
     $('#modal').html @render().el
@@ -36,7 +35,7 @@ module.exports = class Modal extends View
 
   show:(options={}) =>
     @reset()
-    if !options.gutter? and options.submitText? or options.cancelText?
+    if !options.gutter? and options.submitText? or options.cancelText? or options.buttons?
       options.gutter = true # Display buttons if text is specified
     @options = options
     for i in ['submit','cancel']
@@ -54,30 +53,7 @@ module.exports = class Modal extends View
     @reset()
 
   getFormValues: =>
-    values = {}
-    errors = []
-    for item in @options.form
-      if item.type is "text" or item.type is "password"
-        values[item.id] = @$(".form *[data-key=#{item.id}]").val()
-      if item.type is "textarea"
-        values[item.id] = @$(".form *[data-key=#{item.id}]").html()
-      if item.type is "radio"
-        values[item.id] = @$(".form *[data-key=#{item.id}]:checked").val()
-      if item.type is "select"
-        if item.multiple is true
-          items = @$(".form *[data-key=#{item.id}] option:selected")
-          values[item.id] = []
-          for box in items
-            values[item.id].push $(box).val()
-        else
-          values[item.id] = @$(".form *[data-key=#{item.id}] option:selected").val()
-      if item.type is "checkbox"
-        items = @$(".form *[data-key=#{item.id}]:checked")
-        values[item.id] = []
-        for box in items
-          values[item.id].push $(box).val()
-      if item.required is true and (!values[item.id]? or values[item.id] is "")
-        errors.push item.id
+    [values, errors] = FormBuilder.getValues(@$(".form"))
     return [values, errors]
 
   displayValidationErrors:(errors) =>
@@ -89,9 +65,22 @@ module.exports = class Modal extends View
         el.addClass("invalid")
         el.focus()
 
+  handleAction:(e) =>
+    action = $(e.target).attr("action")
+    switch action
+      when "submit"
+        @handleSubmit()
+      when "cancel"
+        @handleCancel()
+      else
+        button = _.where @options.buttons, {action: action}
+        if button?[0]?
+          [values, errors] = @getFormValues()
+          button[0].fn?(values || null)
+
   handleSubmit: =>
     [values, errors] = @getFormValues()
-    if errors.length
+    if errors?.length
       @displayValidationErrors(errors)
     else
       callbacks = _.clone @callbacks
