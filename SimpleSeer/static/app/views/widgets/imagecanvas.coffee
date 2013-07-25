@@ -138,3 +138,6 @@ module.exports = class ImageCanvas extends SubView
     @processing = undefined
     @options.image = image
     @render()
+
+  remove: =>
+    delete @processing

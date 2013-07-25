@@ -151,8 +151,8 @@ $.widget("ui.datetimerange", {
 
             if( self._inChange == false ) {
                 self._inChange = true;
-                applyButton.attr("disabled", "disabled");
-                cancelButton.attr("disabled", "disabled");
+                self.rightSide.find(".apply").attr("disabled", "disabled");
+                self.rightSide.find(".cancel").attr("disabled", "disabled");
 
                 options.startDate = eleDate;
                 options.endDate = eleDate;
@@ -161,8 +161,8 @@ $.widget("ui.datetimerange", {
                 $(".ss-date-to").addClass("alter");
             } else if( eleDate >= options.startDate ) {
                 self._inChange = false;
-                applyButton.removeAttr("disabled");
-                cancelButton.removeAttr("disabled");
+                self.rightSide.find(".apply").removeAttr("disabled");
+                self.rightSide.find(".cancel").removeAttr("disabled");
                 options.endDate = eleDate;
 
                 $(".ss-date-from").addClass("alter");
@@ -204,8 +204,7 @@ $.widget("ui.datetimerange", {
            }
         });
 
-        var cancelButton = self.rightSide.find(".cancel");
-        cancelButton.click(function() {
+        self.rightSide.find(".cancel").click(function() {
 
             self.disappear();
             options.startDate = self.prevStartDate;
@@ -214,8 +213,7 @@ $.widget("ui.datetimerange", {
 
         });
 
-        var applyButton = self.rightSide.find(".apply");
-        applyButton.click(function() {
+        self.rightSide.find(".apply").click(function() {
             if( self._inChange === true ) { return; }
 
             _sd = self.options.startDate;
@@ -227,7 +225,7 @@ $.widget("ui.datetimerange", {
             }
             _et = SimpleSeerDateHelper.universalizeTime(self.window.find(".ss-time-to").attr("value")).split(":");
             if(_et.length == 2) {
-                _et.push("00");  
+                _et.push("00");
             }
 
             self._trigger("onUpdate", null, {
@@ -245,6 +243,10 @@ $.widget("ui.datetimerange", {
     },
 
     destroy: function() {
+        this.rightSide.unbind().remove()
+        this.leftSide.unbind().remove()
+        this.window.unbind().remove()
+        this.element.unbind('click')
         $.Widget.prototype.destroy.call(this);
     },
 
