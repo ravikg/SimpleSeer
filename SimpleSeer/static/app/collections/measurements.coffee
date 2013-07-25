@@ -12,7 +12,7 @@ module.exports = class Measurements extends Collection
 
     columns = {}
     rows = {}
-    
+
     for o in @models
       _l = o.get("label")
       if cols
@@ -39,9 +39,9 @@ module.exports = class Measurements extends Collection
       tolerance.criteria['Part Number'] = data.id
     if data.subkey
       if data.subkey == "min"
-        tolerance.rule.operator = '<'
-      else if data.subkey == "max"
         tolerance.rule.operator = '>'
+      else if data.subkey == "max"
+        tolerance.rule.operator = '<'
     if data.value
       tolerance.rule.value = data.value
 
@@ -51,11 +51,11 @@ module.exports = class Measurements extends Collection
         isChanged = false
         for i,t of o.get("tolerances")
           if t.rule.operator == tolerance.rule.operator and _.isEqual t.criteria, tolerance.criteria
-            if tolerance.rule.value != ""
-              o.attributes.tolerances[i] = tolerance
+            if tolerance.rule.value is "" or tolerance.rule.value is undefined
+              o.attributes.tolerances.splice(i,1)
               isChanged = true
             else
-              o.attributes.tolerances.splice(i,1)
+              o.attributes.tolerances[i] = tolerance
               isChanged = true
         if !isChanged
           o.attributes.tolerances.push tolerance

@@ -49,47 +49,11 @@ def ControlsCommand(self):
     if self.session.arduino:
        Controls(self.session).run()
 
-@Command.simple(use_gevent=True)
-def OlapCommand(self):
-    try:
-        from SeerCloud.OLAPUtils import ScheduledOLAP, RealtimeOLAP, OLAPData
-        from SeerCloud.backfill import MetaSchedule
-    except:
-        print 'Error starting OLAP schedules.  This requires Seer Cloud'
-        return 0
-    
-    from SimpleSeer.models.Inspection import Inspection, Measurement
-
-    try:
-        Inspection.register_plugins('seer.plugins.inspection')
-        Measurement.register_plugins('seer.plugins.measurement')
-
-        # The olap cache manager
-        od = OLAPData()
-        gevent.spawn_link_exception(od.listen)
-        
-        import time; time.sleep(1)
-        Inspection.objects.count()
-        
-        # Schedule olaps (olaps with stats)
-        so = ScheduledOLAP()
-        gevent.spawn_link_exception(so.runSked)
-        
-        # Backfill listener
-        ms = MetaSchedule()
-        gevent.spawn_link_exception(ms.run)
-        gevent.spawn_link_exception(ms.listen)
-        
-        ro = RealtimeOLAP()
-        ro.monitorRealtime()
-        
-    except KeyboardInterrupt as e:
-        print "Interrupted by user"
-
 class WebCommand(Command):
     
     def __init__(self, subparser):
         subparser.add_argument('--procname', default='web', help='give each process a name for tracking within session')
+        subparser.add_argument('--test', default=None, help='Run testing suite')
 
     def run(self):
         'Run the web server'
@@ -113,8 +77,7 @@ class WebCommand(Command):
             db.frame.ensure_index([('results.string', 1)])
         except:
             self.log.info('Could not create indexes')
-            
-        web = WebServer(make_app())
+        web = WebServer(make_app(test = self.options.test))
         
         from SimpleSeer.Backup import Backup
         Backup.importAll(None, False, True, True)
@@ -183,11 +146,63 @@ def OPCCommand(self):
         ChannelManager().publish('opc/', data)
         counter = tagcounter
 
+class MaintenanceCommand(Command):
+
+    def __init__(self, subparser):
+        subparser.add_argument('--message', default=None, help='Message to show the user')
+        pass
+
+    def run(self):
+        'Run the maintenance web server'
+        from flask import request, make_response, Response, redirect, render_template, Flask
+        import flask
+        from SimpleSeer.Session import Session
+        from datetime import datetime
+
+        start_time = str(datetime.now().strftime("%B %d, %Y at %H:%M (EST)"))
+
+        print "Maintenance mode started at {0}".format(start_time)
+
+        yaml_config = Session.read_config()
+
+        pstring = yaml_config['web']['address'].split(":")
+        if len(pstring) is 2:
+            port = int(pstring[1])
+        else:
+            port = 5000
+        tpath = path("{0}/{1}".format(yaml_config['web']['static']['/'], '../templates')).abspath()
+        template_folder = tpath
+        app = Flask(__name__,template_folder=template_folder)
+
+        if self.options.message:
+            message = self.options.message
+        else:
+            message = ''
+
+        @app.route("/")
+        def maintenance():
+            return render_template("maintenance.html", params = dict(start_time=start_time, message=message))
+
+        @app.errorhandler(404)
+        def page_not_found(e):
+            return render_template('maintenance.html', params = dict(start_time=start_time, message=message))
+
+        @app.errorhandler(500)
+        def internal_server_error(e):
+            return render_template('maintenance.html', params = dict(start_time=start_time, message=message))
+        
+        try:
+            app.run(port=port)
+        except KeyboardInterrupt as e:
+            print "Interrupted by user"
+
 
 class ScrubCommand(Command):
     use_gevent = False
     def __init__(self, subparser):
         subparser.add_argument("-t", "--thumbnails", dest="thumbnails", default=False, action="store_true")
+        subparser.add_argument("-o", "--orphans", dest="orphans", default=False, action="store_true")
+
         
     def run(self):
         from SimpleSeer.realtime import ChannelManager
@@ -201,6 +216,32 @@ class ScrubCommand(Command):
                 f.thumbnail_file.delete()
                 f.thumbnail_file = None
                 f.save(publish = False)
+            return
+        
+        if self.options.orphans:
+            self.log.info("Scrubbing orphaned gridfs file objects")
+            db = M.Frame._get_db()
+            import gridfs
+            fs = gridfs.GridFS(db)
+            fileids = db.fs.files.find(fields = ['_id'])
+            thumbnails = db.frame.find(fields = ['thumbnail_file'])
+            images = db.frame.find(fields = ['imgfile'])
+            
+            parented = {}
+            for t in thumbnails:
+                parented[t['thumbnail_file']] = 1
+            
+            for i in images:
+                parented[i['imgfile']] = 1
+            
+            deletedfiles = 0
+            for f in fileids:
+                if not parented.get(f['_id'], False):
+                    #delete the orphan
+                    fs.delete(f['_id'])
+                    deletedfiles += 1
+            
+            self.log.info("Deleted {} orphaned files".format(deletedfiles))
             return
         
         
@@ -237,7 +278,7 @@ class ScrubCommand(Command):
             
                 # Rebuild the cache
                 if retention.get('purge', False):
-                    res = ChannelManager().rpcSendRequest('olap_req/', {'action': 'scrub', 'capturetime_epoch__lt': first_capturetime})
+                    res = ChannelManager().rpcSendRequest('olap_req/', {'action': 'scrub', 'capturetime_epoch__lte': first_capturetime})
             
                 # This line of code needed to solve fragmentation bug in mongo
                 # Can run very slow when run on large collections
@@ -450,6 +491,8 @@ class ImportImagesCommand(Command):
         else:
             frame.camera = "File"
         
+        frame.localtz = self.session.cameras[0].get('timezone', 'UTC')
+        
         frame.metadata.update(metadata)
         frame.image = Image(filename)
         
@@ -518,27 +561,3 @@ class ImportImagesCommand(Command):
             
             self.import_frame(f, metadata, template)
 
-class MRRCommand(Command):
-    # Measurement repeatability and reproducability
-    
-    def __init__(self, subparser):
-        subparser.add_argument("--filter", help="Frame filter query", default = '')
-        
-    def run(self):
-        from SeerCloud.Control import MeasurementRandR
-        from ast import literal_eval
-        mrr = MeasurementRandR()
-
-        query = []
-        if self.options.filter:
-            query = [literal_eval(self.options.filter)]
-
-        df, deg = mrr.getData(query)
-        repeat = mrr.repeatability(df, deg)
-        repro = mrr.reproducability(df, deg)
-
-        print '--- Repeatability ---'
-        print repeat.to_string()
-
-        print '--- Reproducability ---'
-        print repro.to_string()

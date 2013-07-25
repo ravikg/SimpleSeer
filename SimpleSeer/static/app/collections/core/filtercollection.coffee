@@ -27,14 +27,14 @@ module.exports = class FilterCollection extends Collection
     groupfns:{}
   # `url` is the path to the restful filter object
   url:"/getFrames"
-  # `subscribePath` is the channel the `subscribe` method (websocket/pubsub) uses to listen for events 
-  subscribePath:"frame"
-  # if `mute` is true, altering the query params will not fire a request to the server.  This is typically used for parent level filtercollections that have other filtercollection bound to it  
+  # `subscribePath` is the channel the `subscribe` method (websocket/pubsub) uses to listen for events
+  subscribePath:"Frame"
+  # if `mute` is true, altering the query params will not fire a request to the server.  This is typically used for parent level filtercollections that have other filtercollection bound to it
   mute:false
   # if clearOnFetch is true, the filtercollection will clear its models list for every request (page by page, or changing filters).
   # if clearOnFetch is false, the filtercollection will retain its models list, and add newly fetched values on to its stack (endless scroll pagination)
   clearOnFetch:true
-  
+
   #initialize / constructor
   initialize: (models,params) =>
     # Create callback stack for functions to be called before and after a fetch
@@ -43,13 +43,13 @@ module.exports = class FilterCollection extends Collection
     @callbackStack['pre'] = []
 
     # [The mute param](#section-5 "jump to mute examples")
-    if params.mute?
+    if params?.mute?
       @mute = params.mute
-    
+
     # The clearOnFetch param:
     # true: (default) clears collection on fetch.
     # false: retains data in collection (for pagination)
-    if params.clearOnFetch?
+    if params?.clearOnFetch?
       @clearOnFetch = params.clearOnFetch
 
     # init bound collections in private space
@@ -59,7 +59,13 @@ module.exports = class FilterCollection extends Collection
     @_sortParams = _.clone @_defaults
 
     super(models,params)
-    
+
+    if params?.viewid?
+      olap = require 'models/OLAP'
+      @dataview = new olap({id:params.viewid})
+      @dataview.fetch({async:false})
+      params.url = "chart/data/#{@dataview.get('id')}"
+
     # ###bindFilter:
     #   An instance of FilterCollection that when changed, bubbles the filter
     #   up through all bound filters.
@@ -68,19 +74,24 @@ module.exports = class FilterCollection extends Collection
     #   > 5 other FilterCollections bound to the initial instance.
     #   > when you change the initial FilterCollection, all others
     #   > refresh with filter settings
-    if params.bindFilter
+    if params?.bindFilter
+      #@bindTo params.bindFilter.subCollection
       params.bindFilter.subCollection @
       @bindFilter = params.bindFilter
       @bindFilter
       @_sortParams = @bindFilter.getSettings()
     else
       @bindFilter = false
-    
+    @subToBackfill()
+
     # Set baseUrl off of default url.  url is changed, baseUrl remains root url
     if params.url?
-      @url = params.url
-    @baseUrl = @url
-    
+      @_url = params.url
+      @baseUrl = @_url
+    else
+      @baseUrl = @url
+    @_lastUrl = ''
+
     # Load filter widgets
     # TODO: make these collections
     if !@filters?
@@ -89,6 +100,18 @@ module.exports = class FilterCollection extends Collection
       application.settings.ui_filters_framemetadata = []
 
     return @
+
+  subToBackfill: =>
+    if @bindFilter == false
+      application.socket.on "message:backfill/complete/", @globalRefresh
+      if !application.subscriptions["backfill/complete/"]
+        application.subscriptions["backfill/complete/"] = application.socket.emit 'subscribe', "backfill/complete/"
+
+  bindTo: (collection) =>
+    collection.subCollection @
+    @bindFilter = collection
+    #@bindFilter
+    @_sortParams = @bindFilter.getSettings()
 
   # Add sub collection
   subCollection: (collection) =>
@@ -109,7 +132,7 @@ module.exports = class FilterCollection extends Collection
     else
       namePath = ''
     #if application.debug
-      #console.info "series:  subscribing to channel "+"message:#{@subscribePath}/#{namePath}"
+    #console.info "series:  subscribing to channel "+"message:#{@subscribePath}/#{namePath}"
     if application.socket
       application.socket.on "message:#{@subscribePath}/#{namePath}", callback
       #console.info "binding to: message:#{@subscribePath}/#{namePath}"
@@ -120,17 +143,17 @@ module.exports = class FilterCollection extends Collection
   #trigger fired when receiving data on the pubsub subscription.
   receive: (data) =>
     _obj = new @model data.data
-    if @getParam 'sortorder' == -1
+    if @getParam('sortorder') == -1
       at = 0
     else
       at = (@models.length)
     @add _obj, {at:at}
     return _obj
-    
+
   # Set sort param.  Bubble up through bound FiltersCollections
   setParam: (key,val) =>
     if key != "skip"
-      @resetParam("skip") 
+      @resetParam("skip")
     @_sortParams[key] = val
     for o in @_boundCollections
       o.setParam key, val
@@ -156,7 +179,7 @@ module.exports = class FilterCollection extends Collection
   # Get filter library from application
   loadFilter: (name) ->
     application.filters[name]
-  
+
   # Get bound filters and mix-in bound FilterCollection filters
   getFilters: () =>
     _filters = @filters
@@ -172,7 +195,7 @@ module.exports = class FilterCollection extends Collection
         @setParam('sortorder', sortorder)
         @setParam('sorttype', sorttype)
     return
-  
+
   # builds a query based on all bound filter widgets
   alterFilters:() =>
     criteria = []
@@ -185,8 +208,8 @@ module.exports = class FilterCollection extends Collection
       _json = {logic:'and',criteria:criteria}
     @setParam 'query', _json
     return
-  
-  #returns prepared object for query  
+
+  #returns prepared object for query
   getSettings: (total=false, addParams) =>
     if total
       skip = 0
@@ -201,25 +224,30 @@ module.exports = class FilterCollection extends Collection
         type: @getParam 'sorttype', ''
         name: @getParam 'sortkey', 'capturetime_epoch'
         order: @getParam 'sortorder'
-        
+
     if limit != false
-      _json['limit'] = limit
+      if @dataview?
+        _json['limit'] = skip + limit
+      else
+        _json['limit'] = limit
     if @getParam('groupby')
       _json['groupByField'] = {groupby: @getParam('groupby'), groupfns: @getParam('groupfns')}
     if addParams
       _json = _.extend _json, addParams
     return _json
-  
-  # gets url with full db query  
+
+  # gets url with full db query
   # TODO: map .error to params.error
   getUrl: (total=false, addParams, dataSet=false)=>
     if !dataSet
       dataSet = @getSettings(total, addParams)
+    if dataSet.sortinfo.name?
+      dataSet.sortinfo.name = encodeURIComponent dataSet.sortinfo.name
     "/"+JSON.stringify dataSet
 
-  # trigger fired before the fetch method makes request to server 
+  # trigger fired before the fetch method makes request to server
   preFetch:(params)=>
-    if params.modal
+    if params.modal and !@mute
       application.modal.show(params.modal)
     if !@clearOnFetch
       @_all = @models
@@ -228,18 +256,20 @@ module.exports = class FilterCollection extends Collection
         o()
     @callbackStack['pre'] = []
     return
-  
-  # trigger fired after the fetch method makes request to server 
+
+  # trigger fired after the fetch method makes request to server
   postFetch:()=>
-    application.modal.onSuccess()
+    application.modal.clear()
     if !@clearOnFetch
-      if @getParam 'sortorder' == -1
+      if @getParam('sortorder') == -1
         at = 0
       else
-        at = (@models.length)
-      @add @_all, {at:at ,silent: true}
+        at = (@_all.length)
+      # I disabled this because i think we always want paginated data at the pushed on to the stack - Jim
+      #@add @_all, {at:at ,silent: true}
+      @add @_all, {at:0, silent: true}
       @_all = []
-    for i,o of @callbackStack['post']
+    for o in @callbackStack['post']
       if typeof o == 'function'
         o()
     @callbackStack['post'] = []
@@ -261,7 +291,7 @@ module.exports = class FilterCollection extends Collection
         #console.log "resetting: ",_skip,_limit
         @setParam('skip',_skip)
         @setParam('limit',_limit)
-      
+
     @fetch({force:true,filtered:true,modal:false,success:callback})
 
   setRaw: (response) =>
@@ -273,12 +303,15 @@ module.exports = class FilterCollection extends Collection
   # - __before__: fires before the fetch makes request to server
   # - __success__: fires after the fetch makes request to server
   fetch: (params={}) =>
+    #console.dir params
+    #console.log params
     if !params.modal?
       params.modal = {message:'<p class="large center">Loading<p>',throbber:true}
     if params.filtered and @clearOnFetch == false
       @clearOnFetch = true
       @callbackStack['post'].push => @clearOnFetch = false
-
+    if !params.error?
+      params.error = => console.error 'generic request error'
     params['silent'] = true
     @preFetch(params)
     if params.forceRefresh
@@ -286,24 +319,52 @@ module.exports = class FilterCollection extends Collection
     total = params.total || false
     _url = @baseUrl+@getUrl(total,params['params']||false)
     for o in @_boundCollections
+      #TODO: TRACE WHERE THIS DAMN PARAM IS COMING FROM
+      delete params.success
       o.fetch(params)
     if !@mute
       @_all = @models
-      @callbackStack['pre'].push params.before
-      @callbackStack['post'].push params.success
+      if params.before
+        @callbackStack['pre'].push params.before
+      if params.success
+        @callbackStack['post'].push params.success
       params.success = @postFetch
-      if @url != _url or params.force
+      if @_lastUrl != _url or params.force
+        @_lastUrl = _url
         @url = _url
         super(params)
       else if params.success
         params.success()
-  
+
   # parses data returned by `fetch`.  (after `preFetch` and `fetch`, but before `postFetch`)
   parse: (response) =>
-    @totalavail = response.total_frames
-    @lastavail = response.frames?.length || 0
-    @setRaw (response)
-    dir = @getParam 'sortorder'
-    if dir and response.frames
-      response.frames = response.frames.reverse()
-    return response.frames
+    # check for new olap request
+    if response.data?
+      @lastavail = response.data?.length || 0
+      keys = @dataview.get("dataMap")
+      map = @dataview.get("_ormMap")
+      frames = []
+      for f in response.data
+        frame = {id:f.m[0], results:[]}
+        meas = {}
+        for i,k of keys
+          if map.root[k]?
+            frame[k] = f.d[i]
+          else if map.results[k]?
+            fa = k.split(".")
+            if !meas[fa[0]]?
+              meas[fa[0]] = {}
+            meas[fa[0]]['measurement_name'] = fa[0]
+            meas[fa[0]][fa[1]] = f.d[i]
+        for i,me of meas
+          frame.results.push me
+        frames.push frame
+      return frames
+    else
+      @totalavail = response.total_frames
+      @lastavail = response.frames?.length || 0
+      @setRaw (response)
+      #dir = @getParam 'sortorder'
+      #if dir and response.frames
+      #  response.frames = response.frames.reverse()
+      return response.frames

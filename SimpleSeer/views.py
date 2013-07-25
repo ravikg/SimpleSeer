@@ -19,6 +19,10 @@ from . import util
 from .realtime import RealtimeNamespace, ChannelManager
 from .Session import Session
 from .Filter import Filter
+from flask import Flask, request, render_template, redirect, url_for, flash
+from flask.ext.login import (current_user, login_required,
+                              login_user, logout_user, confirm_login,
+                              fresh_login_required)
 
 log = logging.getLogger()
 
@@ -44,7 +48,7 @@ def sio(path):
         request.environ,
         {'/rt': RealtimeNamespace },
         request._get_current_object())
-    
+
 @route('/')
 def index():
     files= ["javascripts/app.js","javascripts/vendor.js","stylesheets/app.css"]
@@ -59,7 +63,11 @@ def index():
       m.update(fHandler.read())
       MD5Hashes[baseUrl+f] = dict(path=m.hexdigest(),type=f.rsplit(".")[1])
       print MD5Hashes
-    return render_template("index.html",params = dict(MD5Hashes=MD5Hashes))    
+    return render_template("index.html",params = dict(MD5Hashes=MD5Hashes),settings=settings)
+
+@route('/testing')
+def testing():
+    return render_template("testing.html", settings=settings)
 
 @route('/log/<type>', methods=['POST'])
 def jsLogger(type):
@@ -80,14 +88,14 @@ def getContext(name):
         return context[0]
     else:
         return None
-    
+
 @route('/plugins.js')
 def plugins():
 
     useCache = False
     if os.path.exists('./cached.js'):
         cacheTime = os.path.getmtime('./cached.js')
-        
+
         useCache = True
         for ptype, plugins in util.all_plugins().items():
             for name, plugin in plugins.items():
@@ -101,7 +109,7 @@ def plugins():
                     plugTime = os.path.getmtime(mpath)
                     if plugTime > cacheTime:
                         useCache = False
-    
+
     if not useCache:
         result = []
         for ptype, plugins in util.all_plugins().items():
@@ -130,7 +138,7 @@ def plugins():
         f = open('./cached.js', 'r')
         log.info('Reading javascript from cache')
         js = f.read()
-        
+
     resp = make_response(js, 200)
     resp.headers['Content-Type'] = "text/javascript"
     return resp
@@ -140,6 +148,7 @@ def test():
     return 'This is a test of the emergency broadcast system'
 
 @route('/test.json', methods=['GET', 'POST'])
+@login_required
 @route('/_test', methods=['GET', 'POST'])
 def test_json():
     return 'This is a test of the emergency broadcast system'
@@ -163,20 +172,20 @@ def frames():
         earliest_date = calendar.timegm(earliest_date.timetuple())
     return dict(frames=frames, total_frames=total_frames, earliest_date=earliest_date)
 
-    
+
 @route('/getFrames/<filter_params>', methods=['GET'])
 @util.jsonify
 def getFrames(filter_params):
     from .base import jsondecode
     from HTMLParser import HTMLParser
     from SeerCloud.OLAPUtils import OLAPFactory
-    
+
     # filter_params should be in the form of a json encoded dicts
-    # that probably was also html encoded 
+    # that probably was also html encoded
     p = HTMLParser()
     nohtml = str(p.unescape(filter_params))
     params = jsondecode(nohtml)
-    
+
     skip = int(params.get('skip', 0))
     limit = params.get('limit', None)
     if limit:
@@ -184,33 +193,33 @@ def getFrames(filter_params):
     else:
         log.info('No limit set.  Using 50k to prevent mongo errors')
         limit = 50000
-    
+
     sortinfo = params.get('sortinfo', {})
     groupByField = params.get('groupByField',{})
     query = params['query']
-    
+
     f = Filter()
     total_frames, frames = f.getFrames(query, limit=limit, skip=skip, sortinfo=sortinfo, groupByField=groupByField)
     #frames = OLAPFactory.filterToOLAP(query, limit=limit, skip=skip, sortinfo=sortinfo)
     retVal = dict(frames=frames, total_frames=-1)
-    
-    
+
+
     if retVal:
         return retVal
     else:
         return {frames: None, 'error': 'no result found'}
-        
-         
+
+
 @route('/downloadFrames', methods=['GET', 'POST'])
 def downloadFrames():
     from .base import jsondecode
-    
+
     params = request.values.to_dict()
     rawdata = jsondecode(params['rawdata'])
     result_format = params['format']
-    
+
     f = Filter()
-    
+
     if result_format == 'csv':
         resp = make_response(f.toCSV(rawdata), 200)
         resp.headers['Content-Type'] = 'text/csv'
@@ -222,30 +231,30 @@ def downloadFrames():
     else:
         return 'Unknown format', 404
     return resp
-    
+
 @route('/getFilter/<filter_type>/<filter_name>/<filter_format>', methods=['GET'])
 @util.jsonify
 def getFilter(filter_type, filter_name, filter_format):
-    
+
     # formats: numeric, string, autofill, datetime
     # types: measurement, frame, framefeature
 
     f = Filter()
     retVal = f.checkFilter(filter_type, filter_name, filter_format)
-    
+
     if retVal:
         return retVal
     else:
         return {'error': 'no result found'}
-    
+
 @route('/features', methods=['GET'])
 @util.jsonify
-def features():    
+def features():
     f = Filter()
     return f.getFilterOptions()
-    
-    
-#TODO, abstract this for layers and thumbnails        
+
+
+#TODO, abstract this for layers and thumbnails
 @route('/grid/imgfile/<frame_id>', methods=['GET'])
 def imgfile(frame_id):
     params = request.values.to_dict()
@@ -259,9 +268,9 @@ def imgfile(frame_id):
         resp.headers['Content-disposition'] = 'attachment; filename="%s-%s.jpg"' % \
             (frame.camera.replace(' ','_'), frame.capturetime.strftime("%Y-%m-%d_%H_%M_%S"))
 
-    return resp    
+    return resp
 
-#TODO, abstract this for layers and thumbnails        
+#TODO, abstract this for layers and thumbnails
 @route('/grid/thumbnail_file/<frame_id>', methods=['GET'])
 def thumbnail(frame_id):
     params = request.values.to_dict()
@@ -269,7 +278,7 @@ def thumbnail(frame_id):
     if not frame or not frame[0].imgfile:
         return "Image not found", 404
     frame = frame[0]
-    
+
     if not frame.thumbnail_file:
         t = frame.thumbnail
         if not "is_slave" in Session().mongo or not Session().mongo['is_slave']:
@@ -280,17 +289,17 @@ def thumbnail(frame_id):
             resp = make_response(s.getvalue(), 200)
             resp.headers['Content-Type'] = "image/jpeg"
             return resp
-   
+
     resp = make_response(frame.thumbnail_file.read(), 200)
     resp.headers['Content-Type'] = frame.thumbnail_file.content_type
-    return resp    
+    return resp
 
 @route('/ping', methods=['GET', 'POST'])
 @util.jsonify
 def ping():
     text = "pong"
     return {"text": text }
-    
+
 #todo: move settings to mongo, create model with save
 @route('/settings', methods=['GET', 'POST'])
 @util.jsonify
@@ -302,7 +311,7 @@ def settings():
         try:
             plugins[i] =  [o for o in eval("M.{0}._plugins".format(i))]
         except AttributeError:
-            pass    
+            pass
     return {"settings": text, "plugins":plugins }
 
 
@@ -310,3 +319,64 @@ def settings():
 @route('/_status', methods=['GET', 'POST'])
 def status():
     return 'ok'
+
+@route('/_auth', methods=['GET','POST'])
+@login_required
+@util.jsonify
+def auth():
+    return ['authorized']
+
+
+@route('/login', methods=["GET", "POST"])
+def login():
+
+  try:
+    from .Web import USER_NAMES, USERS
+  except:
+    print 'login not setup'
+    return
+
+  if request.method == "POST" and "username" in request.form:
+    username = request.form["username"]
+
+    if username in USER_NAMES:
+      password = request.form["password"]
+      if password == USERS[1].password:
+
+        remember = request.form.get("remember", "no") == "yes"
+
+        if login_user(USER_NAMES[username], remember=remember):
+          flash("Logged in!")
+          return redirect(request.args.get("next") or url_for("index"))
+
+        else:
+          flash("Sorry, but you could not log in.")
+      else:
+        flash(u"Invalid Password")
+
+    else:
+      flash(u"Invalid username.")
+
+  return render_template("login.html")
+
+
+
+@route("/reauth", methods=["GET", "POST"])
+@login_required
+def reauth():
+  if request.method == "POST":
+    confirm_login()
+    flash(u"Reauthenticated.")
+    return redirect(request.args.get("next") or url_for("index"))
+
+  return render_template("reauth.html")
+
+
+@route("/logout")
+@login_required
+def logout():
+  logout_user()
+  flash("Logged out.")
+  return redirect(url_for("index"))
+
+

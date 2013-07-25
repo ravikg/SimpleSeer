@@ -15,7 +15,7 @@ module.exports = class Series extends FilterCollection
     click:->
     out:->
   subscribePath:"Chart"
-  
+
   initialize: (models, args={}) =>
     @_counter = 0
     @filterRoot = "Chart"
@@ -43,6 +43,7 @@ module.exports = class Series extends FilterCollection
     #if args.realtime
     #  @subscribe()
     @on("remove",@shiftChart)
+    @on("reset",@onSuccess)
     #@fetch()
     return @
 
@@ -57,11 +58,12 @@ module.exports = class Series extends FilterCollection
         return -1
       else
         return 1
-    
+
 
   parse: (response) =>
+    #console.log response
     @raw = response.data
-    super(response)
+    #super(response)
     if @realtime
       @subscribe(response.chart)
     clean = @_clean response.data
@@ -72,10 +74,11 @@ module.exports = class Series extends FilterCollection
       if !@view.options.fetchCheck()
         return
     @view.showMessage('loading','Loading')
-    args.success = @onSuccess
+    #args.success = @onSuccess
     args.error = @onError
     args['total'] = true
     args['params'] = {skip:~@limit+1,limit:@limit}
+    args['modal'] = ""
     super(args)
 
   onSuccess: (obj, rawJson) =>
@@ -90,7 +93,7 @@ module.exports = class Series extends FilterCollection
     if @view.options.callback?
       @view.options.callback(@view)
     $('.alert_error').remove()
-  
+
   onError: =>
     console.log 'error'
     @view.showMessage('error','Error retrieving data')
@@ -112,7 +115,7 @@ module.exports = class Series extends FilterCollection
       @view.hasData = true
     @shiftStack(true)
     return
-  
+
   _formatChartPoint: (d) =>
     if !@accumulate
       cp = @view.clickPoint
@@ -143,7 +146,7 @@ module.exports = class Series extends FilterCollection
       _point.multipoint = []
       for p in d.d
         _point.multipoint.push @_formatChartPoint {d:[y,p],m:d.m}
-        
+
 
     #for i,s of @model.metaMap
     #  if s == 'string' && @model.colormap
@@ -168,8 +171,8 @@ module.exports = class Series extends FilterCollection
     if @models.length - @view.maxPointSize >= offset
       return true
     return false
-    
-  
+
+
   receive: (data) =>
     for o in data.data.m.data
       p = @_formatChartPoint o
@@ -182,11 +185,11 @@ module.exports = class Series extends FilterCollection
     if @view.hasData && @view.hasMessage
       @view.hideMessage()
     return
-    
+
   inStack:(point) =>
     if @length == 0
       return true
     return point.x >= @at(0).get("x") or @_needShift(-1)
-    
+
   shiftChart: =>
-    @view.shiftPoint @id, false    
+    @view.shiftPoint @id, false

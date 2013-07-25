@@ -3,33 +3,82 @@
 
 # Main application reference
 application = require 'application'
-
 module.exports = class View extends Backbone.View
   subviews: {}
   events: {}
+  #keyBindings:
+  #  "alt+ctrl+shift+73":"keyfireTest"
+  #  "73":"keyfireTest"
   firstRender:true
+
+  #keyfireTest:(e) =>
+  #  console.log "keyfire!"
+  #  console.log e
 
   initialize: (options={}) =>
     super()
+    #application._keyBindings
 
-    if options.context?
+
+    if @options.context?
       # Load any context attached to view
       # For further details, see:
       # _SeerCloud/_ `models/core/context`
       # _SimpleSeer/_ `seer_application`
-      application.loadContext(options.context)
+      application.loadContext(@options.context)
+    #@on "uiFocus", @focus
     @subviews = {}
+
+  _bindKeys: =>
+    id = if typeof @id == "function" then @id() else @id
+
+    if id and @keyBindings
+      for i,o of @keyBindings
+        key = 0
+        for _key in i.split("+")
+          if _key == "alt" or _key == "ctrl" or _key == "shift"
+            key += application._keyCodes[_key]
+          else
+            key += "_" + _key
+        if !application._keyBindings[key]?
+          application._keyBindings[key] = {}
+        if !application._keyBindings[key][id]?
+          application._keyBindings[key][id] = []
+        if @[o] not in application._keyBindings[key][id]
+          application._keyBindings[key][id].push @[o]
 
   _setScroll: (el=@$el) =>
     el.infiniteScroll
       onScroll:(per) => @trigger('scroll', per)
       #onPage: => @trigger('page')
 
-  focus: =>
-    if !@$el.is(":visible")
-      @$el.show()
-    if @options.context
-      application.context[@options.context].activate()
+  focus:(back=false) =>
+    #console.info 'in focus'
+    #if !back and !@$el.is(":visible")
+    #  @$el.show()
+    if application.loading
+      #console.log 'loading...'
+      if @options.context
+        if back
+          application.loading = false
+        #console.log 'ACTIVATING CONTEXT!', @options.context
+        application.context[@options.context].activate()
+        back = false
+      else
+        back = true
+      if !back
+        for i,o of @subviews
+          o.focus()
+      else
+        if @options.parent?
+          @options.parent.focus(true)
+
+  unfocus: =>
+    #if @$el.is(":visible")
+    #  @$el.hide()
+    for i,o of @subviews
+      o.unfocus()
+
 
   # Override in child class.  Returns template handlebars function
   template: =>
@@ -45,6 +94,9 @@ module.exports = class View extends Backbone.View
       if !application.subscriptions[channel]?
         application.subscriptions[channel] = application.socket.emit('subscribe', channel)
       application.socket.on("message:#{channel}", handler)
+
+  socketPublish:(channel, data) =>
+    application.socket.emit("publish", channel, data)
 
   #### Transition is way to call a method with a transition in and out.
   # > __callback__ : Function to call between __in__ and __out__ effects
@@ -70,10 +122,13 @@ module.exports = class View extends Backbone.View
 
   # Renders view using effects if defined
   render: =>
+    @_bindKeys()
+    #console.log 'render'
     callback = =>
       @$el.html @template @getRenderData()
       @renderSubviews()
-      @focus()
+      #@focus()
+      #@trigger "uiFocus"
       @afterRender()
       if @firstRender  && (@onScroll? || @onPage?)
         _ele = @$el.find(@scrollElement)

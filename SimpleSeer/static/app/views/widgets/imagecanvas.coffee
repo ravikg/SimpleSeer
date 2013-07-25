@@ -18,9 +18,14 @@ module.exports = class ImageCanvas extends SubView
 
   showMarkup: =>
     @canvas.show?()
+    return @
 
   hideMarkup: =>
     @canvas.hide?()
+    return @
+
+  toggleMarkup: =>
+    @canvas.toggle?()
 
   getRenderData: =>
     image: @options.image
@@ -33,13 +38,15 @@ module.exports = class ImageCanvas extends SubView
 
   afterRender: =>
     @canvas = @$("canvas")
+    if @options.stealth then @hideMarkup()
     @image = @$("img")
     @image.load =>
-      @image.attr("data-w", @image.get(0).width)
-      @image.attr("data-h", @image.get(0).height)
-      @loaded = true
-      @image.show()
-      @afterLoad()
+      if @image.get(0)?
+        @image.attr("data-w", @image.get(0).width)
+        @image.attr("data-h", @image.get(0).height)
+        @loaded = true
+        @image.show()
+        @afterLoad()
 
   _process: =>
     if !@processing?
@@ -72,22 +79,19 @@ module.exports = class ImageCanvas extends SubView
   # the canvas and image need to be
   # sized to the parent container.
   _scale: =>
-    if @options.scaling is true
-      [w, h] = [@image.attr("data-w"), @image.attr("data-h")]
+    unless @options.scaling is false
+      [w, h] = [@image.data("w"), @image.data("h")]
       box =
         width: @options.width - @options.padding * 2,
         height: @options.height - @options.padding * 2
-
       # Check if we need to scale down the image itself.
       wider = (w > box.width)
       taller = (h > box.height)
-      if(wider or taller)
-        scaleW = box.width / w
-        scaleH = box.height / h
-        @_scaleFactor = Math.min(scaleH, scaleW)
-        @image.width(w * @_scaleFactor)
-        @image.height(h * @_scaleFactor)
-
+      scaleW = box.width / w
+      scaleH = box.height / h
+      @_scaleFactor = Math.min(scaleH, scaleW)
+      @image.width(w * @_scaleFactor)
+      @image.height(h * @_scaleFactor)
       @canvas.width @image.width() + @options.padding * 2
       @canvas.height @image.height() + @options.padding * 2
     else
@@ -107,7 +111,10 @@ module.exports = class ImageCanvas extends SubView
     [w1, h1] = [@image.width(), @image.height()]
     @_process()
     @processing.size w, h
-    @processing.scale @_scaleFactor
+    if @model
+      @processing.scale w1 / @model.get("width")
+    else
+      @processing.scale w1 / @image.attr "data-w"
     @processing.background 0, 0
     engine(@processing, @options, [w1, h1])
 
@@ -121,3 +128,15 @@ module.exports = class ImageCanvas extends SubView
     @afterLoad()
     return @options.height
 
+  repaint: =>
+    @_markup(@options.engine)
+
+  setFeature:(feature) =>
+    @options.feature = feature
+    @afterLoad()
+
+  setImage:(image) =>
+    @loaded = false
+    @processing = undefined
+    @options.image = image
+    @render()

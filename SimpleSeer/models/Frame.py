@@ -1,6 +1,7 @@
 from cStringIO import StringIO
 from calendar import timegm
 import mongoengine
+from mongoengine import signals as sig
 
 from SimpleSeer.base import Image, pil, pygame
 from SimpleSeer import util
@@ -25,7 +26,7 @@ from ..util import LazyProperty
 class FrameSchema(fes.Schema):
     allow_extra_fields=True
     filter_extra_fields=True
-    camera = fev.UnicodeString(not_empty=True)
+    camera = fev.UnicodeString(if_missing='')
     metadata = V.JSON(if_empty={}, if_missing={})
     notes = fev.UnicodeString(if_empty="", if_missing="")
     #TODO, make this feasible as a formencode schema for upload
@@ -58,7 +59,7 @@ class Frame(SimpleDoc, mongoengine.Document):
     imgfile = mongoengine.FileField()
     thumbnail_file = mongoengine.FileField()
     metadata = mongoengine.DictField()
-    notes = mongoengine.StringField()
+    notes = mongoengine.StringField(default='')
     _imgcache = ''
     _imgcache_dirty = False
     _recentframes = [] #class-wide frame cache for lastobjects()
@@ -68,10 +69,26 @@ class Frame(SimpleDoc, mongoengine.Document):
         'indexes': ["capturetime", "camera", "-capturetime", ('camera', '-capturetime'), "-capturetime_epoch", "capturetime_epoch", "results", "results.state", "metadata"]
     }
     
+    
+    def __init__(self, **kwargs):
+        from .base import checkPreSignal, checkPostSignal
+        from SimpleSeer.Session import Session
+        
+        super(Frame, self).__init__(**kwargs)
+        
+        app = Session()._Session__shared_state['appname']
+        
+        for pre in Session().get_triggers(app, 'Frame', 'pre'):
+            sig.pre_save.connect(pre, sender=Frame, weak=False)
+        
+        for post in Session().get_triggers(app, 'Frame', 'post'):
+            sig.post_save.connect(post, sender=Frame, weak=False)
+    
     @classmethod
     #which fields we care about for Filter.py
     def filterFieldNames(cls):
-        return ['_id', 'camera', 'capturetime', 'capturetime_epoch', 'localtz', 'metadata', 'notes', 'height', 'width', 'imgfile', 'results']
+        return ['capturetime', 'capturetime_epoch', 'updatetime', 'localtz', 'camera', 'height', 
+               'width', 'clip_id', 'clip_frame', 'imgfile', 'thumbnail_file', 'metadata', 'notes', 'results']
 
 
     @classmethod
@@ -210,6 +227,7 @@ class Frame(SimpleDoc, mongoengine.Document):
         
     def save(self, *args, **kwargs):
         from .Inspection import Inspection
+        from .Measurement import Measurement
         
         #TODO: sometimes we want a frame with no image data, basically at this
         #point we're trusting that if that were the case we won't call .image
@@ -241,6 +259,10 @@ class Frame(SimpleDoc, mongoengine.Document):
         if 'publish' in kwargs:
             publish = kwargs.pop('publish')
         
+        for m in Measurement.objects:
+            m.tolerance(self, self.results)
+        
+
         super(Frame, self).save(*args, **kwargs)
         
         if newFrame and Session().framebuffer:
@@ -282,8 +304,9 @@ class Frame(SimpleDoc, mongoengine.Document):
             kwargs.pop("publish")
         elif self.id:
             realtime.ChannelManager().publish("framedelete/", { "id": str(self.id) })
+        
         self.delete_image()
-        super(Frame, self).save(*args, **kwargs)
+        super(Frame, self).delete(*args, **kwargs)
         
     def serialize(self):
         s = StringIO()
@@ -341,3 +364,4 @@ class Frame(SimpleDoc, mongoengine.Document):
             if earliest_frame:
                 earliest_date = earliest_frame.capturetime
         return total_frames, chosen_frames, earliest_date
+

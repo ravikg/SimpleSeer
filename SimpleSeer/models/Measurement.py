@@ -1,5 +1,6 @@
 import bson
 import mongoengine
+from mongoengine import signals as sig
 
 from .base import SimpleDoc, WithPlugins
 from .Result import ResultEmbed
@@ -204,6 +205,23 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
 
         return results
 
+    def backfillTolerances(self):
+        from .Frame import Frame
+        from .Alert import Alert
+        from ..realtime import ChannelManager
+        
+        #NJO, we shouldn't be doing this, but we need something to trigger
+        #and our REST stuff is a little too static
+        Alert.info("Backfilling Measurements")
+
+        for frame in Frame.objects:
+            log.info('Backfilling measurement on frame %s' % frame.id)
+            if frame.results:
+                self.tolerance(frame, frame.results)
+                frame.save(publish=False)
+        Alert.clear()
+        Alert.refresh('backfill')
+
     def findFeatureset(self, features):
 
         fs = []
@@ -329,6 +347,20 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
 
         return charts
 
+
+    def __init__(self, **kwargs):
+        from .base import checkPreSignal, checkPostSignal
+        from SimpleSeer.Session import Session
+        
+        super(Measurement, self).__init__(**kwargs)
+        
+        app = Session._Session__shared_state['appname']
+        
+        for pre in Session().get_triggers(app, 'Measurement', 'pre'):
+            sig.pre_save.connect(pre, sender=Frame, weak=False)
+        
+        for post in Session().get_triggers(app, 'Measurement', 'post'):
+            sig.post_save.connect(post, sender=Frame, weak=False)
 
     def __repr__(self):
         return "<Measurement: " + str(self.inspection) + " " + self.method + " " + str(self.featurecriteria) + ">"

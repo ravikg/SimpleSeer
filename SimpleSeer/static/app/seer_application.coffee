@@ -5,75 +5,107 @@
 
 require 'lib/view_helper'
 require 'lib/transitions'
+$.getScript("plugins.js")
 
 module.exports = SeerApplication =
   settings: {}
   menuItems: {}
   menuBars: {}
   context: {}
-  alertStack: [] 
+  alertStack: []
   inAnim: false
-  
-  # Set up the application and include the 
+  browser: {}
+  loading: true
+  _keyCodes:
+    'alt':1
+    'shift':2
+    'ctrl':4
+
+  # Set up the application and include the
   # necessary modules. Configures the page
-  # and 
+  # and
   _init: (settings) ->
+    @_keyBindings = {}
+    $("html").keyup @_keyPress
+
     @settings = _.extend @settings, settings
-    
+
     if @settings.mongo.is_slave
       $(".notebook").hide()
-  		
+
     if !@settings.template_paths?
       @settings.template_paths = {}
-      
+
     @subscriptions = {}
     @timeOffset = (new Date()).getTimezoneOffset() * 60 * 1000
 
     # Set up the client name.
     $('#client-name').html(window.SimpleSeer.settings.ui_pagename || "")
+    document.title = window.SimpleSeer.settings.ui_pagename || ""
 
     if window.WebSocket?
       @socket = io.connect '/rt'
-      #@.socket.on 'timeout', ->
-      #@.socket.on 'connect', ->
-      #@.socket.on 'error', ->
-      #@.socket.on 'disconnect', ->
-      #@.socket.on 'message', (msg) ->
+      @socket.on 'connect', ->
+        @socket.on 'timeout', ->
+          console.error 'websocket timeout'
+        @socket.on 'error', ->
+          console.error 'websocket error'
+        @socket.on 'disconnect', ->
+          console.error 'websocket disconnect'
       @socket.on "message:alert/", window.SimpleSeer._serveralert
       @socket.emit 'subscribe', 'alert/'
-      
+
     m = require 'collections/measurements'
     @measurements = new m()
     @measurements.fetch()
     t = require 'views/core/modal'
     @modal = new t()
 
-    
+
     $("#slides").infiniteScroll
       onScroll:(per) =>
         @activeTab.trigger 'scroll', per
       onPage: =>
         @activeTab.trigger 'page'
 
-        # Set up the timeout message dialog.
-    $('#lost_connection').dialog
-      autoOpen: false
-      modal: true
-      buttons:
-        Ok: ->
-          $( this ).dialog( "close" )
-
   _preinitialize: ->
     tc = require 'collections/tab_container'
     @tabs = new tc()
+    #@loadAdmin()
     @tabs.fetch()
-  
+
+
+  loadAdmin:() ->
+    TabCon = require "models/core/tab_container"
+    SimpleSeer.tabs.push new TabCon
+      id: "__admindash__"
+      navbar: "left-main"
+      path: "admin"
+      tabs: [{
+        name: "db"
+        view: "admin"
+        inNavigation: false
+      }]
+
   route: (route, name=false, callback= =>) ->
     console.log route,name,callback
     for r in Backbone.history.handlers
       console.log r
     @router.route route, name, callback
 
+  _keyPress: (e) ->
+    key = 0
+    if e.altKey
+      key += SimpleSeer._keyCodes['alt']
+    if e.ctrlKey
+      key += SimpleSeer._keyCodes['ctrl']
+    if e.shiftKey
+      key += SimpleSeer._keyCodes['shift']
+    key += "_"+ e.which
+    if SimpleSeer._keyBindings[key]
+      for i,o of SimpleSeer._keyBindings[key]
+        for event in o
+          event(e)
 
   # Sends an alert window to the client
   # with the specified message and severity.
@@ -95,41 +127,29 @@ module.exports = SeerApplication =
       return @menuBars[options.id]
 
   loadContext:(name) ->
-    _context = require 'models/core/context'
     if !@context[name]?
+      _context = require 'models/core/context'
       @context[name] = new _context({name:name})
       #a = @context[name].fetch()
     return @context[name]
 
-  alert:(message, alert_type, pop=false) ->    
-    if @inAnim is true
-      @alertStack.push {message: message, alert_type: alert_type}
-      return
-
+  alert:(message, alert_type, pop=false) ->
     switch alert_type
       when "clear"
-        @inAnim = true
-        $("#messages > .alert").fadeOut(400, (=>
-          @inAnim = false
-          $("#messages > .alert:hidden").remove()
-          stack = _.clone(@alertStack)
-          @alertStack = []
-          for alert in stack
-            @alert(alert.message, alert.alert_type)
-        ))
+        $("#messages > .alert").remove()
       when "redirect"
         if message is "@rebuild"
           window.location.reload()
-        else 
+        else
           window.SimpleSeer.router.navigate(message || window.location.hash, true)
-      else 
+      else
         if !message then return false
         _duplicate = false
 
         #console.group(new Date()); console.log(message); console.groupEnd();
         #$(".alert-#{alert_type}").each (e,v)->
         #  if ($(v).data("message") == message) then _duplicate = true
-        
+
         if _duplicate is false
           popup = $("<div style=\"display: none\">#{message}</div>")
           popup.addClass("alert alert-#{alert_type}").data("message", message).appendTo("#messages")

@@ -1,8 +1,6 @@
-# Base class for all collections.
-Backbone = if describe? then require('backbone') else window.Backbone
-
 module.exports = class Collection extends Backbone.Collection
   ajaxTried: 0
+  cachebust: true
 
   sync: =>
     args = arguments
@@ -26,4 +24,12 @@ module.exports = class Collection extends Backbone.Collection
         return
       else
         @ajaxTried = 0
-        $('#lost_connection').dialog 'open'
+        # THE EVIL UGLY ERROR BOX!!
+        #$('#lost_connection').dialog 'open'
+        console.error "Error: Lost Connection (collection.coffee)"
+
+  fetch: (args) =>
+    if @cachebust
+      @url = @url.replace /(\?cachebust\=\d+)/g, ""
+      @url += "?cachebust="+new moment().valueOf()
+    super(args)

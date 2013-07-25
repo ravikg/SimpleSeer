@@ -1,44 +1,43 @@
 .ui-datetimerange {
   position: fixed;
   z-index: 1030;
-  background: #fafafa;
+  background: #ececec;
   margin-top: 14px;
   padding: 10px;
   font-size: 13px;
-  font-family: sans-serif;
-  box-shadow: rgba(0, 0, 0, 0.296875) 0px 5px 22px;
-  border: 1px solid #777;
+  box-shadow: 0px 8px 28px rgba(0, 0, 0, 0.5);
+  border: 1px solid #727272;
 }
 
 .ui-datetimerange .left,
 .ui-datetimerange .right {
-  height: 154px;
+  height: 164px;
   display: inline-block;
   vertical-align: top;
 }
 
 .ui-datetimerange .right {
-  margin-left: 6px;
-  padding-left: 14px;
-  padding-top: 3px;
-  padding-right: 3px;
-  
-  border-left: 1px solid #D0D0D0;
+  margin-left: 11px;
   box-sizing: border-box;
 }
 
 .ui-datetimerange .right .block {
-  margin-bottom: 10px; 
+  margin-bottom: 10px;
 }
 
 .ui-datetimerange .right .block label {
   margin-bottom: 3px;
   display: block;
+  color: #222;
 }
 
 .ui-datetimerange .bottom button {
   padding: 3px 10px;
   margin-left: 6px;
+}
+
+.ui-datetimerange .bottom button:last-child {
+  margin-right: 0px;
 }
 
 .ui-datetimerange .bottom button[disabled] {
@@ -47,17 +46,36 @@
 }
 
 .ui-datetimerange .bottom {
-  margin-top: 13px;
+  margin-top: 30px;
   text-align: right;
 }
 
 .ui-datetimerange button.switch {
   vertical-align: top;
-  height: 24px;
-  padding-bottom: 21px;
+  height: 100%;
+  padding: 5px;
+  padding-bottom: 11px;
   margin: 0;
-  margin-right: 6px;
+  margin-right: -1px;
   color: #444;
+  border-color: #a0a0a0;
+  background: #d6d6d6;
+  border-radius: 2px;
+  box-shadow: none;
+}
+
+.ui-datetimerange input {
+  color: #333;
+  font-family: "Open Sans";
+  font-size: 12px;
+  padding: 5px;
+  border: 1px solid #bdbdbd;
+  background-color: #FFF;
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, color-stop(1%, #EEE), color-stop(15%, #FFF));
+  background-image: -webkit-linear-gradient(top, #EEE 1%, #FFF 15%);
+  background-image: -moz-linear-gradient(top, #EEE 1%, #FFF 15%);
+  background-image: -o-linear-gradient(top, #EEE 1%, #FFF 15%);
+  background-image: linear-gradient(#EEE 1%, #FFF 15%);
 }
 
 .ui-datetimerange input.alter {
@@ -67,96 +85,107 @@
 }
 
 .ss-calendar {
+  height: 100%;
+  width: 142px;
   vertical-align: top;
-  
+
   display: inline-block;
-  margin-right: 6px;
-  
+  margin-right: -1px;
+
   background: #fff;
-  border: 1px solid #ccc;
-  box-shadow: 0px 1px 0px #F8F8F8;
-  
-  /* Disables text selection */        
+  border: 1px solid #a0a0a0;
+
+  /* Disables text selection */
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -khtml-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
-  user-select: none;        
-}
-      
-.ss-calendar table {
-  font-family: sans-serif;
-  font-size: 11px;
+  user-select: none;
 }
 
-.ss-calendar caption {
+.ss-calendar .caption {
   text-align: center;
-  line-height: 14px;
+  height: 22px;
+  line-height: 21px;
   color: #333;
-  border-bottom: 1px solid #ccc;
-  padding: 2px 0;
-  
-  box-shadow: inset 0px 1px 0px #fbfbfb;
-  
+  border-bottom: 1px solid #a0a0a0;
+  font-size: 12px;
   background-image: linear-gradient(top, rgb(248,248,248) 0%, rgb(230,230,230) 100%);
   background-image: -o-linear-gradient(top, rgb(248,248,248) 0%, rgb(230,230,230) 100%);
   background-image: -moz-linear-gradient(top, rgb(248,248,248) 0%, rgb(230,230,230) 100%);
   background-image: -webkit-linear-gradient(top, rgb(248,248,248) 0%, rgb(230,230,230) 100%);
-  background-image: -ms-linear-gradient(top, rgb(248,248,248) 0%, rgb(230,230,230) 100%);        
-}      
-
-.ss-calendar thead {
-  margin-bottom: 0;
+  background-image: -ms-linear-gradient(top, rgb(248,248,248) 0%, rgb(230,230,230) 100%);
 }
 
-.ss-calendar thead tr {
+.ss-calendar .head {
+  margin-bottom: 0;
+  border-bottom: 1px solid #a0a0a0;
+}
+
+.ss-calendar .head .row {
   border: none;
 }
 
-.ss-calendar thead tr th {
+.ss-calendar .head .row .cell {
   text-align: center;
-  font-weight: bold;
+  font-weight: 600;
+  font-size: 11px;
+  color: #525252;
 }
 
-.ss-calendar tbody td {
-  text-align: center;
-  
-  border-left: 1px solid #ccc;
-  border-top: 1px solid #ccc;
+.ss-calendar .body {
+  background: #f0f0f0;
 }
 
-.ss-calendar tbody td.date {
+.ss-calendar .body .cell.date {
   cursor: pointer;
+  background: white;
 }
 
-.ss-calendar tbody td.date:hover {
+.ss-calendar .body .cell.date:hover {
   background: #FFF5A5;
-  color: #000 !important;
-}      
+  color: #752626;
+}
 
 .ss-calendar tbody td:first-child {
   border-left: none;
 }
 
-.ss-calendar .cell {
-  width: 14px;
-  height: 14px;
-  line-height: 14px;
-  padding: 2px;
+.ss-calendar .row {
   margin: 0;
+}
+
+.ss-calendar .cell {
+  display: inline-block;
+  vertical-align: top;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  margin: 0;
+  color: #525252;
+  text-align: center;
+}
+
+.ss-calendar .body .cell {
+  font-size: 11px;
+  border: 1px solid #A0A0A0;
+  border-width: 0px 1px 1px 0;
+}
+
+.ss-calendar .body .row .cell:last-child {
+  border-right: none;
 }
 
 .ss-calendar .date.static,
 .ss-calendar .date.static:hover {
   cursor: default !important;
-  color: #eee !important;
+  color: #f0f0f0 !important;
   background: none !important;
 }
 
 .ss-calendar .date.selected {
   font-weight: bold;
-  background: #3F5765;
-  color: #fff;
-  text-shadow: 0px 1px 3px rgba(0, 0, 0, .4);
+  background: #B4CDEB !important;
+  color: #003961;
 }

@@ -390,3 +390,9 @@ def BuildCommand(self):
     cwd = os.path.realpath(os.getcwd())
     print "Updating " + cwd
     sst.SimpleSeerProjectTemplate("").post("", cwd, { "package": cwd.split("/")[-1] })
+
+@ManageCommand.simple()
+def BaseCommand(self):
+    subprocess.call(['sh', 'SimpleSeer/scripts/base.sh'])
+    BuildCommand("").run()
+
