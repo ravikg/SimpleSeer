@@ -280,7 +280,6 @@ window.FormBuilder = {
         required = item.parent().data("required") is "required"
         if tag is "INPUT"
           type = item.attr("type")
-
         if (type is "text" or item.type is "password")
           values[id] = item.val()
         if (type is "textarea")
