@@ -146,7 +146,7 @@ $.widget("ui.datetimerange", {
          * tweaks to the interface.
          */
 
-        $(".ss-calendar .date").live("click", function() {
+        self.window.on("click", ".ss-calendar .date", function() {
             var eleDate = new Date($(this).attr("data-date"));
 
             if( self._inChange == false ) {
@@ -243,10 +243,10 @@ $.widget("ui.datetimerange", {
     },
 
     destroy: function() {
-        this.rightSide.unbind().remove()
-        this.leftSide.unbind().remove()
-        this.window.unbind().remove()
-        this.element.unbind('click')
+        this.rightSide.off().unbind().remove()
+        this.leftSide.off().unbind().remove()
+        this.window.off().unbind().remove()
+        this.element.off().unbind('click')
         $.Widget.prototype.destroy.call(this);
     },
 

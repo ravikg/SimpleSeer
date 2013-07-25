@@ -140,4 +140,8 @@ module.exports = class ImageCanvas extends SubView
     @render()
 
   remove: =>
+    @$("img").off().unbind()
+    for trash in @el.children
+      if trash?
+        @el.removeChild(trash)
     delete @processing
