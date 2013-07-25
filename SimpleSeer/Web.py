@@ -75,9 +75,10 @@ def make_app(*args,**kwargs):
 
     app = Flask(__name__,template_folder=template_folder)
 
-
+    # TODO: change this key, its horrible.
     app.secret_key = 'secretkey'
-    login_manager.setup_app(app)
+    # commented out auth for now!
+    #login_manager.setup_app(app)
 
     @app.teardown_request
     def teardown_request(exception):

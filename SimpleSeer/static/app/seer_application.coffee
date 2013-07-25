@@ -64,9 +64,9 @@ module.exports = SeerApplication =
 
     $("#slides").infiniteScroll
       onScroll:(per) =>
-        @activeTab.trigger 'scroll', per
+        @getActiveTab().trigger 'scroll', per
       onPage: =>
-        @activeTab.trigger 'page'
+        @getActiveTab().trigger 'page'
 
   _preinitialize: ->
     tc = require 'collections/tab_container'
@@ -74,6 +74,9 @@ module.exports = SeerApplication =
     #@loadAdmin()
     @tabs.fetch()
 
+  getActiveTab: ->
+    tc = @tabs.where({'name':@activeTab[0]})
+    return tc[0].view.subviews[@activeTab[1]]
 
   loadAdmin:() ->
     TabCon = require "models/core/tab_container"
