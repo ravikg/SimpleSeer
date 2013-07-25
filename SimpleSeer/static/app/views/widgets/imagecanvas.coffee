@@ -9,12 +9,13 @@
 # tasks like handling scale.
 
 module.exports = class ImageCanvas extends SubView
-  template: Template
-  canvas: {}
-  image: {}
-  processing: undefined
-  _scaleFactor: 1
-  loaded: false
+  constructor: ->
+    @template = Template
+    @canvas = {}
+    @image = {}
+    @processing = undefined
+    @_scaleFactor = 1
+    @loaded = false
 
   showMarkup: =>
     @canvas.show?()
