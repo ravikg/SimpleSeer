@@ -278,5 +278,5 @@ class PubSubHandler(logging.Handler):
         self._cm = ChannelManager(shareConnection=False)
         
     def emit(self, msg):
-        self._cm.publish(self._channel, {'ts': msg.created, 'file': msg.filename, 'level': msg.levelname, 'msg': msg.message})
+        self._cm.publish(self._channel, {'ts': msg.created, 'file': msg.filename, 'level': msg.levelname, 'msg': msg.msg})
          
