@@ -20,7 +20,11 @@
     <title>{% block title %}Sight Machine{% endblock %}</title>
   </head>
 
+
+
   <body>
+    {% block modal %}<div id="modal"></div>{% endblock %}
+    <div id="effects">
     {% block header %}
       <header>
           <nav>
@@ -49,12 +53,12 @@
         {% block bottom_toolbar %}{% endblock %}
       </section>
     {% endblock %}
+    </div>
 
     <!-- browser compatability check -->
     <script type="text/javascript">setTimeout(function(){if(typeof SimpleSeer==="undefined"){$("#browser_fail").show()}else{$("#app_load").hide()}if($("#browser_fail").is(":visible")==true){$("#app_load").hide()}},1e4)</script>
 
     <!-- div where non-blocking pop-up messages are written.  Soon to be pushed in to modal logic, and removed. -->
     <div id="messages" class="span10 offset1"></div>
-    {% block modal %}<div id="modal"></div>{% endblock %}
   </body>
 </html>

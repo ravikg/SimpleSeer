@@ -52,6 +52,9 @@ Handlebars.registerHelper "nl2br", (text) ->
   nl2br = (text + "").replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, "$1" + "<br>" + "$2")
   new Handlebars.SafeString(nl2br)
 
+Handlebars.registerHelper "raw", (text) ->
+  new Handlebars.SafeString(text)
+
 Handlebars.registerHelper 'epoch', (epoch) ->
   d = new Date parseInt epoch * 1000
 
@@ -167,7 +170,7 @@ Handlebars.registerHelper "log", (value) ->
   console.log "Handlebars Log: ", value
   return new Handlebars.SafeString ""
 
-Handlebars.registerHelper "resultlist", (results, blacklist) ->
+Handlebars.registerHelper "resultlist", (results, blacklist,text="No Results") ->
   tpl = ""
 
   r = 0
@@ -176,7 +179,7 @@ Handlebars.registerHelper "resultlist", (results, blacklist) ->
       r++
 
   if !results or results.length is 0 or !r
-    tpl += "<div data-use=\"no-results\" class=\"centered\">No Results</div>"
+    tpl += "<div data-use=\"no-results\" class=\"centered\">#{text}</div>"
   else
 
     results.map  ((item) => item.mmm = SimpleSeer.measurements.where({name:item.measurement_name})[0])
@@ -229,3 +232,75 @@ Handlebars.registerHelper "tolstate", (results) ->
     return "fail"
   else
     return "pass"
+
+Handlebars.registerHelper "formbuilder", (form) ->
+  str = "<div data-formbuilder='1'>"
+  for element in form
+    str += "<div data-id=\"#{element.id}\""
+    if element.required
+      str += " data-required=\"required\""
+    str += ">"
+    str += "<label>#{element.label}"
+    if element.required
+      str += "<span>*</span> "
+    str += ":</label><br>"
+    switch element.type
+      when "text"
+        str += "<input type=\"text\" data-key=\"#{element.id}\" value=\"#{element.value or ''}\">"
+      when "password"
+        str += "<input type=\"password\" data-key=\"#{element.id}\" value=\"#{element.value or ''}\">"
+      when "textarea"
+        str += "<textarea data-key=\"#{element.id}\">#{element.value or ''}</textarea>"
+      when "radio"
+        for option in element.values
+          str += "<input type=\"radio\" name=\"#{element.id}\" data-key=\"#{element.id}\" value=\"#{option.value}\"> #{option.name}<br>"
+      when "checkbox"
+        for option in element.values
+          str += "<input type=\"checkbox\" name=\"#{element.id}\" data-key=\"#{element.id}\" value=\"#{option.value}\"> #{option.name}<br>"
+      when "select"
+        str += "<select data-key=\"#{element.id}\" #{if element.multiple then "multiple=\"multiple\"" else ""}>"
+        for option in element.values
+          str += "<option value=\"#{option.value}\">#{option.name}</option>"
+        str += "</select>"
+    str += "</div>"
+  str += "</div>"
+  return new Handlebars.SafeString str
+
+window.FormBuilder = {
+  getValues:(element) =>
+    values = {}
+    errors = []
+    element = element.find("[data-formbuilder=1]")
+    if element[0]?
+      for item in element.find("[data-key]")
+        item = $(item)
+        id = item.data("key")
+        tag = item.get(0).tagName
+        type = tag
+        required = item.parent().data("required") is "required"
+        if tag is "INPUT"
+          type = item.attr("type")
+
+        if (type is "text" or item.type is "password")
+          values[id] = item.val()
+        if (type is "textarea")
+          values[id] = item.html()
+        if (type is "radio")
+          values[id] = item.parent().find("[data-key=#{id}]:checked").val()
+        if (type is "select")
+          if item.multiple is true
+            items = item.parent().find("[data-key=#{id}] option:selected")
+            values[id] = []
+            for box in items
+              values[id].push $(box).val()
+          else
+            values[id] = item.parent().find("[data-key=#{id}] option:selected").val()
+        if (type is "checkbox")
+          items = item.parent().find("[data-key=#{id}]:checked")
+          values[id] = []
+          for box in items
+            values[id].push $(box).val()
+        if (required is true and (!values[id]? or values[id] is ""))
+          errors.push id
+    return [values, errors]
+}
