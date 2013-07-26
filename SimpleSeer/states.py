@@ -181,7 +181,7 @@ class Core(object):
         
         if overwrite:
             if results:
-                newResults = { result.__dict__['measurement_name']: 1 for result in results }.keys()
+                newResults = { result.measurement_name: 1 for result in results }.keys()
             else:
                 newResults = []
             keptResults = [ result for result in frame.results if not result.measurement_name in newResults ]
