@@ -150,6 +150,7 @@ module.exports = class View extends Backbone.View
   # Recursively destroys subviews, then destroys itself
   remove: =>
     @clearSubviews()
+    @$el.off().unbind().remove()
     super()
 
   # Override in child class.  Runs after render is fired
