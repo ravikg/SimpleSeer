@@ -8,7 +8,8 @@ from celery.result import ResultSet
 from bson import ObjectId
 from gridfs import GridFS
 
-from .util import ensure_plugins, jsonencode
+from .util import ensure_plugins 
+from .base import jsonencode, jsondecode
 
 from .realtime import ChannelManager
 from . import models as M
@@ -26,13 +27,80 @@ from collections import defaultdict
             
 ensure_plugins()
 
+"""
+Legacy function for VQL backfill handler
+"""
+@task()
+def backfill_meta(frame_id, inspection_ids, measurement_ids, tolerance_ids):
+    from SeerCloud.OLAPUtils import RealtimeOLAP
+    from SeerCloud.models.OLAP import OLAP
+    from .Filter import Filter
+    
+    try:
+        f = M.Frame.objects.get(id = frame_id)
+        
+        # Scrubber may clear old images from frames, so can't backfill on those
+        if f.imgfile:
+            for i_id in inspection_ids:
+                try:
+                    i = M.Inspection.objects.get(id=i_id)
+                    
+                    if not i.parent:
+                        if not i.camera or i.camera == f.camera: 
+                            f.features += i.execute(f)
+                except Exception as e:
+                    print 'Error on inspection %s: %s' % (i_id, e)
+                    
+            for m_id in measurement_ids:
+                try:
+                    m = M.Measurement.objects.get(id=m_id)
+                    m.execute(f, f.features)
+                except Exception as e:
+                    print 'Error on measurement %s: %s' % (m_id, e)
+            
+            for m_id in tolerance_ids:
+                try:
+                    m = M.Measurement.objects.get(id=m_id)
+                    m.tolerance(f, f.results)
+                except Exception as e:
+                    print 'Error on tolerance %s: %s' % (m_id, e)
+                
+            f.save()    
+            
+            # Need the filter format for realtime publishing
+            ro = RealtimeOLAP()
+            ff = Filter()
+            allFilters = {'logic': 'and', 'criteria': [{'type': 'frame', 'name': 'id', 'eq': frame_id}]}
+            res = ff.getFrames(allFilters)[1]
+            
+            for m_id in measurement_ids:
+                try:
+                    m = M.Measurement.objects.get(id=m_id)
+                    
+                    # Publish the charts
+                    charts = m.findCharts()
+                    for chart in charts:
+                        olap = OLAP.objects.get(name=chart.olap)
+                        data = ff.flattenFrame(res, olap.olapFilter)
+                        data = chart.mapData(data)
+                        ro.sendMessage(chart, data)
+                except Exception as e:
+                    print 'Could not publish realtime for %s: %s' % (m_id, e)
+            
+        else:
+            print 'no image on frame.  skipping'
+    except Exception as e:
+        print 'Error on frame %s: %s' % (frame_id, e)        
+    
+    print 'Backfill done on %s' % frame_id
+    return frame_id
+
 class InspectionLogHandler(logging.Handler):
 
     def __init__(self):
         super(InspectionLogHandler, self).__init__()
         
     def emit(self, msg):
-        import ipdb;ipdb.set_trace()
         from .realtime import ChannelManager
         
         insp = self._getInspectionId(msg.msg)
@@ -143,7 +211,7 @@ class Foreman():
     def worker_x_schedule(self, frame, objs, fn):
         scheduled = ResultSet([])
         for o in objs:
-            scheduled.add(fn.delay(frame.id, o.id))
+            scheduled.add(fn.delay(frame, o))
         return scheduled
             
     def worker_x_iterator(self, scheduled):
@@ -164,11 +232,9 @@ class Foreman():
                 yield res
 
     @task
-    def inspection_execute(fid, iid):
+    def inspection_execute(frame, inspection):
         try:
-            log.warn('{} {} Inspecting'.format(iid, fid))
-            frame = M.Frame.objects.get(id=fid)
-            inspection = M.Inspection.objects.get(id=iid)
+            log.warn('{} Inspecting {}'.format(inspection.id, frame.id))
             features = inspection.execute(frame)
             return features        
         except Exception as e:
@@ -177,13 +243,14 @@ class Foreman():
             return []
 
     @task
-    def measurement_execute(fid, mid):
+    def measurement_execute(frame, measurement):
         try:
-            log.warn('Measuring {}'.format(mid))
-            frame = M.Frame.objects.get(id=fid)
-            measurement = M.Measurement.objects.get(id=mid)
+            log.warn('{} Measuring {}'.format(measurement.id, frame.id))
+            #frame = M.Frame.objects.get(id=fid)
+            #measurement = M.Measurement.objects.get(id=mid)
             results = measurement.execute(frame)
             return results        
         except Exception as e:
             log.error(e)
             return []
+            
