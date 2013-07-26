@@ -159,18 +159,14 @@ class Core(object):
             # Use those to find list of features from old frame that are not in list of new
             # Then append those features to the list of new features
             if features:
-                # worker created features do not have _data after json decoding
-                if '_data' in features[0]:
-                    newInspections = { feature.inspection: 1 for feature in features }.keys()
-                else:
-                    newInspections = { feature.__dict__['inspection']: 1 for feature in features }.keys() 
+                newInspections = { feature.inspection: 1 for feature in features }.keys()
             else:
                 newInspections = []
             keptFeatures = [ feature for feature in frame.features if not feature.inspection in newInspections ]
             features += keptFeatures
             
             frame.features = []
-            
+        
         frame.features += features
              
         # Now that we know we have features, can process measurements
@@ -185,10 +181,7 @@ class Core(object):
         
         if overwrite:
             if results:
-                if '_data' in results[0]:
-                    newResults = { result.measurement_id: 1 for result in results }.keys()
-                else:
-                    newResults = { result.__dict__['measurement_name']: 1 for result in results }.keys()
+                newResults = { result.__dict__['measurement_name']: 1 for result in results }.keys()
             else:
                 newResults = []
             keptResults = [ result for result in frame.results if not result.measurement_name in newResults ]
