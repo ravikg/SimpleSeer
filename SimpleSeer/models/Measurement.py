@@ -264,7 +264,10 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
 
     def save(self, *args, **kwargs):
         from ..realtime import ChannelManager
-
+        from ..Session import Session
+        
+        tolChange = '_changed_fields' in self and 'tolerances' in self._changed_fields
+        
         # Optional parameter: skipDeps
         try:
             skipDeps = kwargs.pop('skipDeps')
@@ -285,7 +288,12 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
 
         super(Measurement, self).save(*args, **kwargs)
         ChannelManager().publish('meta/', self)
-
+        
+        if not Session().procname == 'meta':
+            if tolChange:
+                log.info('Sending backfill request to OLAP')
+                ChannelManager().rpcSendRequest('backfill/', {'type': 'tolerance', 'id': self.id})
+            
     def measurementsBefore(self):
         # Find the list of measurements that need to execute before this one
         before = []
