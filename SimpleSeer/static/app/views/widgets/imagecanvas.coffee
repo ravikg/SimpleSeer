@@ -1,6 +1,6 @@
 [Template, SubView] = [
   require('views/widgets/templates/imagecanvas'),
-  require('views/core/subview')
+  require('views/core/subview'),
 ]
 
 # ImageCanvas provides a image and
@@ -88,10 +88,10 @@ module.exports = class ImageCanvas extends SubView
       scaleW = box.width / w
       scaleH = box.height / h
       @_scaleFactor = Math.min(scaleH, scaleW)
-      @$("img").width(w * @_scaleFactor)
-      @$("img").height(h * @_scaleFactor)
-      @$("canvas").width @$("img").width() + @options.padding * 2
-      @$("canvas").height @$("img").height() + @options.padding * 2
+      iw = w * @_scaleFactor; @$("img").width iw
+      ih = h * @_scaleFactor; @$("img").height ih
+      @$("canvas").width iw + @options.padding * 2
+      @$("canvas").height ih + @options.padding * 2
     else
       @$("canvas").width @options.width
       @$("canvas").height @options.height
