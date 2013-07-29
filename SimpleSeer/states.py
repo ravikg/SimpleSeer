@@ -2,9 +2,8 @@ import time
 from collections import deque
 from Queue import Queue, Empty
 from cStringIO import StringIO
-from worker import ping_worker, execute_inspection
+from worker import Foreman
 
-import zmq
 import gevent
 
 from . import models as M
@@ -17,21 +16,6 @@ from realtime import ChannelManager
 import logging
 log = logging.getLogger(__name__)
 
-def nextInInterval(frame, field, interval):
-    currentValue = 0
-    try:
-        currentValue = getattr(frame, field)
-    except:
-        currentValue = frame.metadata[field]
-        field = 'metadata__' + field
-    
-    roundValue = currentValue - (currentValue % interval)
-    kwargs = {'%s__gte' % field: roundValue, '%s__lt' % field: currentValue, 'camera': frame.camera}
-    if M.Frame.objects(**kwargs).count() == 0:
-        return True
-    return False
-
-
 class Core(object):
     '''Implements the core functionality of SimpleSeer
        - capture
@@ -40,6 +24,7 @@ class Core(object):
        - watch
     '''
     _instance=None
+    _queue = {} # Processing queue if frames are scheduled
 
     class Transition(Exception):
         def __init__(self, state):
@@ -75,10 +60,7 @@ class Core(object):
         util.load_plugins()
         self.reloadInspections()
         
-        if not self.config.skip_worker_check and not self.config.framebuffer:
-            self.workerCheck(5.0) #wait up to 5s for worker processes
-        
-        if self.config.framebuffer and not self.config.skip_worker_check:
+        if self.config.framebuffer:
             log.warn("Framebuffer is active, while worker is enabled.  Workers can not handle framebuffer calls, so you should add skip_worker_check: 1 to the config")
         
         self.lastframes = deque()
@@ -89,27 +71,6 @@ class Core(object):
     def get(cls):
         return cls._instance
         
-    def workerCheck(self, timeout = 0.5, checkinterval = 0.1):
-        result = ping_worker.delay(1)
-        checktime = time.time()
-        self.log.info("checking for worker process")
-        
-        self._worker_checked = checktime
-        while not result.ready():
-            time.sleep(checkinterval)
-            if time.time() - checktime > timeout:
-                self.log.info("worker check timeout")
-                self._worker_enabled = False
-                return False
-        
-        if result.get() == 2:
-            self.log.info("worker found")
-            self._worker_enabled = True
-            return True
-        else:
-            self._worker_enabled = False
-            return False
-                
     def reloadInspections(self):
         i = list(M.Inspection.objects)
         m = list(M.Measurement.objects)
@@ -176,118 +137,60 @@ class Core(object):
 
         return currentframes
     
-    """
-    This is probably not used any more.  commenting out to make sure
+    def schedule(self, frame, inspections=None):
+        fm = Foreman()
+        self._queue[frame.id] = {}
+        self._queue[frame.id]['features'] = fm.process_inspections(frame, inspections)
         
-    def inspect(self, frames = []):
-        if not len(frames) and not len(self.lastframes):
-            frames = self.capture()
-        elif not len(frames):
-            frames = self.lastframes[-1]
+    def process(self, frame, inspections=None, measurements=None, overwrite=True, clean=False):
+        # First do all features, then do all results
+        if not frame.id in self._queue:
+            fm = Foreman()
+            self._queue[frame.id] = {}
+            self._queue[frame.id]['features'] = fm.process_inspections(frame, inspections)
         
-        for frame in frames:
+        features = [ feat for feat in self._queue[frame.id].pop('features') ]
+        
+        if clean:
             frame.features = []
+            
+        if overwrite:
+            # Find a list of inspection id from new inspection
+            # Use those to find list of features from old frame that are not in list of new
+            # Then append those features to the list of new features
+            if features:
+                newInspections = { feature.inspection: 1 for feature in features }.keys()
+            else:
+                newInspections = []
+            keptFeatures = [ feature for feature in frame.features if not feature.inspection in newInspections ]
+            features += keptFeatures
+            
+            frame.features = []
+        
+        frame.features += features
+             
+        # Now that we know we have features, can process measurements
+        if not 'results' in self._queue[frame.id]:
+            fm = Foreman()
+            self._queue[frame.id]['results'] = fm.process_measurements(frame, measurements)
+        
+        results = [ res for res in self._queue[frame.id].pop('results') ]
+        
+        if clean:
             frame.results = []
-            for inspection in self.inspections:
-                if inspection.parent:  #root parents only
-                    continue
-                
-                if inspection.camera and frame.camera != inspection.camera:
-                    #this camera, or all cameras if no camera is specified
-                    continue
-                
-                feats = inspection.execute(frame.image)
-                frame.features.extend(feats)
-                for m in inspection.measurements:
-                    m.execute(frame, feats)
-                    
-            for watcher in self.watchers:
-                watcher.check(frame.results)
-    """
-    
-    
-    def process(self, frame):
-        if self._worker_enabled:
-            async_results = self.process_async(frame)
-            return self.process_async_complete(frame, async_results)
         
-        frame.features = []
-        frame.results = []
+        if overwrite:
+            if results:
+                newResults = { result.measurement_name: 1 for result in results }.keys()
+            else:
+                newResults = []
+            keptResults = [ result for result in frame.results if not result.measurement_name in newResults ]
+            results += keptResults
         
-        # all times are in seconds, not ms
-        ct_epoch = int(frame.capturetime.strftime("%s"))
-        for inspection in M.Inspection.objects:
-            if inspection.parent:
-                continue
-            if inspection.camera and inspection.camera != frame.camera:
-                continue
-            if 'interval' in inspection.parameters and not nextInInterval(frame, inspection.parameters['intervalField'], inspection.parameters['interval']):
-                continue
-            
-            features = inspection.execute(frame)
-            frame.features += features
-            
-            for m in inspection.measurements:
-                if 'interval' in m.parameters and not nextInInterval(frame, m.parameters['intervalField'], m.parameters['interval']):
-                    continue
-            
-                m.execute(frame, features)
-            
-    def process_async(self, frame):
-        frame.features = []
-        frame.results = []
-        frame.save_image()
-        #make sure the image is in gridfs (does nothing if already saved)
+            frame.results = []
         
-        results_async = []
-        inspections = list(M.Inspection.objects)
-        #allocate each inspection to a celery task
-
-        # all times are in seconds, not ms
-        for inspection in M.Inspection.objects:
-            if inspection.parent:
-                continue
-            if inspection.camera and inspection.camera != frame.camera:
-                continue
-            if 'interval' in inspection.parameters and not nextInInterval(frame, inspection.parameters['intervalField'], inspection.parameters['interval']):
-                continue
-            results_async.append(execute_inspection.delay(inspection.id, frame.imgfile.grid_id, frame.metadata))
-        
-        return results_async
-        
-    def process_async_complete(self, frame, results_async):
-        
-        #note that async results refer to Celery results, and not Frame results
-        results_complete = []
-        ct_epoch = int(frame.capturetime.strftime("%s"))
-        while not len(results_complete) == len(results_async):
-            new_ready_results = []
-            for index, r in enumerate(results_async):
-                if not index in results_complete and r.ready():
-                    new_ready_results.append(index)
-                    
-            for result_index in new_ready_results:
-                (scvfeatures, inspection_id) = results_async[result_index].get()
-                insp = M.Inspection.objects.get(id=inspection_id)
-                features = []
-                
-                
-                for scvfeature in scvfeatures:
-                    scvfeature.image = frame.image 
-                    ff = M.FrameFeature()
-                    ff.setFeature(scvfeature)
-                    ff.inspection = insp.id
-                    features.append(ff)
-                
-                frame.features += features
-                #import pdb;pdb.set_trace()
-                for m in insp.measurements:
-                    if 'interval' in m.parameters and not nextInInterval(frame, m.parameters['intervalField'], m.parameters['interval']):
-                        continue
-                    m.execute(frame, features)
-                    
-            results_complete += new_ready_results
-            time.sleep(0.2)
+        frame.results += results
+        self._queue.pop(frame.id)
                 
     @property
     def results(self):
@@ -296,7 +199,7 @@ class Core(object):
             results = []
             for f in frameset:
                 results += [f.results for f in frameset]
-            
+        
             ret.append(results)
             
         return ret

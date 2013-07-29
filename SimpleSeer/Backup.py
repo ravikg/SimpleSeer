@@ -176,6 +176,7 @@ class Backup:
                         ChannelManager().rpcSendRequest('backfill/', {'type': 'inspection', 'id': model.id})
                 
                 if k != 'id':
+                    
                     if type(getattr(getattr(M, (o['type'])), k)) == mongoengine.base.ObjectIdField:
                         model.__setattr__(k, ObjectId(v))
                     else:
@@ -183,11 +184,7 @@ class Backup:
                 
             
             if not checkOnly:
-                # When saving make sure measurements dont re-run their backfill
-                if o['type'] == 'Measurement':
-                    model.save(skipBackfill=True)
-                else:
-                    model.save()
+                model.save()
             else:
                 same = False
                 for existing in M.__getattribute__(o['type']).objects:
@@ -202,9 +199,6 @@ class Backup:
                     log.warn('* Exporting changes to meta will overwrite existing settings')
                     log.warn('****************************************************************')
                 
-        
-                    
-    
         if not skip and M.Frame.objects.count():
             log.info('Backfill run in olap process.  Make sure olap and worker are running.')
         elif not checkOnly:

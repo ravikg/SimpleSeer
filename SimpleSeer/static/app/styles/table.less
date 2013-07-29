@@ -5,18 +5,97 @@
   margin-top: -10px;
 }
 
+.preheader {
+  position: fixed;
+  top: 33px;
+  height: 36px;
+  z-index: 999999;
+  background: #fff;
+  width: 100%;
+  padding: 0px;
+  padding-right: 236px;
+
+  div {
+    float: left;
+  }
+
+  .show-hide-button {
+    float: right;
+    width: 45px;
+    height: 37px;
+    background-repeat: no-repeat;
+    background-image: url('/img/seer/gear.png');
+    background-position: center center;
+    cursor: pointer;
+  }
+
+  .downloads {
+    margin: 5px;
+  }
+}
+
+.show-hide {
+  position: fixed;
+  top: 73px;
+  right: 2px;
+  z-index: 99999999;
+  background: #ECECEC;
+  padding: 9px 10px;
+  border-radius: 1px;
+  box-shadow: 0px 8px 28px rgba(0, 0, 0, 0.5);
+  border: 1px solid #727272;
+  display: none;
+
+  &:before {
+    position: absolute;
+    top: -9px;
+    right: 10px;
+    z-index: 9999999;
+    width: 15px;
+    height: 9px;
+    background: url("/img/seer/grey_arrow.png") no-repeat;
+    content: " ";
+  }
+
+  h2 {
+    font-family: "OpenSansLight";
+    text-align: center;
+    font-size: 14px;
+    color: #111;
+    font-weight: bold;
+  }
+
+  hr {
+    border: 0;
+    border-top: 1px solid #B9B9B9;
+  }
+
+  label {
+    color: #444;
+    font-size: 12px;
+    margin-left: 5px;
+    cursor: pointer;
+  }
+
+  input {
+    margin-top: 2px;
+    cursor: pointer;
+  }
+}
+
 .header {
-  border: 1px solid #555;
-  background-color: #fff;
+  background: transparent;
+  border: 1px solid transparent;
   z-index: 99999;
   position: fixed;
 
   .float {
     float: left;
+    height: 23px;
   }
 
   .downloads {
-    float: right;
+    float: left;
     padding: 5px;
     height: 36px;
   }
@@ -54,6 +133,10 @@
     thead {
       border-bottom: 1px solid #7E7E7E;
     }
+  }
+
+  th.hidden, td.hidden {
+    display: none !important ;
   }
 
   .tcontent {
@@ -117,10 +200,12 @@
     }
 
     &.showhidden {
-      padding: 8px;
-      text-align: center;
+      box-shadow: inset 0px -1px 0px #7A7A7A;
+      background: #E0E0FF;
+      padding: 8px 8px 9px 7px;
+      text-align: left;
       color: #888;
-      font-weight: 700;
+      font-family: "OpenSansBold";
     }
 
   }
@@ -172,11 +257,11 @@ white-space: nowrap; }
 }
 
 .table .th .placeholder {
-  padding: 4px 5px;
+  padding: 3px 5px 4px 5px;
 }
 
 .table .th.sortable .placeholder {
-  padding: 4px 20px 4px 5px;
+  padding: 3px 20px 4px 5px;
 }
 
 .table {

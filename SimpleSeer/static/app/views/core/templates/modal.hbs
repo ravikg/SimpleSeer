@@ -1,11 +1,35 @@
-<div id="throbberBody">
-  <p class="title large" style="display: none;"></p>
-  <p id="throbberGraphic" style="text-align: center; margin-top: 5px;"><img src="/img/seer/loading.gif"></p>
-  <p class="message"></p>
-  <input type="text" class="key" style="display: none;">
-  <input type="text" class="value" style="display: none;">
-  <div class="gutter">
-    <button class="ok-button" style="display: none;"></button>
-    <button class="cancel-button" style="display: none;"></button>
+<div id="modal-body">
+  {{#if options.title}}
+    <p class="title large">{{options.title}}</p>
+  {{/if}}
+
+  {{#if options.throbber}}
+    <p class="throbber">
+      <img src="/img/seer/loading.gif">
+    </p>
+  {{/if}}
+
+  {{#if options.message}}
+    {{#raw options.message}}{{/raw}}
+  {{/if}}
+
+  {{#if options.form}}
+  <div class="form">
+    {{#formbuilder options.form}}{{/formbuilder}}
   </div>
+  {{/if}}
+
+  {{#if options.gutter}}
+  <div class="gutter">
+    {{#if options.buttons}}
+      {{#each options.buttons}}
+        <button action="{{action}}" data-color="{{color}}">{{text}}</button>
+      {{/each}}
+    {{else}}
+      <button action="submit" data-color="green">{{options.submitText}}</button>
+      <button action="cancel" data-color="gray">{{options.cancelText}}</button>
+    {{/if}}
+    <div class="clearfix"></div>
+  </div>
+  {{/if}}
 </div>

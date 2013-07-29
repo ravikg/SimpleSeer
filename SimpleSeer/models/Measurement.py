@@ -1,5 +1,6 @@
 import bson
 import mongoengine
+from mongoengine import signals as sig
 
 from .base import SimpleDoc, WithPlugins
 from .Result import ResultEmbed
@@ -72,7 +73,11 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
         'ordering': ['executeorder']
     }
 
-    def execute(self, frame, features):
+    def execute(self, frame, features=None):
+        
+        if not features:
+            features = frame.features
+        
         featureset = self.findFeatureset(features)
         #this will catch nested features
 
@@ -102,10 +107,10 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
             hasToleranceFunction = hasattr(function_ref, 'tolerance')
 
         if self.booleans:
-            values = self.testBooleans(values, self.booleans, frame.results)
+            values = self.testBooleans(values, self.booleans, values)
 
         if self.conditions:
-            conds = self.testBooleans(values, self.conditions, frame.results)
+            conds = self.testBooleans(values, self.conditions, values)
             values = [ v for v, c in zip(values, conds) if c ]
 
         results = self.toResults(frame, values)
@@ -216,7 +221,6 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
                 frame.save(publish=False)
         Alert.clear()
         Alert.refresh('backfill')
-        res = ChannelManager().rpcSendRequest('olap_req/', {'action': 'rebuild'})
 
     def findFeatureset(self, features):
 
@@ -256,22 +260,14 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
                 measurement_id=self.id,
                 measurement_name=self.name)
             for i, v in enumerate(values) ]
-        frame.results.extend(results)
         return results
 
     def save(self, *args, **kwargs):
         from ..realtime import ChannelManager
-
-        # Optional parameter: skipBackfill
-        try:
-            skipBackfill = kwargs.pop('skipBackfill')
-        except:
-            skipBackfill = 0
-
-        if not skipBackfill:
-            if '_changed_fields' not in dir(self) or 'tolerances' in self._changed_fields:
-                self.backfillTolerances()
-
+        from ..Session import Session
+        
+        tolChange = '_changed_fields' in self and 'tolerances' in self._changed_fields
+        
         # Optional parameter: skipDeps
         try:
             skipDeps = kwargs.pop('skipDeps')
@@ -290,10 +286,14 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
                 log.info('trying to save measurements with duplicate names: %s' % m.name)
                 self.name = self.name + '_1'
 
-
         super(Measurement, self).save(*args, **kwargs)
         ChannelManager().publish('meta/', self)
-
+        
+        if not Session().procname == 'meta':
+            if tolChange:
+                log.info('Sending backfill request to OLAP')
+                ChannelManager().rpcSendRequest('backfill/', {'type': 'tolerance', 'id': self.id})
+            
     def measurementsBefore(self):
         # Find the list of measurements that need to execute before this one
         before = []
@@ -355,6 +355,20 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
 
         return charts
 
+
+    def __init__(self, **kwargs):
+        from .base import checkPreSignal, checkPostSignal
+        from SimpleSeer.Session import Session
+        
+        super(Measurement, self).__init__(**kwargs)
+        
+        app = Session._Session__shared_state['appname']
+        
+        for pre in Session().get_triggers(app, 'Measurement', 'pre'):
+            sig.pre_save.connect(pre, sender=Frame, weak=False)
+        
+        for post in Session().get_triggers(app, 'Measurement', 'post'):
+            sig.post_save.connect(post, sender=Frame, weak=False)
 
     def __repr__(self):
         return "<Measurement: " + str(self.inspection) + " " + self.method + " " + str(self.featurecriteria) + ">"

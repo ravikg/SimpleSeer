@@ -32,7 +32,7 @@ class ChannelManager(object):
         while True:
             try:
                 return amqp.Connection(host=self._config.rabbitmq)
-            except Exception as e:
+            except (socket.error, IOError) as e:
                 log.warn('Socket connection error: {}.  Waiting {} seconds.'.format(e, self.socketRetryWait))
                 sleep(self.socketRetryWait)
         
@@ -278,5 +278,5 @@ class PubSubHandler(logging.Handler):
         self._cm = ChannelManager(shareConnection=False)
         
     def emit(self, msg):
-        self._cm.publish(self._channel, {'ts': msg.created, 'file': msg.filename, 'level': msg.levelname, 'msg': msg.message})
+        self._cm.publish(self._channel, {'ts': msg.created, 'file': msg.filename, 'level': msg.levelname, 'msg': msg.msg})
          

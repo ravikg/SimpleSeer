@@ -82,6 +82,7 @@ module.exports = class FilterCollection extends Collection
       @_sortParams = @bindFilter.getSettings()
     else
       @bindFilter = false
+    @subToBackfill()
 
     # Set baseUrl off of default url.  url is changed, baseUrl remains root url
     if params.url?
@@ -99,6 +100,12 @@ module.exports = class FilterCollection extends Collection
       application.settings.ui_filters_framemetadata = []
 
     return @
+
+  subToBackfill: =>
+    if @bindFilter == false
+      application.socket.on "message:backfill/complete/", @globalRefresh
+      if !application.subscriptions["backfill/complete/"]
+        application.subscriptions["backfill/complete/"] = application.socket.emit 'subscribe', "backfill/complete/"
 
   bindTo: (collection) =>
     collection.subCollection @
@@ -252,7 +259,7 @@ module.exports = class FilterCollection extends Collection
 
   # trigger fired after the fetch method makes request to server
   postFetch:()=>
-    application.modal.onSuccess()
+    application.modal.clear()
     if !@clearOnFetch
       if @getParam('sortorder') == -1
         at = 0

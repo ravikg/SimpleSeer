@@ -146,13 +146,13 @@ $.widget("ui.datetimerange", {
          * tweaks to the interface.
          */
 
-        $(".ss-calendar .date").live("click", function() {
+        self.window.on("click", ".ss-calendar .date", function() {
             var eleDate = new Date($(this).attr("data-date"));
 
             if( self._inChange == false ) {
                 self._inChange = true;
-                applyButton.attr("disabled", "disabled");
-                cancelButton.attr("disabled", "disabled");
+                self.rightSide.find(".apply").attr("disabled", "disabled");
+                self.rightSide.find(".cancel").attr("disabled", "disabled");
 
                 options.startDate = eleDate;
                 options.endDate = eleDate;
@@ -161,8 +161,8 @@ $.widget("ui.datetimerange", {
                 $(".ss-date-to").addClass("alter");
             } else if( eleDate >= options.startDate ) {
                 self._inChange = false;
-                applyButton.removeAttr("disabled");
-                cancelButton.removeAttr("disabled");
+                self.rightSide.find(".apply").removeAttr("disabled");
+                self.rightSide.find(".cancel").removeAttr("disabled");
                 options.endDate = eleDate;
 
                 $(".ss-date-from").addClass("alter");
@@ -172,16 +172,22 @@ $.widget("ui.datetimerange", {
             self.updateCalendars();
         });
 
-        $(".ss-time-from, .ss-time-to").blur(function() {
+        /*$(".ss-time-from, .ss-time-to").blur(function() {
            $(this).attr("value", SimpleSeerDateHelper.flushtime($(this).attr("value")));
-        });
+        });*/
 
         $('.ss-time-from').timepicker({
-            showPeriodLabels: false,
+            template: false,
+            showInputs: false,
+            minuteStep: 5,
+            showMeridian: false
         });
 
         $('.ss-time-to').timepicker({
-            showPeriodLabels: false,
+            template: false,
+            showInputs: false,
+            minuteStep: 5,
+            showMeridian: false
         });
 
         goBackMonth.click(function() {
@@ -198,8 +204,7 @@ $.widget("ui.datetimerange", {
            }
         });
 
-        var cancelButton = self.rightSide.find(".cancel");
-        cancelButton.click(function() {
+        self.rightSide.find(".cancel").click(function() {
 
             self.disappear();
             options.startDate = self.prevStartDate;
@@ -208,15 +213,20 @@ $.widget("ui.datetimerange", {
 
         });
 
-        var applyButton = self.rightSide.find(".apply");
-        applyButton.click(function() {
+        self.rightSide.find(".apply").click(function() {
             if( self._inChange === true ) { return; }
 
             _sd = self.options.startDate;
             _ed = self.options.endDate;
 
             _st = SimpleSeerDateHelper.universalizeTime(self.window.find(".ss-time-from").attr("value")).split(":");
+            if(_st.length == 2) {
+                _st.push("00");
+            }
             _et = SimpleSeerDateHelper.universalizeTime(self.window.find(".ss-time-to").attr("value")).split(":");
+            if(_et.length == 2) {
+                _et.push("00");
+            }
 
             self._trigger("onUpdate", null, {
                 startDate: new Date(_sd.getYear() + 1900, _sd.getMonth(), _sd.getDate(), _st[0], _st[1], _st[2]),
@@ -233,6 +243,10 @@ $.widget("ui.datetimerange", {
     },
 
     destroy: function() {
+        this.rightSide.off().unbind().remove()
+        this.leftSide.off().unbind().remove()
+        this.window.off().unbind().remove()
+        this.element.off().unbind('click')
         $.Widget.prototype.destroy.call(this);
     },
 

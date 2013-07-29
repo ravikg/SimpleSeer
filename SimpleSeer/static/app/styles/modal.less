@@ -1,4 +1,6 @@
-.modal-body{
+#modal {
+
+  #simpleseer-modal {
     height: 100%;
     left: 0;
     position: fixed;
@@ -6,43 +8,122 @@
     width: 100%;
     background: rgba(0,0,0,0.5);
     z-index:10000;
-}
+  }
 
-#throbberBody{
-    background: #fff;
+  #modal-body{
+    background: #f0f0f0;
     border-radius: 2px;
     box-shadow: 0px 8px 28px rgba(0, 0, 0, 0.5);
 
     left: 50%;
-    margin: -60px -22.5%;
+    margin: 0px -22.5%;
     position: fixed;
-    top: 50%;
+    top: 30%;
     width: 45%;
-    padding: 15px;
+    overflow: hidden;
 
     .title {
-        margin-top: -5px;
-        text-align: center;
-        border-bottom: 1px solid #CCC;
-        padding-bottom: 10px;
-        margin-bottom: 8px;
+      text-align: center;
+      border-bottom: 1px solid #CCC;
+      padding: 10px 0;
+      margin-bottom: 10px;
+      background: #fff;
+
+      & + .form { margin-top: -11px; }
     }
 
-    .message { margin-top: 20px; }
-    .large { font-size: 20px; }
-    .center { text-align: center; }
-    input { width: 100%; margin-top:5px; }
-    button { margin-top:5px; float:right; }
+    .message { margin: 10px 0; }
+    .large { font-size: 20px; padding: 10px; }
+    .center { text-align: center; color: #444;}
+
+    em {
+      font-style: italic;
+      font-family: "OpenSansBold";
+      color: #000;
+    }
+
+    .form {
+      border: 1px solid #bbb;
+      padding: 10px 25%;
+      margin-top: 10px;
+      background: #DDD;
+      border-width: 1px 0;
+      text-align: left;
+
+      & + .gutter { border-top: none; margin-top: 0; }
+
+      label {
+        color: #333;
+        font-family: "OpenSansBold";
+        span { color: red; font-style: italic; }
+      }
+
+      input[type=text],
+      input[type=password],
+      select,
+      textarea {
+        color: #333;
+        width: 100%;
+        margin-top: 3px;
+        margin-bottom: 5px;
+        border-color: #BDBDBD;
+        font-family: "OpenSansBold";
+      }
+
+      input[type=radio], input[type=checkbox] {
+        margin-left: 10px;
+      }
+
+      .invalid {
+        border-color: #C58181 !important;
+        background: #FFE0E0;
+      }
+    }
+
+    .gutter {
+      background: #fff;
+      height: 46px;
+      margin-top: 10px;
+      padding: 10px;
+      border-top: 1px solid #CCC;
+
+      button {
+        float: right;
+        margin-right: 0px;
+        margin-left: 9px;
+      }
+    }
+
+    .throbber {
+      text-align: center;
+      padding: 10px;
+
+      &.hidden + .message {
+        padding-top: 0px;
+        margin-top: 0px;
+      }
+    }
+
+    .test {
+      margin: 0 auto;
+      padding: 5px;
+      width: 200px;
+      border-radius: 2px;
+      margin-bottom: 5px;
+
+      &.testPassed {
+        background: #A6EBA6;
+        color: #127400;
+      }
+
+      &.testFailed {
+        background: #EBA6A6;
+        color: #740000;
+      }
+    }
+  }
 }
 
-.testPassed {
-  background: #00ff00;
-  color: #ffffff;
-  padding:4px;
-}
-
-.testFailed {
-  background: #ff0000;
-  color: #ffffff;
-  padding:4px;
+#modal.visible + #effects {
+  -webkit-filter: grayscale(1);
 }

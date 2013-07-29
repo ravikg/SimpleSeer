@@ -66,17 +66,18 @@ module.exports = class Yaml extends SubView
   firstTimeModal: =>
     Application.modal.show
       title: "Willkommen!"
-      message: "Hey there, just wanted to let you know this is your first time building this application :)"
-      okMessage: 'Continue'
+      message: "<p class=\"center\">Hey there, just wanted to let you know this is your first time building this application :)</p>"
+      submitText: 'Continue'
+      cancelText: 'Cancel'
       throbber: false
       success: (options) => return
 
   editValue: (locArray) =>
     Application.modal.show
       title: "Edit Value"
-      okMessage: 'Save'
-      cancelMessage: 'Cancel'
-      inputMessage: 'New value'
+      submitText: 'Save'
+      cancelText: 'Cancel'
+      form: [{id: "value", type: "text", label: "Value"}]
       throbber: false
       success: (options) => @updateValue(options, locArray)
 
@@ -117,10 +118,12 @@ module.exports = class Yaml extends SubView
   addValue: (locArray) =>
     Application.modal.show
       title: "Add Value"
-      okMessage: 'Save'
-      cancelMessage: 'Cancel'
-      keyMessage: 'Key'
-      inputMessage: 'Value'
+      submitText: 'Save'
+      cancelText: 'Cancel'
+      form: [
+        {id: "key", type: "text", label: "Key"},
+        {id: "value", type: "text", label: "Value"}
+      ]
       throbber: false
       success: (options) => @insertValue(options, locArray)
 
@@ -206,7 +209,31 @@ module.exports = class Yaml extends SubView
 
       locArray = dest.split("-")
 
-      if locArray.length == 3
+      cln = _.clone locArray
+      cln.splice(1, 1)
+      target = @schema
+      for key in cln.slice(0, -1)
+        if !isNaN(key)
+          target = target['item']
+        else
+          target = target[key]
+      s = target[cln[cln.length-1]]
+
+      console.log locArray, s
+
+      if !isNaN(key)
+        a++
+        c++
+      if s?
+        if s.type == "Array" or s.type == "Object"
+          if !s.required
+            c++
+        else if s.type == "String" or s.type == "Int"
+          if !s.required
+            b++
+            c++
+
+      ###if locArray.length == 3
         s = @schema[locArray[0]][locArray[2]]
         if s.type == 'Object' or s.type == 'Array'
           a++
@@ -234,7 +261,7 @@ module.exports = class Yaml extends SubView
               a++
             b++
             if !s.required
-              c++
+              c++###
 
       if a
         ret += '<span class="button add" action="add" location="' + dest + '">A</span>'

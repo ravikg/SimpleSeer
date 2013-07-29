@@ -1,6 +1,6 @@
 [Template, SubView] = [
   require('views/widgets/templates/imagecanvas'),
-  require('views/core/subview')
+  require('views/core/subview'),
 ]
 
 # ImageCanvas provides a image and
@@ -9,23 +9,23 @@
 # tasks like handling scale.
 
 module.exports = class ImageCanvas extends SubView
-  template: Template
-  canvas: {}
-  image: {}
-  processing: undefined
-  _scaleFactor: 1
-  loaded: false
+  initialize: =>
+    @template = Template
+    @processing = undefined
+    @_scaleFactor = 1
+    @loaded = false
+    super()
 
   showMarkup: =>
-    @canvas.show?()
+    @$("canvas").show?()
     return @
 
   hideMarkup: =>
-    @canvas.hide?()
+    @$("canvas").hide?()
     return @
 
   toggleMarkup: =>
-    @canvas.toggle?()
+    @$("canvas").toggle?()
 
   getRenderData: =>
     image: @options.image
@@ -37,21 +37,18 @@ module.exports = class ImageCanvas extends SubView
       @_markup(@options.engine)
 
   afterRender: =>
-    #@canvas = @$("canvas")
-    @canvas = @$el.find("canvas")
     if @options.stealth then @hideMarkup()
-    #@image = @$("img")
-    @image = @$el.find("img")
-    @image.load =>
-      @image.attr("data-w", @image.get(0).width)
-      @image.attr("data-h", @image.get(0).height)
-      @loaded = true
-      @image.show()
-      @afterLoad()
+    @$("img").load =>
+      if @$("img").get(0)?
+        @$("img").attr("data-w", @$("img").get(0).width)
+        @$("img").attr("data-h", @$("img").get(0).height)
+        @loaded = true
+        @$("img").show()
+        @afterLoad()
 
   _process: =>
     if !@processing?
-      @processing = new Processing(@canvas.get(0))
+      @processing = new Processing(@$("canvas").get(0))
 
   # The align method is called when
   # the widget is given a padding option.
@@ -64,15 +61,15 @@ module.exports = class ImageCanvas extends SubView
       # themselves, provide an option.
       return
 
-    [w, h] = [@image.width(), @image.height()]
+    [w, h] = [@$("img").width(), @$("img").height()]
     left = Math.floor((@options.width - w) / 2)
     top = Math.floor((@options.height - h) / 2)
 
-    @image.css
+    @$("img").css
       "left": "#{left}px"
       "top": "#{top}px"
 
-    @canvas.css
+    @$("canvas").css
       "left": "#{left - @options.padding}px"
       "top": "#{top - @options.padding}px"
 
@@ -81,7 +78,7 @@ module.exports = class ImageCanvas extends SubView
   # sized to the parent container.
   _scale: =>
     unless @options.scaling is false
-      [w, h] = [@image.data("w"), @image.data("h")]
+      [w, h] = [@$("img").data("w"), @$("img").data("h")]
       box =
         width: @options.width - @options.padding * 2,
         height: @options.height - @options.padding * 2
@@ -91,16 +88,16 @@ module.exports = class ImageCanvas extends SubView
       scaleW = box.width / w
       scaleH = box.height / h
       @_scaleFactor = Math.min(scaleH, scaleW)
-      @image.width(w * @_scaleFactor)
-      @image.height(h * @_scaleFactor)
-      @canvas.width @image.width() + @options.padding * 2
-      @canvas.height @image.height() + @options.padding * 2
+      iw = w * @_scaleFactor; @$("img").width iw
+      ih = h * @_scaleFactor; @$("img").height ih
+      @$("canvas").width iw + @options.padding * 2
+      @$("canvas").height ih + @options.padding * 2
     else
-      @canvas.width @options.width
-      @canvas.height @options.height
-      @image.width @options.width
-      @image.height @options.height
-      @_scaleFactor = @image.width() / @image.attr("data-w")
+      @$("canvas").width @options.width
+      @$("canvas").height @options.height
+      @$("img").width @options.width
+      @$("img").height @options.height
+      @_scaleFactor = @$("img").width() / @$("img").attr("data-w")
 
 
   # The markup method is called each
@@ -108,14 +105,14 @@ module.exports = class ImageCanvas extends SubView
   # on the canvas. No drawing is done by
   # default.
   _markup:(engine = =>) =>
-    [w, h] = [@canvas.width(), @canvas.height()]
-    [w1, h1] = [@image.width(), @image.height()]
+    [w, h] = [@$("canvas").width(), @$("canvas").height()]
+    [w1, h1] = [@$("img").width(), @$("img").height()]
     @_process()
     @processing.size w, h
     if @model
       @processing.scale w1 / @model.get("width")
     else
-      @processing.scale w1 / @image.attr "data-w"
+      @processing.scale w1 / @$("img").attr "data-w"
     @processing.background 0, 0
     engine(@processing, @options, [w1, h1])
 
@@ -136,3 +133,15 @@ module.exports = class ImageCanvas extends SubView
     @options.feature = feature
     @afterLoad()
 
+  setImage:(image) =>
+    @loaded = false
+    @processing = undefined
+    @options.image = image
+    @render()
+
+  remove: =>
+    @$("img").off().unbind()
+    for trash in @el.children
+      if trash?
+        @el.removeChild(trash)
+    delete @processing

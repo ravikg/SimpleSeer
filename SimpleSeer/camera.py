@@ -132,6 +132,10 @@ class StillCamera(object):
 
     def getFrame(self):
         frame = M.Frame(capturetime=datetime.utcnow(), camera=self.name, localtz=self.localtz)
+        
+        if isinstance(self._scv_cam, DirectoryCamera):
+            frame.metadata['imgfile'] = self._scv_cam.filelist[self._scv_cam.counter]
+        
         frame.image = self.getImage()
         return frame
 
@@ -145,7 +149,7 @@ class DirectoryCamera(FrameSource):
     def __init__(self, path):
         self.filelist = sorted(glob(path))
         self.counter = 0
-
+        
     def getImage(self):
         i = Image(self.filelist[self.counter])
         self.counter = (self.counter + 1) % len(self.filelist)
