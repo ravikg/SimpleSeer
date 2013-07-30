@@ -17,9 +17,9 @@ $ ->
   m = "Your browser is not supported by this application and should be upgraded."
 
   if browser[b.name]?
-    if browser[b.name]['warn']? and browser[b.name]['warn'] > b.versionNumber
+    if browser[b.name].warn? and browser[b.name].warn > b.versionNumber
       reject(true, m)
-    else if browser[b.name]['error']? and browser[b.name]['error'] > b.versionNumber
+    else if browser[b.name].error? and browser[b.name].error > b.versionNumber
       reject(false, m)
     else
       loadInterface()

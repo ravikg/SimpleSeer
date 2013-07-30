@@ -9,3 +9,5 @@ SimpleSeer.egg-info/*
 
 .coverage
 *.profile
+
+docs/*
