@@ -8,18 +8,23 @@
 # the interface.
 
 $ ->
+  browser =
+    firefox:
+      warn: 3
+    ie:
+      error: 8
   b = $.browser
   m = "Your browser is not supported by this application and should be upgraded."
-  loadInterface()
-  ###if Application.browser[b.name]?
-    if Application.browser[b.name]['warn']? and Application.browser[b.name]['warn'] > b.versionNumber
+
+  if browser[b.name]?
+    if browser[b.name]['warn']? and browser[b.name]['warn'] > b.versionNumber
       reject(true, m)
-    else if Application.browser[b.name]['error']? and Application.browser[b.name]['error'] > b.versionNumber
+    else if browser[b.name]['error']? and browser[b.name]['error'] > b.versionNumber
       reject(false, m)
     else
       loadInterface()
   else
-    loadInterface()###
+    loadInterface()
 
 loadInterface = =>
   $.getJSON "/settings", (data) ->
