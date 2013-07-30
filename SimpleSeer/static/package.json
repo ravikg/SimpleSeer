@@ -1,18 +1,15 @@
 {
-  "author": "SimpleSeer",
-  "name": "simpleseer",
+  "name": "SimpleSeer",
+  "author": "Sight Machine",
   "description": "Machine Vision Made Easy",
-  "version": "0.0.1",
-  "homepage": "",
+  "version": "2.0",
+  "homepage": "http://sightmachine.com/",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/sightmachine/SimpleSeer"
   },
   "engines": {
     "node": "~0.6.10"
-  },
-  "scripts": {
-    "start": "brunch watch --server"
   },
   "main": "app/index",
   "dependencies": {
@@ -21,13 +18,10 @@
     "less-brunch": "1.0.x || 1.1.x",
     "css-brunch": "1.0.x || 1.1.x",
     "handlebars-brunch": "1.0.x || 1.1.x",
-
     "uglify-js-brunch": "1.0.x || 1.1.x",
     "clean-css-brunch": "1.0.x || 1.1.x"
   },
   "devDependencies": {
-    "mocha": "0.14.0",
-    "expect.js": "0.1.2",
     "backbone":"0.9.2",
     "handlebars": "1.0.5beta"
   }
