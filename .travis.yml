@@ -52,6 +52,7 @@ before_script:
   - "sudo pip install gevent"
   - "sudo pip install path.py"
   - "sudo pip install python-dateutil"
+  - "sudo pip install svgwrite"
   - "sudo pip install pyyaml"
   - "sudo pip install mongoengine"
   - "sudo apt-get install python-pygame"
