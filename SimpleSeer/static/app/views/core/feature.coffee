@@ -159,7 +159,7 @@ module.exports = class Feature extends View
       if (d0 > d1) then (p2[1] = p1[1]) else (p2[0] = p1[0])
     pjs.strokeWeight(@stroke * @scale)
 
-    if p1[1] is p2[1] # Horizontal
+    if true #p1[1] is p2[1] # Horizontal
       if align is "center"
         lineWidth = p2[0] - p1[0]
         pjs.fill(color[0],color[1],color[2])
@@ -205,6 +205,7 @@ module.exports = class Feature extends View
       else
         pjs.line(p1[0], p1[1] + style[1], p1[0], p1[1])
         pjs.line(p2[0], p2[1] + style[1], p2[0], p2[1])
+
   boundingBox: (pjs, bb, offset=0, position, color, id, label) =>
     bb = _.clone bb
     pjs.fill(color[0],color[1],color[2])
