@@ -164,7 +164,7 @@ class Backup:
                 #log.info('Updating %s' % model)
             except:
                 model = M.__getattribute__(o['type'])()
-                model._data[None] = o['obj']['id']
+                model.id = ObjectId(o['obj']['id'])
                 #log.info('Creating new %s' % o['type'])
             
             for k, v in o['obj'].iteritems():
