@@ -168,7 +168,7 @@ class Foreman():
         if inspections:
             inspKwargs['id__in'] = inspections
         
-        filteredInsps = M.Inspection.objects(inspKwargs)
+        filteredInsps = M.Inspection.objects(**inspKwargs)
         
         if self._useWorkers:
             return self.worker_inspection_iterator(frame, filteredInsps)    
