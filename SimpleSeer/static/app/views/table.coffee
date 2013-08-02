@@ -500,6 +500,8 @@ module.exports = class Table extends SubView
       data = @formatData @collection.models
     else
       data = @formatData @tableData
+    if data.length
+      @noData = false
     @data = data
     if !@noData
       _.each data, (model) =>
@@ -532,6 +534,16 @@ module.exports = class Table extends SubView
     #  if total == empty
     #    keys[k] = 1
     #  i++
+
+    # If there is a small data set, let's just show everything off the bat to avoid confusion
+    # for new applications.  Also, if at this point keys.length == tablecols.length then that
+    # means that every column is hidden, which would seem confusing. So, lets show those cols!
+    if @tableCols.length == keys.length
+      delete keys
+      keys = {}
+    if @data.length < 20
+      delete keys
+      keys = {}
 
     for k,v of keys
       $("input#show-hide-#{k}").click()

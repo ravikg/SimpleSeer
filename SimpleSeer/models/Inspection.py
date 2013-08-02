@@ -143,10 +143,11 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
             frameFeatSet = featureset
         else:
             for feat in featureset:
-                ff = FrameFeature()
-                ff.setFeature(feat)
-                ff.exectime = exectime
-                frameFeatSet.append(ff)
+                if feat:
+                    ff = FrameFeature()
+                    ff.setFeature(feat)
+                    ff.exectime = exectime
+                    frameFeatSet.append(ff)
     
         if "skip" in self.parameters or "limit" in self.parameters:
             frameFeatSet = frameFeatSet[self.parameters.get("skip",None):self.parameters.get("limit",None)]

@@ -279,7 +279,13 @@ class Frame(SimpleDoc, mongoengine.Document):
             else:
                 channel = "frameupdate/"
             
-            #send the frame without features, and some other stuff
+            #send the frame with limited feature data, and some other stuff
+            limitedFeats = []
+            for feat in self.features:
+                tmpFeat = {}
+                tmpFeat['featuredata'] = feat.featuredata
+                tmpFeat['inspection'] = str(feat.inspection)
+                limitedFeats.append(tmpFeat)
             realtime.ChannelManager().publish(channel, dict(
                 id = str(self.id),
                 capturetime = self.capturetime,
@@ -288,6 +294,7 @@ class Frame(SimpleDoc, mongoengine.Document):
                 localtz = self.localtz,
                 camera = self.camera,
                 results = self.results,
+                features = limitedFeats,
                 height = self.height,
                 width = self.width,
                 clip_id = str(self.clip_id),
