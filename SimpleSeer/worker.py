@@ -164,11 +164,17 @@ class Foreman():
             return False
 
     def process_inspections(self, frame, inspections=None):
-        inspKwargs = {'camera': frame.camera, 'parent__exists': False}
+        inspKwargs = {'parent__exists': False}
         if inspections:
             inspKwargs['id__in'] = inspections
         
-        filteredInsps = M.Inspection.objects(**inspKwargs)
+        insps = M.Inspection.objects(**inspKwargs)
+        
+        # Because it is too big a pain to do an OR with mongoengine:
+        filteredInsps = []
+        for i in insps:
+            if i.camera == frame.camera or not i.camera:
+                filteredInsps.append(i)
         
         if self._useWorkers:
             return self.worker_inspection_iterator(frame, filteredInsps)    
