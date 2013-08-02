@@ -174,11 +174,12 @@ Handlebars.registerHelper "resultlist", (results, blacklist,text="No Results") -
   tpl = ""
 
   r = 0
+  
   _.each results, (result) =>
     if result.state?
       r++
 
-  if !results or results.length is 0 or !r
+  if !results or results.length is 0
     tpl += "<div data-use=\"no-results\" class=\"centered\">#{text}</div>"
   else
 
@@ -190,7 +191,6 @@ Handlebars.registerHelper "resultlist", (results, blacklist,text="No Results") -
       if k1 is k2 then return 0
       if k1 < k2 then return -1
     )
-
     for result in results
       unless ~blacklist.fields.indexOf(result.measurement_name)
         value = result.numeric or ""
