@@ -188,6 +188,8 @@ module.exports = class Table extends SubView
         cquery = {"logic":"and","criteria":[{"type":"frame","isset":0,"name":key}]}
 
       @emptyCollection.setParam 'query', cquery
+      if @columnSortType == 'measurement'
+        @emptyCollection.setParam 'sorttype', 'measurement'
       @emptyCollection.fetch({'async':false, success:@emptyData})
 
   subscribe: (channel="") =>
