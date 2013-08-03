@@ -174,7 +174,7 @@ Handlebars.registerHelper "resultlist", (results, blacklist,text="No Results") -
   tpl = ""
 
   r = 0
-  
+
   _.each results, (result) =>
     if result.state?
       r++
@@ -193,9 +193,8 @@ Handlebars.registerHelper "resultlist", (results, blacklist,text="No Results") -
     )
     for result in results
       unless ~blacklist.fields.indexOf(result.measurement_name)
-        value = result.numeric or ""
-        value = value or result.string
-        unless value is undefined
+        value = result.numeric or result.string or undefined
+        if value
           obj = result.mmm
           label = "#{obj.get('label')}"
           if obj.get('units')
