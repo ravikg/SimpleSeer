@@ -65,7 +65,7 @@ def backfill_meta(frame_id, inspection_ids, measurement_ids, tolerance_ids):
                 except Exception as e:
                     print 'Error on tolerance %s: %s' % (m_id, e)
                 
-            f.save()    
+            f.save(publish=False)    
             
             # Need the filter format for realtime publishing
             ro = RealtimeOLAP()
