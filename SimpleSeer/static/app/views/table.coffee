@@ -188,7 +188,7 @@ module.exports = class Table extends SubView
         cquery = {"logic":"and","criteria":[{"type":"frame","isset":0,"name":key}]}
 
       @emptyCollection.setParam 'query', cquery
-      @emptyCollection.fetch({'async':false, modal:success:@emptyData})
+      @emptyCollection.fetch({'async':false, success:@emptyData})
 
   subscribe: (channel="") =>
     if channel
