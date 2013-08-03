@@ -351,7 +351,6 @@ module.exports = class Table extends SubView
     classes = if row.classes then row.classes else {}
     titles = if row.titles then row.titles else {}
     id = if row.id then row.id else ''
-
     _.each @tableCols, (v, k) =>
       key = v.key
       val = row[v.key]
@@ -362,7 +361,10 @@ module.exports = class Table extends SubView
         cls += ' ' + classes[key]
       if titles and titles[key]
         title = titles[key]
-      values.push {'class' : cls, 'value' : value, 'title' : title}
+      _r = {'class' : cls, 'value' : value, 'title' : title}
+      if v.href
+        _r['href'] = v.href+id
+      values.push _r
 
     return {id: row.id, values: values}
 
