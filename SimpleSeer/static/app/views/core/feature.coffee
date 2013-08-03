@@ -149,7 +149,7 @@ module.exports = class Feature extends View
     pjs.noFill()
     pjs.arc(x1, y1, angle_width, angle_width, pjs.PI - 0.25, pjs.PI)
 
-  distancePlatform:(pjs, p1, p2, style, color, key, val, align="center") =>
+  distancePlatform:(pjs, p1, p2, style, color, key, val, align="center", valign="center") =>
     p1 = _.clone p1
     p2 = _.clone p2
     kv = @mockKeyValueBox(pjs, key, val)
@@ -159,16 +159,23 @@ module.exports = class Feature extends View
       if (d0 > d1) then (p2[1] = p1[1]) else (p2[0] = p1[0])
     pjs.strokeWeight(@stroke * @scale)
 
-    if p1[1] is p2[1] # Horizontal
+    if true #p1[1] is p2[1] # Horizontal
       if align is "center"
         lineWidth = p2[0] - p1[0]
         pjs.fill(color[0],color[1],color[2])
         pjs.stroke(color[0], color[1], color[2])
-        @keyValueBox(pjs, [p1[0] + lineWidth / 2, p1[1] - kv.height / 2 + style[1]], key, val, "center")
+        if lineWidth < 0
+          bbw = p1[1] + style[1] + 4
+          lineClear = 0
+        else
+          bbw = p1[1] - kv.height / 2 + style[1]
+          lineClear = kv.width / 2
+
+        @keyValueBox(pjs, [p1[0] + lineWidth / 2, bbw], key, val, "center")
         pjs.fill(color[0],color[1],color[2])
         pjs.stroke(color[0], color[1], color[2])
-        @arrow(pjs, [p1[0], p1[1] + style[1]], [p1[0] + lineWidth / 2 - kv.width / 2, p1[1] + style[1]])
-        @arrow(pjs, [p2[0], p2[1] + style[1]], [p1[0] + lineWidth / 2 + kv.width / 2, p1[1] + style[1]])
+        @arrow(pjs, [p1[0], p1[1] + style[1]], [p1[0] + lineWidth / 2 - lineClear, p1[1] + style[1]])
+        @arrow(pjs, [p2[0], p2[1] + style[1]], [p1[0] + lineWidth / 2 + lineClear, p1[1] + style[1]])
       if align is "left"
         lineWidth = p2[0] - p1[0]
         pjs.fill(color[0],color[1],color[2])
@@ -187,7 +194,8 @@ module.exports = class Feature extends View
         pjs.stroke(color[0], color[1], color[2])
         @arrow(pjs, [p1[0], p1[1] + style[1]], [p2[0] - 30 * @scale - kv.width, p1[1] + style[1]])
         @arrow(pjs, [p2[0], p1[1] + style[1]], [p2[0] - 30 * @scale, p1[1] + style[1]])
-
+      if lineWidth < 0
+        lineWidth = ~lineWidth - @arrow_size * 2
       if style[1] is 0
         pjs.line(p1[0], p1[1] - @spacing * @scale, p1[0], p1[1] + @spacing * @scale)
         pjs.line(p2[0], p2[1] - @spacing * @scale, p2[0], p2[1] + @spacing * @scale)

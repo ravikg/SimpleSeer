@@ -43,7 +43,7 @@ module.exports = class ImageCanvas extends SubView
         @$("img").attr("data-w", @$("img").get(0).width)
         @$("img").attr("data-h", @$("img").get(0).height)
         @loaded = true
-        @$("img").show()
+        @$("img").fadeIn(300)
         @afterLoad()
 
   _process: =>
