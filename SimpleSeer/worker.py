@@ -227,7 +227,10 @@ class Foreman():
         
     def serial_inspection_iterator(self, frame, insps):
         for i in insps:
-            features = i.execute(frame)
+            try:
+                features = i.execute(frame)
+            except:
+                features = []
             for feat in features:
                 yield feat
                 
@@ -239,9 +242,13 @@ class Foreman():
 
     @task
     def inspection_execute(frame, inspection):
+        print 'working'
         try:
             log.warn('{} Inspecting {}'.format(inspection.id, frame.id))
-            features = inspection.execute(frame)
+            try:
+                features = inspection.execute(frame)
+            except:
+                return []
             return features        
         except Exception as e:
             log.error(e)
