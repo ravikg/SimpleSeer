@@ -157,6 +157,10 @@ class Foreman():
             log.setLevel(20) # INFO 
 
     def workerRunning(self):
+
+        if Session().disable_workers:
+            return False 
+
         i = celery.control.inspect()
         if i.active_queues() is not None:
             return True
