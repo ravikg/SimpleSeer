@@ -81,9 +81,11 @@ class Picklable(object):
         if not '_data' in self:
             self._data = {}
         
+        self._changed_fields = []
         for k, v in state.iteritems():
             if k == 'id':
                 self._data[None] = ObjectId(v)
+                self.id = ObjectId(v)
             elif k == 'imgfile':
                 grid_id = state['imgfile'][-24:]
                 self._data['imgfile'] = mongoengine.fields.GridFSProxy(ObjectId(grid_id))
@@ -99,6 +101,8 @@ class Picklable(object):
                 self.features = feats
             else:
                 self._data[k] = v
+            
+            self._dynamic_fields = bson.son.SON()
         
 class SimpleDoc(Picklable):
     meta=dict(auto_create_index=True)

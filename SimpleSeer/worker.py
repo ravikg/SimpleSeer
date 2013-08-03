@@ -187,10 +187,7 @@ class Foreman():
         if frame.features:        
             # only measurements for which there is a matching feature...
             # exact format of feature object depends on whether it came from worker or serial
-            if '_data' in frame.features[0]:
-                insps = [ feat.inspection for feat in frame.features ]
-            else:
-                insps = [ feat.__dict__['inspection'] for feat in frame.features ]
+            insps = { feat.inspection: 1 for feat in frame.features }.keys()
             measKwargs['inspection__in'] = insps
         else:
             # No features, but limit measurements to those associated with features on this camera
@@ -223,25 +220,37 @@ class Foreman():
     def worker_x_iterator(self, scheduled):
         for output in scheduled:
             for out in output:
+                for key in out._data.keys():
+                    out._changed_fields.append(key)
                 yield out
         
     def serial_inspection_iterator(self, frame, insps):
         for i in insps:
-            features = i.execute(frame)
+            try:
+                features = i.execute(frame)
+            except:
+                features = []
             for feat in features:
                 yield feat
                 
     def serial_measurement_iterator(self, frame, meass):
         for m in meass:
             results = m.execute(frame)
+            
             for res in results:
+                for key in res._data.keys():
+                    res._changed_fields.append(key)
                 yield res
 
     @task
     def inspection_execute(frame, inspection):
+        print 'working'
         try:
             log.warn('{} Inspecting {}'.format(inspection.id, frame.id))
-            features = inspection.execute(frame)
+            try:
+                features = inspection.execute(frame)
+            except:
+                return []
             return features        
         except Exception as e:
             log.error(e)
