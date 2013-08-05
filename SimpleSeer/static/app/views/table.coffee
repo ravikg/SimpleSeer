@@ -42,7 +42,7 @@ module.exports = class Table extends SubView
 
   events: =>
     "click th.sortable":"sortByColumn"
-    "click .showhidden .controlButton":"showHiddenEvent"
+    "click .showhidden .button":"showHiddenEvent"
     "click .downloads button":"downloadData"
     "click .show-hide-button":"showHideEvent"
     "click .show-hide-checkbox":"showHideCheckboxEvent"
@@ -188,6 +188,8 @@ module.exports = class Table extends SubView
         cquery = {"logic":"and","criteria":[{"type":"frame","isset":0,"name":key}]}
 
       @emptyCollection.setParam 'query', cquery
+      if @columnSortType == 'measurement'
+        @emptyCollection.setParam 'sorttype', 'measurement'
       @emptyCollection.fetch({'async':false, success:@emptyData})
 
   subscribe: (channel="") =>
@@ -617,7 +619,7 @@ module.exports = class Table extends SubView
     # Shows a placeholder row, that asks the user if they would like to see the hidden rows on sort
     if !@showHidden and @hasHidden
       cols = @tableCols.length
-      $(".table.static tbody").prepend('<tr><td class="td showhidden" colspan="'+cols+'"><span class="controlButton">Show hidden rows?</span></td></tr>')
+      $(".table.static tbody").prepend('<tr><td class="td showhidden" colspan="'+cols+'"><button class="button">Show hidden rows?</button></td></tr>')
 
     # Shows the row if there is no data
     if @noData

@@ -160,7 +160,7 @@ class Frame(SimpleDoc, mongoengine.Document):
                 img_data = StringIO()
                 thumbnail_img.save(img_data, "jpeg", quality = 75)
                 self.thumbnail_file.put(img_data.getvalue(), content_type='image/jpeg')
-                self.save()
+                self.save(publish=False)
         else:
             self.thumbnail_file.get().seek(0,0)
             thumbnail_img = Image(pil.open(StringIO(self.thumbnail_file.read())))
