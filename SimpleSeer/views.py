@@ -320,6 +320,11 @@ def settings():
 def status():
     return 'ok'
 
+@route('/_statusJSON', methods=['GET', 'POST'])
+def statusJSON():
+    # Callback is to support the Cross Domain 'JSONP' request.
+    return format(request.values['callback']) + "({status: 200})"
+
 @route('/_auth', methods=['GET','POST'])
 @login_required
 @util.jsonify
