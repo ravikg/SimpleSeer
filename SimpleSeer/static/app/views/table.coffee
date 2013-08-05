@@ -545,6 +545,7 @@ module.exports = class Table extends SubView
     if @tableCols.length == keys.length
       delete keys
       keys = {}
+
     if @data.length < 20
       delete keys
       keys = {}
