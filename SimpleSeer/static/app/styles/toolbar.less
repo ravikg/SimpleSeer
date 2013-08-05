@@ -138,12 +138,13 @@
 }
 
 .oneLine input[type=text] {
-  padding: 5px;
+  padding-left: 5px;
   width: 100%;
-  height: 29px;
+  height: 26px;
   border-color: #777;
   color: #000;
   font-family: "Open Sans";
+  font-size: 12px;
   box-sizing: border-box !important;
   -moz-box-sizing: border-box !important;
   background-color: #FFF;
@@ -152,4 +153,11 @@
   background-image: -moz-linear-gradient(top, #EEE 1%, #FFF 15%);
   background-image: -o-linear-gradient(top, #EEE 1%, #FFF 15%);
   background-image: linear-gradient(#EEE 1%, #FFF 15%);
+}
+
+#toolbar input {
+  &::-webkit-input-placeholder { color: #999; }
+  &:-moz-placeholder { color: #999; }
+  &::-moz-placeholder { color: #999; }
+  &:-ms-input-placeholder { color: #999; }
 }
