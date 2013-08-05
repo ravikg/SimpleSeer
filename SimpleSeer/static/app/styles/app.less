@@ -122,9 +122,9 @@ html[xmlns] .clearfix { display: block }
 .chzn-container { font-size: 12px; position: relative; display: inline-block; zoom: 1; *display: inline; }
 .chzn-container, .chzn-container > .chzn-single, .chzn-container > .chzn-single span, .chzn-container > .chzn-choices, .chzn-container > .chzn-choices .search-field input, .chzn-container-multi .chzn-choices { cursor: pointer !important; }
 .chzn-container-multi .chzn-choices { border-color: #777 !important; }
-select + .chzn-container, .chzn-drop { width: 100% !important; }
-.chzn-choices > .search-field > input { font-family: "Open Sans"; width: 100% !important; }
-
+.chzn-choices > .search-field > input,
+.chzn-container-single .chzn-search input { font-family: "Open Sans"; width: 100% !important; box-sizing: border-box !important; }
+.chzn-container-single .chzn-drop { box-sizing: border-box !important; width: 100% !important; }
 
 /**
  * Image view in Arc
