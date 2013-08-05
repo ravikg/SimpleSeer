@@ -42,7 +42,7 @@ module.exports = class Table extends SubView
 
   events: =>
     "click th.sortable":"sortByColumn"
-    "click .showhidden .controlButton":"showHiddenEvent"
+    "click .showhidden .button":"showHiddenEvent"
     "click .downloads button":"downloadData"
     "click .show-hide-button":"showHideEvent"
     "click .show-hide-checkbox":"showHideCheckboxEvent"
@@ -188,7 +188,9 @@ module.exports = class Table extends SubView
         cquery = {"logic":"and","criteria":[{"type":"frame","isset":0,"name":key}]}
 
       @emptyCollection.setParam 'query', cquery
-      @emptyCollection.fetch({'async':false, modal:success:@emptyData})
+      if @columnSortType == 'measurement'
+        @emptyCollection.setParam 'sorttype', 'measurement'
+      @emptyCollection.fetch({'async':false, success:@emptyData})
 
   subscribe: (channel="") =>
     if channel
@@ -351,7 +353,6 @@ module.exports = class Table extends SubView
     classes = if row.classes then row.classes else {}
     titles = if row.titles then row.titles else {}
     id = if row.id then row.id else ''
-
     _.each @tableCols, (v, k) =>
       key = v.key
       val = row[v.key]
@@ -362,7 +363,10 @@ module.exports = class Table extends SubView
         cls += ' ' + classes[key]
       if titles and titles[key]
         title = titles[key]
-      values.push {'class' : cls, 'value' : value, 'title' : title}
+      _r = {'class' : cls, 'value' : value, 'title' : title}
+      if v.href
+        _r['href'] = v.href+id
+      values.push _r
 
     return {id: row.id, values: values}
 
@@ -541,6 +545,7 @@ module.exports = class Table extends SubView
     if @tableCols.length == keys.length
       delete keys
       keys = {}
+
     if @data.length < 20
       delete keys
       keys = {}
@@ -615,7 +620,7 @@ module.exports = class Table extends SubView
     # Shows a placeholder row, that asks the user if they would like to see the hidden rows on sort
     if !@showHidden and @hasHidden
       cols = @tableCols.length
-      $(".table.static tbody").prepend('<tr><td class="td showhidden" colspan="'+cols+'"><span class="controlButton">Show hidden rows?</span></td></tr>')
+      $(".table.static tbody").prepend('<tr><td class="td showhidden" colspan="'+cols+'"><button class="button">Show hidden rows?</button></td></tr>')
 
     # Shows the row if there is no data
     if @noData

@@ -28,10 +28,16 @@ module.exports = class Modal extends View
     for i of @callbacks
       @callbacks[i] = []
 
+  isVisible: =>
+    return @$el.is(":visible")
+
   addCallback: (type, func) =>
     if @callbacks[type]? and typeof func == 'function'
       @callbacks[type].push func
     return
+
+  setMinorText:(value) =>
+    @$("p.minor").html value
 
   show:(options={}) =>
     @reset()

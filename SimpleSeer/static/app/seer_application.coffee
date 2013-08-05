@@ -153,12 +153,15 @@ module.exports = SeerApplication =
         #$(".alert-#{alert_type}").each (e,v)->
         #  if ($(v).data("message") == message) then _duplicate = true
 
-        if _duplicate is false
-          popup = $("<div style=\"display: none\">#{message}</div>")
-          popup.addClass("alert alert-#{alert_type}").data("message", message).appendTo("#messages")
-          closeBtn = $("<div class='closeAlerts'></div>")
-          closeBtn.click((e, ui) => $(e.currentTarget).parent().fadeOut(-> $(this).remove())).appendTo(popup)
-          popup.fadeIn()
+        if SimpleSeer.modal.isVisible()
+          SimpleSeer.modal.setMinorText(message)
+        else
+          if _duplicate is false
+            popup = $("<div style=\"display: none\">#{message}</div>")
+            popup.addClass("alert alert-#{alert_type}").data("message", message).appendTo("#messages")
+            closeBtn = $("<div class='closeAlerts'></div>")
+            closeBtn.click((e, ui) => $(e.currentTarget).parent().fadeOut(-> $(this).remove())).appendTo(popup)
+            popup.fadeIn()
 
   # Uses a regular expression to determine
   # if the user is on a mobile browser or not.
