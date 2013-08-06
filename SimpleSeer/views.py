@@ -25,6 +25,14 @@ from flask.ext.login import (current_user, login_required,
                               fresh_login_required)
 
 log = logging.getLogger()
+session = Session()
+
+def checkLoginRequired(func):
+  if session.requireAuth:
+    res = login_required(func)
+  else:
+    res = func
+  return res
 
 class route(object):
     routes = []
@@ -50,6 +58,7 @@ def sio(path):
         request._get_current_object())
 
 @route('/')
+@checkLoginRequired
 def index():
     files= ["javascripts/app.js","javascripts/vendor.js","stylesheets/app.css"]
     baseUrl = ''
@@ -314,8 +323,6 @@ def settings():
             pass
     return {"settings": text, "plugins":plugins }
 
-
-
 @route('/_status', methods=['GET', 'POST'])
 def status():
     return 'ok'
@@ -326,62 +333,58 @@ def statusJSON():
     return format(request.values['callback']) + "({status: 200})"
 
 @route('/_auth', methods=['GET','POST'])
-@login_required
 @util.jsonify
 def auth():
-    return ['authorized']
-
+    if flask.ext.login.current_user.is_authenticated():
+        secureUserDict = {}
+        user = M.User.objects(username=flask.ext.login.current_user.name)[0]
+        for key in [key for key in user if key != "password"]:
+            secureUserDict[key] = user[key]
+        return {"authed": True, "user": secureUserDict}
+    return {"authed": False}
 
 @route('/login', methods=["GET", "POST"])
 def login():
 
+  settings = Session().get_config()
+
   try:
     from .Web import USER_NAMES, USERS
   except:
-    print 'login not setup'
     return
 
   if request.method == "POST" and "username" in request.form:
     username = request.form["username"]
-
     if username in USER_NAMES:
-      password = request.form["password"]
-      if password == USERS[1].password:
-
-        remember = request.form.get("remember", "no") == "yes"
-
-        if login_user(USER_NAMES[username], remember=remember):
-          flash("Logged in!")
-          return redirect(request.args.get("next") or url_for("index"))
-
-        else:
-          flash("Sorry, but you could not log in.")
+      user = [user for user in USERS if user.name == username]
+      if user[0]:
+          user = user[0]
+          password = request.form["password"]
+          if password == user.password:
+            remember = request.form.get("remember", "no") == "yes"
+            if login_user(user, remember=remember):
+              return redirect(request.args.get("next") or url_for("index"))
+            else:
+              flash("An unknown error occured. Please contact the system administrator.")
+          else:
+            flash(u"Invalid username / password.")
       else:
-        flash(u"Invalid Password")
-
+        # We should never actually hit this point.
+        flash("An unknown error occured. Please contact the system administrator.")
     else:
-      flash(u"Invalid username.")
-
-  return render_template("login.html")
-
-
+      flash(u"Invalid username / password.")
+  return render_template("login.html", settings = settings)
 
 @route("/reauth", methods=["GET", "POST"])
 @login_required
 def reauth():
   if request.method == "POST":
     confirm_login()
-    flash(u"Reauthenticated.")
     return redirect(request.args.get("next") or url_for("index"))
-
   return render_template("reauth.html")
-
 
 @route("/logout")
 @login_required
 def logout():
   logout_user()
-  flash("Logged out.")
   return redirect(url_for("index"))
-
-
