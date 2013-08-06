@@ -449,6 +449,7 @@ class ImportImagesCommand(Command):
         subparser.add_argument("-n", "--new", dest="new", default=False, action="store_true", help="Only import files written since the most recent Frame")
         subparser.add_argument("-m", "--metadata", dest="metadata", default="", nargs="?", help="Additional metadata for frame (as a python dict)")
         subparser.add_argument("-t", "--timestring", dest="timestring", default="", nargs="?", help="Python strptime() expression to decode timestamp with")
+        subparser.add_argument("-o", "--overwrite", dest="overwrite", default=False, action="store_true", help="Overwrite existing files")
     
     def import_frame(self, filename, metadata = {}, template = ""):
         import SimpleSeer.models as M
@@ -462,12 +463,14 @@ class ImportImagesCommand(Command):
         frame.metadata['filename'] = filename
         frame.metadata['mtime'] = os.path.getmtime(filename)
         if template:
-            print filename
             to_match = filename
             if not self.options.withpath:
                 to_match = os.path.basename(filename) 
             match = re.match(template, to_match)
-            metadata.update(match.groupdict())
+            if match:
+                metadata.update(match.groupdict())
+            else:
+                self.log.warn('Failed to match import attribute template on {0}'.format(filename))
         
         if metadata.get("time", False):
             timestring = metadata.pop('time')
@@ -505,7 +508,7 @@ class ImportImagesCommand(Command):
                         m.execute(frame, features)
         
         frame.save()
-        print "Imported {} at time {} for camera '{}' with attributes {}".format(filename, frame.capturetime, frame.camera, metadata)
+        self.log.info("Imported {} at time {} for camera '{}' with attributes {}".format(filename, frame.capturetime, frame.camera, metadata))
 
     def run(self):
         import SimpleSeer.models as M
@@ -526,7 +529,7 @@ class ImportImagesCommand(Command):
         
         
         if self.options.new:
-            lastframes = M.Frame.objects(metadata__filename__ne = "", metadata__mtime__ne = "", **metadata_params).order_by("-metadata__mtime")
+            lastframes = M.Frame.objects(metadata__filename__exists = True, metadata__mtime__exists = True, **metadata_params).order_by("-metadata__mtime")
             if len(lastframes):
                 lastimport = float(lastframes[0].metadata['mtime'])
         
@@ -555,9 +558,10 @@ class ImportImagesCommand(Command):
         
         for f in files:
             if len(M.Frame.objects(metadata__filename = f, **metadata_params)):
-                print "file {} already imported".format(f)
-                #todo, disable this check if we don't need it
-                continue
+                if self.options.overwrite:
+                     M.Frame.objects(metadata__filename = f, **metadata_params).delete()
+                else:
+                    self.log.info("{} already imported".format(f))
+                    continue
             
             self.import_frame(f, metadata, template)
-
