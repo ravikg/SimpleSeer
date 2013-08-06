@@ -11,9 +11,8 @@ module.exports = class LoginMenu extends SubView
     "click": "handleClick"
 
   handleClick: =>
-    if @currentUser?
+    if Application.currentUser?
       window.location = "/logout"
-      @currentUser = undefined
     else
       window.location = "/login"
 
