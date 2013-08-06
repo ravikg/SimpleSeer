@@ -50,6 +50,9 @@ class TestMongoConnection(unittest.TestCase):
             self.assertEqual(True, True)
         except Exception as inst:
             self.assertEqual(inst.args[0], "MongoDB must be the master!")
+
+        Session.__shared_state = { "config": {} }
+        Session.mongoengine.connection.disconnect()
             
 
 if __name__ == '__main__':
