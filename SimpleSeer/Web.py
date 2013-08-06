@@ -23,10 +23,17 @@ DEBUG = True
 log = logging.getLogger(__name__)
 
 from flask.ext.login import (LoginManager, current_user, login_required,
-                            login_user, logout_user, UserMixin, AnonymousUser,
+                            login_user, logout_user, UserMixin,
                             confirm_login, fresh_login_required)
+
+appauth = False
+session = Session()
+timestamp = time.time()
+
+##################################
+
 class User(UserMixin):
-    def __init__(self, name, id, password=None,active=True):
+    def __init__(self, name, id, password,active=True):
         self.name = name
         self.id = id
         self.password = password
@@ -35,32 +42,28 @@ class User(UserMixin):
     def is_active(self):
         return self.active
 
+USERS = []
+if len(M.User.objects) > 0:
+    _id = 0
+    for user in M.User.objects:
+        USERS.append(User(user.username, _id, user.password))
+        _id += 1
 
-class Anonymous(AnonymousUser):
-    name = u"Anonymous"
-
-
-appauth = False
-session = Session()
-
-timestamp = time.time()
-USERS = {1: User(str(timestamp), int(timestamp), str(timestamp), False)}
-
-if session.login:
-  USERS = {
-      1: User(session.login['username'], 1, session.login['password']),
-  }
-
-USER_NAMES = dict((u.name, u) for u in USERS.itervalues())
+USER_NAMES = dict((u.name, u) for u in USERS)
 login_manager = LoginManager()
-login_manager.anonymous_user = Anonymous
 login_manager.login_view = "login"
-login_manager.login_message = u"Please log in to access this page."
 login_manager.refresh_view = "reauth"
+login_manager.login_message = u"Please log in to access this page."
 
 @login_manager.user_loader
 def load_user(id):
-    return USERS.get(int(id))
+    users = [user for user in USERS if user.id == int(id)]
+    if len(users) == 1:
+        return users[0]
+    else:
+        return None
+
+##################################
 
 app = Flask(__name__)
 DEBUG = True
@@ -77,8 +80,7 @@ def make_app(*args,**kwargs):
 
     # TODO: change this key, its horrible.
     app.secret_key = 'secretkey'
-    # commented out auth for now!
-    #login_manager.setup_app(app)
+    login_manager.setup_app(app)
 
     @app.teardown_request
     def teardown_request(exception):
