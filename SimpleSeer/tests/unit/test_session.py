@@ -53,6 +53,10 @@ class TestMongoConnection(unittest.TestCase):
 
         Session.__shared_state = { "config": {} }
         Session.mongoengine.connection.disconnect()
+
+        # Close the mongod processes
+        _mongod_slave.kill()
+        _mongod_master.kill()
             
 
 if __name__ == '__main__':
