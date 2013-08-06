@@ -29,7 +29,7 @@ class Session():
     __shared_state = dict(
         _config = {})
     
-    def __init__(self, yaml_config_dir = '', procname='simpleseer', ismaster=False):
+    def __init__(self, yaml_config_dir = '', procname='simpleseer'):
         self.__dict__ = self.__shared_state
         
         if not yaml_config_dir:
