@@ -29,7 +29,7 @@ class Session():
     __shared_state = dict(
         _config = {})
     
-    def __init__(self, yaml_config_dir = '', procname='simpleseer'):
+    def __init__(self, yaml_config_dir = '', procname='simpleseer', ismaster=False):
         self.__dict__ = self.__shared_state
         
         if not yaml_config_dir:
@@ -74,6 +74,14 @@ class Session():
             mongoengine.connect(self.database, **master)
         mongoengine.connect(self.database, **self.mongo)
         db = mongoengine.connection.get_db()
+
+        if self.forcemongomaster:
+            if db.command('isMaster')['ismaster']:
+                log.info("MongoDB isMaster: true")
+            else:
+                log.info("MongoDB isMaster: false")
+                raise Exception("MongoDB must be the master!")
+        
         db.add_son_manipulator(SONScrub())
         self.log = logging.getLogger(__name__)
         
