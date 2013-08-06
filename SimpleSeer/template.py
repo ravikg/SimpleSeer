@@ -91,6 +91,7 @@ class SimpleSeerProjectTemplate(Template):
             src_templates / 'testing.html',
             tgt_templates / 'testing.html')
 
+
         # Copy image assets
         try:
             shutil.rmtree(tgt_brunch / 'app/assets/img/seer', True)
