@@ -33,20 +33,23 @@ timestamp = time.time()
 ##################################
 
 class User(UserMixin):
-    def __init__(self, name, id, password,active=True):
-        self.name = name
-        self.id = id
-        self.password = password
-        self.active = active
+    def __init__(self, userModel):
+        self.name = userModel.username
+        self.id = userModel.id
+        self.active = True
+        self.model = userModel
 
     def is_active(self):
         return self.active
+
+    def checkPassword(self, value):
+        return self.model.checkPassword(value)
 
 USERS = []
 if len(M.User.objects) > 0:
     _id = 0
     for user in M.User.objects:
-        USERS.append(User(user.username, _id, user.password))
+        USERS.append(User(user))
         _id += 1
 
 USER_NAMES = dict((u.name, u) for u in USERS)
@@ -57,7 +60,7 @@ login_manager.login_message = u"Please log in to access this page."
 
 @login_manager.user_loader
 def load_user(id):
-    users = [user for user in USERS if user.id == int(id)]
+    users = [user for user in USERS if str(user.id) == str(id)]
     if len(users) == 1:
         return users[0]
     else:
