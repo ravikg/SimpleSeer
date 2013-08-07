@@ -24,7 +24,8 @@ class TestMongoConnection(unittest.TestCase):
 
         _mongod = [line.strip() for line in open('./config/mongod.cfg')]
 
-        # Check slave version
+        # MongoDB no replset, forcemongomaster=false
+        # This mongoengine connection does not check if it is master/slave so it should never raise an exception.
         try:
             shutil.rmtree('/tmp/slave')
             mkdir_p('/tmp/slave')
@@ -34,12 +35,15 @@ class TestMongoConnection(unittest.TestCase):
             session_slave = Session.Session(os.path.dirname(os.path.realpath(__file__)) + '/config/slave', 'corecommand')
             self.assertEqual(True, True)
         except Exception as inst:
-            self.assertEqual(inst.args[0], "MongoDB must be the master!")
+            self.assertTrue(False)
 
         Session.__shared_state = { "config": {} }
         Session.mongoengine.connection.disconnect()
 
-        # Check master version
+        # MongoDB with replset, forcemongomaster=true
+        # This mongoengine connection checks to make sure it is master, if it is slave we expect for it to throw
+        # an exception. Because the mongo instance is being initiated with replset and the connection is happening
+        # within ~10 seconds, it should responsd with an db.command('isMaster') value of false 
         try:
             shutil.rmtree('/tmp/master')
             mkdir_p('/tmp/master')
@@ -47,7 +51,7 @@ class TestMongoConnection(unittest.TestCase):
             _mongod_master = Popen(_master_options, stdin=PIPE, stdout=PIPE, stderr=PIPE)
             time.sleep(3)
             session_master = Session.Session(os.path.dirname(os.path.realpath(__file__)) + '/config/master', 'corecommand')
-            self.assertEqual(True, True)
+            self.assertTrue(False)
         except Exception as inst:
             self.assertEqual(inst.args[0], "MongoDB must be the master!")
 
@@ -56,7 +60,9 @@ class TestMongoConnection(unittest.TestCase):
 
         # Close the mongod processes
         _mongod_slave.kill()
+        shutil.rmtree('/tmp/slave')
         _mongod_master.kill()
+        shutil.rmtree('/tmp/master')
             
 
 if __name__ == '__main__':
