@@ -10,6 +10,8 @@ from path import path
 
 from SimpleSeer import Session
 
+# mkdir_p() taken from top rated comment on stackoverflow thread:
+# http://stackoverflow.com/questions/600268/mkdir-p-functionality-in-python
 def mkdir_p(path):
     try:
         os.makedirs(path)
