@@ -15,28 +15,26 @@ from zipfile import ZipFile, ZIP_DEFLATED
 import time
 import shutil
 
-
 class ManageCommand(Command):
     "Simple management tasks that don't require SimpleSeer context"
     use_gevent = False
 
     def configure(self, options):
         self.options = options
-    
+
 class CreateCommand(ManageCommand):
     "Create a new repo"
-    
+
     def __init__(self, subparser):
         subparser.add_argument("projectname", help="Name of new project")
-        
+
     def run(self):
         from paste.script import command as pscmd
         pscmd.run(["create", "-t", "simpleseer", self.options.projectname])
 
-
 class ResetCommand(ManageCommand):
     "Clear out the database"
-    
+
     def __init__(self, subparser):
         subparser.add_argument("database", help="Name of database", default="default", nargs='?')
 
@@ -56,17 +54,17 @@ class BackupCommand(ManageCommand):
 
 
     def run(self):
-        sess = Session(os.getcwd())        
+        sess = Session(os.getcwd())
         filename = sess.database + "-backup-" + time.strftime('%Y-%m-%d-%H_%M_%S')
         subprocess.call(['mongodump','--db',sess.database,'--out',filename])
         print 'Backup saved to directory:', filename
         exit()
-        
+
 
 class DeployCommand(ManageCommand):
     "Deploy an instance"
     supervisor_link = "/etc/supervisor/conf.d/simpleseer.conf"
-    
+
     def __init__(self, subparser):
         subparser.add_argument("directory", help="Target", default = os.path.realpath(os.getcwd()), nargs = '?')
 
@@ -74,35 +72,35 @@ class DeployCommand(ManageCommand):
         link = "/etc/simpleseer"
         if os.path.lexists(link):
             os.remove(link)
-            
+
         supervisor_link = self.supervisor_link
         if os.path.lexists(supervisor_link):
             os.remove(supervisor_link)
-            
+
         print "Linking %s to %s" % (self.options.directory, link)
         os.symlink(self.options.directory, link)
-        
+
         hostname = gethostname()
         hostname_supervisor_filename = hostname + "_supervisor.conf"
         src_host_specific_supervisor = path(self.options.directory) / 'etc' / hostname_supervisor_filename
-        
+
         regular_supervisor = "supervisor.conf"
         src_supervisor = path(self.options.directory) / 'etc' / regular_supervisor
-        
-        
+
+
         if os.path.exists(src_host_specific_supervisor):
             src_supervisor = src_host_specific_supervisor
-            
+
         print "Linking %s to %s" % (src_supervisor, supervisor_link)
         os.symlink(src_supervisor, supervisor_link)
-        
+
         print "Reloading supervisord"
         subprocess.check_output(['supervisorctl', 'reload'])
 
 
 class ServiceCommand(ManageCommand):
-    
-    
+
+
     def __init__(self, subparser):
         subparser.add_argument("verb", help="what you want to do with services: [list,add,remove]")
         subparser.add_argument("service", help="command you want to run with supervisor", default = "", nargs = '?')
@@ -121,34 +119,34 @@ class ServiceCommand(ManageCommand):
     def run(self):
         if not self.options.verb in ['list', 'deploy', 'remove']:
             self.options.verb = 'list'
-        
+
         if not os.path.exists(DeployCommand.supervisor_link):
             print "You need to run 'simpleseer deploy' before you can manage services"
             return
-        
+
         import ConfigParser
         cp = ConfigParser.RawConfigParser()
         cp.read(DeployCommand.supervisor_link)
-        
+
         need_write = False
-        
+
         if self.options.verb == 'list':
             print "simpleseer services installed:"
             for program in [k for k in cp.sections() if re.match("program", k)]:
                 print "\t{} autostart={} log size={}".format(program, dict(cp.items(program)).get('autostart', "False"), dict(cp.items(program)).get('stdout_logfile_maxbytes', "N/A"))
-            
+
             print "\nsimpleseer service groups:"
             for group in [k for k in cp.sections() if re.match("group", k)]:
                 print "\t{} programs={}".format(group, cp.get(group, 'programs'))
-        
+
         section = "program:" + self.options.service
         group = "group:" + self._get_group(self.options.service)
-        
+
         if self.options.verb == 'deploy':
             if not self.options.service:
                 print 'you must specify a service to deploy'
                 return
-            
+
             template = dict(
                 process_name = "%(program_name)s",
                 priority = "30",
@@ -157,63 +155,63 @@ class ServiceCommand(ManageCommand):
                 stdout_logfile = "/var/log/simpleseer.{}.log".format(self.options.service),
                 startsecs = "5",
             )
-            
+
             if cp.has_section(section):
                 print "updating service {}".format(self.options.service)
                 template = dict(cp.items(section))
             else:
                 cp.add_section(section)
-            
+
             section_options = template
             section_options['command'] = "/usr/local/bin/simpleseer -c /etc/simpleseer -l /etc/simpleseer/simpleseer-logging.cfg {} {}".format(self.options.service, self.options.args)
             section_options['autostart'] = str(not self.options.noautostart)
             section_options['stdout_logfile_maxbytes'] = self.options.logsize
-            
+
             for k, v in section_options.items():
                 cp.set(section, k, v)
-            
+
             old_group_value = cp.get(group, "programs")
             group_list = [programs for programs in old_group_value.split(",") if programs != self.options.service]
             group_list.append(self.options.service)
             new_group_value = ",".join(group_list)
             cp.set(group, "programs", new_group_value)
-            
+
             need_write = True
-            
-            
+
+
         if self.options.verb == 'remove':
             if not self.options.service:
                 print "you must specify a service to remove"
                 return
-            
-            
+
+
             if not cp.has_section(section):
                 print "no service {} is installed, so can't do anything"
                 return
-            
+
             cp.remove_section(section)
             print "removed {} from services".format(section)
-            
-            
+
+
             old_group_value = cp.get(group, "programs")
             new_group_value = ",".join([programs for programs in old_group_value.split(",") if programs != self.options.service])
             cp.set(group, "programs", new_group_value)
             print "removed {} from {}".format(self.options.service, group)
-            
-            
+
+
             need_write = True
-        
+
         if need_write:
             conf_file = "etc/" + gethostname() + "_supervisor.conf"
-            
+
             print "writing config to {}".format(conf_file)
             conf = open(conf_file, 'w')
             cp.write(conf)
             conf.close()
             print "\nrun 'simpleseer deploy' as root to restart services and update symlink"
-            
-            
-    
+
+
+
 
 class GenerateDocsCommand(ManageCommand):
     def __init__(self, subparser):
@@ -251,58 +249,58 @@ class WatchCommand(ManageCommand):
         src_brunch = path(pkg_resources.resource_filename(
             'SimpleSeer', 'static'))
         tgt_brunch = path(cwd) / package / 'brunch_src'
-        
+
         if settings.in_cloud:
             cloud_brunch = path(pkg_resources.resource_filename('SeerCloud', 'static'))
-        
+
         BuildCommand("").run()
         #run a build first, to make sure stuff's up to date
-        
-        
+
+
         #i'm not putting this in pip, since this isn't necessary in production
         from watchdog.observers import Observer
         from watchdog.events import FileSystemEventHandler
-        
+
         #Event watcher for SimpleSeer
         seer_event_handler = FileSystemEventHandler()
         seer_event_handler.eventqueue = []
         def rebuild(event):
             seer_event_handler.eventqueue.append(event)
-        
+
         seer_event_handler.on_any_event = rebuild
-        
+
         seer_observer = Observer()
         seer_observer.schedule(seer_event_handler, path=src_brunch, recursive=True)
-        
+
         #Event watcher for SeerCloud
         if settings.in_cloud:
             cloud_event_handler = FileSystemEventHandler()
             cloud_event_handler.eventqueue = []
             def build_cloud(event):
                 cloud_event_handler.eventqueue.append(event)
-        
+
             cloud_event_handler.on_any_event = build_cloud
-        
+
             cloud_observer = Observer()
             cloud_observer.schedule(cloud_event_handler, path=cloud_brunch, recursive=True)
-        
+
         #Event watcher for seer application
         local_event_handler = FileSystemEventHandler()
         local_event_handler.eventqueue = []
-        
+
         def build_local(event):
             local_event_handler.eventqueue.append(event)
-            
+
         local_event_handler.on_any_event = build_local
-        
+
         local_observer = Observer()
         local_observer.schedule(local_event_handler, path=tgt_brunch, recursive=True)
-        
+
         seer_observer.start()
         if settings.in_cloud:
             cloud_observer.start()
         local_observer.start()
-            
+
         ss_builds = 0
         anythingBuilt = False
         while True:
@@ -325,7 +323,7 @@ class WatchCommand(ManageCommand):
                 local_event_handler.eventqueue = []
                 ss_builds = 0
                 anythingBuilt = True
-            
+
             if len(local_event_handler.eventqueue):
                 time.sleep(0.2)
                 with tgt_brunch:
@@ -333,10 +331,10 @@ class WatchCommand(ManageCommand):
                     print subprocess.check_output(['brunch', 'build'])
                 local_event_handler.eventqueue = []
                 anythingBuilt = True
-            
+
             if anythingBuilt is True and self.options.refresh != 0:
-                Alert.redirect("@rebuild")                
-                    
+                Alert.redirect("@rebuild")
+
             time.sleep(0.5)
 
 
@@ -363,10 +361,10 @@ class WorkerCommand(Command):
 
     That will basically iterate through all the frames, if you want
     to change it then pass the frame id you want to update.
-    
+
     '''
     use_gevent = False
-    
+
     def __init__(self, subparser):
         subparser.add_argument("--purge", help="clear out the task queue", action="store_true")
 

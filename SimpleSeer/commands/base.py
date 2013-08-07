@@ -12,7 +12,7 @@ class Command(object):
     def __init__(self, subparser):
         '''Add any options here'''
         pass
-        
+
     def configure(self, options):
         self.options = options
         if self.use_gevent:
@@ -31,7 +31,7 @@ class Command(object):
         if self.session.mongo.get('is_slave'):
             M.base.SimpleDoc.meta['auto_create_index'] = False
         if options.profile_heap: self._start_profile_heap()
-        
+
     def run(self):
         '''Actually run the command'''
         raise NotImplementedError, 'run'
@@ -39,10 +39,10 @@ class Command(object):
     def _configure_logging(self):
         import logging
         import logging.config
-        
+
         import warnings
         warnings.filterwarnings(action='module', category=DeprecationWarning)
-        
+
         if self.options.logging:
             if os.path.exists(self.options.logging):
                 logging.config.fileConfig(self.options.logging, disable_existing_loggers=False)
@@ -52,13 +52,13 @@ class Command(object):
         else:
             logging.basicConfig(level=logging.DEBUG)
         self.log = logging.getLogger(__name__)
-        
+
         if not self.session.amqplogs:
             amqplib_log = logging.getLogger('amqplib')
             amqplib_log.setLevel(logging.WARNING)
             amqp_log = logging.getLogger('amqp')
-            amqp_log.setLevel(logging.WARNING) 
-        
+            amqp_log.setLevel(logging.WARNING)
+
     @classmethod
     def simple(cls, use_gevent=True):
         '''Create a simple command. Used as a decorator'''
@@ -85,4 +85,4 @@ class Command(object):
             t = threading.Thread(target=profiler)
             t.daemon = True
             t.start()
-    
+
