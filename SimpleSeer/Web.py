@@ -25,12 +25,25 @@ log = logging.getLogger(__name__)
 from flask.ext.login import (LoginManager, current_user, login_required,
                             login_user, logout_user, UserMixin,
                             confirm_login, fresh_login_required)
+login_manager = LoginManager()
+login_manager.login_view = "login"
+login_manager.refresh_view = "reauth"
+login_manager.login_message = u"Please log in to access this page."
 
 appauth = False
 session = Session()
 timestamp = time.time()
+app = Flask(__name__)
+app.config.from_object(__name__)
 
-##################################
+@login_manager.user_loader
+def load_user(id):
+    try:
+        query = M.User.objects.get(id=id)
+        user = User(query)
+        return user
+    except:
+        return None
 
 class User(UserMixin):
     def __init__(self, userModel):
@@ -42,40 +55,11 @@ class User(UserMixin):
     def is_active(self):
         return self.active
 
-    def checkPassword(self, value):
-        return self.model.checkPassword(value)
-
-USERS = []
-if len(M.User.objects) > 0:
-    _id = 0
-    for user in M.User.objects:
-        USERS.append(User(user))
-        _id += 1
-elif session.requireAuth:
+if len(M.User.objects) and session.requireAuth:
     log.warn('****************************************************************')
     log.warn('* WARNING:')
     log.warn('* Application configured to require auth, but there are no users yet')
     log.warn('****************************************************************')
-
-USER_NAMES = dict((u.name, u) for u in USERS)
-login_manager = LoginManager()
-login_manager.login_view = "login"
-login_manager.refresh_view = "reauth"
-login_manager.login_message = u"Please log in to access this page."
-
-@login_manager.user_loader
-def load_user(id):
-    users = [user for user in USERS if str(user.id) == str(id)]
-    if len(users) == 1:
-        return users[0]
-    else:
-        return None
-
-##################################
-
-app = Flask(__name__)
-DEBUG = True
-app.config.from_object(__name__)
 
 def make_app(*args,**kwargs):
     settings = Session()
