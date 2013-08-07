@@ -51,6 +51,11 @@ if len(M.User.objects) > 0:
     for user in M.User.objects:
         USERS.append(User(user))
         _id += 1
+elif session.requireAuth:
+    log.warn('****************************************************************')
+    log.warn('* WARNING:')
+    log.warn('* Application configured to require auth, but there are no users yet')
+    log.warn('****************************************************************')
 
 USER_NAMES = dict((u.name, u) for u in USERS)
 login_manager = LoginManager()
