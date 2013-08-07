@@ -352,7 +352,6 @@ def auth():
 
 @route('/login', methods=["GET", "POST"])
 def login():
-  #import pdb; pdb.set_trace()
   settings = Session().get_config()
   is_post = bool(request.method == "POST")
   has_username = bool("username" in request.form)
