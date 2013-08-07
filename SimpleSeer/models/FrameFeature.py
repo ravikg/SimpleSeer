@@ -37,8 +37,8 @@ class FeatureValidator(fev.FancyValidator):
     def _to_python(self, value, state):
         if value is None: return None
         if isinstance(value, dict) or isinstance(value, list):
+            features = []
             if len(value):
-                features = []
                 for f in value:
                     if f == FrameFeature:
                         features.append(f)
