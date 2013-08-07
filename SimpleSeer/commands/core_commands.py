@@ -578,6 +578,7 @@ class UserCommand(Command):
 
     def run(self):
         from SimpleSeer import models as M
+
         if self.options.action == "add":
             if self.options.username:
                 username = self.options.username
@@ -590,6 +591,7 @@ class UserCommand(Command):
                 except:
                     print("Error: User could not be created.")
                     return
+
         elif self.options.action == "remove":
             if self.options.username:
                 try:
