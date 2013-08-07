@@ -360,7 +360,7 @@ def login():
       if user[0]:
           user = user[0]
           password = request.form["password"]
-          if password == user.password:
+          if user.checkPassword(password):
             remember = request.form.get("remember", "no") == "yes"
             if login_user(user, remember=remember):
               return redirect(request.args.get("next") or url_for("index"))
@@ -369,7 +369,6 @@ def login():
           else:
             flash(u"Invalid username / password.")
       else:
-        # We should never actually hit this point.
         flash("An unknown error occured. Please contact the system administrator.")
     else:
       flash(u"Invalid username / password.")
