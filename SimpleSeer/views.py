@@ -360,18 +360,16 @@ def login():
     username = request.form["username"]
     password = request.form["password"]
     remember = bool(request.form.get("remember", "no") == "yes")
-
     try:
         query = M.User.objects.get(username=username)
-        if query.checkPassword(password): # Preforms a match in the model, using the salt.
-
+        # Preforms a match in the model, using the salt.
+        if query.checkPassword(password):
             user = User(query)
             if login_user(user, remember=remember):
               return redirect(request.args.get("next") or url_for("index"))
             else:
               flash("An unknown error occured.")
               flash("Please contact the system administrator.")
-
         else:
             flash(u"Invalid username / password.")
     except:
