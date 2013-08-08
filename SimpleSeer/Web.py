@@ -25,6 +25,17 @@ log = logging.getLogger(__name__)
 from flask.ext.login import (LoginManager, current_user, login_required,
                             login_user, logout_user, UserMixin,
                             confirm_login, fresh_login_required)
+
+class User(UserMixin):
+    def __init__(self, userModel):
+        self.name = userModel.username
+        self.id = userModel.id
+        self.active = True
+        self.model = userModel
+
+    def is_active(self):
+        return self.active
+
 login_manager = LoginManager()
 login_manager.login_view = "login"
 login_manager.refresh_view = "reauth"
@@ -45,15 +56,7 @@ def load_user(id):
     except:
         return None
 
-class User(UserMixin):
-    def __init__(self, userModel):
-        self.name = userModel.username
-        self.id = userModel.id
-        self.active = True
-        self.model = userModel
 
-    def is_active(self):
-        return self.active
 
 if len(M.User.objects) and session.requireAuth:
     log.warn('****************************************************************')
