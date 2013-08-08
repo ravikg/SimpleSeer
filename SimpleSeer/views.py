@@ -25,6 +25,14 @@ from flask.ext.login import (current_user, login_required,
                               fresh_login_required)
 
 log = logging.getLogger()
+session = Session()
+
+def checkLoginRequired(func):
+  if session.requireAuth:
+    res = login_required(func)
+  else:
+    res = func
+  return res
 
 class route(object):
     routes = []
@@ -43,6 +51,7 @@ class route(object):
             app.route(path, **kwargs)(func)
 
 @route('/socket.io/<path:path>')
+@checkLoginRequired
 def sio(path):
     socketio_manage(
         request.environ,
@@ -50,6 +59,7 @@ def sio(path):
         request._get_current_object())
 
 @route('/')
+@checkLoginRequired
 def index():
     files= ["javascripts/app.js","javascripts/vendor.js","stylesheets/app.css"]
     baseUrl = ''
@@ -66,10 +76,12 @@ def index():
     return render_template("index.html",params = dict(MD5Hashes=MD5Hashes),settings=settings)
 
 @route('/testing')
+@checkLoginRequired
 def testing():
     return render_template("testing.html", settings=settings)
 
 @route('/log/<type>', methods=['POST'])
+@checkLoginRequired
 def jsLogger(type):
     levels = {"CRITICAL":50, "ERROR":40, "WARNING":30, "INFO":20, "DEBUG":10}
     type = type.upper()
@@ -82,6 +94,7 @@ def jsLogger(type):
 
 @route('/context/<name>', methods=['GET'])
 @util.jsonify
+@checkLoginRequired
 def getContext(name):
     context = M.Context.objects(name = name)
     if context:
@@ -90,6 +103,7 @@ def getContext(name):
         return None
 
 @route('/plugins.js')
+@checkLoginRequired
 def plugins():
 
     useCache = False
@@ -148,15 +162,13 @@ def test():
     return 'This is a test of the emergency broadcast system'
 
 @route('/test.json', methods=['GET', 'POST'])
-@login_required
 @route('/_test', methods=['GET', 'POST'])
 def test_json():
     return 'This is a test of the emergency broadcast system'
 
-
-
 @route('/frames', methods=['GET'])
 @util.jsonify
+@checkLoginRequired
 def frames():
     params = request.values.to_dict()
     f_params = json.loads(
@@ -172,9 +184,9 @@ def frames():
         earliest_date = calendar.timegm(earliest_date.timetuple())
     return dict(frames=frames, total_frames=total_frames, earliest_date=earliest_date)
 
-
 @route('/getFrames/<filter_params>', methods=['GET'])
 @util.jsonify
+@checkLoginRequired
 def getFrames(filter_params):
     from .base import jsondecode
     from HTMLParser import HTMLParser
@@ -209,8 +221,8 @@ def getFrames(filter_params):
     else:
         return {frames: None, 'error': 'no result found'}
 
-
 @route('/downloadFrames', methods=['GET', 'POST'])
+@checkLoginRequired
 def downloadFrames():
     from .base import jsondecode
 
@@ -234,6 +246,7 @@ def downloadFrames():
 
 @route('/getFilter/<filter_type>/<filter_name>/<filter_format>', methods=['GET'])
 @util.jsonify
+@checkLoginRequired
 def getFilter(filter_type, filter_name, filter_format):
 
     # formats: numeric, string, autofill, datetime
@@ -248,14 +261,15 @@ def getFilter(filter_type, filter_name, filter_format):
         return {'error': 'no result found'}
 
 @route('/features', methods=['GET'])
+@checkLoginRequired
 @util.jsonify
 def features():
     f = Filter()
     return f.getFilterOptions()
 
-
 #TODO, abstract this for layers and thumbnails
 @route('/grid/imgfile/<frame_id>', methods=['GET'])
+@checkLoginRequired
 def imgfile(frame_id):
     params = request.values.to_dict()
     frame = M.Frame.objects(id = bson.ObjectId(frame_id))
@@ -272,6 +286,7 @@ def imgfile(frame_id):
 
 #TODO, abstract this for layers and thumbnails
 @route('/grid/thumbnail_file/<frame_id>', methods=['GET'])
+@checkLoginRequired
 def thumbnail(frame_id):
     params = request.values.to_dict()
     frame = M.Frame.objects(id = bson.ObjectId(frame_id))
@@ -314,8 +329,6 @@ def settings():
             pass
     return {"settings": text, "plugins":plugins }
 
-
-
 @route('/_status', methods=['GET', 'POST'])
 def status():
     return 'ok'
@@ -326,62 +339,55 @@ def statusJSON():
     return format(request.values['callback']) + "({status: 200})"
 
 @route('/_auth', methods=['GET','POST'])
-@login_required
 @util.jsonify
 def auth():
-    return ['authorized']
-
+    if flask.ext.login.current_user.is_authenticated():
+        secureUserDict = {}
+        user = M.User.objects(username=flask.ext.login.current_user.name)[0]
+        for key in [key for key in user if key != "password"]:
+            secureUserDict[key] = user[key]
+        return {"authed": True, "user": secureUserDict}
+    return {"authed": False}
 
 @route('/login', methods=["GET", "POST"])
 def login():
+  from .Web import User
+  settings = Session().get_config()
+  is_post = bool(request.method == "POST")
+  has_username = bool("username" in request.form)
 
-  try:
-    from .Web import USER_NAMES, USERS
-  except:
-    print 'login not setup'
-    return
-
-  if request.method == "POST" and "username" in request.form:
+  if is_post and has_username:
     username = request.form["username"]
+    password = request.form["password"]
+    remember = bool(request.form.get("remember", "no") == "yes")
 
-    if username in USER_NAMES:
-      password = request.form["password"]
-      if password == USERS[1].password:
-
-        remember = request.form.get("remember", "no") == "yes"
-
-        if login_user(USER_NAMES[username], remember=remember):
-          flash("Logged in!")
-          return redirect(request.args.get("next") or url_for("index"))
-
+    try:
+        query = M.User.objects.get(username=username)
+        # Preforms a match in the model, using the salt.
+        if query.checkPassword(password):
+            user = User(query)
+            if login_user(user, remember=remember):
+              return redirect(request.args.get("next") or url_for("index"))
+            else:
+              flash("An unknown error occured.")
+              flash("Please contact the system administrator.")
         else:
-          flash("Sorry, but you could not log in.")
-      else:
-        flash(u"Invalid Password")
+            flash(u"Invalid username / password.")
+    except:
+        flash(u"Invalid username / password.")
 
-    else:
-      flash(u"Invalid username.")
-
-  return render_template("login.html")
-
-
+  return render_template("login.html", settings = settings)
 
 @route("/reauth", methods=["GET", "POST"])
 @login_required
 def reauth():
   if request.method == "POST":
     confirm_login()
-    flash(u"Reauthenticated.")
     return redirect(request.args.get("next") or url_for("index"))
-
   return render_template("reauth.html")
-
 
 @route("/logout")
 @login_required
 def logout():
   logout_user()
-  flash("Logged out.")
   return redirect(url_for("index"))
-
-
