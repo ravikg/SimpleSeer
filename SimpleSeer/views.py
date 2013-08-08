@@ -19,7 +19,6 @@ from . import util
 from .realtime import RealtimeNamespace, ChannelManager
 from .Session import Session
 from .Filter import Filter
-from .Web import User
 from flask import Flask, request, render_template, redirect, url_for, flash
 from flask.ext.login import (current_user, login_required,
                               login_user, logout_user, confirm_login,
@@ -352,6 +351,7 @@ def auth():
 
 @route('/login', methods=["GET", "POST"])
 def login():
+  from .Web import User
   settings = Session().get_config()
   is_post = bool(request.method == "POST")
   has_username = bool("username" in request.form)
@@ -360,6 +360,7 @@ def login():
     username = request.form["username"]
     password = request.form["password"]
     remember = bool(request.form.get("remember", "no") == "yes")
+
     try:
         query = M.User.objects.get(username=username)
         # Preforms a match in the model, using the salt.
