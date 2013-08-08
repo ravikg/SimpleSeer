@@ -1,6 +1,7 @@
 from .base import Command
 import os
 import os.path
+import glob
 import sys
 import pkg_resources
 import subprocess
@@ -63,9 +64,17 @@ class BackupCommand(ManageCommand):
 
 class DeployCommand(ManageCommand):
     "Deploy an instance"
+    supervisor_dir  = "/etc/supervisor/conf.d/"
     supervisor_link = "/etc/supervisor/conf.d/simpleseer.conf"
 
+    deploy_local_sub_reqs = ["mongodb", "rabbitmq"]
+    deploy_local_seer_reqs = ["core", "olap", "worker", "web"]
+
+    deploy_skybox_sub_reqs = ["mongodb", "rabbitmq"]
+    deploy_skybox_seer_reqs = ["olap", "worker", "web"]
+
     def __init__(self, subparser):
+        subparser.add_argument("type", help="Deployment Type (local, skybox)", default = "local", nargs = '?')
         subparser.add_argument("directory", help="Target", default = os.path.realpath(os.getcwd()), nargs = '?')
 
     def run(self):
@@ -77,6 +86,33 @@ class DeployCommand(ManageCommand):
         if os.path.lexists(supervisor_link):
             os.remove(supervisor_link)
 
+        regular_supervisor = "supervisor.conf"
+        src_etc = path(self.options.directory) / 'etc'
+        src_supervisor = src_etc / regular_supervisor
+        src_paster = path(pkg_resources.resource_filename('SimpleSeer', 'paster_templates'))
+        src_paster_etc = src_paster / 'seer_project' / 'etc'
+
+        link_count = len(glob.glob(src_etc / "supervisor_*.conf"))
+        if link_count is 0:
+            print "**************************************************"
+            print "* Error: No Supervisor Program files detected."
+            print "* Copy them from SimpleSeer with the following command:"
+            print "*   cp {} {}".format(src_paster_etc / "supervisor_*.conf", src_etc)
+            print "* Please remove all program and group entries from supervisor.conf"
+            print "**************************************************"
+            return 0
+
+        subsystem_reqs = self.deploy_local_sub_reqs
+        simpleseer_reqs = self.deploy_local_seer_reqs
+        if self.options.type == "skybox":
+            subsystem_reqs = self.deploy_skybox_sub_reqs
+            simpleseer_reqs = self.deploy_skybox_seer_reqs
+
+        supervisor_groups  = "[group:subsystem]"
+        supervisor_groups += "\nprograms={}".format(','.join(subsystem_reqs))
+        supervisor_groups += "\n\n[group:seer]"
+        supervisor_groups += "\nprograms={}".format(','.join(simpleseer_reqs))
+
         print "Linking %s to %s" % (self.options.directory, link)
         os.symlink(self.options.directory, link)
 
@@ -84,15 +120,35 @@ class DeployCommand(ManageCommand):
         hostname_supervisor_filename = hostname + "_supervisor.conf"
         src_host_specific_supervisor = path(self.options.directory) / 'etc' / hostname_supervisor_filename
 
-        regular_supervisor = "supervisor.conf"
-        src_supervisor = path(self.options.directory) / 'etc' / regular_supervisor
+        src_supervisor_groups = src_etc / 'supervisor_group.conf'
+        if os.path.lexists(src_supervisor_groups):
+            os.remove(src_supervisor_groups)
 
+        # The [group:*] blocks
+        file_supervisor_groups = os.open(src_supervisor_groups, os.O_RDWR | os.O_CREAT)
+        os.write(file_supervisor_groups, supervisor_groups)
+        os.close(file_supervisor_groups)
 
         if os.path.exists(src_host_specific_supervisor):
             src_supervisor = src_host_specific_supervisor
 
+        for file in glob.glob(self.supervisor_dir + "*_supervisor_*.conf"):
+            os.remove(file)
+
         print "Linking %s to %s" % (src_supervisor, supervisor_link)
         os.symlink(src_supervisor, supervisor_link)
+
+        for requirement in (subsystem_reqs + simpleseer_reqs + ['group']):
+            # Order helps order the program files so that
+            # the 'group' file is the last to be imported
+            # to supervisor.
+            order = 1
+            if requirement == 'group':
+                order = 2
+            src_reqconf = "{}/supervisor_{}.conf".format(src_etc, requirement)
+            dest_reqconf = "{}{}_supervisor_{}.conf".format(self.supervisor_dir, order, requirement)
+            print "Linking %s to %s" % (src_reqconf, dest_reqconf)
+            os.symlink(src_reqconf, dest_reqconf)
 
         print "Reloading supervisord"
         subprocess.check_output(['supervisorctl', 'reload'])
