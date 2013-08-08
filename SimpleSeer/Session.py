@@ -74,6 +74,14 @@ class Session():
             mongoengine.connect(self.database, **master)
         mongoengine.connect(self.database, **self.mongo)
         db = mongoengine.connection.get_db()
+
+        if self.forcemongomaster:
+            if db.command('isMaster')['ismaster']:
+                log.info("MongoDB isMaster: true")
+            else:
+                log.info("MongoDB isMaster: false")
+                raise Exception("MongoDB must be the master!")
+        
         db.add_son_manipulator(SONScrub())
         self.log = logging.getLogger(__name__)
         
