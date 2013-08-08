@@ -574,7 +574,7 @@ class UserCommand(Command):
         subparser.add_argument("username", help="Username for new user")
         subparser.add_argument("-n", "--name", dest="name", default=False, help="Full name of new user")
         subparser.add_argument("-p", "--password", dest="password", default=False, help="Password of new user")
-        subparser.add_argument("-f", "--force", dest="recursive", default=False, action="store_true")
+        subparser.add_argument("-f", "--force", dest="force", default=False, action="store_true")
 
     def run(self):
         from SimpleSeer import models as M
@@ -589,6 +589,7 @@ class UserCommand(Command):
                     user.name = fullname
                     user.save()
                 except:
+                    print "Unexpected error:", sys.exc_info()[0]
                     print("Error: User could not be created.")
                     return
 
