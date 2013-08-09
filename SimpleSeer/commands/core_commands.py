@@ -50,6 +50,7 @@ def ControlsCommand(self):
        Controls(self.session).run()
 
 class WebCommand(Command):
+    'Run the web server'
 
     def __init__(self, subparser):
         subparser.add_argument('--procname', default='web', help='give each process a name for tracking within session')
@@ -89,7 +90,7 @@ class WebCommand(Command):
 
 @Command.simple(use_gevent=True)
 def OPCCommand(self):
-    '''
+    '''Run the opc server
     You will also need to add the following to your config file:
     opc:
       server: 10.0.1.107
@@ -338,7 +339,7 @@ class NotebookCommand(Command):
 
 
 class MetaCommand(Command):
-
+    'Import and export project database'
     def __init__(self, subparser):
         subparser.add_argument('subsubcommand', help="metadata [import|export]", default="export")
         subparser.add_argument("--listen", help="(export) Run as daemon listing for changes and exporting when changes found.", action='store_true')
