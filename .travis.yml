@@ -44,6 +44,7 @@ before_script:
   - "sudo apt-get install libsdl1.2-dev"
   - "sudo apt-get install libsmpeg-dev"
   - "sudo pip install pandas"
+  - "sudo pip install patsy==0.1.0"
   - "git submodule init"
   - "git submodule update"
   - "cd SimpleSeer; git pull; cd .."
