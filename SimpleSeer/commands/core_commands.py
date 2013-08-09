@@ -435,12 +435,6 @@ class ImportImagesCommand(Command):
 
 
     def __init__(self, subparser):
-        import SimpleSeer.models as M
-
-        M.Inspection.register_plugins('seer.plugins.inspection')
-        M.Measurement.register_plugins('seer.plugins.measurement')
-
-        #subparser.add_argument("-w", "--watch", dest="watch", help="continue watching the directory", action="store_true", default=False)
         subparser.add_argument("dir", nargs=1, help="Directory to import/watch from")
         subparser.add_argument("-s", "--schema", dest="schema", default="{database}__{count}__{time}__{camera}", nargs="?", help="Schema for filenames.  Special terms are {time} {camera}, otherwise data will get pushed into metadata.  Python named regex blocks (?P<NAME>.?) may also be used")
         subparser.add_argument("-p", "--withpath", dest="withpath", default=False, action="store_true", help="Match schema on the full path (default to filename)")
@@ -512,6 +506,9 @@ class ImportImagesCommand(Command):
 
     def run(self):
         import SimpleSeer.models as M
+        M.Inspection.register_plugins('seer.plugins.inspection')
+        M.Measurement.register_plugins('seer.plugins.measurement')
+
         if self.session.import_params:
             for k,v in self.session.import_params.items():
                 self.options.__dict__.update(self.session.import_params)
