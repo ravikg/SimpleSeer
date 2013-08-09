@@ -11,6 +11,7 @@ import threading
 from pprint import pprint
 import pkg_resources
 
+parser_dict = dict()
 subcommand_list = list()
 help_dict = dict()
 
@@ -34,15 +35,14 @@ def prettyCommandList():
 class MyArgumentParser(ArgumentParser):
 
     def error(self, message):
-        #import pdb; pdb.set_trace()
         message = prettyCommandList()
         call = self._get_kwargs()[0][1]
         pattern = call.split(' ')
         if len(pattern) > 1:
             command = pattern[1]
             if command and command in subcommand_list:
-                self.parse_args(['simpleseer', command, '-h'])
-                return
+                parser_dict[command].print_help()
+                sys.exit(2)
         super(MyArgumentParser, self).error(message)
         return
 
@@ -64,6 +64,7 @@ def main():
         cls = ep.load()
         sp = subparsers.add_parser(ep.name, description=cls.__doc__)
         subcommand_list.append(ep.name)
+        parser_dict[ep.name] = sp
         help_dict[ep.name] = cls.__doc__
         cmd = cls(sp)
         sp.set_defaults(command=ep.name)
