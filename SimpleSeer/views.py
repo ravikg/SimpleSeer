@@ -331,7 +331,29 @@ def settings():
 
 @route('/_status', methods=['GET', 'POST'])
 def status():
-    return 'ok'
+    resp = make_response("OK", 200)
+
+    # Check and see if we can simply connecto to MongoDB
+    from .models.Chart import Chart
+    import mongoengine
+    db = mongoengine.connection.get_db()
+    if db:
+        try:
+            # Check db and see if we can even pull back a list of collections
+            db.collection_names()
+
+            # Check and see if we can get a chart back from OLAP
+            charts = Chart.nonTransient()
+            if charts[0]:
+                chart_id = charts[0]
+            filter_params = {}
+            chart = Chart.objects.get(id=chart_id)
+            retVal = chart.chartData(filter_params)
+
+        except Exception:
+            resp = make_response("Could not connect to MongoDB", 500)
+
+    return resp
 
 @route('/_statusJSON', methods=['GET', 'POST'])
 def statusJSON():
