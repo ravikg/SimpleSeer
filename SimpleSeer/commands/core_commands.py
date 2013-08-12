@@ -9,8 +9,6 @@ from datetime import datetime
 import fnmatch
 import itertools
 import warnings
-import re
-
 
 class CoreCommand(Command):
     'Run the core server / state machine'
@@ -43,14 +41,14 @@ class CoreCommand(Command):
 
 @Command.simple(use_gevent=False)
 def ControlsCommand(self):
-    'Run a control event server'
+    '''Run a control event server'''
     from SimpleSeer.Controls import Controls
 
     if self.session.arduino:
        Controls(self.session).run()
 
 class WebCommand(Command):
-    'Run the web server'
+    '''Run the web server'''
 
     def __init__(self, subparser):
         subparser.add_argument('--procname', default='web', help='give each process a name for tracking within session')
@@ -296,7 +294,7 @@ class ScrubCommand(Command):
 
 @Command.simple(use_gevent=False)
 def ShellCommand(self):
-    'Run the ipython shell'
+    '''Run the ipython shell'''
     import subprocess
     import os
 
@@ -309,7 +307,7 @@ def ShellCommand(self):
 
 
 class NotebookCommand(Command):
-    'Run the ipython notebook server'
+    '''Run the ipython notebook server'''
 
     def __init__(self, subparser):
         subparser.add_argument("--port", help="port defaults to 5050", default="5050")
@@ -339,7 +337,7 @@ class NotebookCommand(Command):
 
 
 class MetaCommand(Command):
-    'Import and export project database'
+    '''Import and export project database'''
     def __init__(self, subparser):
         subparser.add_argument('subsubcommand', help="metadata [import|export]", default="export")
         subparser.add_argument("--listen", help="(export) Run as daemon listing for changes and exporting when changes found.", action='store_true')
@@ -565,7 +563,7 @@ class ImportImagesCommand(Command):
             self.import_frame(f, metadata, template)
 
 class UserCommand(Command):
-    "Create a new user"
+    '''Create a new user'''
 
     def __init__(self, subparser):
         subparser.add_argument("action", help="The desired user action")
