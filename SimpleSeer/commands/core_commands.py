@@ -43,13 +43,14 @@ class CoreCommand(Command):
 
 @Command.simple(use_gevent=False)
 def ControlsCommand(self):
-    'Run a control event server'
+    '''Run a control event server'''
     from SimpleSeer.Controls import Controls
 
     if self.session.arduino:
        Controls(self.session).run()
 
 class WebCommand(Command):
+    '''Run the web server'''
 
     def __init__(self, subparser):
         subparser.add_argument('--procname', default='web', help='give each process a name for tracking within session')
@@ -89,7 +90,7 @@ class WebCommand(Command):
 
 @Command.simple(use_gevent=True)
 def OPCCommand(self):
-    '''
+    '''Run the opc server
     You will also need to add the following to your config file:
     opc:
       server: 10.0.1.107
@@ -295,7 +296,7 @@ class ScrubCommand(Command):
 
 @Command.simple(use_gevent=False)
 def ShellCommand(self):
-    'Run the ipython shell'
+    '''Run the ipython shell'''
     import subprocess
     import os
 
@@ -308,7 +309,7 @@ def ShellCommand(self):
 
 
 class NotebookCommand(Command):
-    'Run the ipython notebook server'
+    '''Run the ipython notebook server'''
 
     def __init__(self, subparser):
         subparser.add_argument("--port", help="port defaults to 5050", default="5050")
@@ -338,7 +339,7 @@ class NotebookCommand(Command):
 
 
 class MetaCommand(Command):
-
+    '''Import and export project database'''
     def __init__(self, subparser):
         subparser.add_argument('subsubcommand', help="metadata [import|export]", default="export")
         subparser.add_argument("--listen", help="(export) Run as daemon listing for changes and exporting when changes found.", action='store_true')
@@ -564,7 +565,7 @@ class ImportImagesCommand(Command):
             self.import_frame(f, metadata, template)
 
 class UserCommand(Command):
-    "Create a new user"
+    '''Create a new user'''
 
     def __init__(self, subparser):
         subparser.add_argument("action", help="The desired user action")

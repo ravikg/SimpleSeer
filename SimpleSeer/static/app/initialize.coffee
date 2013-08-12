@@ -28,7 +28,6 @@ $ ->
         application.initialize()
         Backbone.history.start()
 
-
   reject = (close=true, message="") ->
     $.reject
       reject:

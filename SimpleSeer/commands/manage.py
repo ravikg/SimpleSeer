@@ -63,7 +63,8 @@ class BackupCommand(ManageCommand):
 
 
 class DeployCommand(ManageCommand):
-    "Deploy an instance"
+    "Deploy supervisor configuration"
+
     supervisor_dir  = "/etc/supervisor/conf.d/"
     supervisor_link = "/etc/supervisor/conf.d/simpleseer.conf"
 
