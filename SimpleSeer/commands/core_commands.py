@@ -9,6 +9,8 @@ from datetime import datetime
 import fnmatch
 import itertools
 import warnings
+import re
+
 
 class CoreCommand(Command):
     'Run the core server / state machine'
