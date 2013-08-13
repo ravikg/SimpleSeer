@@ -1,4 +1,5 @@
 from copy import deepcopy
+from bson import ObjectId
 
 import mongoengine
 from mongoengine import signals as sig
@@ -30,6 +31,25 @@ class InspectionSchema(fes.Schema):
     richattributes = V.JSON(if_empty=dict, if_missing=None)
     morphs = fe.ForEach(fev.UnicodeString(), convert_to_list=True)
 
+class InspectionValidator(fev.FancyValidator):
+    def _to_python(self, value, state):
+        if value is None: return None
+        if isinstance(value, dict) or isinstance(value, list):
+            inspections = []
+            if len(value):
+                for inspection in value:
+                    if type(inspection) == ObjectId:
+                        inspections.append(inspection)
+                    else:
+                        inspections.append(ObjectId(inspection))
+            return inspections
+        raise fev.Invalid('invalid Feature object', value, state)
+
+    def _from_python(self, value, state):
+        if value is None: return None
+        if isinstance(value, dict):
+            return value
+        raise fev.Invalid('invalid Python dict', value, state)
 
 class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
     """

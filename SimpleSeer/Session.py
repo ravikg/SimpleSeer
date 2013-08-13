@@ -36,16 +36,7 @@ class Session():
             return  #return the existing shared context
 
         config_dict = self.read_config(yaml_config_dir)
-        log.info("Loaded configuration from %s" % config_dict['yaml_config'])
-        
-        # Look for alternate config files with name hostname_simpleseer.cfg
-        alt_config_filename = gethostname() + '_simpleseer.cfg'
-        alt_config = path(yaml_config_dir) / alt_config_filename
-        if os.path.isfile(alt_config):
-            log.info('Overriding configuration with %s' % alt_config)
-            alt_config_dict = yaml.load(open(alt_config))
-            config_dict.update(alt_config_dict)
-        
+        log.info("Loaded configuration from %s" % config_dict['yaml_config'])        
         self.configure(config_dict)
         if not self.procname:
             self.procname = procname
@@ -64,6 +55,15 @@ class Session():
             yaml_config = path(yaml_config_dir) / "simpleseer.cfg"
         retVal = yaml.load(open(yaml_config))
         retVal['yaml_config'] = yaml_config
+
+        # Look for alternate config files with name hostname_simpleseer.cfg
+        alt_config_filename = gethostname() + '_simpleseer.cfg'
+        alt_config = path(yaml_config_dir) / alt_config_filename
+        if os.path.isfile(alt_config):
+            log.info('Overriding configuration with %s' % alt_config)
+            alt_config_dict = yaml.load(open(alt_config))
+            retVal.update(alt_config_dict)
+
         return retVal
     
     def configure(self, d):
@@ -74,6 +74,14 @@ class Session():
             mongoengine.connect(self.database, **master)
         mongoengine.connect(self.database, **self.mongo)
         db = mongoengine.connection.get_db()
+
+        if self.forcemongomaster:
+            if db.command('isMaster')['ismaster']:
+                log.info("MongoDB isMaster: true")
+            else:
+                log.info("MongoDB isMaster: false")
+                raise Exception("MongoDB must be the master!")
+        
         db.add_son_manipulator(SONScrub())
         self.log = logging.getLogger(__name__)
         
