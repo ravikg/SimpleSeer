@@ -348,7 +348,6 @@ def status():
     resp = make_response("OK", 200)
 
     # Check and see if we can simply connecto to MongoDB
-    from .models.Chart import Chart
     import mongoengine
     db = mongoengine.connection.get_db()
     if db:
