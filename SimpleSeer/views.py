@@ -341,15 +341,7 @@ def status():
         try:
             # Check db and see if we can even pull back a list of collections
             db.collection_names()
-
-            # Check and see if we can get a chart back from OLAP
-            charts = Chart.nonTransient()
-            if charts[0]:
-                chart_id = charts[0]
-            filter_params = {}
-            chart = Chart.objects.get(id=chart_id)
-            retVal = chart.chartData(filter_params)
-
+            res = ChannelManager().rpcSendRequest('olap_req/', {'action': 'ping'})
         except Exception:
             resp = make_response("Could not connect to MongoDB", 500)
 

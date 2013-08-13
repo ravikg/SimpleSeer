@@ -1,9 +1,11 @@
-from amqplib import client_0_8 as amqp
-
+#from amqplib import client_0_8 as amqp
+import amqp
 from socketio.namespace import BaseNamespace
 import gevent
 from time import sleep
 import socket
+
+from functools import partial
 
 from .Session import Session
 from .base import jsonencode, jsondecode
@@ -92,7 +94,7 @@ class ChannelManager(object):
             (queue_name, msgs, consumers) = channel.queue_declare(exclusive=True)
             
             channel.queue_bind(exchange=exchange, queue=queue_name)
-            channel.basic_consume(callback=callback, queue=queue_name)
+            channel.basic_consume(callback=partial(callback, channel), queue=queue_name)
             return channel
             
         channel = setup_channel()
@@ -116,7 +118,8 @@ class ChannelManager(object):
         corrid = ''.join([ choice('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ') for i in range(20) ])
         self._response[corrid] = None
         
-        def on_response(msg):
+        def on_response(channel, msg):
+            msg.channel = channel
             if corrid == msg.properties['correlation_id']:
                 self._response[corrid] = jsondecode(msg.body)
                 
@@ -126,11 +129,11 @@ class ChannelManager(object):
             if not callback_queue:
                 (callback_queue, msgs, consumers) = channel.queue_declare(exclusive=True)
                 
-            channel.basic_consume(callback=on_response, no_ack=True, queue=callback_queue)
+            channel.basic_consume(callback=partial(on_response, channel), no_ack=True, queue=callback_queue)
             return channel, callback_queue
         
         channel, callback_queue = setup_channel(None)
-        channel.basic_consume(callback=on_response, no_ack=True, queue=callback_queue)
+        channel.basic_consume(callback=partial(on_response, channel), no_ack=True, queue=callback_queue)
         
         msg = amqp.Message(jsonencode(request))
         msg.properties['correlation_id'] = corrid
@@ -146,7 +149,7 @@ class ChannelManager(object):
                 log.warn('Socket error: {}.  Will try to reconnect.'.format(e))
                 conn = self.connect()
                 channel, callback_queue = setup_channel(callback_queue)
-                channel.basic_consume(callback=on_response, no_ack=True, queue=callback_queue)
+                channel.basic_consume(callback=partial(on_response, channel), no_ack=True, queue=callback_queue)
         
                 
         return self._response.pop(corrid)
@@ -157,7 +160,8 @@ class ChannelManager(object):
         else:
             conn = self._connection
                     
-        def on_request(msg):
+        def on_request(channel, msg):
+            msg.channel = channel
             res = callback(msg.body)
             resMsg = amqp.Message(jsonencode(res))
             resMsg.properties['correlation_id'] = msg.properties['correlation_id']
@@ -170,7 +174,7 @@ class ChannelManager(object):
             channel.queue_declare(queue=workQueue)
                 
             channel.basic_qos(prefetch_size=0, prefetch_count=1, a_global=False)
-            channel.basic_consume(callback=on_request, queue=workQueue)
+            channel.basic_consume(callback=partial(on_request, channel), queue=workQueue)
             
             return channel
             
