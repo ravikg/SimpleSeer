@@ -24,7 +24,6 @@
       #block {
         border: 1px solid rgba(0, 0, 0, 0.2);
         border-radius: 3px;
-        padding: 10px;
         background: #FFF;
         text-align: center;
       }
@@ -33,19 +32,17 @@
         text-align: center;
       }
       #client {
-        margin-bottom: 6px;
         font-size: 13px;
-        font-family: "OpenSansRegular";
+        font-family: "OpenSansBold";
         color: #777;
-        border-bottom: 1px solid #EEE;
-        padding-bottom: 10px;
+        padding: 10px;
       }
       #client p { text-align: center; }
       #errors {
         padding: 5px;
         background: #FCC;
         border-radius: 1px;
-        margin-right: 1px;
+        margin-top: -5px;
         margin-bottom: 5px;
       }
       #errors li {
@@ -53,12 +50,15 @@
         text-align: center;
       }
       #login {
-        margin-bottom: -4px;
+        border-radius: 0 0 3px 3px;
+        border-top: 1px solid #DDD;
+        padding: 10px;
+        background: #F8F8F8;
       }
       #copyright {
         top: 20px;
         position: relative;
-        border-top: 1px solid #ddd;
+        border-top: 1px solid #d0d0d0;
         padding-top: 10px;
         font-size: 11px;
         font-family: "OpenSansRegular";
@@ -78,7 +78,7 @@
       }
       .full { width: 100%; }
       label[for=remember] { margin-left: 5px; }
-      input[type=text], input[type=password] { font-size: 12px; width: 137px; }
+      input[type=text], input[type=password] { font-size: 12px; width: 137px; border-color: #C9C9C9; border-top-color: #B8B8B8;}
     </style>
     <title>{% block title %}{{settings.ui_pagename}} - Login{% endblock %}</title>
     <script type="text/javascript"> if( window.location.search === "?next=%2Flogout" ) { window.location.search = "?next=%2F"; } </script>
@@ -92,7 +92,7 @@
 
       <div id="block">
         <div id="client">
-          <p>Welcome to {{settings.ui_pagename}}.<br>Please login to continue.</p>
+          <p>{{settings.ui_pagename}}</p>
         </div>
 
       {% with messages = get_flashed_messages() %}
