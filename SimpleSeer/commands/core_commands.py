@@ -197,6 +197,103 @@ class MaintenanceCommand(Command):
         except KeyboardInterrupt as e:
             print "Interrupted by user"
 
+class ModBusCommand(Command):
+
+    '''Modbus'''
+    def __init__(self, subparser):
+        subparser.add_argument('subsubcommand', help="modbus [server|client]", default="server")
+        pass
+
+    def run(self):
+
+        if self.options.subsubcommand == "server":
+            try:
+                from pymodbus.server.async import StartTcpServer
+                from pymodbus.datastore import ModbusSequentialDataBlock
+                from pymodbus.datastore import ModbusSlaveContext, ModbusServerContext
+
+                import logging
+                logging.basicConfig()
+                log = logging.getLogger()
+                log.setLevel(logging.DEBUG)
+
+                store = ModbusSlaveContext(
+                di = ModbusSequentialDataBlock(0, [17]*100),
+                co = ModbusSequentialDataBlock(0, [17]*100),
+                hr = ModbusSequentialDataBlock(0, [17]*100),
+                ir = ModbusSequentialDataBlock(0, [17]*100))
+                context = ModbusServerContext(slaves=store, single=True)
+
+                StartTcpServer(context)
+
+            except KeyboardInterrupt as e:
+                print "Interrupted by user"
+
+        elif self.options.subsubcommand == "client":
+            try:
+                from twisted.internet import reactor, protocol
+                from pymodbus.constants import Defaults
+
+                from pymodbus.client.async import ModbusClientProtocol
+
+                import logging
+                logging.basicConfig()
+                log = logging.getLogger()
+                log.setLevel(logging.DEBUG)
+
+                def dassert(deferred, callback):
+                    def _assertor(value): assert(value)
+                    deferred.addCallback(lambda r: _assertor(callback(r)))
+                    deferred.addErrback(lambda  _: _assertor(False))
+
+
+                def beginAsynchronousTest(client):
+                    rq = client.write_coil(1, True)
+                    rr = client.read_coils(1,1)
+                    dassert(rq, lambda r: r.function_code < 0x80)     # test that we are not an error
+                    dassert(rr, lambda r: r.bits[0] == True)          # test the expected value
+                    
+                    rq = client.write_coils(1, [True]*8)
+                    rr = client.read_coils(1,8)
+                    dassert(rq, lambda r: r.function_code < 0x80)     # test that we are not an error
+                    dassert(rr, lambda r: r.bits == [True]*8)         # test the expected value
+                    
+                    rq = client.write_coils(1, [False]*8)
+                    rr = client.read_discrete_inputs(1,8)
+                    dassert(rq, lambda r: r.function_code < 0x80)     # test that we are not an error
+                    dassert(rr, lambda r: r.bits == [True]*8)         # test the expected value
+                    
+                    rq = client.write_register(1, 10)
+                    rr = client.read_holding_registers(1,1)
+                    dassert(rq, lambda r: r.function_code < 0x80)     # test that we are not an error
+                    dassert(rr, lambda r: r.registers[0] == 10)       # test the expected value
+                    
+                    rq = client.write_registers(1, [10]*8)
+                    rr = client.read_input_registers(1,8)
+                    dassert(rq, lambda r: r.function_code < 0x80)     # test that we are not an error
+                    dassert(rr, lambda r: r.registers == [17]*8)      # test the expected value
+                    
+                    arguments = {
+                        'read_address':    1,
+                        'read_count':      8,
+                        'write_address':   1,
+                        'write_registers': [20]*8,
+                    }
+                    rq = client.readwrite_registers(**arguments)
+                    rr = client.read_input_registers(1,8)
+                    dassert(rq, lambda r: r.registers == [20]*8)      # test the expected value
+                    dassert(rr, lambda r: r.registers == [17]*8)      # test the expected value
+
+                    reactor.callLater(1, client.transport.loseConnection)
+                    reactor.callLater(2, reactor.stop)
+
+                defer = protocol.ClientCreator(reactor, ModbusClientProtocol
+                        ).connectTCP("localhost", Defaults.Port)
+                defer.addCallback(beginAsynchronousTest)
+                reactor.run()
+            except KeyboardInterrupt as e:
+                print "Interrupted by user"
+
 
 class ScrubCommand(Command):
     use_gevent = False
