@@ -108,6 +108,7 @@ class InspectionLogHandler(logging.Handler):
             fra = self._getFrame(msg.msg)
             if fra:
                 # This should be doing an update of the feature history log
+                # Which we currently do not worry about doing
                 pass
                 
     def _getInspectionId(self, msg):
@@ -143,6 +144,9 @@ class Foreman():
     __sharedState = {}
     
     def __init__(self):
+        # Checks once to see if worker is running (self.workerRunning)
+        # Add a special log handler for tracking inspection results
+        
         from .realtime import PubSubHandler
             
         self.__dict__ = self.__sharedState
@@ -158,9 +162,12 @@ class Foreman():
 
     def workerRunning(self):
 
+        # Disable workers is set in the config.
+        # Prevents the use of workers for inspections even if worker process is running
         if Session().disable_workers:
             return False 
 
+        # To test if worker is running, see if Celery has any queues.  This returns an empty list if not running
         i = celery.control.inspect()
         if i.active_queues() is not None:
             return True
@@ -168,67 +175,112 @@ class Foreman():
             return False
 
     def process_inspections(self, frame, inspections=None):
+        """
+        Pass the frame to inspect and an optional list of inspections to run.  
+        If no list of inspections passed, run all matching inspections.
+        Matching inspections defined by:
+        - Does not have a parent inspection (child inspections run by their parent)
+        - The inspection's camera field matches the frame's camera field, or the inspections camera is not set
+        
+        Returns an interator for a list of features
+        """
+        
         inspKwargs = {'parent__exists': False}
         if inspections:
             inspKwargs['id__in'] = inspections
         
         insps = M.Inspection.objects(**inspKwargs)
         
-        # Because it is too big a pain to do an OR with mongoengine:
+        # Do this as a loop because it is too big a pain to do an OR with mongoengine:
         filteredInsps = []
         for i in insps:
             if i.camera == frame.camera or not i.camera:
                 filteredInsps.append(i)
-        
+
+        # Run the inspections
         if self._useWorkers:
             return self.worker_inspection_iterator(frame, filteredInsps)    
         else:
             return self.serial_inspection_iterator(frame, filteredInsps)
 
     def process_measurements(self, frame, measurements=None):
-        measKwargs = {}
+        """
+        Pass a frame, which also contains the list of frame features to be measured
+        Optionally, provide a list of measurements.  If not use the default measurement selection criteria
+        which select measurements that reference the inspections that ran on the frame.
         
-        if frame.features:        
-            # only measurements for which there is a matching feature...
-            # exact format of feature object depends on whether it came from worker or serial
-            insps = { feat.inspection: 1 for feat in frame.features }.keys()
-            measKwargs['inspection__in'] = insps
-        else:
-            # No features, but limit measurements to those associated with features on this camera
-            measKwargs['inspection__in'] = [ insp.id for insp in M.Inspection.objects(camera=frame.camera) ]
+        Note: some measurements return results if an inspection returned no features, so do not filter
+        on measurements matching frame features
+        """
+        
+        measKwargs = {}
+
+        # Get the list of inspections that could have run on this frame
+        inspKwargs = {'parent__exists': False}
+        insps = M.Inspection.objects(**inspKwargs)
+        
+        filteredInspIds = []
+        for i in insps:
+            if i.camera == frame.camera or not i.camera:
+                filteredInspIds.append(i.id)
+
+        measKwargs['inspection__in'] = filteredInspIds
             
         if measurements:
             measKwargs['id__in'] = measurements
         
         filteredMeass = M.Measurement.objects(**measKwargs)
         
+        # Run the measurements
         if self._useWorkers:
             return self.worker_measurement_iterator(frame, filteredMeass)
         else:
             return self.serial_measurement_iterator(frame, filteredMeass)
 
-    def worker_inspection_iterator(self, frame, insps):
-        sched = self.worker_x_schedule(frame, insps, self.inspection_execute)
-        return self.worker_x_iterator(sched)
-        
-    def worker_measurement_iterator(self, frame, meass):
-        sched = self.worker_x_schedule(frame, meass, self.measurement_execute)
-        return self.worker_x_iterator(sched)
-            
     def worker_x_schedule(self, frame, objs, fn):
+        """
+        - For each object (a list of measurements or inspection)
+        - Run the specified function (fn)
+        - On the specified frame
+        - Using workers
+        
+        Returns a celery resultset of tasks that are scheduled to run
+        """
         scheduled = ResultSet([])
         for o in objs:
             scheduled.add(fn.delay(frame, o))
         return scheduled
-            
+
     def worker_x_iterator(self, scheduled):
+        """
+        Loop through the scheduled worker tasks.  This will block until each consecutive task is ready
+        Creates the iterator that returns a single feature or result per iteration 
+        (even if the inspection/measurement returned a list, this breaks it up)
+        """
         for output in scheduled:
             for out in output:
+                # de-serialized json features/results do not get their _changed_fields set correctly
+                # so manually do it to make sure mongoengine knows to properly save it
                 for key in out._data.keys():
                     out._changed_fields.append(key)
                 yield out
+
+    def worker_inspection_iterator(self, frame, insps):
+        # Calls the above worker_x_scheduler and iterator specifically for inspection execution
+        # Combined the scheduling and retrieval of results for simplicity
+        sched = self.worker_x_schedule(frame, insps, self.inspection_execute)
+        return self.worker_x_iterator(sched)
         
+    def worker_measurement_iterator(self, frame, meass):
+        # Calls the above worker_x_scheduler and iteratorspecifically for measurement execution
+        # Combined the scheduling and retrieval of results for simplicity
+        sched = self.worker_x_schedule(frame, meass, self.measurement_execute)
+        return self.worker_x_iterator(sched)
+            
     def serial_inspection_iterator(self, frame, insps):
+        """
+        Make the API for a serial inspection work just like a worker inspection, so create an iterator for the features
+        """
         for i in insps:
             try:
                 features = i.execute(frame)
@@ -238,6 +290,9 @@ class Foreman():
                 yield feat
                 
     def serial_measurement_iterator(self, frame, meass):
+        """
+        Make the API for serial measurement work just like a worker measurement, so create an iterator for the results
+        """
         for m in meass:
             results = m.execute(frame)
             
@@ -248,7 +303,9 @@ class Foreman():
 
     @task
     def inspection_execute(frame, inspection):
-        print 'working'
+        """ 
+        This is the function that is run inside the worker to perform inspection.execute
+        """
         try:
             log.warn('{} Inspecting {}'.format(inspection.id, frame.id))
             try:
@@ -263,10 +320,11 @@ class Foreman():
 
     @task
     def measurement_execute(frame, measurement):
+        """
+        This is the function that is run inside the worker to perform measurement.execute
+        """
         try:
             log.warn('{} Measuring {}'.format(measurement.id, frame.id))
-            #frame = M.Frame.objects.get(id=fid)
-            #measurement = M.Measurement.objects.get(id=mid)
             results = measurement.execute(frame)
             return results        
         except Exception as e:
