@@ -146,9 +146,10 @@ class Core(object):
     def process(self, frame, inspections=None, measurements=None, overwrite=True, clean=False):
         # First do all features, then do all results
         if not frame.id in self._queue:
-            fm = Foreman()
-            self._queue[frame.id] = {}
-            self._queue[frame.id]['features'] = fm.process_inspections(frame, inspections)
+            self.schedule(frame, inspections)
+            #fm = Foreman()
+            #self._queue[frame.id] = {}
+            #self._queue[frame.id]['features'] = fm.process_inspections(frame, inspections)
         
         features = [ feat for feat in self._queue[frame.id].pop('features') ]
         
