@@ -2,6 +2,7 @@
 import amqp
 from socketio.namespace import BaseNamespace
 import gevent
+import threading
 from time import sleep
 import socket
 
@@ -12,6 +13,20 @@ from .base import jsonencode, jsondecode
 
 import logging
 log = logging.getLogger(__name__)
+
+# Channel subscription thread
+class SubscribeThread (threading.Thread):
+    def __init__(self, channel):
+        threading.Thread.__init__(self)
+        self.channel = channel
+
+    def run(self):
+        while True:
+            self.channel.wait()
+            
+    def _stop(self):
+        if self.isAlive():
+            self._Thread__stop()
 
 class ChannelManager(object):
     
@@ -80,7 +95,7 @@ class ChannelManager(object):
         self.safePublish(channel, msg=msg, exchange=exchange, routing_key='')
         channel.close()
         
-    def subscribe(self, exchange, callback):
+    def subscribe(self, exchange, callback, async=False):
         log.info('Subscribe to %s' % exchange)                     
         if not self._shareConnection:
             conn = amqp.Connection(host=self._config.rabbitmq)
@@ -98,15 +113,22 @@ class ChannelManager(object):
             return channel
             
         channel = setup_channel()
+
+        # Workaround for async channel subscriptions
+        # Tried everything to get Ctrl+C, Keyboard Interrupt to kill these async subscriptions to no avail
+        if async:
+            st = SubscribeThread(channel)
+            st.start()
+            st.join(1)
+        else:
+            while True:
+                try:
+                    channel.wait()
+                except (socket.error, IOError) as e:
+                    log.warn('Socket error: {}.  Will try to reconnect.'.format(e))
+                    conn = self.connect()
+                    channel = setup_channel()
         
-        while True:
-            try:
-                channel.wait()
-            except (socket.error, IOError) as e:
-                log.warn('Socket error: {}.  Will try to reconnect.'.format(e))
-                conn = self.connect()
-                channel = setup_channel()
-    
     def rpcSendRequest(self, workQueue, request):
         from random import choice
         

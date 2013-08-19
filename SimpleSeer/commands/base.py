@@ -58,7 +58,7 @@ class Command(object):
             amqplib_log.setLevel(logging.WARNING)
             amqp_log = logging.getLogger('amqp')
             amqp_log.setLevel(logging.WARNING)
-
+            
     @classmethod
     def simple(cls, use_gevent=True):
         '''Create a simple command. Used as a decorator'''
