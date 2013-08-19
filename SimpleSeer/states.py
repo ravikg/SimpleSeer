@@ -5,6 +5,7 @@ from cStringIO import StringIO
 from worker import Foreman
 
 import gevent
+import signal
 
 from . import models as M
 from . import util
@@ -47,7 +48,7 @@ class Core(object):
         self.log = logging.getLogger(__name__)
         self._mem_prof_ticker = 0
         self._channel_manager = ChannelManager(shareConnection=False)
-    
+
         for cinfo in config.cameras:
             cam = StillCamera(**cinfo)
             video = cinfo.get('video')
@@ -59,18 +60,18 @@ class Core(object):
 
         util.load_plugins()
         self.reloadInspections()
-        
+
         if self.config.framebuffer:
             log.warn("Framebuffer is active, while worker is enabled.  Workers can not handle framebuffer calls, so you should add skip_worker_check: 1 to the config")
-        
+
         self.lastframes = deque()
         self.framecount = 0
         self.reset()
-        
+
     @classmethod
     def get(cls):
         return cls._instance
-        
+
     def reloadInspections(self):
         i = list(M.Inspection.objects)
         m = list(M.Measurement.objects)
@@ -81,17 +82,17 @@ class Core(object):
 
     def subscribe(self, name):
         # Create thread that listens for event specified by name
-        # If message received, trigger that event 
-        
+        # If message received, trigger that event
+
         def callback(msg):
             data = jsondecode(msg.body)
             self.trigger(name, data)
-            
+
         def listener():
             self._channel_manager.subscribe(name, callback)
-        
+
         gevent.spawn_link_exception(listener)
-    
+
     def publish(self, name, data):
         self._channel_manager.publish(name, data)
 
@@ -124,7 +125,7 @@ class Core(object):
         cameras = self.cameras
         if len(indexes):
             cameras = [ self.cameras[i] for i in indexes ]
-        
+
         currentframes = [ cam.getFrame() for cam in cameras ]
 
         while len(self.lastframes) >= (self._config.max_frames or 30):
@@ -136,25 +137,36 @@ class Core(object):
             new_frame_ids.append(frame.id)
 
         return currentframes
-    
+
     def schedule(self, frame, inspections=None):
         # Create a queue that hold the inspection iterator for this frame (which will start the inspection if worker running)
         fm = Foreman()
         self._queue[frame.id] = {}
         self._queue[frame.id]['features'] = fm.process_inspections(frame, inspections)
-        
-    def process(self, frame, inspections=None, measurements=None, overwrite=True, clean=False):
+
+    def process(self, frame, inspections=None, measurements=None, overwrite=True, clean=False, timeout=10):
         # First do all features, then do all results
         if not frame.id in self._queue:
             fm = Foreman()
             self._queue[frame.id] = {}
             self._queue[frame.id]['features'] = fm.process_inspections(frame, inspections)
-        
+            if timeout is not None:
+                def onTimeout(signum, frame):
+                    fm._useWorkers = False
+                    Session().disable_workers = True
+                    log.warn("Worker timed out. Disabling workers")
+                signal.signal(signal.SIGALRM, onTimeout)
+                signal.alarm(timeout)
+
         features = [ feat for feat in self._queue[frame.id].pop('features') ]
-        
+
+        if timeout is not None:
+            # Disable the timeout if the features are returned in time.
+            signal.alarm(0)
+
         if clean:
             frame.features = []
-            
+
         if overwrite:
             # Find a list of inspection id from new inspection
             # Use those to find list of features from old frame that are not in list of new
@@ -165,21 +177,21 @@ class Core(object):
                 newInspections = []
             keptFeatures = [ feature for feature in frame.features if not feature.inspection in newInspections ]
             features += keptFeatures
-            
+
             frame.features = []
-        
+
         frame.features += features
-             
+
         # Now that we know we have features, can process measurements
         if not 'results' in self._queue[frame.id]:
             fm = Foreman()
             self._queue[frame.id]['results'] = fm.process_measurements(frame, measurements)
-        
+
         results = [ res for res in self._queue[frame.id].pop('results') ]
-        
+
         if clean:
             frame.results = []
-        
+
         if overwrite:
             if results:
                 newResults = { result.measurement_name: 1 for result in results }.keys()
@@ -187,12 +199,12 @@ class Core(object):
                 newResults = []
             keptResults = [ result for result in frame.results if not result.measurement_name in newResults ]
             results += keptResults
-        
+
             frame.results = []
-        
+
         frame.results += results
         self._queue.pop(frame.id)
-                
+
     @property
     def results(self):
         ret = []
@@ -200,9 +212,9 @@ class Core(object):
             results = []
             for f in frameset:
                 results += [f.results for f in frameset]
-        
+
             ret.append(results)
-            
+
         return ret
 
     """
@@ -212,7 +224,7 @@ class Core(object):
     def get_measurement(self, name):
         return M.Measurement.objects(name=name).next()
     """
-    
+
     def state(self, name):
         if name in self._states: return self._states[name]
         s = self._states[name] = State(self, name)
@@ -266,13 +278,13 @@ class Core(object):
         #~ from guppy import hpy
         self._handle_events()
         self._clock.tick()
-            
+
         if self.config.memprofile:
             self._mem_prof_ticker += 1
             if self._mem_prof_ticker == int(self.config.memprofile):
                 self._mem_prof_ticker = 0
                 #~ self.log.info(hpy().heap())
-            
+
     def _handle_events(self):
         while True:
             try:
