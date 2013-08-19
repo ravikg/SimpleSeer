@@ -1,11 +1,7 @@
 import unittest
 import time
-#import mongoengine
-#import subprocess
 from SimpleSeer.tests.tools.db import DBtools
 from SimpleSeer.tests.tools.seer import SeerInstanceTools
-
-
 
 class TestMongo(unittest.TestCase):
     dbcommands = {
@@ -15,7 +11,7 @@ class TestMongo(unittest.TestCase):
     }
 
     mongo_settings = {"host": "127.0.0.1", "port": 27020, "replicaSet": "rs0", "read_preference": 2}
-    
+
     def setUp(self):
         self.dbs = DBtools(dbs=self.dbcommands)
         self.seers = SeerInstanceTools()
@@ -29,6 +25,7 @@ class TestMongo(unittest.TestCase):
         self.dbs.spinup_mongo("slave")
         self.dbs.spinup_mongo("arbiter")
         self.dbs.init_replset()
+        self.dbs.kill_mongo("master")
         self.seers.spinup_seer('web',config_override={"mongo":self.mongo_settings})
         self.seers.spinup_seer('olap',config_override={"mongo":self.mongo_settings})
 

@@ -35,14 +35,20 @@ class DBtools(object):
         time.sleep(postsleep)
 
     def killall_mongo(self):
-        for i,o in self.db_instance.iteritems():
-            print "killing {0}".format(i)
-            o.kill()
+        for key in self.db_instance.keys():
+            self.kill_mongo(key)
 
-    def init_replset(self):
-    	mongoengine.connection.disconnect()
+    def kill_mongo(self,instance):
+        print "killing {0}".format(instance)
+        self.db_instance[instance].kill()
+        del self.db_instance[instance]
+
+
+    def init_replset(self,postsleep=11):
+        mongoengine.connection.disconnect()
 
         from pymongo import MongoClient
         from bson.code import Code
         conn = MongoClient(self.arbiter)
         conn.admin.command("replSetInitiate",self.replConfig)
+        time.sleep(postsleep)
