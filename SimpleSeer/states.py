@@ -138,6 +138,7 @@ class Core(object):
         return currentframes
     
     def schedule(self, frame, inspections=None):
+        # Create a queue that hold the inspection iterator for this frame (which will start the inspection if worker running)
         fm = Foreman()
         self._queue[frame.id] = {}
         self._queue[frame.id]['features'] = fm.process_inspections(frame, inspections)
