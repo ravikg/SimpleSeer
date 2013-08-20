@@ -1,11 +1,10 @@
 import flask
-
-from flaskext.testing import TestCase
+import unittest
 
 from SimpleSeer import views, crud
-from .. import utils
+from SimpleSeer.tests import utils
 
-class MyTest(TestCase):
+class Test(unittest.TestCase):
 
     def create_app(self):
         utils.register_mim_connection()
@@ -18,4 +17,3 @@ class MyTest(TestCase):
     def test_get_index(self):
         result = self.client.get('/')
         self.assertEqual(result.content_type, 'text/html; charset=utf-8')
-        
