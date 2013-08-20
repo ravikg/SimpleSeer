@@ -30,7 +30,10 @@ class Command(object):
         self._configure_logging()
         if self.session.mongo.get('is_slave'):
             M.base.SimpleDoc.meta['auto_create_index'] = False
-        if options.profile_heap: self._start_profile_heap()
+        try:
+            if options.profile_heap: self._start_profile_heap()
+        except AttributeError:
+            pass
 
     def run(self):
         '''Actually run the command'''
@@ -43,13 +46,15 @@ class Command(object):
         import warnings
         warnings.filterwarnings(action='module', category=DeprecationWarning)
 
-        if self.options.logging:
+        #if self.options.logging:
+        try:
             if os.path.exists(self.options.logging):
                 logging.config.fileConfig(self.options.logging, disable_existing_loggers=False)
             else:
                 warnings.warn("Could not find logging configuration %s, defaulting to basic config" % self.options.logging)
                 logging.basicConfig(level=logging.DEBUG)
-        else:
+        #else:
+        except AttributeError:
             logging.basicConfig(level=logging.DEBUG)
         self.log = logging.getLogger(__name__)
 
