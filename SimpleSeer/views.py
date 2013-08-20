@@ -6,7 +6,6 @@ import calendar
 from datetime import datetime
 from cStringIO import StringIO
 import hashlib
-import threading
 
 import bson.json_util
 import gevent
@@ -330,42 +329,9 @@ def settings():
             pass
     return {"settings": text, "plugins":plugins }
 
-
-class RPCThread (threading.Thread):
-    def __init__(self):
-        threading.Thread.__init__(self)
-        self.result = None
-
-    def run(self):
-        self.result = ChannelManager().rpcSendRequest('olap_req/', {'action': 'ping'})
-
-    def _stop(self):
-        if self.isAlive():
-            self._Thread__stop()
-
 @route('/_status', methods=['GET', 'POST'])
 def status():
-    resp = make_response("OK", 200)
-
-    # Check and see if we can simply connecto to MongoDB
-    import mongoengine
-    db = mongoengine.connection.get_db()
-    if db:
-        try:
-            # Check db and see if we can even pull back a list of collections
-            db.collection_names()
-        except Exception:
-            resp = make_response("Could not connect to MongoDB", 500)
-
-    # Spawn a thread with a timeout, if it timesout, olap is not responding
-    rpc = RPCThread()
-    rpc.start()
-    rpc.join(5)
-    if rpc.isAlive():
-        rpc._stop()
-        resp = make_response("Could not connect to OLAP", 500)
-
-    return resp
+    return 'ok'
 
 @route('/_statusJSON', methods=['GET', 'POST'])
 def statusJSON():

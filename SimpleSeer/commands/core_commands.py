@@ -203,72 +203,8 @@ class ModBusCommand(Command):
 
     '''Modbus'''
     def run(self):
-        from SimpleSeer.realtime import ChannelManager
-        from SimpleSeer.base import jsondecode
-        from pymodbus.client.sync import ModbusTcpClient as ModbusClient
-        modbus_settings = self.session.modbus
-
-        # Must have modbus settings in config to run
-        if modbus_settings:
-            if modbus_settings.has_key('server'):
-                self.log.info('Trying to connect to Modbus Server[%s]...' % modbus_settings['server'])
-                try:
-                    # Connect the modbus client to the server
-                    modbus_client = ModbusClient(modbus_settings['server'])
-                except:
-                    ex = 'Cannot connect to server %s, please verify it is up and running' % modbus_settings['server']
-                    raise Exception(ex)
-                self.log.info('...Connected to server %s' % modbus_settings['server'])
-
-                # Function for writing to the output pin
-                def write_output(msg):
-                    message = jsondecode(msg.body)
-                    self.log.info("modbusOutput/", message)
-                    if message.has_key('pin') and message.has_key('message'):
-                        # Set the pin value
-                        modbus_client.write_coil(message['pin'], message['message'])
-
-                # Function callback for reading from the pin
-                def write_input(msg):
-                    message = jsondecode(msg.body)
-                    self.log.info('modbusInput/ %s' % message)
-
-
-                # Subscribe to the output channel
-                cmo = ChannelManager()
-                cmoThread = cmo.subscribe('modbusOutput/', write_output, True)
-                # Subscribe to the input channel
-                cmi = ChannelManager()
-                cmiThread = cmi.subscribe('modbusInput/', write_input, True) 
-
-                # Channel manager to publish input pin changes
-                cm = ChannelManager()
-                # Get poll rate
-                tick = modbus_settings.get('tick', 1.0)
-                while True:
-                    try:
-                        # Get current state of the bits
-                        bits = []
-                        for pin in modbus_settings['digitalInputs']:
-                            bits.append(modbus_client.read_discrete_inputs(pin['pin']).bits[0])
-                        time.sleep(tick)
-                        i = 0
-                        # Publish any changes to modbusInput/
-                        for pin in modbus_settings['digitalInputs']:
-                            if bits[i] is not modbus_client.read_discrete_inputs(pin['pin']).bits[0]:
-                                cm.publish('modbusInput/', message = {'pin':pin['pin'], 'message':pin['message']})
-                            i += 1
-                    except KeyboardInterrupt:
-                        if cmoThread.isAlive():
-                            cmoThread._stop()
-                        if cmiThread.isAlive():
-                            cmiThread._stop()
-                        ex = 'Keyboard Interrupt!'
-                        raise Exception(ex)
-            else:
-                self.log.info('Please add a modbus server to your configuration file')
-        else:
-            self.log.info('Please add a modbus entry in your configuration file')
+        from SimpleSeer.modbus import ModBusService
+        ModBusService().start()
 
 class ScrubCommand(Command):
     use_gevent = False

@@ -118,7 +118,6 @@ class ChannelManager(object):
             # Start thread for the subscription
             st = SubscribeThread(channel)
             st.start()
-            st.join(1)
             # Returns the thread so you can kill the thread from the calling function
             return st
         else:
