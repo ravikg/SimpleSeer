@@ -29,7 +29,7 @@ class Session():
     __shared_state = dict(
         _config = {})
     
-    def __init__(self, yaml_config_dir = '', procname='simpleseer'):
+    def __init__(self, yaml_config_dir = '.', procname='simpleseer'):
         self.__dict__ = self.__shared_state
         
         if not yaml_config_dir:
@@ -47,17 +47,17 @@ class Session():
         self._known_triggers = {}
     
     @staticmethod
-    def read_config(yaml_config_dir=''):
-        yaml_config = path(yaml_config_dir) / "simpleseer.cfg"
+    def read_config(yaml_config_dir='.', yaml_config_file="simpleseer.cfg"):
+        yaml_config = path(yaml_config_dir) / yaml_config_file
 
         if yaml_config_dir == "." and not os.path.isfile(yaml_config):
             yaml_config_dir = "/etc/simpleseer"
-            yaml_config = path(yaml_config_dir) / "simpleseer.cfg"
+            yaml_config = path(yaml_config_dir) / yaml_config_file
         retVal = yaml.load(open(yaml_config))
         retVal['yaml_config'] = yaml_config
 
         # Look for alternate config files with name hostname_simpleseer.cfg
-        alt_config_filename = gethostname() + '_simpleseer.cfg'
+        alt_config_filename = "{0}_{1}".format(gethostname(),yaml_config_file)
         alt_config = path(yaml_config_dir) / alt_config_filename
         if os.path.isfile(alt_config):
             log.info('Overriding configuration with %s' % alt_config)

@@ -144,12 +144,10 @@ class Core(object):
         self._queue[frame.id] = {}
         self._queue[frame.id]['features'] = fm.process_inspections(frame, inspections)
 
-    def process(self, frame, inspections=None, measurements=None, overwrite=True, clean=False, timeout=10):
+    def process(self, frame, inspections=None, measurements=None, overwrite=True, clean=False, timeout=120):
         # First do all features, then do all results
         if not frame.id in self._queue:
-            fm = Foreman()
-            self._queue[frame.id] = {}
-            self._queue[frame.id]['features'] = fm.process_inspections(frame, inspections)
+            self.schedule(frame, inspections)
             if timeout is not None:
                 def onTimeout(signum, frame):
                     fm._useWorkers = False
@@ -157,7 +155,7 @@ class Core(object):
                     log.warn("Worker timed out. Disabling workers")
                 signal.signal(signal.SIGALRM, onTimeout)
                 signal.alarm(timeout)
-
+                
         features = [ feat for feat in self._queue[frame.id].pop('features') ]
 
         if timeout is not None:
