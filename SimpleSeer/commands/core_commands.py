@@ -10,7 +10,8 @@ import fnmatch
 import itertools
 import warnings
 import re
-
+import pkg_resources
+from path import path
 
 class CoreCommand(Command):
     'Run the core server / state machine'
@@ -613,3 +614,46 @@ class UserCommand(Command):
                 except:
                     print("Error: User not found, aborting.")
                     return
+
+
+class TestCommand(Command):
+    ''' Run the front and back end tests for SimpleSeer. '''
+
+    def __init__(self, subparser):
+        pass
+
+    def run(self):
+        import unittest
+        tests = path(pkg_resources.resource_filename('SimpleSeer', 'tests'))
+        passed = 0
+        failed = 0
+        total = 0
+        missed = 0
+
+        for test in glob.glob(tests / "*/test_*.py"):
+            try:
+                _spl = test.split("/")
+                pkg = "SimpleSeer.tests.{}.{}".format(_spl[-2], _spl[-1].split(".")[0])
+                mod = __import__(pkg, globals(), locals(), ["Test"], -1) 
+                suite = unittest.TestLoader().loadTestsFromTestCase(mod.Test)
+                result = unittest.TextTestRunner(verbosity=0).run(suite)
+
+                _count = len(result.errors + result.failures)
+                if _count is 0:
+                    print "\033[92mPassed tests in {}\033[0m".format(test)
+                    passed = passed + 1
+                else:
+                    print "\033[93mFailed tests in {}\033[0m".format(test)
+                    failed = failed + 1
+                total = total + 1
+            except:
+                missed = missed + 1
+
+        print ""
+        print("*"*80)
+        print "SimpleSeer Tests completed:"
+        print "Passed {} of {} tests.".format(passed, total)
+        print "Could not complete {} test(s).".format(missed)
+
+
+

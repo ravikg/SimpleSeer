@@ -67,5 +67,5 @@ def mse_frame(org, new):
 def mse_clip(org_frames, new_frames):
     return sum(mse_frame(o,n) for o,n in zip(org_frames, new_frames)) / len(new_frames)
 
-if __name__ == '__main__':
-    main()
+class Test(unittest.TestCase):
+    pass
