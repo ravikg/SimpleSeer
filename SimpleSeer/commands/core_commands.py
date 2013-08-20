@@ -205,7 +205,7 @@ class ModBusCommand(Command):
     '''Modbus'''
     def run(self):
         from SimpleSeer.modbus import ModBusService
-        ModBusService().start()
+        ModBusService().start(verbose=True)
 
 class ScrubCommand(Command):
     use_gevent = False

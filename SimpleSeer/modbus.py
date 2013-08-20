@@ -7,23 +7,25 @@ import logging
 log = logging.getLogger(__name__)
 """
   @TODO:
-    - Wrap all log in verbose
-    - Get rid of multiple channel managers
-    - Get all pins once, then check through config pins
-
+    - Get all pins once, then check through config pins 
+    UPDATE: Not sure if there is a way with pymodbus to grab all of the coil info
 """
 class ModBusService(object):
 
-    def start(self, verbose=False):
-        modbus_settings = Session().modbus
+    def start(self, verbose=False, config={}):
+        if config.has_key('server'):
+            modbus_settings = config
+        else:
+            modbus_settings = Session().modbus
+
         # Must have modbus settings in config to run
         if modbus_settings:
-            if modbus_settings.has_key('server'):
+            if modbus_settings.has_key('server') and modbus_settings.has_key('port'):
                 if verbose:
                     log.info('Trying to connect to Modbus Server[%s]...' % modbus_settings['server'])
                 try:
                     # Connect the modbus client to the server
-                    modbus_client = ModbusClient(modbus_settings['server'])
+                    modbus_client = ModbusClient(modbus_settings['server'], port=modbus_settings['port'])
                 except:
                     ex = 'Cannot connect to server %s, please verify it is up and running' % modbus_settings['server']
                     raise Exception(ex)
@@ -42,13 +44,20 @@ class ModBusService(object):
                 # Subscribe to the output channel
                 cm = ChannelManager(shareConnection = False)
 
-                cmThread = cm.subscribe('modbusOutput/', write_output, True)
+                self.cmThread = cm.subscribe('modbusOutput/', write_output, True)
 
                 # Get poll rate
                 tick = modbus_settings.get('tick', 0.05)
                 bits = []
-                for pin in modbus_settings['digitalInputs']:
-                    bits.append(modbus_client.read_discrete_inputs(pin['pin']).bits[0])
+
+                try:
+                    for pin in modbus_settings['digitalInputs']:
+                        # to work with anthony's system this was modbus_client.read_discrete_inputs(pin['pin']).bits[0]
+                        bits.append(modbus_client.read_coils(pin['pin']).bits[0])
+                except:
+                    if self.cmThread.isAlive():
+                        self.cmThread._stop()
+                    raise Exception("It seems your modbus server is not available")
                 while True:
                     try:
                         # Get current state of the bits
@@ -56,19 +65,20 @@ class ModBusService(object):
                         i = 0
                         # Publish any changes to modbusInput/
                         for pin in modbus_settings['digitalInputs']:
-                            bit = modbus_client.read_discrete_inputs(pin['pin']).bits[0]
+                            # to work with anthony's system this was modbus_client.read_discrete_inputs(pin['pin']).bits[0]
+                            bit = modbus_client.read_coils(pin['pin']).bits[0]
                             if bits[i] is not bit:
                                 cm.publish('modbusInput/', message = {'pin':pin['pin'], 'message':pin['message']})
                             bits[i] = bit
                             i += 1
                     except KeyboardInterrupt:
-                        if cmThread.isAlive():
-                            cmThread._stop()
+                        if self.cmThread.isAlive():
+                            self.cmThread._stop()
                         ex = 'Keyboard Interrupt!'
                         raise Exception(ex)
             else:
                 if verbose:
-                    log.info('Please add a modbus server to your configuration file')
+                    log.info('Please add a modbus server and port to your configuration file')
         else:
             if verbose:
                 log.info('Please add a modbus entry in your configuration file')
