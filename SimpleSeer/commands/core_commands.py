@@ -619,16 +619,16 @@ class TestCommand(Command):
         tests = path(pkg_resources.resource_filename('SimpleSeer', 'tests'))
         passed = 0
         failed = 0
-        total = 0
         missed = 0
 
-        for test in glob.glob(tests / "*/test_*.py"):
+        allTests = glob.glob(tests / "integration/test_*.py")
+        for test in allTests:
             try:
                 _spl = test.split("/")
                 pkg = "SimpleSeer.tests.{}.{}".format(_spl[-2], _spl[-1].split(".")[0])
                 mod = __import__(pkg, globals(), locals(), ["Test"], -1) 
                 suite = unittest.TestLoader().loadTestsFromTestCase(mod.Test)
-                result = unittest.TextTestRunner(verbosity=0).run(suite)
+                result = unittest.TextTestRunner(verbosity=2).run(suite)
 
                 _count = len(result.errors + result.failures)
                 if _count is 0:
@@ -637,15 +637,18 @@ class TestCommand(Command):
                 else:
                     print "\033[93mFailed tests in {}\033[0m".format(test)
                     failed = failed + 1
-                total = total + 1
-            except:
+            except Exception, e:
+                print(e)
                 missed = missed + 1
 
         print ""
-        print("*"*80)
+        print("-"*70)
+        print ""
         print "SimpleSeer Tests completed:"
-        print "Passed {} of {} tests.".format(passed, total)
+        print "Passed {} of {} tests.".format(passed, len(allTests))
         print "Could not complete {} test(s).".format(missed)
-
+        print ""
+        print("-"*70)
+        print ""
 
 
