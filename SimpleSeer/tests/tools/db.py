@@ -4,7 +4,8 @@ from filesystem import delete_and_mkdir
 import subprocess
 import time
 import socket
-
+import logging
+log = logging.getLogger()
 
 class DBtools(object):
     db_instance = {}
@@ -40,7 +41,7 @@ class DBtools(object):
             self.kill_mongo(key)
 
     def kill_mongo(self,instance):
-        print "killing {0}".format(instance)
+        log.info("killing {0}".format(instance))
         self.db_instance[instance].kill()
         del self.db_instance[instance]
 
@@ -51,5 +52,6 @@ class DBtools(object):
         from pymongo import MongoClient
         from bson.code import Code
         conn = MongoClient(self.master)
-        print conn.admin.command("replSetInitiate",self.replConfig)
+        resp = conn.admin.command("replSetInitiate",self.replConfig)
         time.sleep(postsleep)
+        return resp

@@ -2,6 +2,8 @@ import time
 from multiprocessing import Process
 from SimpleSeer.commands import core_commands
 from SeerCloud.commands import olap
+import logging
+log = logging.getLogger()
 
 class SeerInstanceTools(object):
     seer_types = {
@@ -16,7 +18,7 @@ class SeerInstanceTools(object):
             self.kill_seer(key)
 
     def kill_seer(self,instance):
-        print "killing {0}".format(instance)
+        log.info("killing {0}".format(instance))
         self.seer_instance[instance].terminate()
         del self.seer_instance[instance]
 
