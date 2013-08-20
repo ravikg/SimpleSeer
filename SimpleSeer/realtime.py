@@ -1,4 +1,3 @@
-#from amqplib import client_0_8 as amqp
 import amqp
 from socketio.namespace import BaseNamespace
 import gevent
