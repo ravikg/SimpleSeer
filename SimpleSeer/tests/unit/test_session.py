@@ -20,7 +20,7 @@ def mkdir_p(path):
             pass
         else: raise
 
-class TestMongoConnection(unittest.TestCase):
+class Test(unittest.TestCase):
 
     def test_mongoconnection(self):
 
@@ -65,7 +65,3 @@ class TestMongoConnection(unittest.TestCase):
         shutil.rmtree('/tmp/slave')
         _mongod_master.kill()
         shutil.rmtree('/tmp/master')
-            
-
-if __name__ == '__main__':
-    unittest.main()

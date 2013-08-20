@@ -5,9 +5,8 @@ import mock
 from SimpleCV.ImageClass import Image
 
 from SimpleSeer import models as M
-from .. import utils
 
-class TestFrame(unittest.TestCase):
+class Test(unittest.TestCase):
 
     @mock.patch('SimpleSeer.realtime.ChannelManager')
     def setUp(self, cm):
@@ -15,7 +14,6 @@ class TestFrame(unittest.TestCase):
         frame = M.Frame(capturetime=datetime.utcnow(), camera='test')
         frame.image = img
         self.frame = frame
-        utils.register_mim_connection()
         self.frame.save()
 
     def test_get_image_in_cache(self):
@@ -31,5 +29,3 @@ class TestFrame(unittest.TestCase):
             sorted(result.keys()),
             [ 'content_type', 'data' ])
         assert result['content_type'] in ('image/webp', 'image/jpeg')
-        
-        
