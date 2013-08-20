@@ -15,7 +15,7 @@ class DBtools(object):
         "version" : 1,
         "members" : [{
             "_id" : 0,
-            "host" : "localname:27020"
+            "host" : "{}:27020".format(socket.gethostname())
         },{
             "_id" : 1,
             "host" : "{}:27019".format(socket.gethostname()),
