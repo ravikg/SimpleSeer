@@ -3,7 +3,7 @@ from SimpleSeer.Session import Session
 from SimpleSeer import validators as V
 
 
-class TestStrictJSON(unittest.TestCase):
+class Test(unittest.TestCase):
 
     testValues = {
         "Invalid No Default":"invalid integer",
@@ -151,6 +151,3 @@ class TestStrictJSON(unittest.TestCase):
         self.assertEqual(Session().get_config()['modelschema'], self.sess._config['modelschema'])
         r = V.StrictJSON(schemakey="metadata")._to_python(self.testValues)
         self.assertEqual(r,{"Valid Regex":"valid"})
-
-suite = unittest.TestLoader().loadTestsFromTestCase(TestStrictJSON)
-unittest.TextTestRunner(verbosity=2).run(suite)

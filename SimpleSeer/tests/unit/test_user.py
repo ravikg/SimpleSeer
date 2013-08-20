@@ -3,7 +3,7 @@ import unittest
 import subprocess
 from SimpleSeer import models as M
 
-class TestUserCommand(unittest.TestCase):
+class Test(unittest.TestCase):
 
     def setUp(self):
         pass
@@ -23,6 +23,3 @@ class TestUserCommand(unittest.TestCase):
         dn = open("/dev/null")
         subprocess.call(['simpleseer','user','remove', '-f', 'testuser'], stderr=dn)
         self.assertEqual(len(M.User.objects), 0)
-
-suite = unittest.TestLoader().loadTestsFromTestCase(TestUserCommand)
-unittest.TextTestRunner(verbosity=2).run(suite)

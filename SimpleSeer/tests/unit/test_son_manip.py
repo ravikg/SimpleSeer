@@ -11,7 +11,7 @@ class _Custom(object): pass
 class _Custom1(_Custom): pass
 
 
-class TestSonScrub(unittest.TestCase):
+class Test(unittest.TestCase):
 
     def setUp(self):
         self.registry = SONScrub.clear_registry()

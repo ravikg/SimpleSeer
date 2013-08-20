@@ -1,4 +1,5 @@
 import unittest
+import sys
 from SeerCloud.testdata import TestData
 from SimpleSeer.worker import Foreman
 from SimpleSeer.Session import Session
@@ -7,7 +8,7 @@ from SimpleSeer.states import Core
 import logging
 log = logging.getLogger(__name__)
 
-class WorkerTest(unittest.TestCase):
+class Test(unittest.TestCase):
     
     testData = None
     fm = None
@@ -42,6 +43,8 @@ class WorkerTest(unittest.TestCase):
             # Each frame should have one feature
             # That feature should have a featuredata point named testdata
             for f in M.Frame.objects(id__in=self.testData.addedFrames):
+                print "("* 10
+                print len(f.features)
                 self.assertEqual(len(f.features), 1, 'Expected exactly one feature')
                 if len(f.features):
                     self.assertIn('testdata', f.features[0].featuredata, 'Expected feature data not found on frame')
@@ -82,7 +85,3 @@ class WorkerTest(unittest.TestCase):
             if len(f.results):
                 self.assertIsNot(f.results[0].numeric, None, 'Result should not be None')
                 self.assertEqual(f.features[0].featuredata['testdata'], f.results[0].numeric, 'Result does not match corresponding feature data')
-                
-suite = unittest.TestLoader().loadTestsFromTestCase(WorkerTest)
-unittest.TextTestRunner(verbosity=1).run(suite)
-
