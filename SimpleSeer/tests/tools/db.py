@@ -3,6 +3,7 @@ import mongoengine
 from filesystem import delete_and_mkdir
 import subprocess
 import time
+import socket
 
 
 class DBtools(object):
@@ -16,14 +17,14 @@ class DBtools(object):
             "host" : "localname:27020"
         },{
             "_id" : 1,
-            "host" : "skybox:27019",
+            "host" : "{}:27019".format(socket.gethostname()),
             "priority" : 0.0001
         },{
             "_id" : 2,
-            "host" : "skybox:27018",
+            "host" : "{}:27018".format(socket.gethostname()),
             "arbiterOnly" : True
         }]}
-    arbiter = "127.0.0.1:27020"
+    master = "127.0.0.1:27020"
 
 
     def __init__(self,*args,**kwargs):
@@ -49,6 +50,6 @@ class DBtools(object):
 
         from pymongo import MongoClient
         from bson.code import Code
-        conn = MongoClient(self.arbiter)
-        conn.admin.command("replSetInitiate",self.replConfig)
+        conn = MongoClient(self.master)
+        print conn.admin.command("replSetInitiate",self.replConfig)
         time.sleep(postsleep)
