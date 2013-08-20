@@ -114,13 +114,15 @@ class ChannelManager(object):
             
         channel = setup_channel()
 
-        # Workaround for async channel subscriptions
-        # Tried everything to get Ctrl+C, Keyboard Interrupt to kill these async subscriptions to no avail
         if async:
+            # Start thread for the subscription
             st = SubscribeThread(channel)
             st.start()
             st.join(1)
+            # Returns the thread so you can kill the thread from the calling function
+            return st
         else:
+            # Not async, lets do some blocking!
             while True:
                 try:
                     channel.wait()

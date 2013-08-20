@@ -211,7 +211,7 @@ class ModBusCommand(Command):
         # Must have modbus settings in config to run
         if modbus_settings:
             if modbus_settings.has_key('server'):
-                self.log.info('Trying to connect to OPC Server[%s]...' % modbus_settings['server'])
+                self.log.info('Trying to connect to Modbus Server[%s]...' % modbus_settings['server'])
                 try:
                     # Connect the modbus client to the server
                     modbus_client = ModbusClient(modbus_settings['server'])
@@ -236,10 +236,10 @@ class ModBusCommand(Command):
 
                 # Subscribe to the output channel
                 cmo = ChannelManager()
-                cmo.subscribe('modbusOutput/', write_output, True)
+                cmoThread = cmo.subscribe('modbusOutput/', write_output, True)
                 # Subscribe to the input channel
                 cmi = ChannelManager()
-                cmi.subscribe('modbusInput/', write_input, True)
+                cmiThread = cmi.subscribe('modbusInput/', write_input, True) 
 
                 # Channel manager to publish input pin changes
                 cm = ChannelManager()
@@ -259,8 +259,12 @@ class ModBusCommand(Command):
                                 cm.publish('modbusInput/', message = {'pin':pin['pin'], 'message':pin['message']})
                             i += 1
                     except KeyboardInterrupt:
-                        print 'Keyboard Interrupt!'
-                        raise
+                        if cmoThread.isAlive():
+                            cmoThread._stop()
+                        if cmiThread.isAlive():
+                            cmiThread._stop()
+                        ex = 'Keyboard Interrupt!'
+                        raise Exception(ex)
             else:
                 self.log.info('Please add a modbus server to your configuration file')
         else:
