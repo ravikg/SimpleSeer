@@ -69,6 +69,11 @@ class Session():
     def configure(self, d):
         from .models.base import SONScrub
         self._config = d
+        if not hasattr(self, 'database') or self.database == '':
+            raise Exception('Database not defined in config')
+        if not hasattr(self, 'mongo') or self.mongo == '':
+            raise Exception('Mongo not defined inconfig')
+        
         if self.mongo.get('master', False):
             master = self.mongo.pop("master")
             mongoengine.connect(self.database, **master)
