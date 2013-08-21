@@ -57,6 +57,7 @@ class WebCommand(Command):
         subparser.add_argument('--procname', default='web', help='give each process a name for tracking within session')
         subparser.add_argument('--test', default=None, help='Run testing suite')
 
+
     def run(self):
         'Run the web server'
         from SimpleSeer.Web import WebServer, make_app
