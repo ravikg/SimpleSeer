@@ -620,7 +620,8 @@ class TestCommand(Command):
 
         # TODO: Add optional verbosity argument. Try to 
         # capture the stderr and stdout of the subprocess
-        # calls.
+        # calls. (Doesnt seem to be possible to swallow most
+        # of what we would want to hide, though..)
 
         pass
 
@@ -655,7 +656,7 @@ class TestCommand(Command):
             except Exception, e:
                 logs.append("\t\033[93mUnexpected error in {}:".format(cleanTestPath(test)))
                 logs.append("\t")
-                logs.append(sys.exc_info()[0], e, "\033[0m")
+                print(sys.exc_info()[0], e, "\033[0m")
                 missed = missed + 1
         
         print("\n"+("-"*70)+"\n")
