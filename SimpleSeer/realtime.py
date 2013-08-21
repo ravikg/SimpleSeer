@@ -1,15 +1,31 @@
-from amqplib import client_0_8 as amqp
-
+import amqp
 from socketio.namespace import BaseNamespace
 import gevent
+import threading
 from time import sleep
 import socket
+
+from functools import partial
 
 from .Session import Session
 from .base import jsonencode, jsondecode
 
 import logging
 log = logging.getLogger(__name__)
+
+# Channel subscription thread
+class SubscribeThread (threading.Thread):
+    def __init__(self, channel):
+        threading.Thread.__init__(self)
+        self.channel = channel
+
+    def run(self):
+        while True:
+            self.channel.wait()
+            
+    def _stop(self):
+        if self.isAlive():
+            self._Thread__stop()
 
 class ChannelManager(object):
     
@@ -81,7 +97,7 @@ class ChannelManager(object):
         self.safePublish(channel, msg=msg, exchange=exchange, routing_key='')
         channel.close()
         
-    def subscribe(self, exchange, callback):
+    def subscribe(self, exchange, callback, async=False):
         log.info('Subscribe to %s' % exchange)                     
         if not self._shareConnection:
             conn = amqp.Connection(host=self._config.rabbitmq)
@@ -99,15 +115,23 @@ class ChannelManager(object):
             return channel
             
         channel = setup_channel()
+
+        if async:
+            # Start thread for the subscription
+            st = SubscribeThread(channel)
+            st.start()
+            # Returns the thread so you can kill the thread from the calling function
+            return st
+        else:
+            # Not async, lets do some blocking!
+            while True:
+                try:
+                    channel.wait()
+                except (socket.error, IOError) as e:
+                    log.warn('Socket error: {}.  Will try to reconnect.'.format(e))
+                    conn = self.connect()
+                    channel = setup_channel()
         
-        while True:
-            try:
-                channel.wait()
-            except (socket.error, IOError) as e:
-                log.warn('Socket error: {}.  Will try to reconnect.'.format(e))
-                conn = self.connect()
-                channel = setup_channel()
-    
     def rpcSendRequest(self, workQueue, request):
         from random import choice
         
@@ -160,7 +184,8 @@ class ChannelManager(object):
         else:
             conn = self._connection
                     
-        def on_request(msg):
+        def on_request(channel, msg):
+            msg.channel = channel
             res = callback(msg.body)
             resMsg = amqp.Message(jsonencode(res))
             resMsg.properties['correlation_id'] = msg.properties['correlation_id']
@@ -173,7 +198,7 @@ class ChannelManager(object):
             channel.queue_declare(queue=workQueue)
                 
             channel.basic_qos(prefetch_size=0, prefetch_count=1, a_global=False)
-            channel.basic_consume(callback=on_request, queue=workQueue)
+            channel.basic_consume(callback=partial(on_request, channel), queue=workQueue)
             
             return channel
             
