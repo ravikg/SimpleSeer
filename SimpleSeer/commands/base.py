@@ -24,9 +24,9 @@ class Command(object):
         from SimpleSeer.Session import Session
         from SimpleSeer import models as M
         try:
-            self.session = Session(options.config, options.procname)
+            self.session = Session(options.config, options.procname, options.config_override)
         except:
-            self.session = Session(options.config, 'simpleseer')
+            self.session = Session(options.config, 'simpleseer', options.config_override)
         self._configure_logging()
         if self.session.mongo.get('is_slave'):
             M.base.SimpleDoc.meta['auto_create_index'] = False

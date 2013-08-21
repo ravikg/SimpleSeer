@@ -57,7 +57,8 @@ class WebCommand(Command):
 
     def __init__(self, subparser):
         subparser.add_argument('--procname', default='web', help='give each process a name for tracking within session')
-        subparser.add_argument('--test', default=None, help='Run testing suite')
+        subparser.add_argument('--test', default=None, help='Run testing suite (use: --test=1)')
+
 
     def run(self):
         'Run the web server'
@@ -625,7 +626,8 @@ class TestCommand(Command):
 
     def run(self):
         logs = []
-        missed = 0        
+        missed = 0     
+        failed = 0   
         tests = path(pkg_resources.resource_filename('SimpleSeer', 'tests'))
         
         def cleanTestPath(path, nameOnly=False):
@@ -649,18 +651,12 @@ class TestCommand(Command):
                     logs.append(u"\t\033[92m\u2714\033[0m {}".format(cleanTestPath(test)))
                 else:
                     logs.append(u"\t\033[91m\u2716\033[0m {}".format(cleanTestPath(test)))
+                    failed = failed + 1
             except Exception, e:
                 logs.append("\t\033[93mUnexpected error in {}:".format(cleanTestPath(test)))
                 logs.append("\t")
-                sys.exc_info()[0], e, "\033[0m"
+                logs.append(sys.exc_info()[0], e, "\033[0m")
                 missed = missed + 1
-
-        # TODO: Run the front end tests
-        # ... will have to spin up web with --testing true
-        # ... capture the exit code for result
-        webhost = "http://127.0.0.1:9178/"
-        bootstrap = tests / "run-jasmine.js"
-        #simpleseer --config-override="{web: {address: '127.0.0.1:9178'}}" web --test=1
         
         print("\n"+("-"*70)+"\n")
         print "SimpleSeer Test Results:"
@@ -668,5 +664,31 @@ class TestCommand(Command):
             print "\t[ Could not complete {} test(s). ]".format(missed)
         print "\nBack-end:"
         print "\n".join(logs)
-        print "\nFront-end:"
-        frontTests = subprocess.call(["phantomjs", bootstrap, webhost + "/testing"])
+
+        # Check to see if we are in a client
+        # repo. If so, we can run the front
+        # end tests.
+        if os.path.exists("simpleseer.cfg"):
+            from SimpleSeer.tests.tools.seer import SeerInstanceTools
+
+            client = os.getcwd().split("/")[-1]
+            bootstrap = tests / "run-jasmine.js"
+            webhost = "http://127.0.0.1:9178/"
+            config = "{'web': {'address': '127.0.0.1:9178', 'static': {'/': '%s/static'}}}" % client
+            seers = SeerInstanceTools()
+
+            print "\nFront-end:"
+
+            seers.spinup_seer('web', config_override=config, pipe=open("/dev/null"))
+            frontTests = subprocess.call(["phantomjs", bootstrap, webhost + "/testing"])
+            seers.kill_seer('web')
+        else:
+            print "\nFront-end: Could not execute tests. Re-run tests from inside a client repo."
+
+        print("\033[94m\n"+("-"*70)+"\n")
+        print "SimpleSeer Test Summary:"
+        print "\n\tBack-end:\tFailed {} test(s).".format(failed)
+        if frontTests is -1:
+            print "\tFront-end: N/A"
+        else:
+            print "\tFront-end:\tFailed {} test(s).\n\033[0m".format(frontTests)

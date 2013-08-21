@@ -29,13 +29,16 @@ class Session():
     __shared_state = dict(
         _config = {})
     
-    def __init__(self, yaml_config_dir = '.', procname='simpleseer'):
+    def __init__(self, yaml_config_dir = '.', procname='simpleseer', config_override={}):
         self.__dict__ = self.__shared_state
         
-        if not yaml_config_dir:
+        if self._config != {}:
             return  #return the existing shared context
+        self.config_override = config_override
 
         config_dict = self.read_config(yaml_config_dir)
+        for k,v in config_override.iteritems():
+            config_dict[k] = v
         log.info("Loaded configuration from %s" % config_dict['yaml_config'])        
         self.configure(config_dict)
         if not self.procname:
@@ -69,6 +72,11 @@ class Session():
     def configure(self, d):
         from .models.base import SONScrub
         self._config = d
+        if not hasattr(self, 'database') or self.database == '':
+            raise Exception('Database not defined in config')
+        if not hasattr(self, 'mongo') or self.mongo == '':
+            raise Exception('Mongo not defined inconfig')
+        
         if self.mongo.get('master', False):
             master = self.mongo.pop("master")
             mongoengine.connect(self.database, **master)

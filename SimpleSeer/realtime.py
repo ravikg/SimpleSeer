@@ -30,6 +30,9 @@ class ChannelManager(object):
         
     def connect(self):
         while True:
+            # Check if rabbitmq parameter set in config
+            if not hasattr(self._config, 'rabbitmq') or self._config.rabbitmq == '':
+                raise Exception('Rabbit MQ parameter not set in configuration')
             try:
                 return amqp.Connection(host=self._config.rabbitmq)
             except (socket.error, IOError) as e:

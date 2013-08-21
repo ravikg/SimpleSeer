@@ -31,7 +31,7 @@ class DBtools(object):
     def __init__(self,*args,**kwargs):
     	self.dbs = kwargs.get('dbs',{})
 
-    def spinup_mongo(self,type,postsleep=5):
+    def spinup_mongo(self,type,postsleep=1):
         delete_and_mkdir("/tmp/{0}".format(type))
         self.db_instance[type] = subprocess.Popen(self.dbs[type])
         time.sleep(postsleep)
@@ -46,7 +46,7 @@ class DBtools(object):
         del self.db_instance[instance]
 
 
-    def init_replset(self,postsleep=11):
+    def init_replset(self,postsleep=20):
         mongoengine.connection.disconnect()
 
         from pymongo import MongoClient
