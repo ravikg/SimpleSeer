@@ -609,9 +609,16 @@ class UserCommand(Command):
 
 
 class TestCommand(Command):
-    ''' Run the front and back end tests for SimpleSeer. '''
+    ''' Run the front-end and back-end tests for SimpleSeer. '''
 
     def __init__(self, subparser):
+        # TODO: Add support for optional tld to search 
+        # for tests. (unit|functional|integration)   
+
+        # TODO: Add optional verbosity argument. Try to 
+        # capture the stderr and stdout of the subprocess
+        # calls.
+
         pass
 
     def run(self):
@@ -621,7 +628,8 @@ class TestCommand(Command):
         failed = 0
         missed = 0
 
-        allTests = glob.glob(tests / "integration/test_*.py")
+
+        allTests = glob.glob(tests / "*/test_*.py")
         for test in allTests:
             try:
                 _spl = test.split("/")
@@ -640,6 +648,10 @@ class TestCommand(Command):
             except Exception, e:
                 print(e)
                 missed = missed + 1
+
+        # TODO: Run the front end tests
+        # ... will have to spin up web with --testing true
+        # ... capture the exit code for result
 
         print ""
         print("-"*70)
