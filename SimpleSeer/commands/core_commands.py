@@ -654,8 +654,8 @@ class TestCommand(Command):
                     logs.append(u"\t\033[91m\u2716\033[0m {}".format(cleanTestPath(test)))
                     failed = failed + 1
             except Exception, e:
-                logs.append("\t\033[93mUnexpected error in {}:".format(cleanTestPath(test)))
-                logs.append("\t")
+                print("\t\033[93mUnexpected error in {}:".format(cleanTestPath(test)))
+                print("\t")
                 print(sys.exc_info()[0], e, "\033[0m")
                 missed = missed + 1
         
