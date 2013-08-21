@@ -630,7 +630,6 @@ class TestCommand(Command):
         # capture the stderr and stdout of the subprocess
         # calls. (Doesnt seem to be possible to swallow most
         # of what we would want to hide, though..)
-
         pass
 
     def run(self):
