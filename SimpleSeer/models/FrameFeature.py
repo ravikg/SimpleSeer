@@ -2,6 +2,7 @@ import cPickle as pickle
 from cStringIO import StringIO
 from binascii import b2a_base64, a2b_base64
 from copy import deepcopy
+from formencode import validators as fev
 
 import cv
 import numpy as np
@@ -30,6 +31,30 @@ SONScrub.register_bsonifier(np.float64, lambda v,c: float(v))
 SONScrub.register_bintype(np.ndarray, _numpy_save, _numpy_load)
 # matrices are instances of np.ndarray, no need to register them again
 # SONScrub.register_bintype(np.matrix, _numpy_save, _numpy_load)
+
+
+class FeatureValidator(fev.FancyValidator):
+    def _to_python(self, value, state):
+        if value is None: return None
+        if isinstance(value, dict) or isinstance(value, list):
+            features = []
+            if len(value):
+                for f in value:
+                    if f == FrameFeature:
+                        features.append(f)
+                    elif type(f) == dict:
+                        ff = FrameFeature()
+                        ff._data = {}
+                        ff._data.update(f)
+                        features.append(ff)
+            return features
+        raise fev.Invalid('invalid Feature object', value, state)
+
+    def _from_python(self, value, state):
+        if value is None: return None
+        if isinstance(value, dict):
+            return value
+        raise fev.Invalid('invalid Python dict', value, state)
 
 class FrameFeature(SimpleEmbeddedDoc, mongoengine.EmbeddedDocument):
 

@@ -119,12 +119,17 @@ html[xmlns] .clearfix { display: block }
 .ui-autocomplete.ui-corner-all { box-shadow: 0px 1px 6px rgba(0, 0, 0, .2); border-top: none; border-color: #CCC; border-radius: 0px 0px 4px 4px; }
 .ui-autocomplete .ui-corner-all.ui-state-hover { border-radius: 3px; }
 #ui-datepicker-div {margin-top: 1px; padding: 8px; box-shadow: rgba(0, 0, 0, 0.296875) 0px 5px 15px; }
-.chzn-container { margin-top: 1px; margin-bottom: -5px; margin-left: -5px; font-size: 13px; position: relative; display: inline-block; zoom: 1; *display: inline; }
+.chzn-container { font-size: 12px; position: relative; display: inline-block; zoom: 1; *display: inline; }
 .chzn-container, .chzn-container > .chzn-single, .chzn-container > .chzn-single span, .chzn-container > .chzn-choices, .chzn-container > .chzn-choices .search-field input, .chzn-container-multi .chzn-choices { cursor: pointer !important; }
 .chzn-container-multi .chzn-choices { border-color: #777 !important; }
-select + .chzn-container, .chzn-drop { width: 100% !important; }
-.chzn-choices > .search-field > input { font-family: "Open Sans"; width: 100% !important; }
-
+.chzn-choices > .search-field > input,
+.chzn-container-single .chzn-search input,
+.chzn-choices .search-field input { font-family: "Open Sans"; height: 23px !important; font-size: 12px !important; width: 100% !important; box-sizing: border-box !important; }
+.chzn-container-single .chzn-drop { box-sizing: border-box !important; width: 100% !important; }
+.chzn-container-single .chzn-single { color: #000; line-height: 23px !important; padding: 0 0 0 5px !important; -webkit-box-shadow: none !important; box-shadow: none !important; -moz-box-shadow: none !important; }
+.chzn-container-single .chzn-default { color: #999 !important; }
+.chzn-container-single .chzn-single abbr { right: 18px !important; }
+.chzn-container.chzn-container-multi { width: 100% !important; }
 
 /**
  * Image view in Arc
@@ -149,7 +154,7 @@ div.fillImageCont {
   width: 13px;
   height: 13px;
   position: absolute;
-  top: 40px;
+  top: 39px;
   right: 15px;
   background: url('/img/seer/chosen-sprite.png') right top no-repeat;
   cursor: pointer;

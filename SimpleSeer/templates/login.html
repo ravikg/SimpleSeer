@@ -1,19 +1,126 @@
-{% extends "layout.html" %}
 
-{% block body %}
-  <body class="login">
-  <div id="login">
-    <div id="branding">
-      <a href="/"><img src="img/header_logo.png" width="200" height="66" border="0" alt="Sight Machine Logo"></a>
+<!doctype html>
+  <!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+  <!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+  <!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=480">
+    <link rel="stylesheet" href="/stylesheets/app.css">
+    <style>
+      body { padding-top: 100px; background: #eee; }
+      #all {
+        left: 50%;
+        position: absolute;
+        top: 35%;
+        height: 242px;
+        margin: 0 auto;
+        width: 300px;
+        margin-top: -121px;
+        margin-left: -150px;
+      }
+      #block {
+        border: 1px solid rgba(0, 0, 0, 0.2);
+        border-radius: 3px;
+        background: #FFF;
+        text-align: center;
+      }
+      #branding {
+        margin-bottom: 10px;
+        text-align: center;
+      }
+      #client {
+        font-size: 13px;
+        font-family: "OpenSansBold";
+        color: #777;
+        padding: 10px;
+      }
+      #client p { text-align: center; }
+      #errors {
+        padding: 5px;
+        background: #FCC;
+        border-radius: 1px;
+        margin-top: -5px;
+        margin-bottom: 5px;
+      }
+      #errors li {
+        color: #800;
+        text-align: center;
+      }
+      #login {
+        border-radius: 0 0 3px 3px;
+        border-top: 1px solid #DDD;
+        padding: 10px;
+        background: #F8F8F8;
+      }
+      #copyright {
+        top: 20px;
+        position: relative;
+        border-top: 1px solid #d0d0d0;
+        padding-top: 10px;
+        font-size: 11px;
+        font-family: "OpenSansRegular";
+        color: #777;
+        text-align: center;
+      }
+      .floater.left {
+        float: left;
+        margin-top: 14px;
+        font-size: 13px;
+        font-family: "OpenSansRegular";
+        color: #333;
+      }
+      .floater.right {
+        float: right;
+        margin-top: 10px;
+      }
+      .full { width: 100%; }
+      label[for=remember] { margin-left: 5px; }
+      input[type=text], input[type=password] { font-size: 12px; width: 137px; border-color: #C9C9C9; border-top-color: #B8B8B8;}
+    </style>
+    <title>{% block title %}{{settings.ui_pagename}} - Login{% endblock %}</title>
+    <script type="text/javascript"> if( window.location.search === "?next=%2Flogout" ) { window.location.search = "?next=%2F"; } </script>
+  </head>
+
+  <body>
+    <div id="all">
+      <div id="branding">
+        <a href="http://sightmachine.com"><img src="/img/seer/logo_rgb.svg" width="200" height="66" border="0" alt="Sight Machine Logo"></a>
+      </div>
+
+      <div id="block">
+        <div id="client">
+          <p>{{settings.ui_pagename}}</p>
+        </div>
+
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div id="errors">
+          <ul class=flashes>
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+      {% endwith %}
+      {% block body %}{% endblock %}
+
+        <div id="login">
+          <form action="" method="POST">
+            <input id="user" name="username" type="text" placeholder="Username">
+            <script type="text/javascript"> window.onload = function() { document.getElementById("user").focus(); } </script>
+            <input id="pass" name="password" type="password" placeholder="Password">
+            <div class="full clearfix">
+              <div class="floater left"><input id="remember" type=checkbox name=remember value=yes><label for="remember">Remember Me?</label></div>
+              <div class="floater right"><input type="submit" value="Login"></div>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div id="copyright">© 2013 Sight Machine</div>
     </div>
-    <form action="" method="POST">
-      <input id="user" name="username" type="text" placeholder="Username">
-      <input id="pass" name="password" type="password" placeholder="Password">
-      <div class="floater">Remember Me:<input type=checkbox name=remember value=yes></div>
-      <div class="floater"><input type="submit" value="Login"></div>
-    </form>
-    <div class="dividerLight"></div>
-    <div id="copyrightLight">© 2012 Sight Machine</div>
-  </div>
   </body>
-{% endblock %}
+</html>

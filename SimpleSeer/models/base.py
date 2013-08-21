@@ -143,10 +143,7 @@ class WithPlugins(object):
         plugins = cls._plugins
         for ep in pkg_resources.iter_entry_points(group):
             log.info('Loading %s plugin %s', group, ep.name)
-            try:
-                plugins[ep.name] = ep.load()
-            except Exception, err:
-                log.error('Failed to load %s plugin %s: %s', group, ep.name, err)
+            plugins[ep.name] = ep.load()
         return plugins
 
 class SONScrub(SONManipulator):

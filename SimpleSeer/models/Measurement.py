@@ -17,6 +17,30 @@ import logging
 log = logging.getLogger()
 
 
+class ResultValidator(fev.FancyValidator):
+    def _to_python(self, value, state):
+        if value is None: return None
+        if isinstance(value, dict) or isinstance(value, list):
+            if len(value):
+                results = []
+                for r in value:
+                    if r == ResultEmbed:
+                        results.append(r)
+                    elif type(r) == dict:
+                        re = ResultEmbed()
+                        re._data = {}
+                        re._data.update(r)
+                        results.append(re)
+            return results
+        raise fev.Invalid('invalid Result object', value, state)
+
+    def _from_python(self, value, state):
+        if value is None: return None
+        if isinstance(value, dict):
+            return value
+        raise fev.Invalid('invalid Python dict', value, state)
+
+
 class MeasurementSchema(fes.Schema):
     name = fev.UnicodeString(not_empty=True) #TODO, validate on unique name
     label = fev.UnicodeString(if_missing=None)
