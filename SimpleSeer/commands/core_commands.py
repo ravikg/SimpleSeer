@@ -685,10 +685,7 @@ class TestCommand(Command):
         else:
             print "\nFront-end: Could not execute tests. Re-run tests from inside a client repo."
 
-        print("\033[94m\n"+("-"*70)+"\n")
-        print "SimpleSeer Test Summary:"
-        print "\n\tBack-end:\tFailed {} test(s).".format(failed)
-        if frontTests is -1:
-            print "\tFront-end: N/A"
+        if failed + frontTests is 0:
+            sys.exit(0)
         else:
-            print "\tFront-end:\tFailed {} test(s).\n\033[0m".format(frontTests)
+            sys.exit(1)
