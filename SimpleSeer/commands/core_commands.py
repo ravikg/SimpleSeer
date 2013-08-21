@@ -11,6 +11,8 @@ import itertools
 import warnings
 import re
 import pkg_resources
+import unittest
+import sys
 from path import path
 
 class CoreCommand(Command):
@@ -622,45 +624,49 @@ class TestCommand(Command):
         pass
 
     def run(self):
-        import unittest
+        logs = []
+        missed = 0        
         tests = path(pkg_resources.resource_filename('SimpleSeer', 'tests'))
-        passed = 0
-        failed = 0
-        missed = 0
+        
+        def cleanTestPath(path, nameOnly=False):
+            spl = path.split("/")
+            if nameOnly:
+                bld = spl[-2] + "." + spl[-1].split(".")[0]
+            else:
+                bld = spl[-2] + "/" + spl[-1]
+            return bld
 
-
-        allTests = glob.glob(tests / "*/test_*.py")
-        for test in allTests:
+        backTests = glob.glob(tests / "*/test_*.py")
+        for test in backTests:
             try:
-                _spl = test.split("/")
-                pkg = "SimpleSeer.tests.{}.{}".format(_spl[-2], _spl[-1].split(".")[0])
+                pkg = "SimpleSeer.tests.{}".format(cleanTestPath(test, True))
                 mod = __import__(pkg, globals(), locals(), ["Test"], -1) 
                 suite = unittest.TestLoader().loadTestsFromTestCase(mod.Test)
-                result = unittest.TextTestRunner(verbosity=2).run(suite)
+                result = unittest.TextTestRunner(verbosity=0).run(suite)
 
                 _count = len(result.errors + result.failures)
                 if _count is 0:
-                    print "\033[92mPassed tests in {}\033[0m".format(test)
-                    passed = passed + 1
+                    logs.append(u"\t\033[92m\u2714\033[0m {}".format(cleanTestPath(test)))
                 else:
-                    print "\033[93mFailed tests in {}\033[0m".format(test)
-                    failed = failed + 1
+                    logs.append(u"\t\033[91m\u2716\033[0m {}".format(cleanTestPath(test)))
             except Exception, e:
-                print(e)
+                logs.append("\t\033[93mUnexpected error in {}:".format(cleanTestPath(test)))
+                logs.append("\t")
+                sys.exc_info()[0], e, "\033[0m"
                 missed = missed + 1
 
         # TODO: Run the front end tests
         # ... will have to spin up web with --testing true
         # ... capture the exit code for result
-
-        print ""
-        print("-"*70)
-        print ""
-        print "SimpleSeer Tests completed:"
-        print "Passed {} of {} tests.".format(passed, len(allTests))
-        print "Could not complete {} test(s).".format(missed)
-        print ""
-        print("-"*70)
-        print ""
-
-
+        webhost = "http://127.0.0.1:9178/"
+        bootstrap = tests / "run-jasmine.js"
+        #simpleseer --config-override="{web: {address: '127.0.0.1:9178'}}" web --test=1
+        
+        print("\n"+("-"*70)+"\n")
+        print "SimpleSeer Test Results:"
+        if missed > 0:
+            print "\t[ Could not complete {} test(s). ]".format(missed)
+        print "\nBack-end:"
+        print "\n".join(logs)
+        print "\nFront-end:"
+        frontTests = subprocess.call(["phantomjs", bootstrap, webhost + "/testing"])
