@@ -10,7 +10,7 @@ class TestMongo(unittest.TestCase):
         "master": ["mongod", "--dbpath=/tmp/master", "--logpath=/tmp/master/mongod.log", "--port=27020", "--nojournal", "--noprealloc", "--oplogSize=100", "--replSet=rs0"]
     }
 
-    mongo_settings = {"host": "127.0.0.1", "port": 27020, "replicaSet": "rs0", "read_preference": 2}
+    mongo_settings = {"host": "127.0.0.1:27019", "port":27019, "replicaSet": "rs0", "read_preference": 3}
 
     def setUp(self):
         self.dbs = DBtools(dbs=self.dbcommands)
@@ -27,9 +27,12 @@ class TestMongo(unittest.TestCase):
         resp = self.dbs.init_replset()
         resp_ok = resp.get('ok',0)
         self.assertEqual(resp_ok, 1.0)
+        time.sleep(20)
         self.dbs.kill_mongo("master")
+        time.sleep(20)
         self.seers.spinup_seer('web',config_override={"mongo":self.mongo_settings})
         self.seers.spinup_seer('olap',config_override={"mongo":self.mongo_settings})
+
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestMongo)
 unittest.TextTestRunner(verbosity=2).run(suite)
