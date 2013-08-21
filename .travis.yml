@@ -67,7 +67,7 @@ before_script:
   - "sudo pip install gevent-socketio==0.3.5-beta"
   - "sudo apt-get install phantomjs"
   - "mkdir -p /tmp/mongo;wget http://fastdl.mongodb.org/linux/mongodb-linux-x86_64-2.2.0.tgz -O /tmp/mongodb-linux-x86_64-2.2.0.tgz;sudo tar zxvf /tmp/mongodb-linux-x86_64-2.2.0.tgz -C /tmp/mongo;sudo cp /tmp/mongo/mongodb-linux-x86_64-2.2.0/bin/* /usr/local/bin/;sudo mkdir -p /var/lib/mongodb;sudo mkdir -p /var/log/mongodb;sudo cp ./SimpleSeer/etc/mongodb.conf /etc/"
-  - "cd ../SimpleSeer; sudo python setup.py develop; cd ../testing"
+  - "cd ../sightmachine/SimpleSeer; sudo python setup.py develop; cd ../testing"
   - "cd SeerCloud; sudo python setup.py develop; cd ../"
   - "sudo simpleseer deploy"
   - "sudo mongod --fork --config /etc/mongodb.conf"
