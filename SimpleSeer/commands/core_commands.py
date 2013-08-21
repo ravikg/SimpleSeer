@@ -202,6 +202,14 @@ class MaintenanceCommand(Command):
             print "Interrupted by user"
 
 
+class ModBusCommand(Command):
+    use_gevent = False
+
+    '''Modbus'''
+    def run(self):
+        from SimpleSeer.modbus import ModBusService
+        ModBusService().start(verbose=True)
+
 class ScrubCommand(Command):
     use_gevent = False
     def __init__(self, subparser):

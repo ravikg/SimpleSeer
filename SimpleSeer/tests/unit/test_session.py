@@ -29,7 +29,7 @@ class Test(unittest.TestCase):
         # MongoDB no replset, forcemongomaster=false
         # This mongoengine connection does not check if it is master/slave so it should never raise an exception.
         try:
-            shutil.rmtree('/tmp/slave')
+            shutil.rmtree('/tmp/slave', ignore_errors=True)
             mkdir_p('/tmp/slave')
             _slave_options = _mongod[0].split()
             _mongod_slave = Popen(_slave_options, stdin=PIPE, stdout=PIPE, stderr=PIPE)
@@ -47,7 +47,7 @@ class Test(unittest.TestCase):
         # an exception. Because the mongo instance is being initiated with replset and the connection is happening
         # within ~10 seconds, it should responsd with an db.command('isMaster') value of false 
         try:
-            shutil.rmtree('/tmp/master')
+            shutil.rmtree('/tmp/master', ignore_errors=True)
             mkdir_p('/tmp/master')
             _master_options = _mongod[1].split()
             _mongod_master = Popen(_master_options, stdin=PIPE, stdout=PIPE, stderr=PIPE)
@@ -62,6 +62,9 @@ class Test(unittest.TestCase):
 
         # Close the mongod processes
         _mongod_slave.kill()
-        shutil.rmtree('/tmp/slave')
+        shutil.rmtree('/tmp/slave', ignore_errors=True)
         _mongod_master.kill()
-        shutil.rmtree('/tmp/master')
+        shutil.rmtree('/tmp/master', ignore_errors=True)
+
+if __name__ == '__main__':
+    unittest.main()
