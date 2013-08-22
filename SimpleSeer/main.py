@@ -53,6 +53,7 @@ def main():
     parser.add_argument('-c', '--config', dest='config', default='.')
     parser.add_argument('-p', '--profile', action='store_true')
     parser.add_argument('--profile-heap', action='store_true')
+    parser.add_argument('--config-override', dest='config_override', default="{}")
 
     subparsers = parser.add_subparsers(title='subcommands',
             description='valid subcommands', help = argparse.SUPPRESS)
@@ -71,6 +72,7 @@ def main():
 
     # parse args
     options = parser.parse_args()
+    options.config_override = eval(options.config_override)
     options.subcommand.configure(options)
 
     if options.profile:
