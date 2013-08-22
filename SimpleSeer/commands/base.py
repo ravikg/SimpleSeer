@@ -39,6 +39,28 @@ class Command(object):
         '''Actually run the command'''
         raise NotImplementedError, 'run'
 
+    def heartbeat(self, name=False, pongfunc=False):
+        from SimpleSeer.realtime import ChannelManager
+        from SimpleSeer.base import jsondecode
+
+        def pong(msg):
+            #time.sleep(21)
+            message = jsondecode(msg.body)
+            message['name'] = name
+            message['status'] = True
+            message['message'] = 'pong'
+            message['timestamp_pong'] = time.time()
+            cm.publish('heartbeat_pong/', message)
+
+        if not pongfunc:
+            pongfunc = pong
+
+        if not name:
+            name = self.__class__.__name___
+
+        cm = ChannelManager(shareConnection = False)
+        monitor = cm.subscribe('heartbeat_ping/', pongfunc, async=True)
+
     def _configure_logging(self):
         import logging
         import logging.config

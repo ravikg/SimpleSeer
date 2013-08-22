@@ -70,6 +70,9 @@ class WebCommand(Command):
         Inspection.register_plugins('seer.plugins.inspection')
         Measurement.register_plugins('seer.plugins.measurement')
 
+        # Subscribe to heartbeat
+        self.heartbeat(name="web")
+
         db = mongoengine.connection.get_db()
         # Ensure indexes created for filterable fields
         # TODO: should make this based on actual plugin params or filter data
