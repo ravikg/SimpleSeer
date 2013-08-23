@@ -662,9 +662,9 @@ class TestCommand(Command):
                     failed = failed + 1
             except Exception, e:
                 logs.append(u"\t\033[91m\u2716\033[0m {}".format(cleanTestPath(test)))
-                print("\t\033[93mUnexpected error in {}:".format(cleanTestPath(test)))
-                print("\t")
+                print("\t\033[93mUnexpected error in {}\033[0m:".format(cleanTestPath(test)))
                 print(sys.exc_info()[0], e, "\033[0m")
+                print("")
                 missed = missed + 1
         
         print("\n"+("-"*70)+"\n")
@@ -682,7 +682,7 @@ class TestCommand(Command):
 
             client = os.getcwd().split("/")[-1]
             bootstrap = tests / "run-jasmine.js"
-            webhost = "http://127.0.0.1:9178/"
+            webhost = "http://127.0.0.1:9178"
             config = "{'web': {'address': '127.0.0.1:9178', 'static': {'/': '%s/static'}}}" % client
             seers = SeerInstanceTools()
 
