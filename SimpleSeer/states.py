@@ -7,6 +7,8 @@ from worker import Foreman
 import gevent
 import signal
 
+from SimpleSeer import Session
+
 from . import models as M
 from . import util
 from .base import jsondecode, jsonencode
@@ -150,12 +152,12 @@ class Core(object):
             self.schedule(frame, inspections)
             if timeout is not None:
                 def onTimeout(signum, frame):
-                    fm._useWorkers = False
-                    Session().disable_workers = True
+                    self._useWorkers = False
+                    Session.disable_workers = True
                     log.warn("Worker timed out. Disabling workers")
                 signal.signal(signal.SIGALRM, onTimeout)
                 signal.alarm(timeout)
-                
+               
         features = [ feat for feat in self._queue[frame.id].pop('features') ]
 
         if timeout is not None:
