@@ -11,6 +11,8 @@ import itertools
 import warnings
 import re
 import pkg_resources
+import unittest
+import sys
 from path import path
 
 class CoreCommand(Command):
@@ -55,7 +57,7 @@ class WebCommand(Command):
 
     def __init__(self, subparser):
         subparser.add_argument('--procname', default='web', help='give each process a name for tracking within session')
-        subparser.add_argument('--test', default=None, help='Run testing suite')
+        subparser.add_argument('--test', default=None, help='Run testing suite (use: --test=1)')
 
 
     def run(self):
@@ -618,43 +620,81 @@ class UserCommand(Command):
 
 
 class TestCommand(Command):
-    ''' Run the front and back end tests for SimpleSeer. '''
+    ''' Run the front-end and back-end tests for SimpleSeer. '''
 
     def __init__(self, subparser):
+        # TODO: Add support for optional tld to search 
+        # for tests. (unit|functional|integration)   
+
+        # TODO: Add optional verbosity argument. Try to 
+        # capture the stderr and stdout of the subprocess
+        # calls. (Doesnt seem to be possible to swallow most
+        # of what we would want to hide, though..)
         pass
 
     def run(self):
-        import unittest
+        logs = []
+        missed = 0     
+        failed = 0   
         tests = path(pkg_resources.resource_filename('SimpleSeer', 'tests'))
-        passed = 0
-        failed = 0
-        total = 0
-        missed = 0
+        
+        def cleanTestPath(path, nameOnly=False):
+            spl = path.split("/")
+            if nameOnly:
+                bld = spl[-2] + "." + spl[-1].split(".")[0]
+            else:
+                bld = spl[-2] + "/" + spl[-1]
+            return bld
 
-        for test in glob.glob(tests / "*/test_*.py"):
+        backTests = glob.glob(tests / "*/test_*.py")
+        for test in backTests:
             try:
-                _spl = test.split("/")
-                pkg = "SimpleSeer.tests.{}.{}".format(_spl[-2], _spl[-1].split(".")[0])
+                pkg = "SimpleSeer.tests.{}".format(cleanTestPath(test, True))
                 mod = __import__(pkg, globals(), locals(), ["Test"], -1) 
                 suite = unittest.TestLoader().loadTestsFromTestCase(mod.Test)
                 result = unittest.TextTestRunner(verbosity=0).run(suite)
 
                 _count = len(result.errors + result.failures)
                 if _count is 0:
-                    print "\033[92mPassed tests in {}\033[0m".format(test)
-                    passed = passed + 1
+                    logs.append(u"\t\033[92m\u2714\033[0m {}".format(cleanTestPath(test)))
                 else:
-                    print "\033[93mFailed tests in {}\033[0m".format(test)
+                    logs.append(u"\t\033[91m\u2716\033[0m {}".format(cleanTestPath(test)))
                     failed = failed + 1
-                total = total + 1
-            except:
+            except Exception, e:
+                logs.append(u"\t\033[91m\u2716\033[0m {}".format(cleanTestPath(test)))
+                print("\t\033[93mUnexpected error in {}\033[0m:".format(cleanTestPath(test)))
+                print(sys.exc_info()[0], e, "\033[0m")
+                print("")
                 missed = missed + 1
+        
+        print("\n"+("-"*70)+"\n")
+        print "SimpleSeer Test Results:"
+        if missed > 0:
+            print "\t[ Could not complete {} test(s). ]".format(missed)
+        print "\nBack-end:"
+        print "\n".join(logs)
 
-        print ""
-        print("*"*80)
-        print "SimpleSeer Tests completed:"
-        print "Passed {} of {} tests.".format(passed, total)
-        print "Could not complete {} test(s).".format(missed)
+        # Check to see if we are in a client
+        # repo. If so, we can run the front
+        # end tests.
+        if os.path.exists("simpleseer.cfg"):
+            from SimpleSeer.tests.tools.seer import SeerInstanceTools
 
+            client = os.getcwd().split("/")[-1]
+            bootstrap = tests / "run-jasmine.js"
+            webhost = "http://127.0.0.1:9178"
+            config = "{'web': {'address': '127.0.0.1:9178', 'static': {'/': '%s/static'}}}" % client
+            seers = SeerInstanceTools()
 
+            print "\nFront-end:"
 
+            seers.spinup_seer('web', config_override=config, pipe=open("/dev/null"))
+            frontTests = subprocess.call(["phantomjs", bootstrap, webhost + "/testing"])
+            seers.kill_seer('web')
+        else:
+            print "\nFront-end: Could not execute tests. Re-run tests from inside a client repo."
+
+        if failed + frontTests is 0:
+            sys.exit(0)
+        else:
+            sys.exit(1)
