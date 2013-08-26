@@ -33,3 +33,6 @@ cached.js
 */templates/seer_index.html
 */templates/login.html
 */templates/testing.html
+
+# Google Chrome
+libpeerconnection.log
