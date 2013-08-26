@@ -3,7 +3,7 @@ import time
 from SimpleSeer.tests.tools.db import DBtools
 from SimpleSeer.tests.tools.seer import SeerInstanceTools
 
-class TestMongo(unittest.TestCase):
+class Test(unittest.TestCase):
     dbcommands = {
         "slave": ["mongod", "--dbpath=/tmp/slave", "--logpath=/tmp/slave/mongod.log", "--port=27019", "--nojournal", "--noprealloc", "--oplogSize=100", "--replSet=rs0"],
         "arbiter": ["mongod", "--dbpath=/tmp/arbiter", "--logpath=/tmp/arbiter/mongod.log", "--port=27018", "--nojournal", "--noprealloc", "--oplogSize=100", "--replSet=rs0"],
@@ -32,7 +32,3 @@ class TestMongo(unittest.TestCase):
         time.sleep(20)
         self.seers.spinup_seer('web',config_override={"mongo":self.mongo_settings})
         self.seers.spinup_seer('olap',config_override={"mongo":self.mongo_settings})
-
-
-suite = unittest.TestLoader().loadTestsFromTestCase(TestMongo)
-unittest.TextTestRunner(verbosity=2).run(suite)

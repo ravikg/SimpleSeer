@@ -1,5 +1,5 @@
 import time
-
+import unittest
 import vpx
 import numpy as np
 from SimpleCV import Camera

@@ -185,6 +185,12 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
 
     def tolerance(self, frame, results):
 
+        function_ref = self.get_plugin(self.method)
+        hasToleranceFunction = hasattr(function_ref, 'tolerance')
+        if hasToleranceFunction:
+            return function_ref.tolerance(frame, results)
+            
+
         for result in results:
             if result.measurement_name == self.name:
                 testField = None

@@ -22,9 +22,9 @@ class SeerInstanceTools(object):
         self.seer_instance[instance].kill()
         del self.seer_instance[instance]
 
-    def spinup_seer(self, type, config='./config/test_simpleseer.cfg', config_override={} ):
+    def spinup_seer(self, type, config='./config/test_simpleseer.cfg', config_override={}, pipe=None):
         args = ['simpleseer','--config-override={}'.format(config_override),type]
-        self.seer_instance[type] = subprocess.Popen(args)
+        self.seer_instance[type] = subprocess.Popen(args, stdout=pipe, stderr=pipe)
         time.sleep(10)
         #(stdout, stderr) = self.seer_instance[type].communicate()
         #print stdout, stderr

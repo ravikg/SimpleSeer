@@ -72,7 +72,10 @@ def main():
 
     # parse args
     options = parser.parse_args()
-    options.config_override = eval(options.config_override)
+    if options.config_override:
+        options.config_override = eval(options.config_override)
+    else:
+        options.config_override = {}
     options.subcommand.configure(options)
 
     if options.profile:
