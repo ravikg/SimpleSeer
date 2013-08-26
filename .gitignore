@@ -1,11 +1,35 @@
-*.pyc
-*.log
-*_log
-*.box
-Vagrant*
-default.cfg
-SimpleSeer/static/public/*
-SimpleSeer.egg-info/*
-
+# Python
+*.py[cod]
+*.egg
+*.egg-info
+dist
+build
+eggs
+parts
+var
+sdist
+develop-eggs
+.installed.cfg
+lib64
+pip-log.txt
 .coverage
-*.profile
+.tox
+nosetests.xml
+*.mo
+
+# Coffee / JavaScript
+*/static/
+*/brunch_src/app/assets/img/seer/
+*/brunch_src/app/assets/img/cloud/
+*/brunch_src/vendor/javascripts/seer.js
+*/brunch_src/vendor/javascripts/seertest.js
+*/brunch_src/vendor/javascripts/cloud.js
+*/brunch_src/vendor/javascripts/cloudtest.js
+*/brunch_src/vendor/stylesheets/seer.css
+*/brunch_src/vendor/stylesheets/cloud.css
+cached.js
+
+# Templates
+*/templates/seer_index.html
+*/templates/login.html
+*/templates/testing.html
