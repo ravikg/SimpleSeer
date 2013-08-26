@@ -1,4 +1,3 @@
-
 from celery import Celery
 from celery import task
 from celery.exceptions import RetryTaskError

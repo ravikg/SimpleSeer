@@ -7,6 +7,8 @@ from worker import Foreman
 import gevent
 import signal
 
+from SimpleSeer import Session
+
 from . import models as M
 from . import util
 from .base import jsondecode, jsonencode
@@ -48,6 +50,7 @@ class Core(object):
         self.log = logging.getLogger(__name__)
         self._mem_prof_ticker = 0
         self._channel_manager = ChannelManager(shareConnection=False)
+        self._subscriptions = []
 
         for cinfo in config.cameras:
             cam = StillCamera(**cinfo)
@@ -150,12 +153,12 @@ class Core(object):
             self.schedule(frame, inspections)
             if timeout is not None:
                 def onTimeout(signum, frame):
-                    fm._useWorkers = False
-                    Session().disable_workers = True
+                    self._useWorkers = False
+                    Session.disable_workers = True
                     log.warn("Worker timed out. Disabling workers")
                 signal.signal(signal.SIGALRM, onTimeout)
                 signal.alarm(timeout)
-                
+               
         features = [ feat for feat in self._queue[frame.id].pop('features') ]
 
         if timeout is not None:
@@ -246,7 +249,9 @@ class Core(object):
 
     def on(self, state_name, event_name):
         state = self.state(state_name)
-        self.subscribe(event_name)
+        if event_name not in self._subscriptions:
+            self.subscribe(event_name)
+            self._subscriptions.append(event_name)
         return state.on(event_name)
 
     def run(self, audit=False):
