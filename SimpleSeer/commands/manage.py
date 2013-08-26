@@ -70,9 +70,11 @@ class DeployCommand(ManageCommand):
 
     deploy_local_sub_reqs = ["mongodb", "rabbitmq"]
     deploy_local_seer_reqs = ["core", "olap", "worker", "web"]
+    deploy_local_kiosk_reqs = ["browser"]
 
     deploy_skybox_sub_reqs = ["mongodb", "rabbitmq"]
     deploy_skybox_seer_reqs = ["olap", "worker", "web"]
+    deploy_skybox_kiosk_reqs = []
 
     def __init__(self, subparser):
         subparser.add_argument("type", help="Deployment Type (local, skybox)", default = "local", nargs = '?')
@@ -105,14 +107,18 @@ class DeployCommand(ManageCommand):
 
         subsystem_reqs = self.deploy_local_sub_reqs
         simpleseer_reqs = self.deploy_local_seer_reqs
+        kiosk_reqs = self.deploy_local_kiosk_reqs
         if self.options.type == "skybox":
             subsystem_reqs = self.deploy_skybox_sub_reqs
             simpleseer_reqs = self.deploy_skybox_seer_reqs
+            kiosk_reqs = self.deploy_skybox_kiosk_reqs
 
         supervisor_groups  = "[group:subsystem]"
         supervisor_groups += "\nprograms={}".format(','.join(subsystem_reqs))
         supervisor_groups += "\n\n[group:seer]"
         supervisor_groups += "\nprograms={}".format(','.join(simpleseer_reqs))
+        supervisor_groups += "\n\n[group:kiosk]"
+        supervisor_groups += "\nprograms={}".format(','.join(kiosk_reqs))
 
         print "Linking %s to %s" % (self.options.directory, link)
         os.symlink(self.options.directory, link)
@@ -139,7 +145,7 @@ class DeployCommand(ManageCommand):
         print "Linking %s to %s" % (src_supervisor, supervisor_link)
         os.symlink(src_supervisor, supervisor_link)
 
-        for requirement in (subsystem_reqs + simpleseer_reqs + ['group']):
+        for requirement in (subsystem_reqs + simpleseer_reqs + kiosk_reqs + ['group']):
             # Order helps order the program files so that
             # the 'group' file is the last to be imported
             # to supervisor.
@@ -170,6 +176,8 @@ class ServiceCommand(ManageCommand):
     def _get_group(self, service):
         if service in ['mongodb', 'broker']:
             return 'subsystem'
+        elif service in ['browser']:
+            return 'kiosk'
         else:
             return 'seer'
 
