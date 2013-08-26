@@ -94,3 +94,11 @@ class StrictJSON(fev.FancyValidator):
         return retVal
     def _from_python(self, value, state):
         return value
+
+class ReferenceFieldList(fev.FancyValidator):
+
+    def _to_python(self, value, state):
+        return value
+
+    def _from_python(self, value, state):
+        return value

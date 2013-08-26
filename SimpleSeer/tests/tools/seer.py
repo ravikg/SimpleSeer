@@ -28,3 +28,4 @@ class SeerInstanceTools(object):
         time.sleep(10)
         #(stdout, stderr) = self.seer_instance[type].communicate()
         #print stdout, stderr
+    
