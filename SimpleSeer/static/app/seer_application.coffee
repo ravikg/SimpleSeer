@@ -64,6 +64,12 @@ module.exports = SeerApplication =
       @socket.on "message:alert/", window.SimpleSeer._serveralert
       @socket.emit 'subscribe', 'alert/'
 
+      host = window.location.host.split(":")
+
+      if host[0] is "127.0.0.1" or host[0] is "localhost"
+        @socket.on 'message:heartbeat_ping/', window.SimpleSeer._heartbeat_pong
+        @socket.emit 'subscribe', 'heartbeat_ping/'
+
     m = require 'collections/measurements'
     @measurements = new m()
     @measurements.fetch()
@@ -117,6 +123,15 @@ module.exports = SeerApplication =
   # with the specified message and severity.
   _serveralert: (msg) ->
     window.SimpleSeer.alert(msg['data']['message'], msg['data']['severity'])
+
+  _heartbeat_pong: (msg)->
+    data = msg['data']
+    timestamp = new moment().unix()
+    data['name'] = 'chrome'
+    data['status'] = true
+    data['message'] = 'pong'
+    data['timestamp_pong'] = timestamp
+    @socket['namespaces']['/rt'].emit('publish', 'heartbeat_pong/', JSON.stringify(data))
 
   # Returns the loading status of the application.
   isLoading: =>

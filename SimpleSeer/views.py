@@ -331,7 +331,11 @@ def settings():
 
 @route('/_status', methods=['GET', 'POST'])
 def status():
-    return 'ok'
+    from SeerCloud.commands.monitor import Health
+    response = {'message':'default', 'status': 200}
+    response = Health().health()
+    resp = make_response(response['message'], response['status'])
+    return resp
 
 @route('/_statusJSON', methods=['GET', 'POST'])
 def statusJSON():
