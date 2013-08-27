@@ -113,17 +113,9 @@ class ChannelManager(object):
             channel.queue_bind(exchange=exchange, queue=queue_name)
             channel.basic_consume(callback=callback, queue=queue_name)
             return channel
-            
-        channel = setup_channel()
 
-        if async:
-            # Start thread for the subscription
-            st = SubscribeThread(channel)
-            st.start()
-            # Returns the thread so you can kill the thread from the calling function
-            return st
-        else:
-            # Not async, lets do some blocking!
+
+        def channel_wait(channel):
             while True:
                 try:
                     channel.wait()
@@ -131,6 +123,18 @@ class ChannelManager(object):
                     log.warn('Socket error: {}.  Will try to reconnect.'.format(e))
                     conn = self.connect()
                     channel = setup_channel()
+            
+        channel = setup_channel()
+
+        if async:
+            # Start thread for the subscription
+            thread = SubscribeThread(channel)
+            thread.daemon = True
+            thread.start()
+            return thread
+        else:
+            # Blocking channel.wait()
+            channel_wait(channel)
         
     def rpcSendRequest(self, workQueue, request):
         from random import choice
