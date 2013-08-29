@@ -576,8 +576,10 @@ class ImportImagesCommand(Command):
                 else:
                     self.log.info("{} already imported".format(f))
                     continue
-
-            self.import_frame(f, metadata, template)
+            try:
+                self.import_frame(f, metadata, template)
+            except Exception as e:
+                self.log.warning("Invalid file: {}, {}".format(f, e))
 
 class UserCommand(Command):
     '''Create a new user'''

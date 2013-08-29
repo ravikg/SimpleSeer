@@ -127,7 +127,8 @@ class ModelHandler(object):
         obj = self._get_object(id)
         to_validate = {}
         for x in self.schema.fields.keys():
-            to_validate[x] = obj[x]
+            if hasattr(obj, x):
+                to_validate[x] = obj[x]
 
         return 200, self.schema.from_python(to_validate)
 
