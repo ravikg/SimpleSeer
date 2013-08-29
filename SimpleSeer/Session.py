@@ -36,11 +36,8 @@ class Session():
             return  #return the existing shared context
         self.config_override = config_override
 
-        config_dict = self.read_config(yaml_config_dir)
-        for k,v in config_override.iteritems():
-            config_dict[k] = v
-        log.info("Loaded configuration from %s" % config_dict['yaml_config'])        
-        self.configure(config_dict)
+        self.reload_config(yaml_config_dir, config_override)
+
         if not self.procname:
             self.procname = procname
     
@@ -49,6 +46,20 @@ class Session():
         self.appname = self.database
         self._known_triggers = {}
     
+    def reload_config(self, yaml_config_dir = '.', config_override={}):
+        try:
+            db = mongoengine.connection.get_db()
+            log.info("Disconnecting from db")
+            mongoengine.connection.disconnect()
+        except mongoengine.ConnectionError:
+            pass
+
+        config_dict = self.read_config(yaml_config_dir)
+        for k,v in config_override.iteritems():
+            config_dict[k] = v
+        log.info("Loaded configuration from %s" % config_dict['yaml_config'])        
+        self.configure(config_dict)
+
     @staticmethod
     def read_config(yaml_config_dir='.', yaml_config_file="simpleseer.cfg"):
         yaml_config = path(yaml_config_dir) / yaml_config_file
@@ -81,7 +92,7 @@ class Session():
             master = self.mongo.pop("master")
             mongoengine.connect(self.database, **master)
         mongoengine.connect(self.database, **self.mongo)
-        db = mongoengine.connection.get_db()
+        db = mongoengine.connection.get_db(**{"reconnect":True})
 
         if self.forcemongomaster:
             if db.command('isMaster')['ismaster']:

@@ -55,3 +55,9 @@ class DBtools(object):
         resp = conn.admin.command("replSetInitiate",self.replConfig)
         time.sleep(postsleep)
         return resp
+
+    def connect(self,config_override):
+        from SimpleSeer import Session
+        s = Session.Session()
+        s.reload_config(config_override=config_override)
+

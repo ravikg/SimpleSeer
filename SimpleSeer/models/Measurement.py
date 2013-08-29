@@ -12,7 +12,7 @@ import formencode as fe
 from datetime import datetime
 
 from SimpleSeer import validators as V
-
+from Tolerance import Tolerance
 import logging
 log = logging.getLogger()
 
@@ -51,7 +51,8 @@ class MeasurementSchema(fes.Schema):
     fixdig = fev.UnicodeString(if_missing=2)
     inspection = V.ObjectId(not_empty=True)
     featurecriteria = V.JSON(if_empty=None, if_missing=None)
-    tolerances = fev.Set(if_empty=[])
+    #tolerances = fev.Set(if_empty=[])
+    tolerance_list = fev.Set(if_empty=[])
     updatetime = fev.UnicodeString()
     conditions = fev.Set(if_empty=[])
     booleans = fev.Set(if_empty=[])
@@ -87,7 +88,8 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
     fixdig = mongoengine.IntField(default=99)
     inspection = mongoengine.ObjectIdField(default=None)
     featurecriteria = mongoengine.DictField(default={})
-    tolerances = mongoengine.ListField(default=[])
+    #tolerances = mongoengine.ListField(default=[])
+    tolerance_list = mongoengine.ListField(mongoengine.ReferenceField('Tolerance', dbref=False, reverse_delete_rule=mongoengine.NULLIFY))
     updatetime = mongoengine.DateTimeField(default=None)
     conditions = mongoengine.ListField(default=[])
     booleans = mongoengine.ListField(default=[])
@@ -201,7 +203,7 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
 
                 result.state = 0
                 messages = []
-                for rule in self.tolerances:
+                for rule in self.tolerance_list:
                     if rule['criteria'].values()[0] == 'all' or (rule['criteria'].keys()[0] in frame.metadata and frame.metadata[rule['criteria'].keys()[0]] == rule['criteria'].values()[0]):
                         criteriaFunc = "testField %s %s" % (rule['rule']['operator'], rule['rule']['value'])
                         match = eval(criteriaFunc, {}, {'testField': testField})
@@ -295,8 +297,7 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
     def save(self, *args, **kwargs):
         from ..realtime import ChannelManager
         from ..Session import Session
-        
-        tolChange = '_changed_fields' in self and 'tolerances' in self._changed_fields
+        tolChange = '_changed_fields' in self and 'tolerance_list' in self._changed_fields
         
         # Optional parameter: skipDeps
         try:
