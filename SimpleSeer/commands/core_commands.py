@@ -628,14 +628,7 @@ class TestCommand(Command):
     ''' Run the front-end and back-end tests for SimpleSeer. '''
 
     def __init__(self, subparser):
-        # TODO: Add support for optional tld to search 
-        # for tests. (unit|functional|integration)   
-
-        # TODO: Add optional verbosity argument. Try to 
-        # capture the stderr and stdout of the subprocess
-        # calls. (Doesnt seem to be possible to swallow most
-        # of what we would want to hide, though..)
-        pass
+        subparser.add_argument("-t", "--type", dest="type", default="*", help="Which test suites to run [unit|functional|integration|web|all]")
 
     def run(self):
         logs = []
@@ -651,26 +644,33 @@ class TestCommand(Command):
                 bld = spl[-2] + "/" + spl[-1]
             return bld
 
-        backTests = glob.glob(tests / "*/test_*.py")
-        for test in backTests:
-            try:
-                pkg = "SimpleSeer.tests.{}".format(cleanTestPath(test, True))
-                mod = __import__(pkg, globals(), locals(), ["Test"], -1) 
-                suite = unittest.TestLoader().loadTestsFromTestCase(mod.Test)
-                result = unittest.TextTestRunner(verbosity=0).run(suite)
+        if self.options.type == "all":
+            self.options.type = "*"            
 
-                _count = len(result.errors + result.failures)
-                if _count is 0:
-                    logs.append(u"\t\033[92m\u2714\033[0m {}".format(cleanTestPath(test)))
-                else:
+        if self.options.type != "web":
+            pattern = "{}/test_*.py".format(self.options.type)
+            backTests = glob.glob(tests / pattern)
+            for test in backTests:
+                try:
+                    pkg = "SimpleSeer.tests.{}".format(cleanTestPath(test, True))
+                    mod = __import__(pkg, globals(), locals(), ["Test"], -1) 
+                    suite = unittest.TestLoader().loadTestsFromTestCase(mod.Test)
+                    result = unittest.TextTestRunner(verbosity=0).run(suite)
+
+                    _count = len(result.errors + result.failures)
+                    if _count is 0:
+                        logs.append(u"\t\033[92m\u2714\033[0m {}".format(cleanTestPath(test)))
+                    else:
+                        logs.append(u"\t\033[91m\u2716\033[0m {}".format(cleanTestPath(test)))
+                        failed = failed + 1
+                except Exception, e:
                     logs.append(u"\t\033[91m\u2716\033[0m {}".format(cleanTestPath(test)))
-                    failed = failed + 1
-            except Exception, e:
-                logs.append(u"\t\033[91m\u2716\033[0m {}".format(cleanTestPath(test)))
-                print("\t\033[93mUnexpected error in {}\033[0m:".format(cleanTestPath(test)))
-                print(sys.exc_info()[0], e, "\033[0m")
-                print("")
-                missed = missed + 1
+                    print("\t\033[93mUnexpected error in {}\033[0m:".format(cleanTestPath(test)))
+                    print(sys.exc_info()[0], e, "\033[0m")
+                    print("")
+                    missed = missed + 1
+        else:
+            logs.append("\tSkipped back end tests.")
         
         print("\n"+("-"*70)+"\n")
         print "SimpleSeer Test Results:"
@@ -682,22 +682,26 @@ class TestCommand(Command):
         # Check to see if we are in a client
         # repo. If so, we can run the front
         # end tests.
-        if os.path.exists("simpleseer.cfg"):
-            from SimpleSeer.tests.tools.seer import SeerInstanceTools
+        if self.options.type == "web" or self.options.type == "*":
+            if os.path.exists("simpleseer.cfg"):
+                from SimpleSeer.tests.tools.seer import SeerInstanceTools
 
-            client = os.getcwd().split("/")[-1]
-            bootstrap = tests / "run-jasmine.js"
-            webhost = "http://127.0.0.1:9178"
-            config = "{'web': {'address': '127.0.0.1:9178', 'static': {'/': '%s/static'}}}" % client
-            seers = SeerInstanceTools()
+                client = os.getcwd().split("/")[-1]
+                bootstrap = tests / "run-jasmine.js"
+                webhost = "http://127.0.0.1:9178"
+                config = "{'web': {'address': '127.0.0.1:9178', 'static': {'/': '%s/static'}}}" % client
+                seers = SeerInstanceTools()
 
-            print "\nFront-end:"
+                print "\nFront-end:"
 
-            seers.spinup_seer('web', config_override=config, pipe=open("/dev/null"))
-            frontTests = subprocess.call(["phantomjs", bootstrap, webhost + "/testing"])
-            seers.kill_seer('web')
+                seers.spinup_seer('web', config_override=config, pipe=open("/dev/null"))
+                frontTests = subprocess.call(["phantomjs", bootstrap, webhost + "/testing"])
+                seers.kill_seer('web')
+            else:
+                print "\nFront-end: Could not execute tests. Re-run tests from inside a client repo."
         else:
-            print "\nFront-end: Could not execute tests. Re-run tests from inside a client repo."
+            print "\nFront-end:\n\tSkipped front end tests."
+            frontTests = 0
 
         if failed + frontTests is 0:
             sys.exit(0)

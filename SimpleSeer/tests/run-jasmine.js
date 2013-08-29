@@ -65,7 +65,7 @@ page.open(system.args[1], function(status) {
                         console.log("\t\033[31m\u2716 Unexpected error occured. No tests ran.\033[0m")
                         return 1
                     } else {
-                        var tx = (count > 0 ? "\033[31m\u2716 " + count + " of " + total + " tests failed\033[0m" : "\033[32m\u2714 All tests passed\033[0m")
+                        var tx = (count > 0 ? "\033[31m\u2716 " + count + " of " + total + " web tests failed\033[0m" : "\033[32m\u2714 All web tests passed\033[0m")
                         console.log("\tTest Suite Finished (" + (end-start) + "ms)")
                         console.log("\t" + tx)
                         return count > 0 ? 0 : 1                        

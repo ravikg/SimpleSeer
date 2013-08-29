@@ -21,6 +21,15 @@ module.exports = SeerApplication =
     'shift':2
     'ctrl':4
 
+  staticwidgets: [
+    {
+      id: "seerLogin",
+      lib: "core/login",
+      menubar: "system-tray",
+      params: {icon: "/img/seer/login.png", label: "User", style: "inline"}
+    }
+  ]
+
   # Set up the application and include the
   # necessary modules. Configures the page
   # and
@@ -96,12 +105,6 @@ module.exports = SeerApplication =
         inNavigation: false
       }]
 
-  route: (route, name=false, callback= =>) ->
-    console.log route,name,callback
-    for r in Backbone.history.handlers
-      console.log r
-    @router.route route, name, callback
-
   _keyPress: (e) ->
     key = 0
     if e.altKey
@@ -164,7 +167,6 @@ module.exports = SeerApplication =
         if !message then return false
         _duplicate = false
 
-        #console.group(new Date()); console.log(message); console.groupEnd();
         #$(".alert-#{alert_type}").each (e,v)->
         #  if ($(v).data("message") == message) then _duplicate = true
 
