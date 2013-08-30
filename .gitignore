@@ -18,7 +18,6 @@ nosetests.xml
 *.mo
 
 # Coffee / JavaScript
-*/static/
 */brunch_src/app/assets/img/seer/
 */brunch_src/app/assets/img/cloud/
 */brunch_src/vendor/javascripts/seer.js
