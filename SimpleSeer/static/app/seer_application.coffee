@@ -73,6 +73,9 @@ module.exports = SeerApplication =
     m = require 'collections/measurements'
     @measurements = new m()
     @measurements.fetch()
+    tol = require 'collections/tolerance_list'
+    @tolerance_list = new tol()
+    @tolerance_list.fetch()
     t = require 'views/core/modal'
     @modal = new t()
 
