@@ -26,7 +26,15 @@ from ..util import LazyProperty
 class FrameSchema(fes.Schema):
     allow_extra_fields=True
     filter_extra_fields=True
+    capturetime = fev.UnicodeString(if_missing=None)
+    capturetime_epoch = fev.Int(if_empty=None, if_missing=None)
+    updatetime = fev.UnicodeString(if_missing=None)
+    localtz = fev.UnicodeString(if_missing='UTC')
     camera = fev.UnicodeString(if_missing='')
+    features = fev.Set(if_empty=[], if_missing=[])
+    results = fev.Set(if_empty=[], if_missing=[])
+    height = fev.Int(if_empty=0, if_missing=0)
+    width = fev.Int(if_empty=0, if_missing=0)
     metadata = V.JSON(if_empty={}, if_missing={})
     notes = fev.UnicodeString(if_empty="", if_missing="")
     #TODO, make this feasible as a formencode schema for upload

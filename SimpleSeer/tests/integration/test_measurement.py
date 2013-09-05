@@ -19,9 +19,9 @@ class TestMeasurement(unittest.TestCase):
         self.dbs = DBtools(dbs=self.dbcommands)
         self.dbs.spinup_mongo("master",10)
         self.dbs.connect(self.config_override)
-        #self.fm = Foreman()
         self.seers = SeerInstanceTools()
-        self.seers.spinup_seer('olap',config_override={"mongo":self.config_override})
+        self.seers.spinup_seer('worker',config_override=self.config_override)
+        self.seers.spinup_seer('olap',config_override=self.config_override)
 
     def tearDown(self):
         self.teardown_tolerance()
@@ -50,13 +50,18 @@ class TestMeasurement(unittest.TestCase):
 
 
     def test_tolerance_create(self):
+        print "done with spin up"
         self.setup_tolerance()
+        print "done with tolerance setup"
         # apply tolerance to measurement
         self.measurement.tolerance_list.append(self.tolerance)
+        print "done with tolerance append"
         self.measurement.save()
+        print "done with measurement save"
 
         # reload measurement from db
         self.measurement.reload()
+        print "done with measurement reload"
         print self.measurement
 
         ## check that tolerance is on tolerance_list

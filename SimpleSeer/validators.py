@@ -98,7 +98,17 @@ class StrictJSON(fev.FancyValidator):
 class ReferenceFieldList(fev.FancyValidator):
 
     def _to_python(self, value, state):
-        return value
+        retVal = []
+        for obj in value:
+            if obj.get('id',None) == None:
+                obj = self.ref_type(obj)
+                obj.save()
+                retVal.append(bson.ObjectId(obj['id']))
+            elif obj.get("_DBRef__id",None):
+                retVal.append(bson.ObjectId(obj['_DBRef__id']))
+            else:
+                retVal.append(bson.ObjectId(obj['id']))
+        return retVal
 
     def _from_python(self, value, state):
         return value

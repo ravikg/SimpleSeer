@@ -22,6 +22,7 @@ import logging
 log = logging.getLogger()
 
 class InspectionSchema(fes.Schema):
+    id = V.ObjectId(if_empty=None, if_missing=None)
     parent = V.ObjectId(if_empty=None, if_missing=None)
     name = fev.UnicodeString(not_empty=True)
     method = fev.UnicodeString(not_empty=True)
