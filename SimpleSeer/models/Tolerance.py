@@ -9,6 +9,7 @@ from SimpleSeer import validators as V
 from SimpleSeer.models.base import SimpleDoc
 
 class ToleranceSchema(fes.Schema):
+    id = fev.UnicodeString()
     measurement_id = fev.UnicodeString(not_empty=True)
     criteria = V.JSON(if_empty={}, if_missing={})
     rule = V.JSON(if_empty={}, if_missing={})

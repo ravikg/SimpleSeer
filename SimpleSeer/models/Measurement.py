@@ -42,6 +42,7 @@ class ResultValidator(fev.FancyValidator):
 
 
 class MeasurementSchema(fes.Schema):
+    id = V.ObjectId(if_empty=None, if_missing=None)
     name = fev.UnicodeString(not_empty=True) #TODO, validate on unique name
     label = fev.UnicodeString(if_missing=None)
     labelkey = fev.UnicodeString(if_missing=None)
@@ -52,7 +53,7 @@ class MeasurementSchema(fes.Schema):
     inspection = V.ObjectId(not_empty=True)
     featurecriteria = V.JSON(if_empty=None, if_missing=None)
     tolerances = fev.Set(if_empty=[])
-    tolerance_list = fev.Set(if_empty=[])
+    tolerance_list = V.ReferenceFieldList(ref_type=Tolerance)
     updatetime = fev.UnicodeString()
     conditions = fev.Set(if_empty=[])
     booleans = fev.Set(if_empty=[])
@@ -300,7 +301,7 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
         from ..realtime import ChannelManager
         from ..Session import Session
         tolChange = '_changed_fields' in self and 'tolerance_list' in self._changed_fields
-        
+
         # Optional parameter: skipDeps
         try:
             skipDeps = kwargs.pop('skipDeps')
