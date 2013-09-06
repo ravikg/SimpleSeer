@@ -1,4 +1,4 @@
-<tr id="{{id}}" class="tr">
+<tr id="{{id}}" class="tr" {{#if this.data-part}}data-part="{{this.data-part}}"{{/if}}>
 {{#each values}}
   <td class="td {{this.class}}" {{#if this.title}}title="{{this.title}}"{{/if}}>{{#if this.value.html}}<span {{#if this.title}}title="{{this.title}}"{{/if}}>{{#if this.href}}<a href="#{{this.href}}">{{/if}}{{{this.value.html}}}</span>{{#if this.href}}</a>{{/if}}{{/if}}
 {{/each}}

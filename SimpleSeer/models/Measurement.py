@@ -42,7 +42,7 @@ class ResultValidator(fev.FancyValidator):
 
 
 class MeasurementSchema(fes.Schema):
-    id = V.ObjectId(if_empty=None, if_missing=None)
+    id = V.ObjectId()
     name = fev.UnicodeString(not_empty=True) #TODO, validate on unique name
     label = fev.UnicodeString(if_missing=None)
     labelkey = fev.UnicodeString(if_missing=None)
