@@ -14,11 +14,14 @@ module.exports = class ImageList extends SubView
     
     options = @options.parent.options.widget
     @blackList = {fields:[], metadata:[]}
+    @blocks = []
     if options.blackList
       if options.blackList.fields
         @blackList.fields = options.blackList.fields
       if options.blackList.metadata
         @blackList.metadata = options.blackList.metadata
+    if options.blocks
+      @blocks = options.blocks
         
     bindFilter = Application.context[@options.parent.dashboard.options.parent.options.context].filtercollection
     
@@ -49,4 +52,5 @@ module.exports = class ImageList extends SubView
   getRenderData: =>
     'blackList': @blackList
     'records': @filtercollection.models
+    'blocks': @blocks
 
