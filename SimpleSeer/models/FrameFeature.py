@@ -11,8 +11,12 @@ import mongoengine.base
 
 import SimpleCV
 
-from .base import SimpleEmbeddedDoc, SONScrub
+from .base import SimpleEmbeddedDoc, SimpleDoc, SONScrub
 from SimpleSeer.base import mebasedict_handle, mebaselist_handle
+from SimpleSeer.base import jsonencode, jsondecode
+
+from datetime import datetime
+
 
 def _numpy_save(son, collection):
     sio = StringIO()
@@ -196,3 +200,65 @@ class FrameFeature(SimpleEmbeddedDoc, mongoengine.EmbeddedDocument):
             p1x,p1y = p2x,p2y
 
         return inside  
+        
+
+class FeatureFactory(SimpleDoc, mongoengine.Document):
+    
+    inspid = mongoengine.ObjectIdField()
+    frameid = mongoengine.ObjectIdField()
+    featureversion = mongoengine.FloatField(default=0.0)
+    ts = mongoengine.DateTimeField()
+    inspparams = mongoengine.DictField(default={})
+    # all the vals are json encoded, so create a separate property that will encode/decode this variable
+    _featuredict = mongoengine.DictField(default={})
+    
+    # Unpack the manually json encoded fields
+    @property
+    def featuredict(self):
+        return { key: jsondecode(val) for key, val in self._featuredict.iteritems() }
+        
+    @featuredict.setter
+    def featuredict(self, values):
+        tmp = {}
+        # not all features json encode properly when left to mongo, try it manually
+        for key, val in values.iteritems() :
+            try:
+                tmp[key] = jsonencode(val)
+            except:
+                print 'Feature factory could not json encode {}.  Skipping.'.format(key)
+            
+        self._featuredict = tmp
+    
+    def __call__(self, frame, inspection):
+        
+        plugin = inspection.get_plugin(inspection.method)
+        image = frame.image
+        feats = plugin(image)
+        
+        featureDict = {}
+        for d in dir(plugin):
+            # No functions, no hidden fields
+            if not hasattr(getattr(plugin, d), '__call__') and d[0] != '_':
+                featureDict[d] = getattr(plugin, d)
+    
+        self.inspid = inspection.id
+        self.frameid = frame.id
+        self.featuredict = featureDict
+        self.inspparams = inspection.parameters
+        self.ts = datetime.utcnow()
+        if feats:
+            if hasattr(feats[0], 'VERSION'):
+                self.featureversion = feats[0].VERSION
+            else:
+                self.featureversion = 0.0
+        else:
+            self.featureversion = -1
+            
+        if inspection.parameters.get('saveFactory', False):
+            self.save()
+    
+        if inspection.parameters.get('returnFactory', False):
+            return feats, self.featuredict
+        else:
+            return feats
+    
