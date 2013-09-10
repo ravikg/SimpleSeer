@@ -1,39 +1,42 @@
-application = require 'application'
-template = require './templates/imageList'
-SubView = require 'views/core/subview'
-FilterCollection = require "collections/core/filtercollection"
-Frame = require "models/frame"
+[Application, Template, SubView, FilterCollection, Frame] = [
+  require('application'),
+  require('./templates/imageList'),
+  require('views/core/subview'),
+  require("collections/core/filtercollection"),
+  require("models/frame")
+]
 
-module.exports = class imageList extends SubView
-  template:template
+module.exports = class ImageList extends SubView
+  template: Template
     
   initialize: =>
-    @blackList = {fields:[], metadata:[]}
-    if @options.parent.options.widget.blackList
-      if @options.parent.options.widget.blackList.fields
-        @blackList.fields = @options.parent.options.widget.blackList.fields
-      if @options.parent.options.widget.blackList.metadata
-        @blackList.metadata = @options.parent.options.widget.blackList.metadata
-    bindFilter = application.context[@options.parent.dashboard.options.parent.options.context].filtercollection
-    @filtercollection = new FilterCollection([],{bindFilter:bindFilter,model:Frame,clearOnFetch:false})
-    #@filtercollection.on "reset", @addObjs
     super()
-
-    @filtercollection.setParam 'limit', @options.parent.options.widget.custom_limit 
-    @filtercollection.setParam 'skip', 0
-    #@filtercollection.fetch success: @render
-    @filtercollection.on("reset",@render)
-    @filtercollection.fetch()
+    
+    options = @options.parent.options.widget
+    @blackList = {fields:[], metadata:[]}
+    if options.blackList
+      if options.blackList.fields
+        @blackList.fields = options.blackList.fields
+      if options.blackList.metadata
+        @blackList.metadata = options.blackList.metadata
+        
+    bindFilter = Application.context[@options.parent.dashboard.options.parent.options.context].filtercollection
+    
+    @filtercollection = new FilterCollection([],{bindFilter:bindFilter,model:Frame,clearOnFetch:false})
+    @filtercollection.setParam('limit', @options.parent.options.widget.custom_limit)
+    @filtercollection.setParam('skip', 0)
     @filtercollection.subscribePath = 'frame'
-    @filtercollection.subscribe('',@receive)
-    @on "page", @loadMore
-
+    @filtercollection.subscribe('', @receive)    
+    @filtercollection.on("reset", @render)
+    @filtercollection.fetch()
+    
+    @on("page", @loadMore)
     return @
 
-  loadMore: (evt)=>
+  loadMore:(e) =>
     if @filtercollection.lastavail == 20 
       @filtercollection.setParam('skip', (@filtercollection.getParam('skip') + @filtercollection._defaults.limit))
-      @filtercollection.fetch()# success:@render
+      @filtercollection.fetch()
     return
     
   addObjs: =>

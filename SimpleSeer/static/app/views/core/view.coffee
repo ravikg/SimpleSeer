@@ -207,3 +207,11 @@ module.exports = class View extends Backbone.View
   addCustomEvent: (name, callback) =>
     @events[name] = callback
     return
+    
+  error:(e) =>
+    ctr = String(@.constructor).match(/function\s(.*)\(\)/)[1]
+    console.log " "
+    console.group "%c#{ctr}: {name: #{@options.name}, id: #{@options.id}}", "color: red"
+    console.error "Error: #{e}"
+    console.groupEnd()
+    console.log(" ")
