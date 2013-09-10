@@ -46,7 +46,6 @@
 
         &:last-child {
           border-right: none;
-          padding: 0px;
         }
       }
     }
@@ -55,9 +54,9 @@
 
 #image-list {
   .block.attributes {
-    li div {
-      display: inline-block;  
-    }
+    li { margin-bottom: 5px; }
+    li div { display: inline-block; }
+    li:last-child { margin-bottom: 0; }
     
     .label {
       color: #666;

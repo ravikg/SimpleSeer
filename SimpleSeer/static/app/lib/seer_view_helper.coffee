@@ -1,5 +1,7 @@
 # Put your handlebars.js helpers here.
 
+require "./prototype"
+
 Handlebars.registerHelper "eqperh", (context, options) ->
   return "height: #{1/context.length*100}%"
 

@@ -1,9 +1,11 @@
-[Application, Template, SubView, FilterCollection, Frame] = [
+[Application, Template, SubView, FilterCollection,
+ Frame, InspectionMap] = [
   require('application'),
   require('./templates/imageList'),
   require('views/core/subview'),
   require("collections/core/filtercollection"),
-  require("models/frame")
+  require("models/frame"),
+  require("views/widgets/inspectionmap")
 ]
 
 module.exports = class ImageList extends SubView
@@ -46,8 +48,21 @@ module.exports = class ImageList extends SubView
     @render()
     
   receive: (data) =>
-    @filtercollection.add data.data, {at:0}
+    @filtercollection.add(data.data, {at:0})
     @render()
+    
+  render: =>
+    @clearSubviews()
+    super()
+    
+  afterRender: =>
+    if "inspections" in @blocks
+      for subview in @subviews
+        subview.undelegateEvents()
+      for frame in @filtercollection.models
+        id = frame.attributes.id
+        sv = @addSubview("im-#{id}", InspectionMap, "#inspection_#{id}", {model: frame})
+        sv.render()      
 
   getRenderData: =>
     'blackList': @blackList

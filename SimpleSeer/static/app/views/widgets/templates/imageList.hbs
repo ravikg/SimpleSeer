@@ -31,10 +31,7 @@
         <!--------------------------------------------------------------->
         
         {{#if_eq this compare="inspections"}}
-        <div class="block image">
-          <img src="/grid/thumbnail_file/{{../../attributes.id}}">
-          <div class="camera">{{../../attributes.camera}} {{../../attributes.capturetime}}</div>
-        </div>
+          <div id="inspection_{{../../attributes.id}}"></div>
         {{/if_eq}}
         
         <!--------------------------------------------------------------->
