@@ -210,8 +210,19 @@ module.exports = class View extends Backbone.View
     
   error:(e) =>
     ctr = String(@.constructor).match(/function\s(.*)\(\)/)[1]
+    str = "#{ctr}: {name: #{@options.name}, id: #{@options.id}}"
     console.log " "
-    console.group "%c#{ctr}: {name: #{@options.name}, id: #{@options.id}}", "color: red"
+    console.group "%c#{str}", "color: red"
     console.error "Error: #{e}"
     console.groupEnd()
     console.log(" ")
+    
+    $.ajax
+      type:"POST"
+      url:"/log/error"
+      data:
+        "location":Backbone.history.fragment
+        "response":
+          "module": str
+          "error": e
+      dataType:"json"

@@ -188,6 +188,9 @@ def frames():
 @util.jsonify
 @checkLoginRequired
 def getFrames(filter_params):
+    resp = make_response("", 200)
+    return resp # Forbidden!!
+    
     from .base import jsondecode
     from HTMLParser import HTMLParser
     from SeerCloud.OLAPUtils import OLAPFactory

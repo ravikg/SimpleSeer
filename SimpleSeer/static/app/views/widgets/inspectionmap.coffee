@@ -3,7 +3,7 @@ template = require './templates/inspectionmap'
 application = require 'application'
 markupImage = require 'views/widgets/markupImage'
 
-module.exports = class inspectionMap extends SubView
+module.exports = class InspectionMap extends SubView
   template: template
   expanded: false
   

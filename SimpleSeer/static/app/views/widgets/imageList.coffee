@@ -27,13 +27,14 @@ module.exports = class ImageList extends SubView
         
     bindFilter = Application.context[@options.parent.dashboard.options.parent.options.context].filtercollection
     
-    @filtercollection = new FilterCollection([],{bindFilter:bindFilter,model:Frame,clearOnFetch:false})
-    @filtercollection.setParam('limit', @options.parent.options.widget.custom_limit)
-    @filtercollection.setParam('skip', 0)
-    @filtercollection.subscribePath = 'frame'
-    @filtercollection.subscribe('', @receive)    
-    @filtercollection.on("reset", @render)
-    @filtercollection.fetch()
+    @filtercollection = new FilterCollection([],{bindFilter:bindFilter,model:Frame,clearOnFetch:false,viewid:"50f573cbf4c400111fc5b553"})
+    @filtercollection.subscribePath = "frameupdate"
+    @filtercollection.subscribe(false,@receive)
+    @filtercollection.subscribePath = "framedelete"
+    @filtercollection.subscribe(false,@receive)
+    @filtercollection.subscribePath = "frame"
+    @filtercollection.subscribe(false,@receive)
+    @filtercollection.on "reset", @addObjs
     
     @on("page", @loadMore)
     return @
