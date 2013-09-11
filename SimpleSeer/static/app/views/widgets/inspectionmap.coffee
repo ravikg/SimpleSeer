@@ -36,4 +36,4 @@ module.exports = class InspectionMap extends SubView
   mergeCamera: =>   
 
   getRenderData: => 
-    maps: []
+    maps: SimpleSeer.settings.maps
