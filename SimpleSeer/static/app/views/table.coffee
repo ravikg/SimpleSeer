@@ -263,7 +263,7 @@ module.exports = class Table extends SubView
     return col
 
   # Render the cell
-  renderCell:(raw, key) =>
+  renderCell:(raw, key, inspection_id = '') =>
     v = raw
     html = ''
     tableCol = @getTableCol(@tableCols, key)
@@ -286,6 +286,7 @@ module.exports = class Table extends SubView
                 name: key + '-' + col.key
                 value: value
                 class: key + '-' + col.key
+                'data-inspection-id': inspection_id
               }
               html += "<input "
               $.each args, (k, v) =>
@@ -326,7 +327,10 @@ module.exports = class Table extends SubView
   changeCell:(e) =>
     target = $(e.target)
     id = target.parents('tr').attr('id')
+    part = target.parents('tr').data('part')
     cls = target.attr('class')
+    measurement_id = target.data('measurement-id')
+    tolerance_id = target.data('tolerance-id')
     spl = cls.split('-')
     if spl[0]
       key = spl[0]
@@ -335,14 +339,18 @@ module.exports = class Table extends SubView
     title = @getColumnTitleByKey(key)
     value = target.val()
 
-    obj =
-      target: target
-      id: id
-      cls: cls
-      key: key
-      subkey: subkey
-      title: title
-      value: value
+    obj = {}
+    if target then obj.target = target
+    if id then obj.id = id
+    if cls then obj.cls = cls
+    if key then obj.key = key
+    if subkey then obj.subkey = subkey
+    if title then obj.title = title
+    if value then obj.value = value
+    if measurement_id then obj.measurement_id = measurement_id
+    if tolerance_id then  obj.tolerance_id = tolerance_id
+    if part then obj.part = part
+
     @saveCell(obj)
 
   saveCell:(frame, obj, key = '') =>
@@ -487,12 +495,13 @@ module.exports = class Table extends SubView
       @scroll.scrollTop(0)
       @cof = false
     @rows = []
+
     if @collection
       if !@collection.length
         @noData = true
       else if @collection.length == 1
         if @collection.models and @collection.models[0] and @collection.models[0].attributes
-          if !@collection.models[0].attributes.id
+          if !@collection.models[0].attributes.id # BECAUSE CHART DATA ALWAYS RETURNS AT LEAST 1, EVEN IF ITS BLANK
             @noData = true
           else
             @noData = false
@@ -500,13 +509,17 @@ module.exports = class Table extends SubView
         @noData = false
     else
       @noData = false
+
+
     if @collection and @collection.models
       data = @formatData @collection.models
     else
       data = @formatData @tableData
     if data.length
       @noData = false
+
     @data = data
+    
     if !@noData
       _.each data, (model) =>
         @insertRow(model, @insertDirection)

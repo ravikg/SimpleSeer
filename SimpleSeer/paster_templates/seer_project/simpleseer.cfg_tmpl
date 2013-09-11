@@ -28,3 +28,6 @@ sub_uri: ipc:///tmp/${project}-sub
 
 # To require login just uncomment the following line
 requireAuth: true
+
+# Skips tolerance backfilling
+doBackfill: false

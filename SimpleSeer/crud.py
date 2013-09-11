@@ -87,13 +87,19 @@ class ModelHandler(object):
         for key in body.keys():
             if key.isdigit():
                 del body[key]
+
+        try: # Is this a new model?
+            id = body['id']
+        except KeyError: # Good, then set a blank ID so our schema validator doesn't fail.
+            body['id'] = None
+            pass
+
         try:
+            values = self.schema.to_python(body, None) # Validate our dict
             try:
-                del body['id']
+                del values['id']
             except KeyError:
                 pass
-            #import pdb; pdb.set_trace()
-            values = self.schema.to_python(body, None)
         except fe.Invalid, inv:
             raise exceptions.BadRequest(inv.unpack_errors())
         return values
