@@ -1,5 +1,7 @@
 
 import mongoengine
+from pymongo import MongoClient
+from bson.code import Code
 from filesystem import delete_and_mkdir
 import subprocess
 import time
@@ -47,10 +49,9 @@ class DBtools(object):
 
 
     def init_replset(self,postsleep=20):
+        #mongoengine.connection.disconnect()
         mongoengine.connection.disconnect()
 
-        from pymongo import MongoClient
-        from bson.code import Code
         conn = MongoClient(self.master)
         resp = conn.admin.command("replSetInitiate",self.replConfig)
         time.sleep(postsleep)
