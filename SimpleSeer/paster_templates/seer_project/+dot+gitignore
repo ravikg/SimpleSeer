@@ -36,3 +36,9 @@ cached.js
 
 # Google Chrome
 libpeerconnection.log
+
+# Folders
+test-images/
+*/test-images/
+backup/
+backups/
