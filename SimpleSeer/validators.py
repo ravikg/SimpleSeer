@@ -36,7 +36,10 @@ class DateTime(fev.FancyValidator):
 
     def _to_python(self, value, state):
         try:
-            return datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
+            try:
+                return datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
+            except ValueError:
+                return datetime.strptime(value, '%Y-%m-%d %H:%M:%S.%f')
         except ValueError, ve:
             raise fev.Invalid(str(ve), value, state)
 
