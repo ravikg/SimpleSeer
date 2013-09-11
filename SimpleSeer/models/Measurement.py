@@ -326,10 +326,9 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
         if not Session().procname == 'meta':
             if tolChange:
                 s = Session()
-                if s._config.has_key('doBackfill'):
-                    if s._config['doBackfill']:
-                        log.info('Sending backfill request to OLAP')
-                        ChannelManager().rpcSendRequest('backfill/', {'type': 'tolerance', 'id': self.id})
+                if s.doBackfill:
+                    log.info('Sending backfill request to OLAP')
+                    ChannelManager().rpcSendRequest('backfill/', {'type': 'tolerance', 'id': self.id})
             
     def measurementsBefore(self):
         # Find the list of measurements that need to execute before this one
