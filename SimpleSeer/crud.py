@@ -32,6 +32,7 @@ def register(app):
         ModelHandler(M.Inspection, M.InspectionSchema,
                      'inspection', '/inspection'),
         ModelHandler(M.Measurement, M.MeasurementSchema, 'measurement', '/measurement'),
+        ModelHandler(M.Tolerance, M.ToleranceSchema, 'tolerance', '/tolerance'),
         ModelHandler(M.Frame, M.FrameSchema, 'frame', "/frame"),
         ModelHandler(M.FrameSet, M.FrameSetSchema, 'frameset', '/frameset'),
         ModelHandler(M.Context, M.ContextSchema, 'context', '/context')
@@ -45,7 +46,9 @@ def register(app):
     if 'Chart' in dir(M):
         handlers.append(ModelHandler(M.Chart, M.ChartSchema, 'chart', '/chart'))
     if 'TabContainer' in dir(M):
-        handlers.append(ModelHandler(M.TabContainer, M.TabContainer, 'tabcontainer', '/tabcontainer'))
+        handlers.append(ModelHandler(M.TabContainer, M.TabContainerSchema, 'tabcontainer', '/tabcontainer'))
+    if 'Truth' in dir(M):
+        handlers.append(ModelHandler(M.Truth, M.TruthSchema, 'truth', '/truth'))
         
     for h in handlers:
         flask_rest.RESTResource(
@@ -73,6 +76,10 @@ class ModelHandler(object):
         objs = self._cls.objects(id=id)
         if not objs:
             raise exceptions.NotFound('Object not found')
+        #import pdb; pdb.set_trace()
+        #print objs[0]
+
+
         return objs[0]
 
     def _get_body(self, body):
@@ -85,6 +92,7 @@ class ModelHandler(object):
                 del body['id']
             except KeyError:
                 pass
+            #import pdb; pdb.set_trace()
             values = self.schema.to_python(body, None)
         except fe.Invalid, inv:
             raise exceptions.BadRequest(inv.unpack_errors())
@@ -117,8 +125,19 @@ class ModelHandler(object):
         id = kwargs.values()[0]
 
         obj = self._get_object(id)
-        return 200, obj
+        to_validate = {}
+        for x in self.schema.fields.keys():
+            if hasattr(obj, x):
+                to_validate[x] = obj[x]
+
+        return 200, self.schema.from_python(to_validate)
 
     def list(self):
         objs = self._cls.objects()
-        return 200, list(objs)
+        retVal = []
+        for obj in objs:
+            to_validate = {}
+            for x in self.schema.fields.keys():
+                to_validate[x] = obj[x]
+            retVal.append(self.schema.from_python(to_validate))
+        return 200, retVal

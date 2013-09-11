@@ -90,6 +90,10 @@ class SimpleSeerProjectTemplate(Template):
         overwrite(
             src_templates / 'testing.html',
             tgt_templates / 'testing.html')
+        overwrite(
+            src_templates / 'login.html',
+            tgt_templates / 'login.html')
+
 
         # Copy image assets
         try:

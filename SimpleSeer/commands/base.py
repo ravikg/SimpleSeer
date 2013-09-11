@@ -12,7 +12,7 @@ class Command(object):
     def __init__(self, subparser):
         '''Add any options here'''
         pass
-        
+
     def configure(self, options):
         self.options = options
         if self.use_gevent:
@@ -24,41 +24,68 @@ class Command(object):
         from SimpleSeer.Session import Session
         from SimpleSeer import models as M
         try:
-            self.session = Session(options.config, options.procname)
+            self.session = Session(options.config, options.procname, options.config_override)
         except:
-            self.session = Session(options.config, 'simpleseer')
+            self.session = Session(options.config, 'simpleseer', options.config_override)
         self._configure_logging()
         if self.session.mongo.get('is_slave'):
             M.base.SimpleDoc.meta['auto_create_index'] = False
-        if options.profile_heap: self._start_profile_heap()
-        
+        try:
+            if options.profile_heap: self._start_profile_heap()
+        except AttributeError:
+            pass
+
     def run(self):
         '''Actually run the command'''
         raise NotImplementedError, 'run'
 
+    def heartbeat(self, name=False, pongfunc=False):
+        from SimpleSeer.realtime import ChannelManager
+        from SimpleSeer.base import jsondecode
+
+        def pong(msg):
+            #time.sleep(21)
+            message = jsondecode(msg.body)
+            message['name'] = name
+            message['status'] = True
+            message['message'] = 'pong'
+            message['timestamp_pong'] = time.time()
+            cm.publish('heartbeat_pong/', message)
+
+        if not pongfunc:
+            pongfunc = pong
+
+        if not name:
+            name = self.__class__.__name___
+
+        cm = ChannelManager(shareConnection = False)
+        monitor = cm.subscribe('heartbeat_ping/', pongfunc, async=True)
+
     def _configure_logging(self):
         import logging
         import logging.config
-        
+
         import warnings
         warnings.filterwarnings(action='module', category=DeprecationWarning)
-        
-        if self.options.logging:
+
+        #if self.options.logging:
+        try:
             if os.path.exists(self.options.logging):
                 logging.config.fileConfig(self.options.logging, disable_existing_loggers=False)
             else:
                 warnings.warn("Could not find logging configuration %s, defaulting to basic config" % self.options.logging)
                 logging.basicConfig(level=logging.DEBUG)
-        else:
+        #else:
+        except AttributeError:
             logging.basicConfig(level=logging.DEBUG)
         self.log = logging.getLogger(__name__)
-        
+
         if not self.session.amqplogs:
             amqplib_log = logging.getLogger('amqplib')
             amqplib_log.setLevel(logging.WARNING)
             amqp_log = logging.getLogger('amqp')
-            amqp_log.setLevel(logging.WARNING) 
-        
+            amqp_log.setLevel(logging.WARNING)
+
     @classmethod
     def simple(cls, use_gevent=True):
         '''Create a simple command. Used as a decorator'''
@@ -85,4 +112,4 @@ class Command(object):
             t = threading.Thread(target=profiler)
             t.daemon = True
             t.start()
-    
+

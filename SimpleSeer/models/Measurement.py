@@ -12,12 +12,37 @@ import formencode as fe
 from datetime import datetime
 
 from SimpleSeer import validators as V
-
+from Tolerance import Tolerance
 import logging
 log = logging.getLogger()
 
 
+class ResultValidator(fev.FancyValidator):
+    def _to_python(self, value, state):
+        if value is None: return None
+        if isinstance(value, dict) or isinstance(value, list):
+            if len(value):
+                results = []
+                for r in value:
+                    if r == ResultEmbed:
+                        results.append(r)
+                    elif type(r) == dict:
+                        re = ResultEmbed()
+                        re._data = {}
+                        re._data.update(r)
+                        results.append(re)
+            return results
+        raise fev.Invalid('invalid Result object', value, state)
+
+    def _from_python(self, value, state):
+        if value is None: return None
+        if isinstance(value, dict):
+            return value
+        raise fev.Invalid('invalid Python dict', value, state)
+
+
 class MeasurementSchema(fes.Schema):
+    id = V.ObjectId(if_empty=None, if_missing=None)
     name = fev.UnicodeString(not_empty=True) #TODO, validate on unique name
     label = fev.UnicodeString(if_missing=None)
     labelkey = fev.UnicodeString(if_missing=None)
@@ -28,6 +53,7 @@ class MeasurementSchema(fes.Schema):
     inspection = V.ObjectId(not_empty=True)
     featurecriteria = V.JSON(if_empty=None, if_missing=None)
     tolerances = fev.Set(if_empty=[])
+    tolerance_list = V.ReferenceFieldList(ref_type=Tolerance)
     updatetime = fev.UnicodeString()
     conditions = fev.Set(if_empty=[])
     booleans = fev.Set(if_empty=[])
@@ -64,6 +90,7 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
     inspection = mongoengine.ObjectIdField(default=None)
     featurecriteria = mongoengine.DictField(default={})
     tolerances = mongoengine.ListField(default=[])
+    tolerance_list = mongoengine.ListField(mongoengine.ReferenceField('Tolerance', dbref=False, reverse_delete_rule=mongoengine.NULLIFY))
     updatetime = mongoengine.DateTimeField(default=None)
     conditions = mongoengine.ListField(default=[])
     booleans = mongoengine.ListField(default=[])
@@ -73,7 +100,11 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
         'ordering': ['executeorder']
     }
 
-    def execute(self, frame, features):
+    def execute(self, frame, features=None):
+        
+        if not features:
+            features = frame.features
+        
         featureset = self.findFeatureset(features)
         #this will catch nested features
 
@@ -103,10 +134,10 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
             hasToleranceFunction = hasattr(function_ref, 'tolerance')
 
         if self.booleans:
-            values = self.testBooleans(values, self.booleans, frame.results)
+            values = self.testBooleans(values, self.booleans, values)
 
         if self.conditions:
-            conds = self.testBooleans(values, self.conditions, frame.results)
+            conds = self.testBooleans(values, self.conditions, values)
             values = [ v for v, c in zip(values, conds) if c ]
 
         results = self.toResults(frame, values)
@@ -157,6 +188,14 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
 
     def tolerance(self, frame, results):
 
+        try:
+            function_ref = self.get_plugin(self.method)
+            hasToleranceFunction = hasattr(function_ref, 'tolerance')
+            if hasToleranceFunction:
+                return function_ref.tolerance(frame, results)
+        except:
+            pass                
+
         for result in results:
             if result.measurement_name == self.name:
                 testField = None
@@ -167,7 +206,7 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
 
                 result.state = 0
                 messages = []
-                for rule in self.tolerances:
+                for rule in self.tolerance_list:
                     if rule['criteria'].values()[0] == 'all' or (rule['criteria'].keys()[0] in frame.metadata and frame.metadata[rule['criteria'].keys()[0]] == rule['criteria'].values()[0]):
                         criteriaFunc = "testField %s %s" % (rule['rule']['operator'], rule['rule']['value'])
                         match = eval(criteriaFunc, {}, {'testField': testField})
@@ -201,7 +240,6 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
 
         return results
 
-    
     def backfillTolerances(self):
         from .Frame import Frame
         from .Alert import Alert
@@ -218,7 +256,6 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
                 frame.save(publish=False)
         Alert.clear()
         Alert.refresh('backfill')
-        res = ChannelManager().rpcSendRequest('olap_req/', {'action': 'rebuild'})
 
     def findFeatureset(self, features):
 
@@ -258,21 +295,12 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
                 measurement_id=self.id,
                 measurement_name=self.name)
             for i, v in enumerate(values) ]
-        frame.results.extend(results)
         return results
 
     def save(self, *args, **kwargs):
         from ..realtime import ChannelManager
-
-        # Optional parameter: skipBackfill
-        try:
-            skipBackfill = kwargs.pop('skipBackfill')
-        except:
-            skipBackfill = 0
-
-        if not skipBackfill:
-            if '_changed_fields' not in dir(self) or 'tolerances' in self._changed_fields:
-                self.backfillTolerances()
+        from ..Session import Session
+        tolChange = '_changed_fields' in self and 'tolerance_list' in self._changed_fields
 
         # Optional parameter: skipDeps
         try:
@@ -292,10 +320,14 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
                 log.info('trying to save measurements with duplicate names: %s' % m.name)
                 self.name = self.name + '_1'
 
-
         super(Measurement, self).save(*args, **kwargs)
         ChannelManager().publish('meta/', self)
-
+        
+        if not Session().procname == 'meta':
+            if tolChange:
+                log.info('Sending backfill request to OLAP')
+                ChannelManager().rpcSendRequest('backfill/', {'type': 'tolerance', 'id': self.id})
+            
     def measurementsBefore(self):
         # Find the list of measurements that need to execute before this one
         before = []

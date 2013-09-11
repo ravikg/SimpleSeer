@@ -26,7 +26,15 @@ from ..util import LazyProperty
 class FrameSchema(fes.Schema):
     allow_extra_fields=True
     filter_extra_fields=True
+    capturetime = fev.UnicodeString(if_missing=None)
+    capturetime_epoch = fev.Int(if_empty=None, if_missing=None)
+    updatetime = fev.UnicodeString(if_missing=None)
+    localtz = fev.UnicodeString(if_missing='UTC')
     camera = fev.UnicodeString(if_missing='')
+    features = fev.Set(if_empty=[], if_missing=[])
+    results = fev.Set(if_empty=[], if_missing=[])
+    height = fev.Int(if_empty=0, if_missing=0)
+    width = fev.Int(if_empty=0, if_missing=0)
     metadata = V.JSON(if_empty={}, if_missing={})
     notes = fev.UnicodeString(if_empty="", if_missing="")
     #TODO, make this feasible as a formencode schema for upload
@@ -160,7 +168,7 @@ class Frame(SimpleDoc, mongoengine.Document):
                 img_data = StringIO()
                 thumbnail_img.save(img_data, "jpeg", quality = 75)
                 self.thumbnail_file.put(img_data.getvalue(), content_type='image/jpeg')
-                self.save()
+                self.save(publish=False)
         else:
             self.thumbnail_file.get().seek(0,0)
             thumbnail_img = Image(pil.open(StringIO(self.thumbnail_file.read())))
@@ -279,7 +287,13 @@ class Frame(SimpleDoc, mongoengine.Document):
             else:
                 channel = "frameupdate/"
             
-            #send the frame without features, and some other stuff
+            #send the frame with limited feature data, and some other stuff
+            limitedFeats = []
+            for feat in self.features:
+                tmpFeat = {}
+                tmpFeat['featuredata'] = feat.featuredata
+                tmpFeat['inspection'] = str(feat.inspection)
+                limitedFeats.append(tmpFeat)
             realtime.ChannelManager().publish(channel, dict(
                 id = str(self.id),
                 capturetime = self.capturetime,
@@ -288,6 +302,7 @@ class Frame(SimpleDoc, mongoengine.Document):
                 localtz = self.localtz,
                 camera = self.camera,
                 results = self.results,
+                features = limitedFeats,
                 height = self.height,
                 width = self.width,
                 clip_id = str(self.clip_id),

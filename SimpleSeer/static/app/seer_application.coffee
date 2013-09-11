@@ -21,6 +21,15 @@ module.exports = SeerApplication =
     'shift':2
     'ctrl':4
 
+  staticwidgets: [
+    {
+      id: "seerLogin",
+      lib: "core/login",
+      menubar: "system-tray",
+      params: {icon: "/img/seer/login.png", label: "User", style: "inline"}
+    }
+  ]
+
   # Set up the application and include the
   # necessary modules. Configures the page
   # and
@@ -55,9 +64,18 @@ module.exports = SeerApplication =
       @socket.on "message:alert/", window.SimpleSeer._serveralert
       @socket.emit 'subscribe', 'alert/'
 
+      host = window.location.host.split(":")
+
+      if host[0] is "127.0.0.1" or host[0] is "localhost"
+        @socket.on 'message:heartbeat_ping/', window.SimpleSeer._heartbeat_pong
+        @socket.emit 'subscribe', 'heartbeat_ping/'
+
     m = require 'collections/measurements'
     @measurements = new m()
     @measurements.fetch()
+    tol = require 'collections/tolerance_list'
+    @tolerance_list = new tol()
+    @tolerance_list.fetch()
     t = require 'views/core/modal'
     @modal = new t()
 
@@ -90,12 +108,6 @@ module.exports = SeerApplication =
         inNavigation: false
       }]
 
-  route: (route, name=false, callback= =>) ->
-    console.log route,name,callback
-    for r in Backbone.history.handlers
-      console.log r
-    @router.route route, name, callback
-
   _keyPress: (e) ->
     key = 0
     if e.altKey
@@ -114,6 +126,15 @@ module.exports = SeerApplication =
   # with the specified message and severity.
   _serveralert: (msg) ->
     window.SimpleSeer.alert(msg['data']['message'], msg['data']['severity'])
+
+  _heartbeat_pong: (msg)->
+    data = msg['data']
+    timestamp = new moment().unix()
+    data['name'] = 'chrome'
+    data['status'] = true
+    data['message'] = 'pong'
+    data['timestamp_pong'] = timestamp
+    @socket['namespaces']['/rt'].emit('publish', 'heartbeat_pong/', JSON.stringify(data))
 
   # Returns the loading status of the application.
   isLoading: =>
@@ -149,16 +170,18 @@ module.exports = SeerApplication =
         if !message then return false
         _duplicate = false
 
-        #console.group(new Date()); console.log(message); console.groupEnd();
         #$(".alert-#{alert_type}").each (e,v)->
         #  if ($(v).data("message") == message) then _duplicate = true
 
-        if _duplicate is false
-          popup = $("<div style=\"display: none\">#{message}</div>")
-          popup.addClass("alert alert-#{alert_type}").data("message", message).appendTo("#messages")
-          closeBtn = $("<div class='closeAlerts'></div>")
-          closeBtn.click((e, ui) => $(e.currentTarget).parent().fadeOut(-> $(this).remove())).appendTo(popup)
-          popup.fadeIn()
+        if SimpleSeer.modal.isVisible()
+          SimpleSeer.modal.setMinorText(message)
+        else
+          if _duplicate is false
+            popup = $("<div style=\"display: none\">#{message}</div>")
+            popup.addClass("alert alert-#{alert_type}").data("message", message).appendTo("#messages")
+            closeBtn = $("<div class='closeAlerts'></div>")
+            closeBtn.click((e, ui) => $(e.currentTarget).parent().fadeOut(-> $(this).remove())).appendTo(popup)
+            popup.fadeIn()
 
   # Uses a regular expression to determine
   # if the user is on a mobile browser or not.
