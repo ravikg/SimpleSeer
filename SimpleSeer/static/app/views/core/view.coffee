@@ -207,3 +207,22 @@ module.exports = class View extends Backbone.View
   addCustomEvent: (name, callback) =>
     @events[name] = callback
     return
+    
+  error:(e) =>
+    ctr = String(@.constructor).match(/function\s(.*)\(\)/)[1]
+    str = "#{ctr}: {name: #{@options.name}, id: #{@options.id}}"
+    console.log " "
+    console.group "%c#{str}", "color: red"
+    console.error "Error: #{e}"
+    console.groupEnd()
+    console.log(" ")
+    
+    $.ajax
+      type:"POST"
+      url:"/log/error"
+      data:
+        "location":Backbone.history.fragment
+        "response":
+          "module": str
+          "error": e
+      dataType:"json"
