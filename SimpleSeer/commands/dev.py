@@ -31,7 +31,8 @@ class CreateTestFramesCommand(DevCommand):
             f.close()
         except IOError as err:
             log.warn("Import failed: {}, generateing sample yaml".format(err.strerror))
-            yaml = self.gen_yaml()
+            self.gen_yaml()
+            return
         objs = load(yaml)
 
         def _gen_rnd_vals(bounds,passframe=True):
@@ -44,7 +45,7 @@ class CreateTestFramesCommand(DevCommand):
                 if passframe:
                     return randrange(int(bounds[0]),int(bounds[1]))
                 else:
-                    _bound = randrange(0,1)
+                    _bound = randrange(0,2)
                     if _bound:
                         bx = int(bounds[0]) - randrange(1,self.options.tolerance)
                         by = int(bounds[1]) - randrange(1,self.options.tolerance)
