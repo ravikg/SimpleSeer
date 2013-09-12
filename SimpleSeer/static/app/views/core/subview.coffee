@@ -4,10 +4,14 @@ View = require 'views/core/view'
 
 module.exports = class SubView extends View
 
-  initialize: =>
-    @htmltags = {}
-    super()
+  _variables: =>
+    variables = {}
+    return variables
 
+  initialize: =>
+    super()
+    @htmltags = {}
+    
   # Overrides render in `view.coffee`
   render: () =>
     if @rendered

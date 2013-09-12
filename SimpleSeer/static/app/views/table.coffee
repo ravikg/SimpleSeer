@@ -1,51 +1,370 @@
-Application = require 'application'
-SubView = require 'views/core/subview'
-Template = require './templates/table2'
-RowTemplate = require './templates/row2'
-Collection = require "collections/table"
+[Application, 
+ SubView,
+ Collection,
+ TableTemplate,
+ RowTemplate] = [
+  require('application'),
+  require('views/core/subview'),
+  require('collections/table'),
+  require('./templates/table'),
+  require('./templates/table_row')
+]
 
 module.exports = class Table extends SubView
-  template: Template
-  rowTemplate: RowTemplate
+    
 
-  tbody: {}
-  thead: {}
-  content: {}
-  widthCache: {}
-  editableList:{}
-  sortKey: 'id'
-  sortDirection: 'desc'
-  lastSortKey: undefined
-  cof: false
-  editable: true
-  renderComplete: false
-  lastY: 0
-  limit: 100
-  direction: -1
-  insertDirection: -1
-  sortType: 'collection'
-  header: ''
-  tableClasses: 'table'
-  firefox: false
-  msie: false
-  left: undefined
-  persistentHeader: false
-  showHidden: false
-  hasHidden: false
-  noData: false
-  showHideCols: {}
-  showHideColsSelected: {}
-  scrollElem: '#content #slides'
-  afterRenderCounter: 0
-  viewid: "5089a6d31d41c855e4628fb0"
-  noRender: false
+  ''' INIT '''
+
+  initialize: =>
+    super()
+
+    # Table.coffee v2.0
+    #
+    # ===========================
+    #
+    # size: (full), widget
+    # pagination: noscroll, (infinite), num
+    # header: fixed, (float)
+    # settings: true, (false)
+    # collection: 'collections/table', ''
+    # model: ('models/frame'), ''
+    # url: ('api/frame'), ''
+    # sortable: (true), false
+    # sorttype: (db), js
+    # editable: (true), false
+
+    # Build everything
+    @settings = @_settings()
+    @variables = @_variables()
+    @template = @variables.template
+    @collection = @_collection()
+
+    if @settings.pagination is 'infinite'
+      @on 'page', @_infinite
+    if @settings.header is 'float'
+      @on 'scroll', @_scroll
+
+    # Init table
+    @collection.fetch()
+
+  # Build a settings object from our configuration file
+  _settings: =>
+    settings = {}
+    settings.classes = ['table', 'border', 'zebra']
+    settings.styles = []
+    settings.size = @options.size ? 'full'
+    settings.classes.push(settings.size)
+    settings.pagination = @options.pagination ? 'infinite'
+    settings.classes.push(settings.pagination)
+    settings.clearOnFetch = (if settings.pagination is 'infinite' then true else true)
+    settings.header = @options.header ? 'float'
+    settings.classes.push(settings.header)
+    settings.settings = @options.settings ? false
+    if @options.data?
+      settings.collection = @options.data.collection ? 'collections/table'
+      settings.collection = require settings.collection
+      settings.model = @options.data.model ? 'models/frame'
+      settings.model = require settings.model
+      settings.url = @options.data.url ? 'api/frame'
+      settings.viewid = @options.data.viewid ? '5089a6d31d41c855e4628fb0'
+      settings.limit = @options.data.limit ? 40
+      settings.limit = 40
+    settings.subscribe = @options.subscribe ? []
+    settings.columns = @options.columns ? []
+    settings.sortable = @options.sortable ? true
+    settings.sorttype = @options.sorttype ? 'db'
+    if settings.sortable
+      for o,i in settings.columns
+        o.sortable = o.sortable ? true
+
+    return settings
+
+  # Append addition variables to our class scope
+  _variables: =>
+    variables = super()
+    variables.template = TableTemplate
+    variables.rowTemplate = RowTemplate
+    variables.preHTML = ""
+    variables.postHTML = ""
+    variables.data = []
+    variables.cleardata = false
+    variables.rows = []
+    variables.clearrows = false
+    variables.sortkey = undefined
+    variables.sortdirection = -1
+    variables.limit = @settings.limit
+    variables.skip = 0
+    variables.nodata = false
+    variables.scrollElem = '#content #slides'
+    variables.left = null
+    if @settings.header is 'float'
+      variables.preHTML += '<div class="header">
+              <div class="float">
+                <table class="table floater borderTop"></table>
+              </div>
+            </div>'
+
+    return variables
+
+
+  ''' GETTING / SETTING DATA '''
+
+  # Build the collection and fetch the initial batch
+  _collection: =>
+    bindFilter = Application.context[@options.parent.dashboard.options.parent.options.context].filtercollection
+    collection = new @settings.collection([], {
+      bindFilter: bindFilter, 
+      model: @settings.model, 
+      url: @settings.url, 
+      viewid: @settings.viewid
+    })
+
+    collection.setParam 'limit', @variables.limit
+    collection.setParam 'skip', @variables.skip
+
+    for o,i in @settings.subscribe
+      collection.subscribePath = o
+      collection.subscribe(false,@receive)
+
+    collection.on('reset', @_data)
+    return collection
+
+  _update: (params) =>
+    if @collection
+      for i,o of params
+        @collection.setParam i, o
+
+      @collection.fetch()
+    else
+      @_collection()
+
+  _clear: =>
+    if @variables.cleardata
+      @variables.data = []
+      @variables.cleardata = false
+    if @variables.clearrows
+      @variables.rows = []
+      @variables.clearrows = false
+
+  ''' RENDERING '''
+
+  _data: (a = null, b = null) =>
+    console.log _.clone @collection.url
+
+
+    if @collection.getParam('skip') is 0
+      @variables.cleardata = true
+      @variables.skip = 0
+
+    if @settings.sorttype is 'db'
+      if !b # Let db handle what should and shouldn't be available.
+        @variables.clearrows = true
+
+    @_clear()
+
+    data = []
+    if !@collection or @collection.length <= 1
+      if @collection.models and @collection.models[0] and @collection.models[0].get('id')
+        @variables.nodata = false
+      else
+        @variables.nodata = true
+    else
+      @variables.nodata = false
+
+    if !@variables.nodata
+      data = @_formatData @collection.models
+      if data
+        console.log "data length", data.length
+        @variables.data = @variables.data.concat(data)
+        console.log "variables data length", @variables.data.length
+        console.log "rows before length", @variables.rows.length
+        for o,i in @variables.data
+          if @variables.direction is 1
+            @variables.rows.unshift(@_row(o))
+          else
+            @variables.rows.push(@_row(o))
+        console.log "rows after length", @variables.rows.length
+        @render()
+    else
+      @variables.data = []
+      @variables.rows = []
+      @$el.find('.table.static tbody').html('<tr><td class="nodata" colspan="' + @settings.columns.length + '">No data within filter parameters</td></tr>')
+
+  # Generally overwrite in client repo
+  _formatData: (data) =>
+    return data
+
+  _row: (row = {}) =>
+    return @variables.rowTemplate @_formatRow(row)
+
+  _formatRow: (row) =>
+    id = row.get('id') ? ''
+    values = []
+
+    for o,i in @settings.columns
+      values.push @_formatCell o, row.get(o.data.key)
+
+    return {id: id, values: values}
+
+  _formatCell: (settings, value) =>
+    cell = {title:'', html:'', data:[]}
+    
+    for i,o of settings.data
+      cell.data.push('data-'+i+'="'+o+'"')
+    
+    cell.raw = value
+    cell.html = value
+    return cell
+
+  getRenderData: =>
+    classes: @settings.classes
+    styles: @settings.styles
+    header: @variables.preHTML
+    footer: @variables.postHTML
+    columns: @settings.columns
+    rows: @variables.rows
+    pageButtons: @options.page == "page"
+
+  afterRender: =>
+    dir = (if @variables.sortdirection is -1 then "asc" else "desc")
+    @$el.find(".th[data-key=\"#{@variables.sortkey}\"]")
+      .removeClass("sort-asc sort-desc")
+      .addClass("sort-#{dir}")
+
+    if @settings.header is 'float'
+      @_header()
+      if !@variables.scroll
+        @variables.scroll = $(@variables.scrollElem)
+      console.log "trying to scroll left"
+      @_scrollLeft()
+
+  _header: () =>
+    console.log "header"
+    @$(".table.floater").html('')
+    @$(".table.static .thead").clone().appendTo('.table.floater').css('opacity', 1)
+
+
+    table = @$('.table.static')
+    header = @$('.header')
+    static = @$('.table.static .thead')
+    floater = @$('.table.floater .thead')
+
+    header.width(static.width() + 1)
+
+    lastkey = ""
+    _.each static.find('.th'), (column) =>
+      key = $(column).data('key')
+      placeholder = $($(column).find('.placeholder'))
+      width = placeholder.width() + parseInt(placeholder.css('padding-left'), 10) + parseInt(placeholder.css('padding-right'), 10)
+      width += 1
+      if $(column).is(":visible")
+        lastkey = key
+      floater.find(".th[data-key=\"#{key}\"]").css('width', width).css('height', $(column).height() - 2)
+
+    if lastkey
+      last = floater.find(".th[data-key=\"#{lastkey}\"]")
+      last.css('width', last.width() - 1)
+
+
+
+  ''' EVENT HANDLING '''
 
   events: =>
-    "click th.sortable":"sortByColumn"
-    "click .showhidden .button":"showHiddenEvent"
-    "click .downloads button":"downloadData"
-    "click .show-hide-button":"showHideEvent"
-    "click .show-hide-checkbox":"showHideCheckboxEvent"
+    "click th.sortable":"_sort"
+    #"click .showhidden .button":"showHiddenEvent"
+    #"click .downloads button":"downloadData"
+    #"click .show-hide-button":"showHideEvent"
+    #"click .show-hide-checkbox":"showHideCheckboxEvent"
+
+  _sort: (e) =>
+    direction = @variables.sortdirection
+    type = (if e.currentTarget then 'event' else 'filter')
+    if type is 'event'
+      key = $(e.currentTarget).data('key')
+      if direction is 1
+        @variables.sortdirection = -1
+      else
+        @variables.sortdirection = 1
+    else if type is 'filter'
+      if direction = 1
+        direction = -1
+      else
+        direction = 1
+      key = $(e).data('key')
+
+    @variables.sortkey = key
+
+    if @settings.sorttype is 'db' # Let the backend do the sorting
+      @variables.clearrows = true
+      @variables.cleardata = true
+      @_update({sortkey:key, sortorder:direction})
+    else if @settings.sorttype is 'js' # Let javascript do the sorting
+      @variables.clearrows = true
+      @variables.cleardata = true
+      if @settings.model
+        model = @settings.model
+        
+        if direction is 1
+          @collection.comparator = (model) ->
+            str = model.get(key) ? ""
+            str = str.toString()
+            String.fromCharCode.apply String, _.map(str.split(""), (c) ->
+              c.charCodeAt() - 0xffff
+            )
+        else if direction is -1
+          @collection.comparator = (model) ->
+            str = model.get(key) ? ""
+            str = str.toString()
+            if !str
+              str = "                                                                                                                                 "
+            String.fromCharCode.apply String, _.map(str.split(""), (c) ->
+              0xffff - c.charCodeAt()
+            )
+        @collection.models = @variables.data
+        @collection.sort()
+
+  _infinite: =>
+    if @collection and @collection.lastavail >= @variables.limit
+      @variables.skip += @variables.limit
+      @collection.setParam 'skip', @variables.skip
+      @variables.clearrows = true
+      @variables.cleardata = false
+      @collection.fetch()
+    return
+
+  _scroll: (y) =>
+    if @settings.header is 'float'
+      if !@variables.scroll
+        @variables.scroll = $(@variables.scrollElem)
+      @_scrollLeft()
+      @_scrollDown()
+
+  _scrollLeft: () =>
+    left = @variables.scroll.scrollLeft()
+    if left != @variables.left
+      console.log "Scrolling left"
+      @variables.left = left
+      offset = @$el.find('.table.static thead').offset()
+      head = @$el.find('.header')
+      head.css('left', offset.left)
+
+  _scrollDown: () =>
+    down = @variables.scroll.scrollTop()
+    head = @$el.find('.header')
+    if down > 0
+      if !head.hasClass('shadow')
+        head.addClass('shadow')
+    else
+      if head.hasClass('shadow')
+        head.removeClass('shadow')
+
+  reflow: =>
+    if @settings.header is 'float'
+      @_header()
+
+
+
+
 
   showHideEvent: (e) =>
     box = $('.show-hide')
@@ -65,21 +384,6 @@ module.exports = class Table extends SubView
     if e.originalEvent?
       $(window).resize()
 
-  initialize: =>
-    super()
-    # @Todo: Standardize and push this up the chain
-    @msie = $.browser.hasOwnProperty('msie')
-    @firefox = $.browser.hasOwnProperty('mozilla')
-
-    @rows = []
-    @getOptions()
-    @getCollection()
-    if @infiniteScrollEnabled
-      @on 'page', @infinitePage
-    #@scroll = $(@scrollElem)
-    if @persistentHeader
-      @on 'scroll', @scrollPage
-
   getColumnKeyByTitle: (title) =>
     key = null
     _.each @tableCols, (col) =>
@@ -97,55 +401,12 @@ module.exports = class Table extends SubView
     return title
 
   getOptions: =>
-    if @options.persistentHeader?
-      @persistentHeader = @options.persistentHeader
-    if @options.infiniteScroll?
-      @infiniteScrollEnabled = @options.infiniteScroll
-    if @options.sortKey?
-      @sortKey = @options.sortKey
-    if @options.sortDirection?
-      @direction = @options.sortDirection
-      if @direction == 1
-        @sortDirection = 'asc'
-      else
-        @sortDirection = 'desc'
-    if @options.sortType?
-      @sortType = @options.sortType
-    if @options.tableKey?
-      @tableKey = @options.tableKey
-    if @options.editable?
-      @editable = @options.editable
-    if !@options.tableCols?
-      @tableCols = [key: "id", title: "ID"]
-    else
-      @tableCols = @options.tableCols
-    if @options.collection_model
-      @_collection = require "collections/" + @options.collection_model + "s"
-      @_model = require "models/" + @options.collection_model
-      @_url = "api/"+@options.collection_model
-    else
-      @_collection = require "collections/table"
-      @_model = require "models/frame"
-      @_url = "api/frame"
+    return
 
   getCollectionExtras: =>
     return
 
-  getCollection: =>
-    bindFilter = Application.context[@options.parent.dashboard.options.parent.options.context].filtercollection
-    @collection = new @_collection([],{bindFilter:bindFilter,model:@_model,clearOnFetch:@cof,url:@_url,viewid:@viewid})
-    if !@options.collection_model
-      @collection.setParam 'sortkey', @getSortKey(@sortKey)
-      @collection.setParam 'sortorder', @direction
-      @collection.setParam 'limit', @limit
-    @getCollectionExtras()
-    @collection.subscribePath = "frameupdate"
-    @collection.subscribe(false,@receive)
-    @collection.subscribePath = "framedelete"
-    @collection.subscribe(false,@receive)
-    @collection.on('reset',@updateData)
-    @collection.fetch()
-    @subscribe()
+  
 
   receive: (data) =>
     poo = @collection.where({id: data.data.id})[0]
@@ -189,7 +450,7 @@ module.exports = class Table extends SubView
 
       @emptyCollection.setParam 'query', cquery
       if @columnSortType == 'measurement'
-        @emptyCollection.setParam 'sorttype', 'measurement'
+        @emptyCollection.setParam 'sorttype', 'measurchement'
       @emptyCollection.fetch({'async':false, success:@emptyData})
 
   subscribe: (channel="") =>
@@ -203,12 +464,7 @@ module.exports = class Table extends SubView
           #console.info "subscribing to: #{@subscribePath}/#{namePath}"
           application.subscriptions["Chart/#{namePath}"] = application.socket.emit 'subscribe', "Chart/#{namePath}"
 
-  getRenderData: =>
-    classes: @tableClasses
-    header: @header
-    cols: @tableCols
-    rows: @rows
-    pageButtons: @options.page == "page"
+
 
   isEditable:(cols, key) =>
     edit = 0
@@ -356,34 +612,9 @@ module.exports = class Table extends SubView
   saveCell:(frame, obj, key = '') =>
     frame.save if key then {key: obj} else obj
 
-  renderRow:(row) =>
-    values = []
-    classes = if row.classes then row.classes else {}
-    titles = if row.titles then row.titles else {}
-    id = if row.id then row.id else ''
-    _.each @tableCols, (v, k) =>
-      key = v.key
-      val = row[v.key]
-      value = @renderCell(val, key)
-      cls = v.key
-      title = ""
-      if classes and classes[key]
-        cls += ' ' + classes[key]
-      if titles and titles[key]
-        title = titles[key]
-      _r = {'class' : cls, 'value' : value, 'title' : title}
-      if v.href
-        _r['href'] = v.href+id
-      values.push _r
 
-    return {id: row.id, values: values}
 
-  insertRow:(row, insertDirection = 1) =>
-    markup = @rowTemplate @renderRow(row)
-    if insertDirection is -1
-      @rows.push(markup)
-    else
-      @rows.unshift(markup)
+
 
   getSortKey: (k) =>
     key = k
@@ -402,79 +633,6 @@ module.exports = class Table extends SubView
       window.open(encodeURI(url))
     return false
 
-  sortByColumn:(e, set) =>
-    if @sortType is 'collection'
-      key = $(e.currentTarget).data('key')
-      direction = $(e.currentTarget).attr('direction') || "desc"
-      if @lastSortKey and key != @lastSortKey
-        @showHidden = false
-      if key
-        @lastSortKey = key
-      k = @getSortKey(key)
-      if !set
-        @collection.setParam 'sortkey', k
-      @sortKey = key
-      if direction == "asc"
-        @collection.setParam 'sortorder', -1
-        @sortDirection = 'desc'
-        @direction = -1
-      else
-        @collection.setParam 'sortorder', 1
-        @sortDirection = 'asc'
-        @direction = 1
-      @cof = true
-      query = @collection.getParam 'query'
-      if @showHidden
-        if query.criteria
-          _.each query.criteria, (criteria, id) =>
-            if criteria.isset
-              delete(query.criteria[id])
-        query.criteria = _.compact(query.criteria)
-        @collection.setParam 'query', query
-        @collection.fetch({'filtered':true})
-      else
-        if query
-          if query.criteria
-            _.each query.criteria, (criteria, id) =>
-              if criteria.isset
-                delete(query.criteria[id])
-            query.criteria.push({"type":"frame","isset":1,"name":k})
-            query.criteria = _.compact(query.criteria)
-          else
-            query = {"logic":"and","criteria":[{"type":"frame","isset":1,"name":k}]}
-          @collection.setParam 'query', query
-        else
-          query = {"logic":"and","criteria":[{"type":"frame","isset":1,"name":k}]}
-          @collection.setParam 'query', query
-        cquery = $.extend(true, {}, query);
-        @getEmptyCollection(k, cquery)
-    else if @sortType is 'js'
-      key = $(e.currentTarget).data('key')
-      direction = $(e.currentTarget).attr('direction') || "desc"
-      if key
-        @lastSortKey = key
-      @sortKey = key
-      k = @getSortKey(key)
-      if direction == "asc"
-        @sortDirection = 'desc'
-        @direction = -1
-      else
-        @sortDirection = 'asc'
-        @direction = 1
-      if @model
-        if @direction == 1
-          @collection.comparator = (@model) =>
-            String.fromCharCode.apply String, _.map(@model.get(k).split(""), (c) ->
-                c.charCodeAt() - 0xffff
-              )
-        else if @direction == -1
-          @collection.comparator = (@model) =>
-            String.fromCharCode.apply String, _.map(@model.get(k).split(""), (c) ->
-                0xffff - c.charCodeAt()
-              )
-        @collection.sort()
-        @updateData()
-
   showHiddenEvent: (e) =>
     @showHidden = true
     query = @collection.getParam 'query'
@@ -487,43 +645,9 @@ module.exports = class Table extends SubView
       @collection.setParam 'query', query
       @collection.fetch({'filtered':true})
 
-  formatData:(data) =>
-    return data
-
-  updateData: =>
-    if @cof == true
-      @scroll.scrollTop(0)
-      @cof = false
-    @rows = []
-
-    if @collection
-      if !@collection.length
-        @noData = true
-      else if @collection.length == 1
-        if @collection.models and @collection.models[0] and @collection.models[0].attributes
-          if !@collection.models[0].attributes.id # BECAUSE CHART DATA ALWAYS RETURNS AT LEAST 1, EVEN IF ITS BLANK
-            @noData = true
-          else
-            @noData = false
-      else
-        @noData = false
-    else
-      @noData = false
 
 
-    if @collection and @collection.models
-      data = @formatData @collection.models
-    else
-      data = @formatData @tableData
-    if data.length
-      @noData = false
 
-    @data = data
-    
-    if !@noData
-      _.each data, (model) =>
-        @insertRow(model, @insertDirection)
-    @render()
 
   infinitePage: =>
     if @collection and @collection.lastavail >= @limit
@@ -566,79 +690,6 @@ module.exports = class Table extends SubView
     for k,v of keys
       $("input#show-hide-#{k}").click()
 
-  updateHeader: =>
-    if @persistentHeader
-      @$(".table.floater").html('')
-      @$(".table.static .thead").clone().appendTo('.table.floater').css('opacity', 1)
-      @head = @$(".header")
-      @static = @$(".table.static .thead")
-      @floater = @$(".table.floater .thead")
-      @table = @$(".table.static")
-      @controls = @table.hasClass('controls')
-
-      # Some extra nudging
-      extras = {'w':0, 'h':0, 't':0, 'l':0}
-      if @controls
-        extras.w = 4
-        extras.h = 0
-        extras.t = -8
-        extras.l = 0
-
-      @hider = @$('.hider')
-
-      @hider.width(@static.width() + 12)
-      @head.width(@static.width() + 1).css('top', 68)
-      @hider.css('left', @head.offset().left - 10)
-
-      key = undefined
-      last = undefined
-      w = undefined
-      _.each @static.find('.th'), (column) =>
-        col = $(column)
-        key = col.attr('data-key')
-        width = col.width()
-        place = col.find('.placeholder')
-        p = $(place)
-        pwidth = p.width()
-        ppadleft = parseInt(p.css('padding-left'), 10)
-        ppadright = parseInt(p.css('padding-right'), 10)
-        w = pwidth + ppadleft + ppadright + 1 + extras.w
-        h = col.height() + extras.h
-        if col.is(":visible")
-          last = key
-        @floater.find(".th[data-key=#{key}]").css('width', w).css('height', h - 2)
-
-      if last
-        item = @floater.find(".th[data-key=#{last}]")
-        item.css('width', item.width() - 1)
-      @table.css('position', 'relative').css('top', 36)
-
-  afterRender: =>
-
-    @afterRenderCounter++
-
-    @$el.find(".th[data-key=#{@sortKey}]")
-      .removeClass("sort-asc sort-desc")
-      .addClass("sort-#{@sortDirection}")
-      .attr('direction', @sortDirection)
-
-    if !@scroll
-      @scroll = $(@scrollElem)
-
-    if @afterRenderCounter >= 2
-      @updateShowHide()
-    @updateHeader()
-    @scrollPage(0)
-
-    # Shows a placeholder row, that asks the user if they would like to see the hidden rows on sort
-    if !@showHidden and @hasHidden
-      cols = @tableCols.length
-      $(".table.static tbody").prepend('<tr><td class="td showhidden" colspan="'+cols+'"><button class="button">Show hidden rows?</button></td></tr>')
-
-    # Shows the row if there is no data
-    if @noData
-      cols = @tableCols.length
-      $(".table.static tbody").prepend('<tr><td class="td showhidden" colspan="'+cols+'">No data to display. Try expanding your filters.</td></tr>')
 
   reflow: =>
     super()
