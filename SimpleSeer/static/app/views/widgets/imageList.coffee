@@ -1,5 +1,4 @@
-[Application, Template, SubView, FilterCollection,
- Frame, InspectionMap] = [
+[Application, Template, SubView, FilterCollection, Frame, InspectionMap] = [
   require('application'),
   require('./templates/imageList'),
   require('views/core/subview'),
@@ -66,7 +65,9 @@ module.exports = class ImageList extends SubView
         sv.render()      
 
   getRenderData: =>
-    'blackList': @blackList
-    'records': @filtercollection.models
-    'blocks': @blocks
+    return {
+      'blackList': @blackList
+      'records': @filtercollection.models
+      'blocks': @blocks
+    }
 

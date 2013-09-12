@@ -4,7 +4,6 @@
     <div class="body">
       {{#each ../blocks}}
       <div class="block {{this}}">
-        <!--------------------------------------------------------------->
         
         {{#if_eq this compare="attributes"}}
           <ul>
@@ -16,8 +15,6 @@
           </ul>
         {{/if_eq}}
         
-        <!--------------------------------------------------------------->
-        
         {{#if_eq this compare="metadata"}}
           <ul>
           {{#key_value ../../attributes.metadata}}
@@ -28,19 +25,14 @@
           </ul>
         {{/if_eq}}
         
-        <!--------------------------------------------------------------->
-        
         {{#if_eq this compare="inspections"}}
           <div id="inspection_{{../../attributes.id}}"></div>
         {{/if_eq}}
-        
-        <!--------------------------------------------------------------->
         
         {{#if_eq this compare="results"}}
           Not Implemented Yet
         {{/if_eq}}
         
-        <!--------------------------------------------------------------->
       </div>
       {{/each}}
     </div>
