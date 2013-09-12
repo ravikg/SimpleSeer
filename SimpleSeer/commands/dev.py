@@ -1,21 +1,4 @@
 from .base import Command
-#import os
-#import os.path
-#import glob
-#import sys
-#import pkg_resources
-#import subprocess
-#import time
-#import re
-#from path import path
-#from SimpleSeer.Session import Session
-#from SimpleSeer.models import Alert
-#from socket import gethostname
-#from contextlib import closing
-#from zipfile import ZipFile, ZIP_DEFLATED
-#import shutil
-
-
 from yaml import load, dump
 from SimpleSeer.models import Frame, FrameFeature 
 import datetime
@@ -40,7 +23,6 @@ class CreateTestFramesCommand(DevCommand):
     def run(self):
         import logging
         log = logging.getLogger(__name__)
-        #log = logging.getLogger()
 
         log.info("Checking meta in file {}".format(self.options.yaml_path))
         try:
@@ -83,7 +65,6 @@ class CreateTestFramesCommand(DevCommand):
                     f.features.append(ff)
                 f.save()
 
-        # Generate passing frames
         log.info("Generating {} passes".format(self.options.frame_passes))
         _gen_frames(True)
 
