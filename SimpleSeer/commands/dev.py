@@ -22,7 +22,8 @@ class CreateTestFramesCommand(DevCommand):
 
     def run(self):
         import logging
-        log = logging.getLogger(__name__)
+        logging.basicConfig(level=logging.DEBUG)
+        log = logging.getLogger()
 
         log.info("Checking meta in file {}".format(self.options.yaml_path))
         try:
@@ -30,8 +31,7 @@ class CreateTestFramesCommand(DevCommand):
             yaml = f.read()
             f.close()
         except IOError as err:
-            log.warn("Import failed: {}, generateing sample yaml".format(err.strerror))
-            self.gen_yaml()
+            log.warn("Import failed: {}, generate sample yaml with simpleseer generatedevyaml".format(err.strerror))
             return
         objs = load(yaml)
 
@@ -72,10 +72,12 @@ class CreateTestFramesCommand(DevCommand):
         log.info("Generating {} failing frames".format(self.options.frame_fails))
         _gen_frames(False)
 
-    def gen_yaml(self):
-    	toExport = {'FrameFeatures': {'tester': {'box': [[[0, 10], [30, 40]], [[0, 10], [400, 500]]], 'curve': [10, 12], 'height': [100, 130]}}}
+class GenerateDevYAMLCommand(DevCommand):
+
+    def run(self):
+        toExport = {'FrameFeatures': {'tester': {'box': [[[0, 10], [30, 40]], [[0, 10], [400, 500]]], 'curve': [10, 12], 'height': [100, 130]}}}
         yaml = dump(toExport, default_flow_style=False)        
-        f = open(self.options.yaml_path, 'w')
+        f = open("dev.yaml", 'w')
         f.write(yaml)
         f.close()
         return yaml
