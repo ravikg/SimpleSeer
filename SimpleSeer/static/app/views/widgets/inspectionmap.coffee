@@ -29,8 +29,8 @@ module.exports = class inspectionMap extends SubView
   clickCanvas: (event) =>
     map = $(event.target).parents(".region").attr("data-map")
     os = $(event.target).offset()
-    _x = event.pageX-os.left.round()
-    _y = event.pageY-os.top.round()
+    _x = Math.round event.pageX-os.left
+    _y = Math.round event.pageY-os.top
     for camera in @maths[@lastMap]
       coords = camera.coords
       if (_x > coords[0]) and (_x < (coords[0]+coords[2])) and (_y > coords[2]) and (_y < (coords[1]+coords[3]))

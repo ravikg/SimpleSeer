@@ -65,7 +65,9 @@ module.exports = class ImageList extends SubView
         sv.render()      
 
   getRenderData: =>
-    'blackList': @blackList
-    'records': @filtercollection.models
-    'blocks': @blocks
+    return {
+      'blackList': @blackList
+      'records': @filtercollection.models
+      'blocks': @blocks
+    }
 
