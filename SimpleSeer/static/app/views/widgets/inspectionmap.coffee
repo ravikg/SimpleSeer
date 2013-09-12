@@ -108,8 +108,7 @@ module.exports = class inspectionMap extends SubView
     parent = @$el.parents(".record-list-item")
     cm = @$el.find(".canvas-map")
     cw = $(cm.prev()).width()
-    cm.css("width", "#{cw}px")
-      .hide("slide", {direction: "up", duration: speed}, => cm.css("width", "100%"))    
+    cm.css("width", "#{cw}px").hide("slide", {direction: "up", duration: speed}, => cm.css("width", "100%"))    
     @hideTriangle()
     @expanded = false
     parent.removeClass("expanded")
