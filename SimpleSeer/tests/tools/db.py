@@ -49,7 +49,6 @@ class DBtools(object):
 
 
     def init_replset(self,postsleep=20):
-        #mongoengine.connection.disconnect()
         mongoengine.connection.disconnect()
 
         conn = MongoClient(self.master)
