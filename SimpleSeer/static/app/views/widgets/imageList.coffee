@@ -1,5 +1,4 @@
-[Application, Template, SubView, FilterCollection,
- Frame, InspectionMap] = [
+[Application, Template, SubView, FilterCollection, Frame, InspectionMap] = [
   require('application'),
   require('./templates/imageList'),
   require('views/core/subview'),
