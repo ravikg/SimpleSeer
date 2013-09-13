@@ -59,11 +59,12 @@ class CreateTestFramesCommand(DevCommand):
             for x in range(1,int(self.options.frame_passes)):
                 f =  Frame(capturetime=datetime.datetime.now())
                 f.features = []
-                for ff_name, ff_values in objs["FrameFeatures"].iteritems():
+                for inspection_id, ff_values in objs["FrameFeatures"].iteritems():
                     ff = FrameFeature()
                     for tol_name, tol_values in ff_values.iteritems():
                         ff.featuredata[tol_name] = _gen_rnd_vals(tol_values, passframe)
                     f.features.append(ff)
+                f.features.inspection = inspection_id
                 f.save()
 
         log.info("Generating {} passes".format(self.options.frame_passes))
