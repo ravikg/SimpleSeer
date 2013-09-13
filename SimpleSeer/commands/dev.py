@@ -1,6 +1,6 @@
 from .base import Command
 from yaml import load, dump
-from SimpleSeer.models import Frame, FrameFeature 
+from SimpleSeer.models import Frame, FrameFeature, ResultEmbed, Measurement
 import datetime
 from random import randrange
 
@@ -63,20 +63,37 @@ class CreateTestFramesCommand(DevCommand):
                     ff = FrameFeature()
                     for tol_name, tol_values in ff_values.iteritems():
                         ff.featuredata[tol_name] = _gen_rnd_vals(tol_values, passframe)
+                    ff.inspection = inspection_id
                     f.features.append(ff)
-                f.features.inspection = inspection_id
+                f.save()
+
+        def _gen_frames_meas(passframe):
+            for x in range(1,int(self.options.frame_passes)):
+                f =  Frame(capturetime=datetime.datetime.now())
+                f.results = []
+                for measurement_id, re_values in objs["ResultEmbed"].iteritems():
+                    result = ResultEmbed()
+                    for tol_name, tol_values in re_values.iteritems():
+                        result.numeric = _gen_rnd_vals(tol_values, passframe)
+                    mObj = Measurement.objects.get(id=measurement_id)
+                    result.measurement_id = measurement_id
+                    result.inspection_id = mObj.inspection
+                    f.results.append(result)
+                #f.features.inspection = inspection_id
                 f.save()
 
         log.info("Generating {} passes".format(self.options.frame_passes))
         _gen_frames(True)
+        _gen_frames_meas(True)
 
         log.info("Generating {} failing frames".format(self.options.frame_fails))
         _gen_frames(False)
+        _gen_frames_meas(False)
 
 class GenerateDevYAMLCommand(DevCommand):
 
     def run(self):
-        toExport = {'FrameFeatures': {'tester': {'box': [[[0, 10], [30, 40]], [[0, 10], [400, 500]]], 'curve': [10, 12], 'height': [100, 130]}}}
+        toExport = {'FrameFeatures': {'50002eee598e1e2ba4000000': {'box': [[[0, 10], [30, 40]], [[0, 10], [400, 500]]], 'curve': [10, 12], 'height': [100, 130]}}}
         yaml = dump(toExport, default_flow_style=False)        
         f = open("dev.yaml", 'w')
         f.write(yaml)
