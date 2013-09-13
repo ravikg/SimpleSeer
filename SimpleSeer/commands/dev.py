@@ -76,7 +76,7 @@ class CreateTestFramesCommand(DevCommand):
 class GenerateDevYAMLCommand(DevCommand):
 
     def run(self):
-        toExport = {'FrameFeatures': {'tester': {'box': [[[0, 10], [30, 40]], [[0, 10], [400, 500]]], 'curve': [10, 12], 'height': [100, 130]}}}
+        toExport = {'FrameFeatures': {'50002eee598e1e2ba4000000': {'box': [[[0, 10], [30, 40]], [[0, 10], [400, 500]]], 'curve': [10, 12], 'height': [100, 130]}}}
         yaml = dump(toExport, default_flow_style=False)        
         f = open("dev.yaml", 'w')
         f.write(yaml)
