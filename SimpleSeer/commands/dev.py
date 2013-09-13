@@ -1,6 +1,6 @@
 from .base import Command
 from yaml import load, dump
-from SimpleSeer.models import Frame, FrameFeature, ResultEmbed, Measurement
+from SimpleSeer.models import Frame, FrameFeature, ResultEmbed, Measurement, Inspection
 import datetime
 from random import randrange
 
@@ -19,12 +19,14 @@ class CreateTestFramesCommand(DevCommand):
         subparser.add_argument("-f", "--fail", dest="frame_fails", default=10,  help="Number of failed frames to generate")
         subparser.add_argument("-t", "--tolerance", dest="tolerance", default=3, help="On failed frames, this number indicates how much to deviate from the passing bounds")
         subparser.add_argument("-y", "--yaml", dest="yaml_path", default="dev.yaml",  help="Path to yaml file containing the pass/fail data")
+        subparser.add_argument("-m", "--metadata", dest="metadata", default="{}",  help="metadata to apply to each generated frame")
+
 
     def run(self):
         import logging
         logging.basicConfig(level=logging.DEBUG)
         log = logging.getLogger()
-
+        self.options.metadata = eval(self.options.metadata)
         log.info("Checking meta in file {}".format(self.options.yaml_path))
         try:
             f = open(self.options.yaml_path, 'r')
@@ -55,7 +57,7 @@ class CreateTestFramesCommand(DevCommand):
                     return randrange(bx, by)
 
 
-        def _gen_frames(passframe):
+        def _gen_frames(options, passframe):
             for x in range(1,int(self.options.frame_passes)):
                 f =  Frame(capturetime=datetime.datetime.now())
                 f.features = []
@@ -65,9 +67,10 @@ class CreateTestFramesCommand(DevCommand):
                         ff.featuredata[tol_name] = _gen_rnd_vals(tol_values, passframe)
                     ff.inspection = inspection_id
                     f.features.append(ff)
+                f.metadata = options.metadata
                 f.save()
 
-        def _gen_frames_meas(passframe):
+        def _gen_frames_meas(options, passframe):
             for x in range(1,int(self.options.frame_passes)):
                 f =  Frame(capturetime=datetime.datetime.now())
                 f.results = []
@@ -76,19 +79,22 @@ class CreateTestFramesCommand(DevCommand):
                     for tol_name, tol_values in re_values.iteritems():
                         result.numeric = _gen_rnd_vals(tol_values, passframe)
                     mObj = Measurement.objects.get(id=measurement_id)
+                    iObj = Inspection.objects.get(id=mObj.inspection)
                     result.measurement_id = measurement_id
                     result.inspection_id = mObj.inspection
+                    result.measurement_name = mObj.name
+                    result.inspection_name = iObj.name
                     f.results.append(result)
-                #f.features.inspection = inspection_id
+                f.metadata = options.metadata
                 f.save()
 
         log.info("Generating {} passes".format(self.options.frame_passes))
-        _gen_frames(True)
-        _gen_frames_meas(True)
+        _gen_frames(self.options, True)
+        _gen_frames_meas(self.options, True)
 
         log.info("Generating {} failing frames".format(self.options.frame_fails))
-        _gen_frames(False)
-        _gen_frames_meas(False)
+        _gen_frames(self.options, False)
+        _gen_frames_meas(self.options, False)
 
 class GenerateDevYAMLCommand(DevCommand):
 
