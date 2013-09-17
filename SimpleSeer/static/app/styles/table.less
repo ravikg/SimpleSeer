@@ -19,7 +19,7 @@
     float: left;
   }
 
-  .show-hide-button {
+  .toggles {
     float: right;
     width: 45px;
     height: 37px;
@@ -34,7 +34,7 @@
   }
 }
 
-.show-hide {
+.toggles-html {
   position: fixed;
   top: 73px;
   right: 2px;
@@ -173,6 +173,7 @@
     color: inherit;
     padding: 4px 7px 3px 7px;
     height: 100%;
+    text-align: left;
 
     span {
       white-space: nowrap;
@@ -210,18 +211,19 @@
       font-family: "OpenSansBold";
     }
 
+    &.fail {
+      background-color: #E42020;
+      color: #FFFFFF;
+    }
+
+    &.pass {
+
+    }
+
   }
 
-  .td.fail {
-    background-color: #E42020;
-    color: #FFFFFF;
-    text-align: center;
-    text-transform: uppercase;
-  }
-
-  .td.pass {
-    text-align: center;
-    text-transform: uppercase;
+  td[data-sort="measurement"] {
+    text-align: right;
   }
 
   .thead {

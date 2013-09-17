@@ -1,6 +1,6 @@
-<tr id="{{id}}" class="tr">
+<tr id="{{id}}" class="tr" {{#if data}}{{#each data}}{{{this}}}{{/each}}{{/if}}>
 {{#each values}}
-  <td class="td" {{#if this.title}}title="{{this.title}}"{{/if}} {{#each data}}{{{this}}}{{/each}}>
+  <td class="td {{#if this.classes}}{{#each this.classes}}{{this}} {{/each}}{{/if}}" {{#if this.title}}title="{{this.title}}"{{/if}} {{#each data}}{{{this}}}{{/each}}>
   {{#if this.html}}
     <span {{#if this.title}}title="{{this.title}}"{{/if}}>
       {{#if this.href}}<a href="#{{this.href}}">{{/if}}{{{this.html}}}{{#if this.href}}</a>{{/if}}

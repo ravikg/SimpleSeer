@@ -3,12 +3,27 @@
 {{#if header}}
   {{{header}}}
 {{/if}}
+{{#if toggles}}
+<div class="toggles-html">
+  <h2>Show / Hide Columns</h2>
+  <hr>
+  <div class="items">
+  {{#each columns}}
+    <div class="item">
+      <input type="checkbox" id="toggle-{{this.data.key}}" data-key="{{this.data.key}}" class="toggle" {{#if this.visible}}checked{{/if}}/><label for="toggle-{{this.data.key}}">{{this.title}}</label>
+    </div>
+  {{/each}}
+  </div>
+</div>
+{{/if}}
 <table class="{{#each classes}}{{this}} {{/each}}static"  style="{{#each styles}}{{{this}}}{{/each}}">
     <thead class="thead">
      {{#each columns}}
-         <th class="th {{#if this.sortable}}sortable{{/if}}" title="{{this.title}}" {{#if this.data.key}}data-key="{{this.data.key}}"{{/if}}>
-             <div class="placeholder">{{this.title}}</div>
-         </th>
+        {{#if this.visible}}
+           <th class="th {{#if this.sortable}}sortable{{/if}}" title="{{this.title}}" {{#if this.data.key}}data-key="{{this.data.key}}"{{/if}}  {{#if this.data.sort}}data-sort="{{this.data.sort}}"{{/if}}>
+               <div class="placeholder">{{this.title}}</div>
+           </th>
+        {{/if}}
      {{/each}}
     </thead>
     <tbody class="tbody">
