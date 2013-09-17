@@ -188,6 +188,10 @@ def frames():
 @util.jsonify
 @checkLoginRequired
 def getFrames(filter_params):
+    resp = make_response("{'error': 'api endpoint deprecated'}", 406)
+    return resp # Forbidden!!
+    
+    '''
     from .base import jsondecode
     from HTMLParser import HTMLParser
     from SeerCloud.OLAPUtils import OLAPFactory
@@ -220,6 +224,7 @@ def getFrames(filter_params):
         return retVal
     else:
         return {frames: None, 'error': 'no result found'}
+    '''
 
 @route('/downloadFrames', methods=['GET', 'POST'])
 @checkLoginRequired

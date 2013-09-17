@@ -70,15 +70,18 @@ module.exports = SeerApplication =
         @socket.on 'message:heartbeat_ping/', window.SimpleSeer._heartbeat_pong
         @socket.emit 'subscribe', 'heartbeat_ping/'
 
-    m = require 'collections/measurements'
-    @measurements = new m()
-    @measurements.fetch()
-    tol = require 'collections/tolerance_list'
-    @tolerance_list = new tol()
-    @tolerance_list.fetch()
+
     t = require 'views/core/modal'
     @modal = new t()
 
+    tol = require 'collections/tolerance_list'
+    @tolerance_list = new tol()
+    @tolerance_list.fetch({async:false})
+
+    m = require 'collections/measurements'
+    @measurements = new m()
+    @measurements.fetch({async:false})
+    
 
     $("#slides").infiniteScroll
       onScroll:(per) =>
