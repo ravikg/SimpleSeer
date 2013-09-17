@@ -70,6 +70,52 @@
       }
     }
     
+    .block.results {
+      div.elastic {
+        color: #444;
+        position: relative;
+        clear: both;
+        white-space: nowrap;
+        overflow: hidden;
+      
+        &.niptuck {
+          margin-top: -18px;
+        }
+      
+        &.spacedown {
+          padding: 0;
+          margin-bottom: 10px;
+          border-radius: 1px;
+        }
+      
+        &.interactive {
+          padding: 3px 4px 4px 6px;
+          margin-bottom: 1px;
+          border-radius: 1px;
+        }
+      
+        &.interactive:nth-child(odd) {
+          background: #E0E0E0;
+        }
+      
+        &:last-child { margin-bottom: 0px; }
+      
+        span.label {
+          display: inline-block;
+          float: left;
+          white-space: nowrap;
+        }
+      
+        span.value {
+          display: inline-block;
+          color: #000;
+          white-space: nowrap;
+          right: 8px;
+          float: right;
+        }
+      }      
+    }
+    
     .block.inspections {
       padding: 0px;
       

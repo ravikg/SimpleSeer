@@ -9,7 +9,12 @@
           <ul>
           {{#key_value ../../attributes}}
             {{#not_in this needle=this.key haystack=../../../../blackList.fields }}
-            <li><span class="label">{{this.key}}:</span><span class="value">{{this.value}}</span></li>
+              {{#if_eq this.key compare="capturetime_epoch"}}
+                <li><span class="label">Capture Time:</span><span class="value">{{#capturetime ../this.value}}{{/capturetime}}</span></li>
+              {{/if_eq}}
+              {{#unless_eq this.key compare="capturetime_epoch"}}
+                <li><span class="label">{{../this.key}}:</span><span class="value">{{../this.value}}</span></li>
+              {{/unless_eq}}
             {{/not_in}}
           {{/key_value}}
           </ul>
@@ -30,7 +35,7 @@
         {{/if_eq}}
         
         {{#if_eq this compare="results"}}
-          Not Implemented Yet
+          {{#resultlist ../../attributes.results ../../../blackList "No Results"}}{{/resultlist}}
         {{/if_eq}}
         
       </div>
