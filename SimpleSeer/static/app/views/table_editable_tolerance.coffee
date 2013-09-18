@@ -10,9 +10,7 @@ module.exports = class ToleranceTable extends EditableTable
 
   ''' TODO '''
   '''
-    Try creating a new row
-    Try sorting on part Number
-    Try deleting everything from a row
+    Make sure javascript sort works for part number
   '''
 
   ''' INIT '''
@@ -23,6 +21,10 @@ module.exports = class ToleranceTable extends EditableTable
       Application.subscriptions["backfill/complete/"] = Application.socket.emit 'subscribe', "backfill/complete/"
     
     super()
+
+  backfillComplete: =>
+    # TODO: we should give some kind visual feedback based on the job thats currently running
+    return
 
   # Append some variables to our table variables dict
   _variables: =>
@@ -41,6 +43,10 @@ module.exports = class ToleranceTable extends EditableTable
     settings = super()
     settings.styles.push('margin-top: 35px;')
     return settings
+
+
+
+  ''' GETTING / SETTING DATA '''
 
   _collection: =>
     collection = Application.measurements
@@ -79,6 +85,14 @@ module.exports = class ToleranceTable extends EditableTable
             rule.measurement_id = b.get('id')
             rule.tolerance_id = d.get('id')
             raw[f][b.get('method')].push(rule)
+
+    # Insert the new rows
+    for b,a in @variables.newrows
+      if raw[b]
+        @_modal('<p class="center">The part number you entered already exists. Please enter in a unique value.</p>')
+        @variables.newrows.pop()
+      else
+        raw[b] = {'metadata.Part Number':b}
 
     rows = []
     for a,b of raw
@@ -169,6 +183,36 @@ module.exports = class ToleranceTable extends EditableTable
 
     return cell
 
+
+  ''' EVENT HANDLING '''
+
+  events: =>
+    parent_events = super()
+    events = { "click .buttonBar .createPart":"_addRow", 'change input[type="text"]':'_changeCell' }
+    _.extend parent_events, events
+
+  _addRow: =>
+    @_modal('<p class="center">Enter in a Part Number for the new tolerance.</p>')
+
+  _changeCell:(e) =>
+    target = $(e.target)
+    id = target.parents('tr').attr('id')
+    part = target.parents('tr').data('part')
+    operator = target.data('operator')
+    measurement_id = target.data('measurement-id')
+    tolerance_id = target.data('tolerance-id')
+    value = target.val()
+    obj = {}
+    if target then obj.target = target
+    if id then obj.id = id
+    if part then obj.part = part
+    if operator then obj.operator = operator
+    if value then obj.value = value
+    if measurement_id then obj.measurement_id = measurement_id
+    if tolerance_id then  obj.tolerance_id = tolerance_id
+    
+    @saveCell(obj)
+
   saveCleanup: (t=undefined, o=undefined) =>
     tid = t.get('id')
     # Write the tolerance id to the UI so we can just write directly now.
@@ -186,7 +230,6 @@ module.exports = class ToleranceTable extends EditableTable
       @saveInfo['measurement_id'] = obj.measurement_id
       @saveInfo['target'] = obj.target
       tolerance = Application.tolerance_list.where({id:obj.tolerance_id})
-      console.log tolerance
       for o,i in tolerance
         o.attributes.rule.value = obj.value
         o.attributes.id = obj.tolerance_id
@@ -208,50 +251,21 @@ module.exports = class ToleranceTable extends EditableTable
       t = new Tolerance({criteria:criteria, rule:rule})
       t.save({}, {wait:true, success:@saveCleanup})
 
-  saveRow: (options) =>
+  _saveRow: (options) =>
     if options and options.part
       id = options.part
-      @newRows.push(id)
-      @updateData()
+      @variables.newrows.push(id)
+      @variables.cleardata = true
+      @variables.clearrows = true
+      @_data()
 
-  showNewRowModal:(m='') =>
+  _modal:(m='') =>
     SimpleSeer.modal.show
       title: "New Tolerance"
       message: m
       submitText: 'Save'
       cancelText: 'Cancel'
       throbber: false
-      submit:(results) => @saveRow(results)
+      submit:(results) => @_saveRow(results)
       form: [{id: "part", type: "text", label: "Part Number"}]
     return 0
-
-  events: =>
-    parent_events = super()
-    events = { "click .buttonBar .createPart":"addRow", 'change input[type="text"]':'changeCell' }
-    _.extend parent_events, events
-
-  addRow: =>
-    @showNewRowModal('<p class="center">Enter in a Part Number for the new tolerance.</p>')
-
-  backfillComplete: =>
-    # TODO: we should give some kind visual feedback based on the job thats currently running
-    return
-
-  changeCell:(e) =>
-    target = $(e.target)
-    id = target.parents('tr').attr('id')
-    part = target.parents('tr').data('part')
-    operator = target.data('operator')
-    measurement_id = target.data('measurement-id')
-    tolerance_id = target.data('tolerance-id')
-    value = target.val()
-    obj = {}
-    if target then obj.target = target
-    if id then obj.id = id
-    if part then obj.part = part
-    if operator then obj.operator = operator
-    if value then obj.value = value
-    if measurement_id then obj.measurement_id = measurement_id
-    if tolerance_id then  obj.tolerance_id = tolerance_id
-    
-    @saveCell(obj)
