@@ -28,7 +28,7 @@ class JSON(fev.FancyValidator):
 
     def _from_python(self, value, state):
         if value is None: return None
-        if isinstance(value, dict):
+        if isinstance(value, dict) or isinstance(value, list):
             return value
         raise fev.Invalid('invalid Python dict', value, state)
 
