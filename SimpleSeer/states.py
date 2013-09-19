@@ -151,19 +151,13 @@ class Core(object):
         # First do all features, then do all results
         if not frame.id in self._queue:
             self.schedule(frame, inspections)
-            if timeout is not None:
-                def onTimeout(signum, frame):
-                    self._useWorkers = False
-                    Session.disable_workers = True
-                    log.warn("Worker timed out. Disabling workers")
-                signal.signal(signal.SIGALRM, onTimeout)
-                signal.alarm(timeout)
-               
-        features = [ feat for feat in self._queue[frame.id].pop('features') ]
-
-        if timeout is not None:
-            # Disable the timeout if the features are returned in time.
-            signal.alarm(0)
+        try:
+            features = [ feat for feat in self._queue[frame.id].pop('features') ]
+        except:
+            log.warn("Worker timed out!  All further inspections will be ran in line.")
+            Session.disable_workers = True
+            self.schedule(frame, inspections)
+            features = [ feat for feat in self._queue[frame.id].pop('features') ]
 
         if clean:
             frame.features = []
