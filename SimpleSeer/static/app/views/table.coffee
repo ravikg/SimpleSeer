@@ -240,6 +240,9 @@ module.exports = class Table extends SubView
     cell.html = value.value
     cell.classes = value.classes
 
+    if settings.href
+      cell.href = settings.href
+
     return cell
 
   # Add stuff to the render function
