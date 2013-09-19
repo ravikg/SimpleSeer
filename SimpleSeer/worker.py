@@ -256,7 +256,7 @@ class Foreman():
         Creates the iterator that returns a single feature or result per iteration 
         (even if the inspection/measurement returned a list, this breaks it up)
         """
-        itt = scheduled.iterate(timeout=100)
+        itt = scheduled.iterate(timeout=120)
         for output in itt:
             for out in output:
                 # de-serialized json features/results do not get their _changed_fields set correctly

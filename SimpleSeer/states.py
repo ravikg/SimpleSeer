@@ -15,6 +15,7 @@ from .base import jsondecode, jsonencode
 from .camera import StillCamera, VideoCamera
 
 from realtime import ChannelManager
+from celery.exceptions import TimeoutError
 
 import logging
 log = logging.getLogger(__name__)
@@ -153,10 +154,11 @@ class Core(object):
             self.schedule(frame, inspections)
         try:
             features = [ feat for feat in self._queue[frame.id].pop('features') ]
-        except:
+        except TimeoutError:
             log.warn("Worker timed out!  All further inspections will be ran in line.")
             Session.disable_workers = True
             self.schedule(frame, inspections)
+            # Note: even though we're not using workers anymore, a TimeoutError exception can still be thrown, and will bubble up.
             features = [ feat for feat in self._queue[frame.id].pop('features') ]
 
         if clean:
