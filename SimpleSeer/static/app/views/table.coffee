@@ -84,7 +84,7 @@ module.exports = class Table extends SubView
 
   # Append addition variables to our class scope
   _variables: =>
-    variables = super()
+    variables = {}
     variables.template = TableTemplate
     variables.rowTemplate = RowTemplate
     variables.preHTML = ""
@@ -135,21 +135,6 @@ module.exports = class Table extends SubView
 
     collection.on('reset', @_data)
     return collection
-
-  # Handle subscriptions to our chart
-  subscribe: (channel="") =>
-    if channel
-      console.log "Subscribing to: " + channel
-      path = channel + "/"
-      if Application.socket
-        Application.socket.removeListener "message:#Chart/#{path}", @_chart
-        Application.socket.on "message:Chart/#{path}", @_chart
-        if !Application.subscriptions["Chart/#{path}"]
-          Application.subscriptions["Chart/#{path}"] = Application.socket.emit 'subscribe', "Chart/#{path}"
-
-  # Do something with the message from Chart
-  _chart: =>
-    console.log "Message from Chart"
 
   # Safe function to update the collection with passed params
   # @TODO: Pass set/unset key to params

@@ -4,10 +4,6 @@ View = require 'views/core/view'
 
 module.exports = class SubView extends View
 
-  _variables: =>
-    variables = {}
-    return variables
-
   initialize: =>
     super()
     @htmltags = {}
