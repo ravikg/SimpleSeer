@@ -50,11 +50,13 @@ module.exports = class Table extends SubView
   # Build a settings object from our configuration file
   _settings: =>
     settings = {}
-    settings.classes = ['table', 'border', 'zebra']
+    settings.classes = ['table', 'zebra']
     settings.styles = []
     settings.toggles = @options.toggles ? false
     settings.hideEmpty = @options.hideEmpty ? false
     settings.size = @options.size ? 'full'
+    if settings.size is 'full'
+      settings.classes.push('border')
     settings.classes.push(settings.size)
     settings.pagination = @options.pagination ? 'infinite'
     settings.classes.push(settings.pagination)
