@@ -78,6 +78,10 @@ module.exports = SeerApplication =
     @tolerance_list = new tol()
     @tolerance_list.fetch({async:false})
 
+    i = require 'collections/inspections'
+    @inspections = new i()
+    @inspections.fetch({async:false})
+
     m = require 'collections/measurements'
     @measurements = new m()
     @measurements.fetch({async:false})
