@@ -247,13 +247,6 @@ module.exports = class Table extends SubView
 
     return cell
 
-  # Add stuff to the render function
-  render: =>
-    if @settings.size is 'full'
-      @select()
-      super()
-      @
-
   # Pass data to handlebars to render
   getRenderData: =>
     toggles: @settings.toggles
