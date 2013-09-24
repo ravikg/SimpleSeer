@@ -5,6 +5,13 @@
       {{#each ../blocks}}
       <div class="block {{this}}">
         
+        {{#if_eq this compare="image"}}
+          <div data-id="{{../id}}" class="markup"> </div>
+          <p class="capturetime">{{#capturetime ../attributes.capturetime_epoch}}{{/capturetime}}</p>
+          <p class="passfail"><span class="value" style="text-transform:uppercase;">{{tolstate ../attributes.results}}</span></p>     
+        {{/if_eq}}
+        
+        
         {{#if_eq this compare="attributes"}}
           <ul>
           {{#key_value ../../attributes}}
@@ -43,4 +50,8 @@
     </div>
   </div>
   {{/each}}
+</div>
+
+<div class="no-records" style="display:none;">
+	<h1 style="text-align: center; font-size:21px; padding:20px;">No records matching search criteria</h1>
 </div>

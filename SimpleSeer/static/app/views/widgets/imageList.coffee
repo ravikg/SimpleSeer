@@ -56,6 +56,8 @@ module.exports = class ImageList extends SubView
     super()
     
   afterRender: =>
+    if @filtercollection.models.length < 1
+      @$(".no-records").show()
     if "inspections" in @blocks
       for subview in @subviews
         subview.undelegateEvents()
