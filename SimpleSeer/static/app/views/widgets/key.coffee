@@ -1,0 +1,72 @@
+[Template, SubView, application] = [
+  require("views/widgets/templates/key"),
+  require("views/core/subview"),
+  require("application")
+]
+
+module.exports = class Key extends SubView
+  template: Template
+  className: 'menu-widget key-widget'
+
+  setModel:(model) =>
+    @model = model
+    @render()
+
+  render:=>
+    if @options.parent.active
+      return super()
+
+  getRenderData:=>
+    retVal = []
+    console.log @model
+    if @model
+      for i,o of @model.get('features')
+        md = o[0].metadata()
+        for k,v of md
+          retVal.push v
+
+      rs = {}
+      for i,o of @model.get('results')
+        if o.state
+          rs[o.measurement_name] = 'fail'
+        else
+          rs[o.measurement_name] = 'pass'
+
+      _.each retVal, (o,i) =>
+
+        if rs[o.prop]?
+          retVal[i].state = rs[o.prop]
+
+          if retVal[i].state is "fail"
+            for mment in SimpleSeer.measurements.models
+              if mment.get("name") is retVal[i].prop
+                # Found the matching measurement
+                units = mment.get("units")
+                values = []
+                label = ""
+                tol = ""
+                wrap = if units is "deg" then "&deg;" else ""
+                val = Number(retVal[i].value)
+
+                # Loop tolerances and get min / max
+
+                for tol in mment.get("tolerances")
+                  if tol.criteria["Part Number"] is @model.get("metadata")["Part Number"]
+                    values.push tol.rule
+                values.sort()
+
+
+                if values
+                  _.each values, (o, i) =>
+                    if o.operator == "<" and val > o.value
+                      label = "Max";
+                      tol = o.value;
+                    if o.operator == ">" and val < o.value
+                      label = "Min";
+                      tol = o.value;
+
+                  retVal[i].tolerances = {label: label, value: tol + wrap}
+                break
+
+    return {features: retVal}
+

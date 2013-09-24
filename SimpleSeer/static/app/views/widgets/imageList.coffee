@@ -114,3 +114,8 @@ module.exports = class ImageList extends SubView
         model.attributes.metadata['Notes'] = el.val()
         model.save({}, {success: @refresh})
         @saveSuccessFlash()
+        
+  jumpToDetails:(event)=>
+    id = $(event.currentTarget).data('id')
+    Application.router.navigate "explore/part/#{id}", {trigger: true}
+        
