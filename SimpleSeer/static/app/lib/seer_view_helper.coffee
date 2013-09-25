@@ -193,7 +193,7 @@ Handlebars.registerHelper "resultlist", (results, blacklist,text="No Results") -
     )
     for result in results
       unless ~blacklist.fields.indexOf(result.measurement_name)
-        value = result.numeric or result.string or undefined
+        value = if result.numeric? then result.numeric.toFixed(result.mmm.get("fixdig")) else if result.string? then result.string else undefined
         if value
           obj = result.mmm
           label = "#{obj.get('label')}"
