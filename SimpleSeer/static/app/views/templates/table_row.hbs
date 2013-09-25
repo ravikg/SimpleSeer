@@ -3,7 +3,7 @@
   <td class="td {{#if this.classes}}{{#each this.classes}}{{this}} {{/each}}{{/if}}" {{#if this.title}}title="{{this.title}}"{{/if}} {{#each data}}{{{this}}}{{/each}}>
   {{#if this.html}}
     <span {{#if this.title}}title="{{this.title}}"{{/if}}>
-      {{#if this.href}}<a href="{{this.href}}{{this.html}}">{{/if}}{{{this.html}}}{{#if this.href}}</a>{{/if}}
+      {{#if this.href}}<a href="{{this.href}}">{{/if}}{{{this.html}}}{{#if this.href}}</a>{{/if}}
     </span>
   {{/if}}
   </td>

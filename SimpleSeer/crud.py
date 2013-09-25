@@ -97,6 +97,8 @@ class ModelHandler(object):
         try:
             values = self.schema.to_python(body, None) # Validate our dict
             try:
+                del values['results']
+                del values['features']
                 del values['id']
             except KeyError:
                 pass
@@ -120,8 +122,6 @@ class ModelHandler(object):
 
     def delete(self, **kwargs):
         id = kwargs.values()[0]
-
-
         obj = self._get_object(id)
         d = obj.__getstate__()
         obj.delete()

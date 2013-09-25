@@ -243,7 +243,7 @@ module.exports = class Table extends SubView
     cell.classes = value.classes
 
     if settings.href
-      cell.href = settings.href
+      cell.href = value.href
 
     return cell
 
