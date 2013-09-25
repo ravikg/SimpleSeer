@@ -239,16 +239,31 @@ module.exports = class Feature extends View
     kv = @mockKeyValueBox(pjs, id, label)
     pjs.strokeWeight(@stroke * @scale)
     pjs.fill(color[0],color[1],color[2])
-    unless offset is 0
-      pjs.line(p1[0], p1[1], p1[0] + offset, p1[1])
-      pjs.line(p2[0], p2[1], p2[0] + offset, p2[1])
-      p1[0] = p1[0] + offset
-      p2[0] = p2[0] + offset
-    if position is "top"
-      @arrow(pjs, p1, [p1[0], p1[1] - kv.height - 12 * @scale])
-      @arrow(pjs, p2, [p2[0], p2[1] + 20 * @scale])
-      @keyValueBox(pjs, [p1[0] - 1, p1[1] - kv.height - 12 * @scale], id, label, "gap")
-    if position is "bottom"
-      @arrow(pjs, p1, [p1[0], p1[1] - 20 * @scale])
-      @arrow(pjs, p2, [p2[0], p2[1] + kv.height + 12 * @scale])
-      @keyValueBox(pjs, [p1[0] - 1, p2[1] + 11 * @scale], id, label, "gap")
+    if p1[0] is p2[0]
+      unless offset is 0
+        pjs.line(p1[0], p1[1], p1[0] + offset, p1[1])
+        pjs.line(p2[0], p2[1], p2[0] + offset, p2[1])
+        p1[0] = p1[0] + offset
+        p2[0] = p2[0] + offset
+      if position is "top"
+        @arrow(pjs, p1, [p1[0], p1[1] - kv.height - 12 * @scale])
+        @arrow(pjs, p2, [p2[0], p2[1] + 20 * @scale])
+        @keyValueBox(pjs, [p1[0] - 1, p1[1] - kv.height - 12 * @scale], id, label, "gap")
+      if position is "bottom"
+        @arrow(pjs, p1, [p1[0], p1[1] - 20 * @scale])
+        @arrow(pjs, p2, [p2[0], p2[1] + kv.height + 12 * @scale])
+        @keyValueBox(pjs, [p1[0] - 1, p2[1] + 11 * @scale], id, label, "gap")
+    else
+      unless offset is 0
+        pjs.line(p1[0], p1[1], p1[0] + offset, p1[1])
+        pjs.line(p2[0], p2[1], p2[0] + offset, p2[1])
+        p1[0] = p1[0] + offset
+        p2[0] = p2[0] + offset
+      if position is "left"
+        @arrow(pjs, p1, [p1[0] - kv.width - 12 * @scale, p1[1] ])
+        @arrow(pjs, p2, [p2[0] + 20 * @scale, p2[1]])
+        @keyValueBox(pjs, [p1[0] + 13 - kv.width * @scale, p1[1] - kv.height - 6 * @scale], id, label, "gap")
+      if position is "right"
+        @arrow(pjs, p1, [p1[0] - 20 * @scale, p1[1] ])
+        @arrow(pjs, p2, [p2[0] + 13 * @scale + kv.width, p2[1]])
+        @keyValueBox(pjs, [p2[0] + 20 * @scale + 17 * @scale, p2[1] - kv.height - 6 * @scale], id, label, "gap")    
