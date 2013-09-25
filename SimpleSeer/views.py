@@ -188,6 +188,7 @@ def frames():
 @util.jsonify
 @checkLoginRequired
 def getFrames(filter_params):
+    log.warn("API endpoint getFrames/ is DEPRECATED")
     from .base import jsondecode
     from HTMLParser import HTMLParser
     from SeerCloud.OLAPUtils import OLAPFactory

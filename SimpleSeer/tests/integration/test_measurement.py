@@ -1,5 +1,6 @@
 import unittest
 import time
+from pymongo import MongoClient
 from SimpleSeer.tests.tools.db import DBtools
 from SimpleSeer.models import Tolerance, Measurement
 from SimpleSeer.worker import Foreman
@@ -15,9 +16,23 @@ class TestMeasurement(unittest.TestCase):
     measurement = None
     tolerance = None
 
+    def assertCollections(self):
+        conn = MongoClient("127.0.0.1:27020")
+        db = conn.test
+        col = db.test
+        col.insert({"test":'test'})
+        print db.collection_names()
+        return self.assertTrue("test" in db.collection_names())
+
+
     def setUp(self):
         self.dbs = DBtools(dbs=self.dbcommands)
         self.dbs.spinup_mongo("master",10)
+        
+        # assure the db exists 
+
+        self.assertCollections()
+
         self.dbs.connect(self.config_override)
         self.seers = SeerInstanceTools()
         self.seers.spinup_seer('worker',config_override=self.config_override)
@@ -38,8 +53,6 @@ class TestMeasurement(unittest.TestCase):
         #if not self.fm.workerRunning():
         #    assertTrue(False) #check to see if worker is running.  if not, use worker tools
 
-        print "tolerance setup complete"
-
     def teardown_tolerance(self):
         if self.tolerance:
             self.tolerance.delete()
@@ -49,49 +62,26 @@ class TestMeasurement(unittest.TestCase):
             self.measurement = None
 
 
-    def test_tolerance_create(self):
-        print "done with spin up"
+    def test_tolerance_binding(self):
         self.setup_tolerance()
-        print "done with tolerance setup"
         # apply tolerance to measurement
         self.measurement.tolerance_list.append(self.tolerance)
-        print "done with tolerance append"
         self.measurement.save()
-        print "done with measurement save"
 
         # reload measurement from db
-        self.measurement.reload()
-        print "done with measurement reload"
-        print self.measurement
+        self.measurement = Measurement.objects.get(id=self.measurement.id)
+        #self.measurement.reload()
 
         ## check that tolerance is on tolerance_list
-        #self.assertTrue( self.measurement.tolerance_list[0].id == self.tolerance.id )
-        # 
-        # delete tolerance
-        # reload measurement from db
+        self.assertTrue( self.measurement.tolerance_list[0].id == self.tolerance.id )
+
+        # delete tolerance, reload measurement from db
+        self.tolerance.delete()
+        self.measurement = Measurement.objects.get(id=self.measurement.id)
         ## check that tolerance_list is empty
-        #delete measurement
-        #self.assertTrue(False)
+        self.assertTrue( len(self.measurement.tolerance_list) == 0 )
+
         self.teardown_tolerance()
-"""
-    def test_tolerance_change(self):
-        # create measurement
-        # create tolerance
-        # add tolerance to measurement
-        ## check that tolerance values == measurement.tolerance_list[0].values
-        # change tolerance value
-        ## check that check that tolerance values != measurement.tolerance_list[0].values
-        # save tolerance
-        ## check that tolerance values == measurement.tolerance_list[0].values
-        # delete tolerance
-        # delete measurement
-        self.assertTrue(False)
-
-    def test_backfill(self):
-
-        #Measurement.objects()[0].backfillTolerances()
-        self.assertTrue(False)
-"""
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestMeasurement)
 unittest.TextTestRunner(verbosity=2).run(suite)

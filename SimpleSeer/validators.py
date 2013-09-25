@@ -28,7 +28,7 @@ class JSON(fev.FancyValidator):
 
     def _from_python(self, value, state):
         if value is None: return None
-        if isinstance(value, dict):
+        if isinstance(value, dict) or isinstance(value, list):
             return value
         raise fev.Invalid('invalid Python dict', value, state)
 
@@ -36,7 +36,10 @@ class DateTime(fev.FancyValidator):
 
     def _to_python(self, value, state):
         try:
-            return datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
+            try:
+                return datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
+            except ValueError:
+                return datetime.strptime(value, '%Y-%m-%d %H:%M:%S.%f')
         except ValueError, ve:
             raise fev.Invalid(str(ve), value, state)
 

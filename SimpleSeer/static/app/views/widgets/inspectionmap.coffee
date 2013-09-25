@@ -7,39 +7,8 @@ module.exports = class inspectionMap extends SubView
   template: template
   expanded: false
   lastMap: ""
-  mapThumbnails:
-    driver:
-      pass: "/img/map/driver_pass.png"
-      fail: "/img/map/driver_fail.png"
-      full: "/img/map/driver_full.png"
-      size: [276, 92]
-    passenger:
-      pass: "/img/map/passenger_pass.png"
-      fail: "/img/map/passenger_fail.png"
-      full: "/img/map/passenger_full.png"
-      size: [276, 92]
-    back:
-      pass: "/img/map/back_pass.png"
-      fail: "/img/map/back_fail.png"
-      full: "/img/map/back_full.png"
-      size: [116, 92]
-  mapOrder: [
-    {
-      name: "driver"
-      pass: ""
-      thumbnail: "/img/map/driver_blank.png"
-    },
-    {
-      name: "back"
-      pass: ""
-      thumbnail: "/img/map/back_blank.png"      
-    },
-    {
-      name: "passenger"
-      pass: ""
-      thumbnail: "/img/map/passenger_blank.png"     
-    }
-  ]
+  mapThumbnails: application.settings.mapThumbnails
+  mapOrder: application.settings.mapThumbnails
   
   events: =>
     "click .map-figure": "expandFigure"
@@ -48,18 +17,23 @@ module.exports = class inspectionMap extends SubView
 
   initialize: =>
     @markup = @addSubview "markup", markupImage, ".canvas-map .graphic"
-    @maths = {'driver':[],'back':[],'passenger':[]}
+    @maths = {}
+    for k,v of @mapThumbnails
+      @maths[k] = []
     for camera in application.settings.cameras
-      @maths[camera.map].push {name: camera.name, coords: @stringToList(camera.location,@mapThumbnails[camera.map].size)}
+      if camera.location? and camera.map? and camera.name?
+        @maths[camera.map].push
+          name: camera.name
+          coords: @stringToList(camera.location,@mapThumbnails[camera.map].size)
 
   clickCanvas: (event) =>
     map = $(event.target).parents(".region").attr("data-map")
     os = $(event.target).offset()
-    _x = Math.round(event.pageX-os.left)
-    _y = Math.round(event.pageY-os.top)
+    _x = Math.round event.pageX-os.left
+    _y = Math.round event.pageY-os.top
     for camera in @maths[@lastMap]
       coords = camera.coords
-      if _x > coords[0] and _x < (coords[0]+coords[2]) and _y > coords[2] and _y < (coords[1]+coords[3])
+      if (_x > coords[0]) and (_x < (coords[0]+coords[2])) and (_y > coords[2]) and (_y < (coords[1]+coords[3]))
         vin = $(event.target).parents(".im-block").attr("data-vin")
         application.router.navigate encodeURI("#stats/Inspection_History/#{vin}/#{camera.name}"), true
         return
@@ -134,8 +108,7 @@ module.exports = class inspectionMap extends SubView
     parent = @$el.parents(".record-list-item")
     cm = @$el.find(".canvas-map")
     cw = $(cm.prev()).width()
-    cm.css("width", "#{cw}px")
-      .hide("slide", {direction: "up", duration: speed}, => cm.css("width", "100%"))    
+    cm.css("width", "#{cw}px").hide("slide", {direction: "up", duration: speed}, => cm.css("width", "100%"))    
     @hideTriangle()
     @expanded = false
     parent.removeClass("expanded")

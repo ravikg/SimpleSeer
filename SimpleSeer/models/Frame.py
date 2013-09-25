@@ -26,7 +26,7 @@ from ..util import LazyProperty
 class FrameSchema(fes.Schema):
     allow_extra_fields=True
     filter_extra_fields=True
-    capturetime = fev.UnicodeString(if_missing=None)
+    capturetime = V.DateTime(if_missing=None)
     capturetime_epoch = fev.Int(if_empty=None, if_missing=None)
     updatetime = fev.UnicodeString(if_missing=None)
     localtz = fev.UnicodeString(if_missing='UTC')

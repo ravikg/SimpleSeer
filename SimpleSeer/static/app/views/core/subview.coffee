@@ -5,9 +5,9 @@ View = require 'views/core/view'
 module.exports = class SubView extends View
 
   initialize: =>
-    @htmltags = {}
     super()
-
+    @htmltags = {}
+    
   # Overrides render in `view.coffee`
   render: () =>
     if @rendered

@@ -42,7 +42,7 @@ class ResultValidator(fev.FancyValidator):
 
 
 class MeasurementSchema(fes.Schema):
-    id = V.ObjectId(if_empty=None, if_missing=None)
+    id = V.ObjectId()
     name = fev.UnicodeString(not_empty=True) #TODO, validate on unique name
     label = fev.UnicodeString(if_missing=None)
     labelkey = fev.UnicodeString(if_missing=None)
@@ -325,8 +325,10 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
         
         if not Session().procname == 'meta':
             if tolChange:
-                log.info('Sending backfill request to OLAP')
-                ChannelManager().rpcSendRequest('backfill/', {'type': 'tolerance', 'id': self.id})
+                s = Session()
+                if s.doBackfill:
+                    log.info('Sending backfill request to OLAP')
+                    ChannelManager().rpcSendRequest('backfill/', {'type': 'tolerance', 'id': self.id})
             
     def measurementsBefore(self):
         # Find the list of measurements that need to execute before this one
