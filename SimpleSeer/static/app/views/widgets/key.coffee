@@ -18,7 +18,6 @@ module.exports = class Key extends SubView
 
   getRenderData:=>
     retVal = []
-    console.log @model
     if @model
       for i,o of @model.get('features')
         md = o[0].metadata()
