@@ -16,7 +16,7 @@ module.exports = class DataTable extends Table
       for y,x in @settings.columns
         if y.data?.key
           location = y.data.key.split('.')
-              
+          
           if location.length > 1
             if location[0] is 'metadata' # Handles all columns in metadata
               d = o.get(location[0])[location[1]]
