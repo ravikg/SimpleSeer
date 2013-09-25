@@ -234,7 +234,7 @@ module.exports = class Table extends SubView
               path = placeholder.slice(2, -1)
               if path is "this"
                 val = o.get(location[0])
-                if val[0] # We have a group by in the list
+                if val instanceof Array and val[0]? # We have a group by in the list
                   val = val[0]
                 if location[1]
                   val = val[location[1]]
