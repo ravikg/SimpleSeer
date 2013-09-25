@@ -31,7 +31,7 @@ module.exports = class DataTable extends Table
             o.attributes.formatted[y.data.key].href = href
 
           if location[0] is 'capturetime_epoch' # Handles capturetime
-            o.attributes.formatted[y.data.key].value = moment(o.get(location[0])).format('YYYY-MM-DD H:mm')
+            o.attributes.formatted[y.data.key].value = moment(o.get(location[0])).format('M/D/YYYY H:mm')
 
           if location.length > 1
             if location[0] is 'metadata' # Handles all columns in metadata
