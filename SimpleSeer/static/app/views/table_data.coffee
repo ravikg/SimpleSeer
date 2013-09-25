@@ -16,15 +16,7 @@ module.exports = class DataTable extends Table
       for y,x in @settings.columns
         if y.data?.key
           location = y.data.key.split('.')
-
-          if !o.attributes.formatted
-            o.attributes.formatted = {}
-          if !o.attributes.formatted[y.data.key]
-            o.attributes.formatted[y.data.key] = {value:'', classes:[]}
               
-          if location[0] is 'capturetime_epoch' # Handles capturetime
-            o.attributes.formatted[y.data.key].value = moment(o.get(location[0])).format('M/D/YYYY H:mm')
-
           if location.length > 1
             if location[0] is 'metadata' # Handles all columns in metadata
               d = o.get(location[0])[location[1]]
@@ -38,17 +30,6 @@ module.exports = class DataTable extends Table
                   o.attributes.formatted[y.data.key].value = (if b.numeric then b.numeric.toFixed(plugin.get('fixdig')) else '')
                   if b.state
                     o.attributes.formatted[y.data.key].classes.push('fail')
-          if y.href
-            href = y.href
-            pattern = /\#\{([\w\.\_]+)\}/g
-            for placeholder in y.href.match(pattern)
-              path = placeholder.slice(2, -1)
-              if path is "this"
-                val = o.attributes.formatted[y.data.key].value
-              else
-                val = o.get(path)
-              href = href.replace(placeholder, val)
-            o.attributes.formatted[y.data.key].href = href
 
     return data
 
