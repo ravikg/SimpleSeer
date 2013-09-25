@@ -3,7 +3,7 @@ import sys
 
 from User import User, UserSchema
 from Frame import Frame, FrameSchema
-from FrameFeature import FrameFeature
+from FrameFeature import FrameFeature, FeatureFactory
 from Inspection import Inspection, InspectionSchema
 from Measurement import Measurement, MeasurementSchema
 from Tolerance import Tolerance, ToleranceSchema
