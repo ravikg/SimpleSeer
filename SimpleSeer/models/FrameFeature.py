@@ -3,6 +3,7 @@ from cStringIO import StringIO
 from binascii import b2a_base64, a2b_base64
 from copy import deepcopy
 from formencode import validators as fev
+import warnings
 
 import cv
 import numpy as np
@@ -204,30 +205,30 @@ class FrameFeature(SimpleEmbeddedDoc, mongoengine.EmbeddedDocument):
 
 class FeatureFactory(SimpleDoc, mongoengine.Document):
     
-    inspid = mongoengine.ObjectIdField()
-    frameid = mongoengine.ObjectIdField()
+    inspection = mongoengine.ObjectIdField()
+    frame = mongoengine.ObjectIdField()
     featureversion = mongoengine.FloatField(default=0.0)
-    ts = mongoengine.DateTimeField()
-    inspparams = mongoengine.DictField(default={})
+    inspecttime = mongoengine.DateTimeField()
+    parameters = mongoengine.DictField(default={})
     # all the vals are json encoded, so create a separate property that will encode/decode this variable
-    _featuredict = mongoengine.DictField(default={})
+    _factory = mongoengine.DictField(default={})
     
-    # Unpack the manually json encoded fields
+     #Unpack the manually json encoded fields
     @property
-    def featuredict(self):
-        return { key: jsondecode(val) for key, val in self._featuredict.iteritems() }
+    def factory(self):
+        return { key: jsondecode(val) for key, val in self._factory.iteritems() }
         
-    @featuredict.setter
-    def featuredict(self, values):
+    @factory.setter
+    def factory(self, values):
         tmp = {}
         # not all features json encode properly when left to mongo, try it manually
         for key, val in values.iteritems() :
             try:
                 tmp[key] = jsonencode(val)
             except:
-                print 'Feature factory could not json encode {}.  Skipping.'.format(key)
-            
-        self._featuredict = tmp
+                warnings.warn('Feature factory could not json encode {}.  Skipping.'.format(key))
+        self._factory = tmp
+        
     
     def __call__(self, frame, inspection):
         
@@ -236,16 +237,17 @@ class FeatureFactory(SimpleDoc, mongoengine.Document):
         feats = plugin(image)
         
         featureDict = {}
+        skip = ['inspection', 'featureclass']
         for d in dir(plugin):
-            # No functions, no hidden fields
-            if not hasattr(getattr(plugin, d), '__call__') and d[0] != '_':
+            # No functions, no hidden fields, and some other skips
+            if not hasattr(getattr(plugin, d), '__call__') and d[0] != '_' and d not in skip:
                 featureDict[d] = getattr(plugin, d)
     
-        self.inspid = inspection.id
-        self.frameid = frame.id
-        self.featuredict = featureDict
-        self.inspparams = inspection.parameters
-        self.ts = datetime.utcnow()
+        self.inspection = inspection.id
+        self.frame = frame.id
+        self.factory = featureDict
+        self.parameters = inspection.parameters
+        self.inspecttime = datetime.utcnow()
         if feats:
             if hasattr(feats[0], 'VERSION'):
                 self.featureversion = feats[0].VERSION
