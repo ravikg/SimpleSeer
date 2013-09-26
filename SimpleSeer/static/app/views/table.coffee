@@ -81,7 +81,6 @@ module.exports = class Table extends SubView
       for o,i in settings.columns
         o.sortable = o.sortable ? true
         o.visible = o.visible ? true
-
     return settings
 
   # Append addition variables to our class scope
@@ -495,8 +494,8 @@ module.exports = class Table extends SubView
 
   # Handles downloading collections by file type
   _download: (e) =>
+    type = $(e.target).attr('data-type')
     if @collection
-      type = $(e.target).attr('data-type')
       @collection.setParam 'limit', 999999999
       url = @collection.baseUrl + @collection.getUrl()
       s = url.split("?")
