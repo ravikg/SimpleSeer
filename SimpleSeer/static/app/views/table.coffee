@@ -214,6 +214,35 @@ module.exports = class Table extends SubView
   # But with a new field in attributes called "formatted" which
   # is an object with {value:value, classes:classes}
   _formatData: (data) =>
+    for o,i in data
+      for y,x in @settings.columns
+        if y.data?.key
+          location = y.data.key.split('.')
+
+          if !o.attributes.formatted
+            o.attributes.formatted = {}
+          if !o.attributes.formatted[y.data.key]
+            o.attributes.formatted[y.data.key] = {value:'', classes:[]}
+
+          if location[0] is 'capturetime_epoch'
+            o.attributes.formatted[y.data.key].value = moment(o.get(location[0])).format('YYYY-MM-DD H:mm')
+          
+          if y.href
+            href = y.href
+            pattern = /\#\{([\w\.\_]+)\}/g
+            for placeholder in y.href.match(pattern)
+              path = placeholder.slice(2, -1)
+              if path is "this"
+                val = o.get(location[0])
+                if val instanceof Array and val[0]? # We have a group by in the list
+                  val = val[0]
+                if location[1]
+                  val = val[location[1]]
+              else
+                val = o.get(path)
+              href = href.replace(placeholder, val)
+            o.attributes.formatted[y.data.key].href = href
+
     return data
 
   # Takes row data, returns row html
@@ -243,7 +272,7 @@ module.exports = class Table extends SubView
     cell.classes = value.classes
 
     if settings.href
-      cell.href = settings.href
+      cell.href = value.href
 
     return cell
 

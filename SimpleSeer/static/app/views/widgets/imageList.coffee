@@ -10,6 +10,13 @@
 module.exports = class ImageList extends SubView
   template: Template
     
+  events:=>
+    "click .markup": "jumpToDetails"
+    "change input": "editMeta"
+    "change textarea": "editNotes"
+    #"mouseenter .results .elastic.interactive": "loadFull"
+    #"mouseleave .results .elastic.interactive": "hideMarkup"    
+    
   initialize: =>
     super()
     
@@ -48,14 +55,24 @@ module.exports = class ImageList extends SubView
     @render()
     
   receive: (data) =>
-    @filtercollection.add(data.data, {at:0})
-    @render()
+    poo = @filtercollection.where({id:data.data.id})[0]
+    if data.channel == "framedelete/"
+      if poo
+        @filtercollection.remove(poo)
+    else
+      if poo
+        poo.attributes = data.data
+      else
+        @filtercollection.add(data.data,{at:0})
+    @render()    
     
   render: =>
     @clearSubviews()
     super()
     
   afterRender: =>
+    if @filtercollection.models.length < 1
+      @$(".no-records").show()
     if "inspections" in @blocks
       for subview in @subviews
         subview.undelegateEvents()
@@ -69,5 +86,36 @@ module.exports = class ImageList extends SubView
       'blackList': @blackList
       'records': @filtercollection.models
       'blocks': @blocks
+      'metafields': SimpleSeer.settings.ui_metadata_keys
     }
 
+  jumpToDetails: => undefined
+  
+  saveSuccessFlash: =>
+    Application.alert('Information saved', 'success')
+    $('#messages .alert').last().delay(3000).fadeOut('fast');  
+  
+  editMeta:(eve) =>
+    if "editmetadata" in @blocks
+      el = $(eve.currentTarget)
+      id = el.parents('.item').attr('data-id')
+      model = @filtercollection.where({id:id})[0]
+      unless model.attributes.metadata[el.attr('name')] is el.val()
+        model.attributes.metadata[el.attr('name')] = el.val()
+        model.save({}, {success: @refresh})
+        @saveSuccessFlash()
+
+  editNotes:(eve) =>
+    if "editmetadata" in @blocks
+      el = $(eve.currentTarget)
+      id = el.parents('.item').attr('data-id')
+      model = @filtercollection.where({id:id})[0]
+      unless model.attributes.metadata['Notes'] is el.val()
+        model.attributes.metadata['Notes'] = el.val()
+        model.save({}, {success: @refresh})
+        @saveSuccessFlash()
+        
+  jumpToDetails:(event)=>
+    id = $(event.currentTarget).data('id')
+    Application.router.navigate "explore/part/#{id}", {trigger: true}
+        

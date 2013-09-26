@@ -54,6 +54,30 @@
 
 #image-list {
   .body {
+    .block.image {
+      position: relative;
+      padding: 0px;
+      
+      .markup { cursor: pointer; }
+      
+      p.capturetime {
+        text-align: center;
+        color: white;
+        position: absolute;
+        top: 10px;
+        left: 10px;
+      }
+      
+      p.passfail {
+        text-align: center;
+        color: white;
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        font-size: 24px;
+      }      
+    }
+          
     .block.attributes, .block.metadata {
       li { margin-bottom: 5px; }
       li div { display: inline-block; }
@@ -68,6 +92,66 @@
         color: #333;
         float: right;
       }
+    }
+    
+    .block.editmetadata {
+      color: #444;
+      div.elastic.spacedown { margin-bottom: 10px; }
+      div.elastic {
+        position: relative;
+        clear: both;
+        white-space: nowrap;
+        overflow: hidden;
+      }      
+      input, textarea {
+        width: 100%;
+        display:block;
+        border-width:0;
+        background: transparent;
+        color: #222;
+        border: 1px solid #929292;
+        font-size: 1.5em;
+        font-weight: bold;
+        resize: none;
+        padding: 4px 4px 4px 6px;
+        -webkit-transition: background 50ms linear;
+        -moz-transition: background 50ms linear;
+        -moz-box-shadow: inset 0px 0px 1px 0px rgba(0,0,0,.2);
+        -webkit-box-shadow: inset 0px 0px 1px 0px rgba(0,0,0,.2);
+        box-shadow: inset 0px 0px 1px 0px rgba(0,0,0,.2);
+        margin: 2px 0 0 0;
+      }
+      textarea {
+        font-size: 13px;
+      }
+      input:hover, textarea:hover {
+        background: rgba(255, 255, 255, 0.5);
+      }
+      input:focus, textarea:focus {
+        background: #FFFFFF !important;
+      }
+      textarea[data-use=notes] {
+        background: transparent;
+        color: #222;
+        width: 100%;
+        height: 54px;
+        border: 1px solid #888;
+        font-size: 13px !important;
+        font-weight: bold;
+        resize: none;
+        padding: 8px;
+      
+        -webkit-transition: background 50ms linear;
+        -moz-transition: background 50ms linear;
+      
+        &:focus {
+          background: white !important;
+        }
+      
+        &:hover {
+          background: rgba(255, 255, 255, 0.5);
+        }
+      }      
     }
     
     .block.results {

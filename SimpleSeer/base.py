@@ -88,7 +88,11 @@ def mebasedict_handle(obj):
 class NumpyIntHandler(jsonpickle.handlers.BaseHandler):
     def flatten(self, obj, data):
         return int(obj)
-    
+
+class NumpyGenericHandler(jsonpickle.handlers.BaseHandler):
+    def flatten(self, obj, data):
+        return obj.tolist()
+
 class FrameFeatureHandler(jsonpickle.handlers.BaseHandler):
     def flatten(self, obj, data = {}):
         j = Pickler(False, 100)
@@ -102,6 +106,11 @@ jsonpickle.handlers.Registry().register(mongoengine.base.BaseList, MongoEngineBa
 jsonpickle.handlers.Registry().register(mongoengine.base.BaseDict, MongoEngineBaseDictHandler)
 jsonpickle.handlers.Registry().register(mongoengine.fields.GridFSProxy, MongoEngineFileFieldHandler)
 jsonpickle.handlers.Registry().register(numpy.int64, NumpyIntHandler)
+jsonpickle.handlers.Registry().register(numpy.float32, NumpyGenericHandler)
+jsonpickle.handlers.Registry().register(numpy.float64, NumpyGenericHandler)
+jsonpickle.handlers.Registry().register(numpy.ndarray, NumpyGenericHandler)
+
+
 
 
 
