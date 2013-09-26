@@ -3,6 +3,7 @@ from cStringIO import StringIO
 from binascii import b2a_base64, a2b_base64
 from copy import deepcopy
 from formencode import validators as fev
+import warnings
 
 import cv
 import numpy as np
@@ -11,8 +12,12 @@ import mongoengine.base
 
 import SimpleCV
 
-from .base import SimpleEmbeddedDoc, SONScrub
+from .base import SimpleEmbeddedDoc, SimpleDoc, SONScrub
 from SimpleSeer.base import mebasedict_handle, mebaselist_handle
+from SimpleSeer.base import jsonencode, jsondecode
+
+from datetime import datetime
+
 
 def _numpy_save(son, collection):
     sio = StringIO()
@@ -196,3 +201,66 @@ class FrameFeature(SimpleEmbeddedDoc, mongoengine.EmbeddedDocument):
             p1x,p1y = p2x,p2y
 
         return inside  
+        
+
+class FeatureFactory(SimpleDoc, mongoengine.Document):
+    
+    inspection = mongoengine.ObjectIdField()
+    frame = mongoengine.ObjectIdField()
+    featureversion = mongoengine.FloatField(default=0.0)
+    inspecttime = mongoengine.DateTimeField()
+    parameters = mongoengine.DictField(default={})
+    # all the vals are json encoded, so create a separate property that will encode/decode this variable
+    _factory = mongoengine.DictField(default={})
+    
+     #Unpack the manually json encoded fields
+    @property
+    def factory(self):
+        return { key: jsondecode(val) for key, val in self._factory.iteritems() }
+        
+    @factory.setter
+    def factory(self, values):
+        tmp = {}
+        # not all features json encode properly when left to mongo, try it manually
+        for key, val in values.iteritems() :
+            try:
+                tmp[key] = jsonencode(val)
+            except:
+                warnings.warn('Feature factory could not json encode {}.  Skipping.'.format(key))
+        self._factory = tmp
+        
+    
+    def __call__(self, frame, inspection):
+        
+        plugin = inspection.get_plugin(inspection.method)
+        image = frame.image
+        feats = plugin(image)
+        
+        featureDict = {}
+        skip = ['inspection', 'featureclass']
+        for d in dir(plugin):
+            # No functions, no hidden fields, and some other skips
+            if not hasattr(getattr(plugin, d), '__call__') and d[0] != '_' and d not in skip:
+                featureDict[d] = getattr(plugin, d)
+    
+        self.inspection = inspection.id
+        self.frame = frame.id
+        self.factory = featureDict
+        self.parameters = inspection.parameters
+        self.inspecttime = datetime.utcnow()
+        if feats:
+            if hasattr(feats[0], 'VERSION'):
+                self.featureversion = feats[0].VERSION
+            else:
+                self.featureversion = 0.0
+        else:
+            self.featureversion = -1
+            
+        if inspection.parameters.get('saveFactory', False):
+            self.save()
+    
+        if inspection.parameters.get('returnFactory', False):
+            return feats, self.featuredict
+        else:
+            return feats
+    

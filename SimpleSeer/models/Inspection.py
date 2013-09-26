@@ -15,7 +15,7 @@ from datetime import datetime
 
 from .base import SimpleDoc, WithPlugins
 from .Measurement import Measurement
-from .FrameFeature import FrameFeature
+from .FrameFeature import FrameFeature, FeatureFactory
 from .Frame import Frame
 
 import logging
@@ -133,24 +133,26 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
         
         # For legacy testing, make sure we have a frame and not an image
         if not type(frame) == Frame:
-            log.warn('inspection execute not expects a frame instead of an image')
+            log.warn('inspection execute expects a frame instead of an image')
             return []
         
         # Pull the frame metadata into the inspection's metadata
-        
         self.parameters['metadata'] = frame.metadata
-        #execute the morphs?
         
         #recursion stopper so we don't accidentally end up in any loops
         if parents.has_key(self.id):
             return []
         
-        method_ref = self.get_plugin(self.method)
+        #method_ref = self.get_plugin(self.method)
         #get the ROI function that we want
         #note that we should validate/roi method
         
         startexectime = datetime.now()
-        featureset = method_ref(frame.image)
+        if self.parameters.get('returnFactory', False):
+            featureset, tmp = FeatureFactory()(frame, self)
+        else:
+            featureset = FeatureFactory()(frame, self)
+            
         execdelta = datetime.now() - startexectime
         
         exectime = float(execdelta.seconds) + execdelta.microseconds / 1000000.0

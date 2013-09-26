@@ -1,9 +1,16 @@
 <div id="image-list">
   {{#each records}}
-  <div class="item">
+  <div class="item" data-id="{{id}}">
     <div class="body">
       {{#each ../blocks}}
       <div class="block {{this}}">
+        
+        {{#if_eq this compare="image"}}
+          <div data-id="{{../../id}}" class="markup" style="background-image: url('/grid/thumbnail_file/{{../../id}}');"></div>
+          <p class="capturetime">{{#capturetime ../../attributes.capturetime_epoch}}{{/capturetime}}</p>
+          <p class="passfail"><span class="value" style="text-transform:uppercase;">{{tolstate ../../attributes.results}}</span></p>     
+        {{/if_eq}}
+        
         
         {{#if_eq this compare="attributes"}}
           <ul>
@@ -30,6 +37,15 @@
           </ul>
         {{/if_eq}}
         
+        {{#if_eq this compare="editmetadata"}}
+          {{#editablemetalist ../../attributes.metadata ../../../metafields}}{{/editablemetalist}}
+
+          <div class="elastic spacedown bottom">
+            Notes
+            <textarea data-use="notes">{{../../attributes.metadata.Notes}}</textarea>
+          </div>        
+        {{/if_eq}}
+        
         {{#if_eq this compare="inspections"}}
           <div id="inspection_{{../../attributes.id}}"></div>
         {{/if_eq}}
@@ -43,4 +59,8 @@
     </div>
   </div>
   {{/each}}
+</div>
+
+<div class="no-records" style="display:none;">
+	<h1 style="text-align: center; font-size:21px; padding:20px;">No records matching search criteria</h1>
 </div>

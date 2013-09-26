@@ -16,15 +16,7 @@ module.exports = class DataTable extends Table
       for y,x in @settings.columns
         if y.data?.key
           location = y.data.key.split('.')
-
-          if !o.attributes.formatted
-            o.attributes.formatted = {}
-          if !o.attributes.formatted[y.data.key]
-            o.attributes.formatted[y.data.key] = {value:'', classes:[]}
-
-          if location[0] is 'capturetime_epoch' # Handles capturetime
-            o.attributes.formatted[y.data.key].value = moment(o.get(location[0])).format('YYYY-MM-DD H:mm')
-
+          
           if location.length > 1
             if location[0] is 'metadata' # Handles all columns in metadata
               d = o.get(location[0])[location[1]]

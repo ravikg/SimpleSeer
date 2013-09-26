@@ -97,6 +97,7 @@ module.exports = class Dashboard extends Model
 
 
   loadElements: =>
+    # TODO: This should be fired first -- this is posing a race condition issue. 
     if @view
       @view.clearSubviews()
       for widget in @attributes.widgets

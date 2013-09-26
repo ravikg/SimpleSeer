@@ -88,6 +88,7 @@
   border: 1px solid transparent;
   z-index: 99999;
   position: fixed;
+  border-right: 1px solid #EEE;
 
   .float {
     float: left;
@@ -153,7 +154,8 @@
     color: #333;
     white-space: nowrap;
     border-bottom: 1px solid #c0c0c0;
-    &:nth-child(odd) { background: #fff; }
+    border-right: 1px solid #eee;
+    &:nth-child(odd) { background: #fff; border-right: 1px solid #fff; }
     &:nth-child(even) { background: #fff; }
 
     &:nth-child(2n) {
@@ -177,7 +179,7 @@
 
     span {
       white-space: nowrap;
-      a { white-space: nowrap; }
+      a { cursor: pointer; white-space: nowrap; }
     }
 
     input {
