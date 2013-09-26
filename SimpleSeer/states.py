@@ -265,8 +265,20 @@ class Core(object):
                     self._cur_state = None
                 else:
                     self._cur_state = self.state(t.state)
-        audit_trail.append(None)
-        return audit_trail
+            except Exception, e:
+                estate = self._states.get('error',None)
+                if estate:
+                    log.error("{} error raised in {}".format(e.__class__.__name__, self._cur_state.name))
+                    _next = estate.run()
+                    audit_trail.append(estate)
+                    if _next:
+                        self._cur_state = _next
+                else:
+                    log.warn("No state.error defined")
+                    raise e
+
+            audit_trail.append(None)
+            return audit_trail
 
     def set_rate(self, rate_in_hz):
         self._clock = util.Clock(rate_in_hz, sleep=gevent.sleep)
