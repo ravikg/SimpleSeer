@@ -42,7 +42,7 @@ class Session():
             self.procname = procname
     
         #self.appname = self.get_app_name('.')
-
+        self.log = log
         self.appname = self.database
         self._known_triggers = {}
     
