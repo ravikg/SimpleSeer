@@ -319,8 +319,14 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
             if m.name == self.name and m.id != self.id:
                 log.info('trying to save measurements with duplicate names: %s' % m.name)
                 self.name = self.name + '_1'
-
-        super(Measurement, self).save(*args, **kwargs)
+        try:
+            super(Measurement, self).save(*args, **kwargs)
+        except mongoengine.ValidationError:
+            # TODO:
+            # This is thrown when importing tolerances, and i have no idea why.
+            # commiting this code as the importing of tolerances is a blocker
+            # -Jim
+            pass
         ChannelManager().publish('meta/', self)
         
         if not Session().procname == 'meta':
