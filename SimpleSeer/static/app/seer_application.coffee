@@ -52,6 +52,8 @@ module.exports = SeerApplication =
     $('#client-name').html(window.SimpleSeer.settings.ui_pagename || "")
     document.title = window.SimpleSeer.settings.ui_pagename || ""
 
+    window.panicCount = 0
+    
     if window.WebSocket?
       @socket = io.connect '/rt'
       @socket.on 'connect', ->
@@ -86,6 +88,7 @@ module.exports = SeerApplication =
     @measurements = new m()
     @measurements.fetch({async:false})
     
+    @_pingStatus()
 
     $("#slides").infiniteScroll
       onScroll:(per) =>
@@ -156,7 +159,22 @@ module.exports = SeerApplication =
       @menuBars[options.id] = new _lib(options)
       _t.html @menuBars[options.id].render().el
       return @menuBars[options.id]
-
+  
+  _pingStatus: ->
+    onSuccess = =>
+      window.panicCount = 0
+      setTimeout(SimpleSeer._pingStatus, 10000)
+    onError = =>
+      window.panicCount++
+      if( window.panicCount >= 2 )
+        PanicMode()
+      else
+        setTimeout(SimpleSeer._pingStatus, 10000) 
+    $.getJSON("/ping", (onSuccess)).fail(onError)
+    return
+    
+    
+              
   loadContext:(name) ->
     if !@context[name]?
       _context = require 'models/core/context'
