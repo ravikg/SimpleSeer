@@ -245,4 +245,21 @@
       }
     }
   }
+
+  .body.Fail {
+    background-color: #FFCACA;
+
+    .block.image {
+      p.passfail { color: red; }
+    } 
+
+    .block.results {
+      .interactive { background: none !important; }
+      .interactive.fail {
+        color: #8F0000;
+        .value { color: #8F0000; }
+        background: #C59B9B !important;
+      }      
+    }
+  }  
 }
