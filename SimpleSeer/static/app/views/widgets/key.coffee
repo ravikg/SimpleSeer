@@ -56,9 +56,6 @@ module.exports = class Key extends SubView
                     values.push tol.get("rule")
                 values.sort()
 
-
-                debugger;
-
                 if values
                   _.each values, (o, i) =>
                     if o.operator == "<" and val > o.value
