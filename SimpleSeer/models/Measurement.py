@@ -206,6 +206,7 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
 
                 result.state = 0
                 messages = []
+
                 for rule in self.tolerance_list:
                     if rule['criteria'].values()[0] == 'all' or (rule['criteria'].keys()[0] in frame.metadata and frame.metadata[rule['criteria'].keys()[0]] == rule['criteria'].values()[0]):
                         criteriaFunc = "testField %s %s" % (rule['rule']['operator'], rule['rule']['value'])
