@@ -49,20 +49,21 @@ module.exports = class Key extends SubView
 
                 # Loop tolerances and get min / max
 
-                for tol in mment.get("tolerances")
-                  if tol.criteria["Part Number"] is @model.get("metadata")["Part Number"]
-                    values.push tol.rule
-                values.sort()
+                #
 
+                for tol in mment.get("tolerance_list")
+                  if tol.get("criteria")["Part Number"] is "all" or tol.get("criteria")["Part Number"] is @model.get("metadata")["Part Number"]
+                    values.push tol.get("rule")
+                values.sort()
 
                 if values
                   _.each values, (o, i) =>
                     if o.operator == "<" and val > o.value
                       label = "Max";
-                      tol = o.value;
+                      tol = "#{o.value}#{mment.get("units")}"
                     if o.operator == ">" and val < o.value
                       label = "Min";
-                      tol = o.value;
+                      tol = "#{o.value}#{mment.get("units")}"
 
                   retVal[i].tolerances = {label: label, value: tol + wrap}
                 break
