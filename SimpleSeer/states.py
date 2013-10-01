@@ -142,13 +142,15 @@ class Core(object):
 
         return currentframes
 
-    def schedule(self, frame, inspections=None):
+    def schedule(self, frame, inspections=None, workers=True):
         # Create a queue that hold the inspection iterator for this frame (which will start the inspection if worker running)
         fm = Foreman()
+        if workers == False:
+            fm._useWorkers = False
         self._queue[frame.id] = {}
         self._queue[frame.id]['features'] = fm.process_inspections(frame, inspections)
 
-    def process(self, frame, inspections=None, measurements=None, overwrite=True, clean=False, timeout=120):
+    def process(self, frame, inspections=None, measurements=None, overwrite=True, clean=False):
         # First do all features, then do all results
         if not frame.id in self._queue:
             self.schedule(frame, inspections)
@@ -157,7 +159,7 @@ class Core(object):
         except TimeoutError:
             log.warn("Worker timed out!  All further inspections will be ran in line.")
             Session.disable_workers = True
-            self.schedule(frame, inspections)
+            self.schedule(frame, inspections, False)
             # Note: even though we're not using workers anymore, a TimeoutError exception can still be thrown, and will bubble up.
             features = [ feat for feat in self._queue[frame.id].pop('features') ]
 
@@ -277,8 +279,8 @@ class Core(object):
                     log.warn("No state.error defined")
                     raise e
 
-            audit_trail.append(None)
-            return audit_trail
+                audit_trail.append(None)
+                return audit_trail
 
     def set_rate(self, rate_in_hz):
         self._clock = util.Clock(rate_in_hz, sleep=gevent.sleep)
