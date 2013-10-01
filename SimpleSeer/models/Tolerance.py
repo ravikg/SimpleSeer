@@ -22,10 +22,18 @@ class Tolerance(SimpleDoc, mongoengine.Document):
 
     def save(self, *args, **kwargs):        
         from SimpleSeer.realtime import ChannelManager
-
-        #import pdb; pdb.set_trace()
         
         super(Tolerance, self).save(*args, **kwargs)
         ChannelManager().publish('meta/', self)
 
-
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            # Note: ignoring name to test if this context is functionally equivalent to other inspection (name is irrelevant)
+            banlist = [None]
+            params = [ a for a in self.__dict__['_data'] if not a in banlist ]
+            for p in params:
+                if self.__getattribute__(p) != other.__getattribute__(p):
+                    return False
+            return True
+        else:
+            return False
