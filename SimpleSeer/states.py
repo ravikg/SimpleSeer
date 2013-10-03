@@ -145,7 +145,7 @@ class Core(object):
     def schedule(self, frame, inspections=None, workers=True):
         # Create a queue that hold the inspection iterator for this frame (which will start the inspection if worker running)
         fm = Foreman()
-        if workers == False:
+        if workers == False or Session.disable_workers == True:
             fm._useWorkers = False
         self._queue[frame.id] = {}
         self._queue[frame.id]['features'] = fm.process_inspections(frame, inspections)
