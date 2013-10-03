@@ -179,6 +179,8 @@ Handlebars.registerHelper "resultlist", (results, blacklist,text="No Results") -
     if result.state?
       r++
 
+  count = 0
+
   if !results or results.length is 0
     tpl += "<div data-use=\"no-results\" class=\"centered\">#{text}</div>"
   else
@@ -195,6 +197,7 @@ Handlebars.registerHelper "resultlist", (results, blacklist,text="No Results") -
       unless ~blacklist.fields.indexOf(result.measurement_name)
         value = if result.numeric? then result.numeric.toFixed(result.mmm.get("fixdig")) else if result.string? then result.string else undefined
         if value
+          count++
           obj = result.mmm
           label = "#{obj.get('label')}"
           if obj.get('units')
@@ -203,6 +206,10 @@ Handlebars.registerHelper "resultlist", (results, blacklist,text="No Results") -
             unit = ""
           if value is "" then unit = "--"
           tpl += "<div class=\"elastic interactive #{if result.state is 1 then "fail" else "pass"}\" data-feature=\"#{result.measurement_name}\"><span class=\"label\">#{label}:</span><span class=\"value\">#{value}#{unit}</span><div class=\"clearfix\"></div></div>"
+  
+  if count == 0
+    tpl += "<div data-use=\"no-results\" class=\"centered\">#{text}</div>"    
+
   return new Handlebars.SafeString tpl
 
 Handlebars.registerHelper "metalist", (results, template) ->
