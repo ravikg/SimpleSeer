@@ -16,6 +16,7 @@ log.setLevel(logging.INFO)
 class ModBusService(object):
 
     def start(self, verbose=False, config={}):
+
         if config.has_key('server'):
             modbus_settings = config
         else:
