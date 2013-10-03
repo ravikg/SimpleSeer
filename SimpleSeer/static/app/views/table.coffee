@@ -186,7 +186,7 @@ module.exports = class Table extends SubView
 
     data = []
     if !@collection or @collection.length <= 1
-      if @collection.models and @collection.models[0] and @collection.models[0].get('id')
+      if @collection.models and @collection.models[0]
         @variables.nodata = false
       else
         @variables.nodata = true
