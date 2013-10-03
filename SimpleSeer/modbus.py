@@ -71,7 +71,7 @@ class ModBusService(object):
                             # to work with anthony's system this was modbus_client.read_discrete_inputs(pin['pin']).bits[0]
                             bit = modbus_client.read_discrete_inputs(pin['pin']).bits[0]
                             if bits[i] is not bit:
-                                cm.publish('modbusInput/', message = {'pin':pin['pin'], 'message':pin['message']})
+                                cm.publish('modbusInput/', message = {'pin':pin['pin'], 'message':bit})
                             bits[i] = bit
                             i += 1
                     except KeyboardInterrupt:
