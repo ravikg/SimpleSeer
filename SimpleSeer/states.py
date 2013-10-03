@@ -145,7 +145,7 @@ class Core(object):
     def schedule(self, frame, inspections=None, workers=True):
         # Create a queue that hold the inspection iterator for this frame (which will start the inspection if worker running)
         fm = Foreman()
-        if workers == False or Session.disable_workers == True:
+        if workers == False or Session().disable_workers == True:
             fm._useWorkers = False
         self._queue[frame.id] = {}
         self._queue[frame.id]['features'] = fm.process_inspections(frame, inspections)
@@ -164,7 +164,6 @@ class Core(object):
             features = [ feat for feat in self._queue[frame.id].pop('features') ]
         except TimeoutError:
             log.warn("Worker timed out!  All further inspections will be ran in line.")
-            Session.disable_workers = True
             self._worker_enabled = False
             self.schedule(frame, inspections, False)
             # Note: even though we're not using workers anymore, a TimeoutError exception can still be thrown, and will bubble up.
