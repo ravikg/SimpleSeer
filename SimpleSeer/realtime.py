@@ -68,16 +68,12 @@ class ChannelManager(object):
                 log.warn("Was unable to use self._connection: {}".format(e))
 
         tries = 0
-        try:
-            max_tries = self._max_tries
-        except Exception as e:
-            max_tries = 1000000
 
         # Attempt to connect until we have a connection or we exceed max_tries
         while True:
             # If we exceed max tries, raise an exception. 
             # All services will exceed the monitor's max_tries limit allowing monitor to restart broker.
-            if tries > max_tries:
+            if tries > self._max_tries:
                 log.warn('Was unable to establish a rabbitmq connection!')
                 raise Exception
             try:

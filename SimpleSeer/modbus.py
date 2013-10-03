@@ -4,7 +4,10 @@ from pymodbus.client.sync import ModbusTcpClient as ModbusClient
 from .Session import Session 
 import time
 import logging
-log = logging.getLogger(__name__)
+logging.basicConfig()
+log = logging.getLogger()
+log.setLevel(logging.INFO)
+
 """
   @TODO:
     - Get all pins once, then check through config pins 
@@ -53,7 +56,7 @@ class ModBusService(object):
                 try:
                     for pin in modbus_settings['digitalInputs']:
                         # to work with anthony's system this was modbus_client.read_discrete_inputs(pin['pin']).bits[0]
-                        bits.append(modbus_client.read_coils(pin['pin']).bits[0])
+                        bits.append(modbus_client.read_discrete_inputs(pin['pin']).bits[0])
                 except:
                     if self.cmThread.isAlive():
                         self.cmThread._stop()
@@ -66,7 +69,7 @@ class ModBusService(object):
                         # Publish any changes to modbusInput/
                         for pin in modbus_settings['digitalInputs']:
                             # to work with anthony's system this was modbus_client.read_discrete_inputs(pin['pin']).bits[0]
-                            bit = modbus_client.read_coils(pin['pin']).bits[0]
+                            bit = modbus_client.read_discrete_inputs(pin['pin']).bits[0]
                             if bits[i] is not bit:
                                 cm.publish('modbusInput/', message = {'pin':pin['pin'], 'message':pin['message']})
                             bits[i] = bit
