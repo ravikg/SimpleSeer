@@ -151,7 +151,13 @@ class Core(object):
         self._queue[frame.id]['features'] = fm.process_inspections(frame, inspections)
 
     def process(self, frame, inspections=None, measurements=None, overwrite=True, clean=False):
-        # First do all features, then do all results
+        # WARNING: Workers cannot process the frame if it has not
+        # been saved to the database yet. We will automatically
+        # save the frame if workers are enabled.
+        if not frame.id and self._worker_enabled != False:
+            frame.save()
+
+        # First do all features, then do all results            
         if not frame.id in self._queue:
             self.schedule(frame, inspections)
         try:
@@ -159,6 +165,7 @@ class Core(object):
         except TimeoutError:
             log.warn("Worker timed out!  All further inspections will be ran in line.")
             Session.disable_workers = True
+            self._worker_enabled = False
             self.schedule(frame, inspections, False)
             # Note: even though we're not using workers anymore, a TimeoutError exception can still be thrown, and will bubble up.
             features = [ feat for feat in self._queue[frame.id].pop('features') ]
