@@ -65,7 +65,8 @@ class ChannelManager(object):
             try:
                 return self._connection
             except Exception as e:
-                log.warn("Was unable to use self._connection: {}".format(e))
+                pass
+                #log.warn("Was unable to use self._connection: {}".format(e))
 
         tries = 0
 
