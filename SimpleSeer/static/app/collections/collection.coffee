@@ -1,7 +1,7 @@
 module.exports = class Collection extends Backbone.Collection
   ajaxTried: 0
   ajaxMaxAttempts: 10
-  ajaxTimeout: 4000
+  ajaxTimeout: 8000
   cachebust: true
 
   sync: =>
