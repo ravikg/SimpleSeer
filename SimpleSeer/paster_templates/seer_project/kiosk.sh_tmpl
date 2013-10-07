@@ -1,0 +1,10 @@
+#!/bin/bash
+started=0
+while true; do
+    sleep 30s;
+    if [ $started -eq 0 ]
+    then
+        started=1
+        google-chrome localhost:8080 --incognito --kiosk; 
+    fi
+done
