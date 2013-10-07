@@ -207,8 +207,8 @@ Handlebars.registerHelper "resultlist", (results, blacklist,text="No Results") -
           if value is "" then unit = "--"
           tpl += "<div class=\"elastic interactive #{if result.state is 1 then "fail" else "pass"}\" data-feature=\"#{result.measurement_name}\"><span class=\"label\">#{label}:</span><span class=\"value\">#{value}#{unit}</span><div class=\"clearfix\"></div></div>"
   
-  if count == 0
-    tpl += "<div data-use=\"no-results\" class=\"centered\">#{text}</div>"    
+    if count == 0
+      tpl += "<div data-use=\"no-results\" class=\"centered\">#{text}</div>"    
 
   return new Handlebars.SafeString tpl
 
