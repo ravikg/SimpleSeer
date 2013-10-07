@@ -164,12 +164,12 @@ module.exports = SeerApplication =
     onSuccess = =>
       window.panicCount = 0
       setTimeout(SimpleSeer._pingStatus, 10000)
+      PanicMode(false)
     onError = =>
       window.panicCount++
       if( window.panicCount >= 2 )
         PanicMode()
-      else
-        setTimeout(SimpleSeer._pingStatus, 10000) 
+      setTimeout(SimpleSeer._pingStatus, 10000) 
     $.getJSON("/ping", (onSuccess)).fail(onError)
     return
     
