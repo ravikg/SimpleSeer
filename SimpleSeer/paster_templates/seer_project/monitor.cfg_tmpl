@@ -13,14 +13,24 @@ services:
   supervisor: 'subsystem:mongodb'
   timeout: 30.0
 - active: false
+  allowed_skips: 3
+  name: worker
+  supervisor: 'seer:worker'
+  timeout: 5.0
+- active: false
+  allowed_skips: 3
+  name: core
+  supervisor: 'seer:core'
+  timeout: 5.0
+- active: false
   allowed_skips: 6
   name: olap
-  supervisor: 'olap'
+  supervisor: 'seer:olap'
   timeout: 30.0
 - active: false
   allowed_skips: 6
   name: web
-  supervisor: 'web'
+  supervisor: 'seer:web'
   timeout: 30.0
 - active: false
   allowed_skips: 6

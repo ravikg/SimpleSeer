@@ -434,6 +434,10 @@ class WorkerCommand(Command):
         subparser.add_argument("--purge", help="clear out the task queue", action="store_true")
 
     def run(self):
+
+        # Subscribe to heartbeat
+        self.heartbeat(name="worker")
+
         if self.options.purge:
             cmd = ('celery', 'purge', '--config', 'SimpleSeer.celeryconfig')
             subprocess.call(cmd)
