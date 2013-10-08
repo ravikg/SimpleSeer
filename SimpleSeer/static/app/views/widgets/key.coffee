@@ -68,5 +68,5 @@ module.exports = class Key extends SubView
                   retVal[i].tolerances = {label: label, value: tol + wrap}
                 break
 
-    return {features: retVal}
+    return {features: retVal, count: retVal.length}
 
