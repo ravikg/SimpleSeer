@@ -14,6 +14,4 @@ module.exports = class Measurement extends Model
     return response
 
   save: (attributes, options) =>
-    if attributes.formatted?
-      delete(attributes.formatted)
     super(attributes, options)
