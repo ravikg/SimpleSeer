@@ -82,7 +82,9 @@ class Session():
     
     def configure(self, d):
         from .models.base import SONScrub
+        import socket
         self._config = d
+        self._config['hostname'] = socket.gethostname()
         if not hasattr(self, 'database') or self.database == '':
             raise Exception('Database not defined in config')
         if not hasattr(self, 'mongo') or self.mongo == '':
