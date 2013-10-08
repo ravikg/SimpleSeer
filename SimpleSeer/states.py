@@ -145,7 +145,7 @@ class Core(object):
     def schedule(self, frame, inspections=None, workers=True):
         # Create a queue that hold the inspection iterator for this frame (which will start the inspection if worker running)
         fm = Foreman()
-        if workers == False or Session().disable_workers == True:
+        if fm.workerRunning() == False or Session().disable_workers == True:
             fm._useWorkers = False
         self._queue[frame.id] = {}
         self._queue[frame.id]['features'] = fm.process_inspections(frame, inspections)
@@ -154,7 +154,7 @@ class Core(object):
         # WARNING: Workers cannot process the frame if it has not
         # been saved to the database yet. We will automatically
         # save the frame if workers are enabled.
-        if not frame.id and self._worker_enabled != False:
+        if not frame.id and Foreman().workerRunning():
             frame.save()
 
         # First do all features, then do all results            
