@@ -4,8 +4,9 @@
     <li style="border:none">
       <div class="key" style="font-size:17px;text-align:center;">No Results</div>
     </li>
+  {{/if_eq}}
 
-  {{else}}
+  {{#unless_eq features.length compare=0}}
 
     {{#key_value features}}
       <li class="{{value.state}}" data-key="{{value.prop}}">
@@ -20,5 +21,5 @@
       </li>
     {{/key_value}}
 
-  {{/if_eq}}
+  {{/unless_eq}}
   </ul>
