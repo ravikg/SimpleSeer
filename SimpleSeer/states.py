@@ -7,7 +7,7 @@ from worker import Foreman
 import gevent
 import signal
 
-from SimpleSeer.Session import Session
+from .Session import Session
 
 from . import models as M
 from . import util
