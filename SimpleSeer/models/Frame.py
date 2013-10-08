@@ -257,6 +257,9 @@ class Frame(SimpleDoc, mongoengine.Document):
             if r.state > 0:
                 self.metadata['tolstate'] = 'Fail'
         
+        if len(self.results) == 0:
+            self.metadata['tolstate'] = 'Warn'
+
         self.updatetime = datetime.utcnow()
         
         newFrame = False
