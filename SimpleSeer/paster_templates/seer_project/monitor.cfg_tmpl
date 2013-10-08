@@ -1,0 +1,39 @@
+check_interval: 5
+verbose: true
+
+services:
+- active: true
+  allowed_skips: 6
+  name: rabbitmq
+  supervisor: 'subsystem:rabbitmq'
+  timeout: 30.0
+- active: false
+  allowed_skips: 6
+  name: mongodb
+  supervisor: 'subsystem:mongodb'
+  timeout: 30.0
+- active: false
+  allowed_skips: 3
+  name: worker
+  supervisor: 'seer:worker'
+  timeout: 5.0
+- active: false
+  allowed_skips: 3
+  name: core
+  supervisor: 'seer:core'
+  timeout: 5.0
+- active: false
+  allowed_skips: 6
+  name: olap
+  supervisor: 'seer:olap'
+  timeout: 30.0
+- active: false
+  allowed_skips: 6
+  name: web
+  supervisor: 'seer:web'
+  timeout: 30.0
+- active: false
+  allowed_skips: 6
+  name: chrome
+  supervisor: 'kiosk:browser'
+  timeout: 30.0
