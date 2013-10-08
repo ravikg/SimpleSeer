@@ -1,14 +1,14 @@
   <ul>
-  {{#if_eq features.length compare=0}}
+  {{#if_eq count compare=0}}
     
     <li style="border:none">
       <div class="key" style="font-size:17px;text-align:center;">No Results</div>
     </li>
   {{/if_eq}}
 
-  {{#unless_eq features.length compare=0}}
+  {{#unless_eq count compare=0}}
 
-    {{#key_value features}}
+    {{#key_value ../features}}
       <li class="{{value.state}}" data-key="{{value.prop}}">
         <div class="key" style="float:left; height:30px; width:24px;"><p style="padding: 10px 8px 0 0; font-size:20px; text-align: center;">{{value.labelkey}}</p></div>
         <p class="title">{{value.title}}:</p>
