@@ -81,6 +81,10 @@ module.exports = class Table extends SubView
       for o,i in settings.columns
         o.sortable = o.sortable ? true
         o.visible = o.visible ? true
+    else
+      for o,i in settings.columns
+        o.sortable = false
+        o.visible = o.visible ? true
     return settings
 
   # Append addition variables to our class scope
