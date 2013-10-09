@@ -242,7 +242,7 @@ module.exports = class ToleranceTable extends EditableTable
       @saveInfo['target'] = obj.target
       criteria = {}
       if obj.part
-        criteria.part_number = obj.part
+        criteria['Part Number'] = obj.part
       rule = {}
       if obj.operator
         if obj.operator is "min"
