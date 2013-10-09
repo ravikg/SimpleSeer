@@ -251,6 +251,9 @@ class Frame(SimpleDoc, mongoengine.Document):
         if self.capturetime_epoch != epoch_ms:
             self.capturetime_epoch = epoch_ms
         
+        for m in Measurement.objects:
+            m.tolerance(self, self.results)
+
         # Aggregate the tolerance states into single measure
         self.metadata['tolstate'] = 'Pass'
         for r in self.results:
@@ -269,10 +272,6 @@ class Frame(SimpleDoc, mongoengine.Document):
         publish = True
         if 'publish' in kwargs:
             publish = kwargs.pop('publish')
-        
-        for m in Measurement.objects:
-            m.tolerance(self, self.results)
-        
 
         super(Frame, self).save(*args, **kwargs)
         
