@@ -45,6 +45,7 @@ module.exports = class Key extends SubView
                 label = ""
                 tol = ""
                 wrap = if units is "deg" then "&deg;" else ""
+                unit = mment.get("units").replace("deg", "")
                 val = Number(retVal[i].value)
 
                 # Loop tolerances and get min / max
@@ -60,12 +61,12 @@ module.exports = class Key extends SubView
                   _.each values, (o, i) =>
                     if o.operator == "<" and val > o.value
                       label = "Max";
-                      tol = "#{o.value}#{mment.get("units")}"
+                      tol = "#{o.value}"
                     if o.operator == ">" and val < o.value
                       label = "Min";
-                      tol = "#{o.value}#{mment.get("units")}"
+                      tol = "#{o.value}"
 
-                  retVal[i].tolerances = {label: label, value: tol + wrap}
+                  retVal[i].tolerances = {label: label, value: tol + unit + wrap}
                 break
 
     return {features: retVal, count: retVal.length}
