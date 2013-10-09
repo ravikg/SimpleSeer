@@ -232,7 +232,12 @@ class Frame(SimpleDoc, mongoengine.Document):
             capturetime = self.capturetime.ctime()
         return "<SimpleSeer Frame Object %d,%d captured with '%s' at %s>" % (
             self.width, self.height, self.camera, capturetime)
-        
+
+    def update_results(self):
+        from .Measurement import Measurement
+        for m in Measurement.objects:
+            m.tolerance(self, self.results)
+
     def save(self, *args, **kwargs):
         from .Inspection import Inspection
         from .Measurement import Measurement
@@ -250,8 +255,9 @@ class Frame(SimpleDoc, mongoengine.Document):
         if self.capturetime_epoch != epoch_ms:
             self.capturetime_epoch = epoch_ms
         
-        for m in Measurement.objects:
-            m.tolerance(self, self.results)
+        # If we don't have any results, or we force a backfill, lets update our results!
+        if len(self.results) == 0 or Session().doBackfill:
+            self.update_results()
 
         # Aggregate the tolerance states into single measure
         self.metadata['tolstate'] = 'Pass'
