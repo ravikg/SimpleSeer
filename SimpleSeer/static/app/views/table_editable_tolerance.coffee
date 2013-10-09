@@ -242,7 +242,7 @@ module.exports = class ToleranceTable extends EditableTable
       @saveInfo['target'] = obj.target
       criteria = {}
       if obj.part
-        criteria['Part Number'] = obj.part
+        criteria['Part Number'] = String(obj.part)
       rule = {}
       if obj.operator
         if obj.operator is "min"
@@ -250,7 +250,7 @@ module.exports = class ToleranceTable extends EditableTable
         if obj.operator is "max"
           rule.operator = "<"
       if obj.value
-        rule.value = obj.value
+        rule.value = String(obj.value)
       t = new Tolerance({criteria:criteria, rule:rule})
       t.save({}, {wait:true, success:@saveCleanup})
 
