@@ -239,7 +239,6 @@ class Frame(SimpleDoc, mongoengine.Document):
         
         #TODO: sometimes we want a frame with no image data, basically at this
         #point we're trusting that if that were the case we won't call .image
-
         self.save_image()
         
         epoch_ms = timegm(self.capturetime.timetuple()) * 1000 + self.capturetime.microsecond / 1000

@@ -32,4 +32,5 @@ module.exports = class Frame extends Model
       delete @attributes.features
     if @attributes.results?
       delete @attributes.results
+
     super(attributes, options)
