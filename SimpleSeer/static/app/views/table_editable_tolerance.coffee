@@ -221,7 +221,10 @@ module.exports = class ToleranceTable extends EditableTable
     # Save the new tolerance to the measurement 
     if @saveInfo.measurement_id
       measurement = Application.measurements.get(id=@saveInfo.measurement_id)
+      if !measurement.attributes.tolerance_list
+        measurement.attributes.tolerance_list = []
       measurement.attributes.tolerance_list.push(o)
+      delete(measurement.attributes.formatted)
       measurement.save()
 
   saveCell: (obj) =>
