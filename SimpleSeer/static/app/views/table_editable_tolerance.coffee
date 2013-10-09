@@ -221,7 +221,10 @@ module.exports = class ToleranceTable extends EditableTable
     # Save the new tolerance to the measurement 
     if @saveInfo.measurement_id
       measurement = Application.measurements.get(id=@saveInfo.measurement_id)
+      if !measurement.attributes.tolerance_list
+        measurement.attributes.tolerance_list = []
       measurement.attributes.tolerance_list.push(o)
+      delete(measurement.attributes.formatted)
       measurement.save()
 
   saveCell: (obj) =>
@@ -239,7 +242,7 @@ module.exports = class ToleranceTable extends EditableTable
       @saveInfo['target'] = obj.target
       criteria = {}
       if obj.part
-        criteria.part_number = obj.part
+        criteria['Part Number'] = String(obj.part)
       rule = {}
       if obj.operator
         if obj.operator is "min"
@@ -247,7 +250,7 @@ module.exports = class ToleranceTable extends EditableTable
         if obj.operator is "max"
           rule.operator = "<"
       if obj.value
-        rule.value = obj.value
+        rule.value = String(obj.value)
       t = new Tolerance({criteria:criteria, rule:rule})
       t.save({}, {wait:true, success:@saveCleanup})
 
