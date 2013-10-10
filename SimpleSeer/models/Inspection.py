@@ -138,6 +138,7 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
         
         # Pull the frame metadata into the inspection's metadata
         self.parameters['metadata'] = frame.metadata
+        self.parameters['tolerances'] = self.tolerances(frame)
         
         #recursion stopper so we don't accidentally end up in any loops
         if parents.has_key(self.id):
@@ -200,6 +201,16 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
                 
         return frameFeatSet
 
+    def tolerances(self, frame):
+        toleranced_fields = {}
+        
+        for m  in self.measurements:
+            for rule in m.tolerance_list + m.tolerances:
+                if rule['criteria'].values()[0] == 'all' or (rule['criteria'].keys()[0] in frame.metadata and frame.metadata[rule['criteria'].keys()[0]] == rule['criteria'].values()[0]):
+                    toleranced_fields[m.method] = 1
+                    
+        return toleranced_fields.keys()
+                    
     def save(self, *args, **kwargs):
         from ..realtime import ChannelManager
         
