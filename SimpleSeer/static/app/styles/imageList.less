@@ -66,6 +66,7 @@
         position: absolute;
         top: 10px;
         left: 10px;
+        text-shadow: 0px 0px 7px #000;
       }
       
       p.passfail {
@@ -75,6 +76,7 @@
         top: 15px;
         right: 15px;
         font-size: 24px;
+        text-shadow: 0px 0px 7px #000;
       }      
     }
           
@@ -155,6 +157,11 @@
     }
     
     .block.results {
+      div[data-use=no-results] {
+        padding-top: 123px;
+        text-align: center;   
+      }
+     
       div.elastic {
         color: #444;
         position: relative;
@@ -262,4 +269,12 @@
       }      
     }
   }  
+
+  .body.Warn {
+    background-color: #FFECCB;
+
+    .block.image {
+      p.passfail { color: #FFAD00; }
+    }
+  }    
 }

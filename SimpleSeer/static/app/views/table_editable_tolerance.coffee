@@ -71,7 +71,6 @@ module.exports = class ToleranceTable extends EditableTable
 
   _formatData: (data) =>
     data = super(data)
-
     raw = {}
     for b,a in data
       if b.get('tolerance_list')?.length > 0
@@ -149,9 +148,15 @@ module.exports = class ToleranceTable extends EditableTable
       value['min'] = {'value':''}
       value['max'] = {'value':''}
 
+    notEmpty = false
+
     if typeof value is 'object'
       value['min'] = value['min'] ? {value:''}
       value['max'] = value['max'] ? {value:''}
+      
+      if value['min'].value or value['max'].value
+        notEmpty = true
+
       for b,a in tols
         if b
           placeholder = b
@@ -179,7 +184,9 @@ module.exports = class ToleranceTable extends EditableTable
       cell.html = value
 
     cell.raw = value
-    cell.classes = value.classes
+    cell.classes = value.classes ? []
+    if notEmpty
+      cell.classes.push('notEmpty')
 
     return cell
 
@@ -218,28 +225,41 @@ module.exports = class ToleranceTable extends EditableTable
     # Write the tolerance id to the UI so we can just write directly now.
     if tid
       @saveInfo.target.attr('data-tolerance-id', tid)
-    # Save the new tolerance to the measurement 
-    if @saveInfo.measurement_id
+    # Save the new tolerance to the measurement
+    if !@saveInfo.tolerance_id and @saveInfo.measurement_id
       measurement = Application.measurements.get(id=@saveInfo.measurement_id)
+      if !measurement.attributes.tolerance_list
+        measurement.attributes.tolerance_list = []
       measurement.attributes.tolerance_list.push(o)
+      delete(measurement.attributes.formatted)
       measurement.save()
+      # Put the new tolerance in the tolerance list
+      Application.tolerance_list.fetch({async:false})
+
+  destroyCleanup: (t=undefined, o=undefined) =>
+    return
 
   saveCell: (obj) =>
     @saveInfo = {}
     if obj.tolerance_id and obj.measurement_id
+      @saveInfo['tolerance_id'] = obj.tolerance_id
       @saveInfo['measurement_id'] = obj.measurement_id
       @saveInfo['target'] = obj.target
       tolerance = Application.tolerance_list.where({id:obj.tolerance_id})
       for o,i in tolerance
-        o.attributes.rule.value = obj.value
-        o.attributes.id = obj.tolerance_id
-      o.save({}, {wait:true, success:@saveCleanup})
+        if !obj.value
+          o.destroy({success:@destroyCleanup})
+        else
+          o.attributes.rule.value = obj.value
+          o.attributes.id = obj.tolerance_id
+          o.save({}, {wait:true, success:@saveCleanup})
+
     else if obj.measurement_id
       @saveInfo['measurement_id'] = obj.measurement_id
       @saveInfo['target'] = obj.target
       criteria = {}
       if obj.part
-        criteria.part_number = obj.part
+        criteria['Part Number'] = String(obj.part)
       rule = {}
       if obj.operator
         if obj.operator is "min"
@@ -247,7 +267,7 @@ module.exports = class ToleranceTable extends EditableTable
         if obj.operator is "max"
           rule.operator = "<"
       if obj.value
-        rule.value = obj.value
+        rule.value = String(obj.value)
       t = new Tolerance({criteria:criteria, rule:rule})
       t.save({}, {wait:true, success:@saveCleanup})
 

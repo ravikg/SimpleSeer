@@ -38,6 +38,9 @@ class CoreCommand(Command):
         if not found_statemachine:
             raise Exception("State machine " + self.options.program + " not found!")
 
+        # Subscribe to heartbeat
+        self.heartbeat(name="core")
+
         try:
             core.run()
         except KeyboardInterrupt as e:
@@ -211,6 +214,10 @@ class ModBusCommand(Command):
     '''Modbus'''
     def run(self):
         from SimpleSeer.modbus import ModBusService
+
+        # Subscribe to heartbeat
+        self.heartbeat(name="modbus")
+
         ModBusService().start(verbose=True)
 
 class ScrubCommand(Command):

@@ -42,6 +42,11 @@ class Command(object):
     def heartbeat(self, name=False, pongfunc=False):
         from SimpleSeer.realtime import ChannelManager
         from SimpleSeer.base import jsondecode
+        import socket
+
+        uniqueId = socket.gethostname()
+        if not uniqueId:
+            uniqueId = ''
 
         def pong(msg):
             #time.sleep(21)
@@ -50,7 +55,7 @@ class Command(object):
             message['status'] = True
             message['message'] = 'pong'
             message['timestamp_pong'] = time.time()
-            cm.publish('heartbeat_pong/', message)
+            cm.publish(uniqueId + '_heartbeat_pong/', message)
 
         if not pongfunc:
             pongfunc = pong
@@ -59,7 +64,7 @@ class Command(object):
             name = self.__class__.__name___
 
         cm = ChannelManager(shareConnection = False)
-        monitor = cm.subscribe('heartbeat_ping/', pongfunc, async=True)
+        monitor = cm.subscribe(uniqueId + '_heartbeat_ping/', pongfunc, async=True)
 
     def _configure_logging(self):
         import logging

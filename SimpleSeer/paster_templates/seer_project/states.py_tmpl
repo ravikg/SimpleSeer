@@ -25,9 +25,12 @@ def run(state):
         gc.collect()
         frames = core.capture()
         for frame in frames:
+            # frame.save() needs to fire before core.process(frame)
+            # to ensure worker can process the frame
+            frame.save() 
             core.process(frame)
-            if config.record_all:
-                frame.save()
+            #if config.record_all:
+            #    frame.save()
 
                 
 @core.on('run', 'rate/')

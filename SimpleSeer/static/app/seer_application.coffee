@@ -68,9 +68,14 @@ module.exports = SeerApplication =
 
       host = window.location.host.split(":")
 
+      if settings.hostname
+        hostname = settings.hostname
+      else
+        hostname = ''
+
       if host[0] is "127.0.0.1" or host[0] is "localhost"
-        @socket.on 'message:heartbeat_ping/', window.SimpleSeer._heartbeat_pong
-        @socket.emit 'subscribe', 'heartbeat_ping/'
+        @socket.on 'message:' + hostname + '_heartbeat_ping/', window.SimpleSeer._heartbeat_pong
+        @socket.emit 'subscribe', hostname + '_heartbeat_ping/'
 
 
     t = require 'views/core/modal'
@@ -164,12 +169,12 @@ module.exports = SeerApplication =
     onSuccess = =>
       window.panicCount = 0
       setTimeout(SimpleSeer._pingStatus, 10000)
+      PanicMode(false)
     onError = =>
       window.panicCount++
       if( window.panicCount >= 2 )
         PanicMode()
-      else
-        setTimeout(SimpleSeer._pingStatus, 10000) 
+      setTimeout(SimpleSeer._pingStatus, 10000) 
     $.getJSON("/ping", (onSuccess)).fail(onError)
     return
     

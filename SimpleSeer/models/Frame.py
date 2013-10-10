@@ -232,14 +232,18 @@ class Frame(SimpleDoc, mongoengine.Document):
             capturetime = self.capturetime.ctime()
         return "<SimpleSeer Frame Object %d,%d captured with '%s' at %s>" % (
             self.width, self.height, self.camera, capturetime)
-        
+
+    def update_results(self):
+        from .Measurement import Measurement
+        for m in Measurement.objects:
+            m.tolerance(self, self.results)
+
     def save(self, *args, **kwargs):
         from .Inspection import Inspection
         from .Measurement import Measurement
         
         #TODO: sometimes we want a frame with no image data, basically at this
         #point we're trusting that if that were the case we won't call .image
-
         self.save_image()
         
         epoch_ms = timegm(self.capturetime.timetuple()) * 1000 + self.capturetime.microsecond / 1000
@@ -251,12 +255,19 @@ class Frame(SimpleDoc, mongoengine.Document):
         if self.capturetime_epoch != epoch_ms:
             self.capturetime_epoch = epoch_ms
         
+        # If we don't have any results, or we force a backfill, lets update our results!
+        if len(self.results) == 0 or Session().doBackfill:
+            self.update_results()
+
         # Aggregate the tolerance states into single measure
         self.metadata['tolstate'] = 'Pass'
         for r in self.results:
             if r.state > 0:
                 self.metadata['tolstate'] = 'Fail'
         
+        if len(self.results) == 0:
+            self.metadata['tolstate'] = 'Warn'
+
         self.updatetime = datetime.utcnow()
         
         newFrame = False
@@ -266,10 +277,6 @@ class Frame(SimpleDoc, mongoengine.Document):
         publish = True
         if 'publish' in kwargs:
             publish = kwargs.pop('publish')
-        
-        for m in Measurement.objects:
-            m.tolerance(self, self.results)
-        
 
         super(Frame, self).save(*args, **kwargs)
         

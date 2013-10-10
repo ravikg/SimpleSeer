@@ -81,6 +81,10 @@ module.exports = class Table extends SubView
       for o,i in settings.columns
         o.sortable = o.sortable ? true
         o.visible = o.visible ? true
+    else
+      for o,i in settings.columns
+        o.sortable = false
+        o.visible = o.visible ? true
     return settings
 
   # Append addition variables to our class scope
@@ -186,7 +190,7 @@ module.exports = class Table extends SubView
 
     data = []
     if !@collection or @collection.length <= 1
-      if @collection.models and @collection.models[0] and @collection.models[0].get('id')
+      if @collection.models and @collection.models[0]
         @variables.nodata = false
       else
         @variables.nodata = true

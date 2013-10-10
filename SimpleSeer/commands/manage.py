@@ -69,11 +69,11 @@ class DeployCommand(ManageCommand):
     supervisor_link = "/etc/supervisor/conf.d/simpleseer.conf"
 
     deploy_local_sub_reqs = ["mongodb", "rabbitmq"]
-    deploy_local_seer_reqs = ["core", "olap", "worker", "web"]
+    deploy_local_seer_reqs = ["core", "olap", "worker", "web", "monitor"]
     deploy_local_kiosk_reqs = ["browser"]
 
     deploy_skybox_sub_reqs = ["mongodb", "rabbitmq"]
-    deploy_skybox_seer_reqs = ["olap", "worker", "web"]
+    deploy_skybox_seer_reqs = ["olap", "worker", "web", "monitor"]
     deploy_skybox_kiosk_reqs = []
 
     def __init__(self, subparser):
@@ -434,6 +434,10 @@ class WorkerCommand(Command):
         subparser.add_argument("--purge", help="clear out the task queue", action="store_true")
 
     def run(self):
+
+        # Subscribe to heartbeat
+        self.heartbeat(name="worker")
+
         if self.options.purge:
             cmd = ('celery', 'purge', '--config', 'SimpleSeer.celeryconfig')
             subprocess.call(cmd)

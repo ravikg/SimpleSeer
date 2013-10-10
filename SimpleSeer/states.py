@@ -7,7 +7,7 @@ from worker import Foreman
 import gevent
 import signal
 
-from SimpleSeer import Session
+from .Session import Session
 
 from . import models as M
 from . import util
@@ -145,20 +145,26 @@ class Core(object):
     def schedule(self, frame, inspections=None, workers=True):
         # Create a queue that hold the inspection iterator for this frame (which will start the inspection if worker running)
         fm = Foreman()
-        if workers == False:
+        if fm.workerRunning() == False or Session().disable_workers == True:
             fm._useWorkers = False
         self._queue[frame.id] = {}
         self._queue[frame.id]['features'] = fm.process_inspections(frame, inspections)
 
     def process(self, frame, inspections=None, measurements=None, overwrite=True, clean=False):
-        # First do all features, then do all results
+        # WARNING: Workers cannot process the frame if it has not
+        # been saved to the database yet. We will automatically
+        # save the frame if workers are enabled.
+        if not frame.id and Foreman().workerRunning():
+            frame.save()
+
+        # First do all features, then do all results            
         if not frame.id in self._queue:
             self.schedule(frame, inspections)
         try:
             features = [ feat for feat in self._queue[frame.id].pop('features') ]
         except TimeoutError:
             log.warn("Worker timed out!  All further inspections will be ran in line.")
-            Session.disable_workers = True
+            self._worker_enabled = False
             self.schedule(frame, inspections, False)
             # Note: even though we're not using workers anymore, a TimeoutError exception can still be thrown, and will bubble up.
             features = [ feat for feat in self._queue[frame.id].pop('features') ]
