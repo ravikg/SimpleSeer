@@ -209,6 +209,18 @@ module.exports = class ToleranceTable extends EditableTable
     measurement_id = target.data('measurement-id')
     tolerance_id = target.data('tolerance-id')
     value = target.val()
+  
+    # Highlight new cells with data
+    values = []
+    target.parent('span').children('input').each ->
+      v = $(this).val()
+      if v or String(v) == "0"
+        values.push(v)
+    if values.length
+      target.parents('.td').addClass('notEmpty')
+    else
+      target.parents('.td').removeClass('notEmpty')
+
     obj = {}
     if target then obj.target = target
     if id then obj.id = id
