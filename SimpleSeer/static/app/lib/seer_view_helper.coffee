@@ -229,7 +229,7 @@ Handlebars.registerHelper "editablemetalist", (results={}, template) ->
   return new Handlebars.SafeString tpl
 
 Handlebars.registerHelper "capturetime", (time) ->
-  str = new moment(parseInt(time)).format("M/D/YYYY h:mm a")
+  str = new moment(parseInt(time)).format("M/D/YYYY HH:mm")
   return new Handlebars.SafeString str
 
 Handlebars.registerHelper "tolstate", (results) ->

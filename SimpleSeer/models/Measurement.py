@@ -90,7 +90,7 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
     inspection = mongoengine.ObjectIdField(default=None)
     featurecriteria = mongoengine.DictField(default={})
     tolerances = mongoengine.ListField(default=[])
-    tolerance_list = mongoengine.ListField(mongoengine.ReferenceField('Tolerance', dbref=False, reverse_delete_rule=mongoengine.NULLIFY))
+    tolerance_list = mongoengine.ListField(mongoengine.ReferenceField('Tolerance', dbref=False, reverse_delete_rule=mongoengine.PULL))
     updatetime = mongoengine.DateTimeField(default=None)
     conditions = mongoengine.ListField(default=[])
     booleans = mongoengine.ListField(default=[])
