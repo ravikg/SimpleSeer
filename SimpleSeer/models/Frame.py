@@ -237,7 +237,9 @@ class Frame(SimpleDoc, mongoengine.Document):
         from .Measurement import Measurement
         results = []
         for m in Measurement.objects:
-            results.append(m.execute(self)[0])
+            res = m.execute(self)
+            if len(res):
+                results.append(res[0])
         return results
 
     def save(self, *args, **kwargs):
