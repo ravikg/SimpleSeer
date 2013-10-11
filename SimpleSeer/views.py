@@ -387,13 +387,25 @@ def login():
 @route("/reauth", methods=["GET", "POST"])
 @login_required
 def reauth():
-  if request.method == "POST":
-    confirm_login()
-    return redirect(request.args.get("next") or url_for("index"))
-  return render_template("reauth.html")
+    if request.method == "POST":
+        confirm_login()
+        return redirect(request.args.get("next") or url_for("index"))
+    return render_template("reauth.html")
 
 @route("/logout")
 @login_required
 def logout():
   logout_user()
   return redirect(url_for("index"))
+
+@route('/execute/<frame_id>', methods=['GET'])
+@checkLoginRequired
+def re_measure(frame_id):
+    params = request.values.to_dict()
+    frame = M.Frame.objects(id = bson.ObjectId(frame_id))
+    if not frame:
+        return "Frame not found", 404
+    frame = frame[0]
+    frame.save(execute = True)
+    resp = make_response('OK', 200)
+    return resp
