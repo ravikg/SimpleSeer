@@ -235,8 +235,10 @@ class Frame(SimpleDoc, mongoengine.Document):
 
     def update_results(self):
         from .Measurement import Measurement
+        results = []
         for m in Measurement.objects:
-            m.tolerance(self, self.results)
+            results.append(m.execute(self)[0])
+        return results
 
     def save(self, *args, **kwargs):
         from .Inspection import Inspection
@@ -255,9 +257,12 @@ class Frame(SimpleDoc, mongoengine.Document):
         if self.capturetime_epoch != epoch_ms:
             self.capturetime_epoch = epoch_ms
         
-        # If we don't have any results, or we force a backfill, lets update our results!
-        if len(self.results) == 0 or Session().doBackfill:
-            self.update_results()
+        # run measurement.execute to get updated results based on current tolerances
+        execute = False
+        if 'execute' in kwargs:
+            execute = kwargs.pop('execute')
+        if execute is True:
+            self.results = self.update_results()
 
         # Aggregate the tolerance states into single measure
         self.metadata['tolstate'] = 'Pass'
