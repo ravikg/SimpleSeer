@@ -128,6 +128,16 @@ class StillCamera(object):
             img = self._scv_cam.getImage()
         if self.crop:
             img = img.crop(self.crop)
+        if self.rotate:
+            if self.rotate == 90:
+                img = img.rotate90()
+            elif self.rotate == 180:
+                img = img.rotate180()
+            elif self.rotate == 270:
+                img = img.rotate270()
+            else:
+                img = img.rotate(self.rotate, fixed = False)
+
         return img
 
     def getFrame(self):
