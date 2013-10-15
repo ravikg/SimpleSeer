@@ -249,7 +249,7 @@ class Frame(SimpleDoc, mongoengine.Document):
         #TODO: sometimes we want a frame with no image data, basically at this
         #point we're trusting that if that were the case we won't call .image
         self.save_image()
-        
+
         epoch_ms = timegm(self.capturetime.timetuple()) * 1000 + self.capturetime.microsecond / 1000
         # Mongo will automatically fix the datetime but not the epoch
         if self.capturetime.tzinfo:
@@ -259,12 +259,7 @@ class Frame(SimpleDoc, mongoengine.Document):
         if self.capturetime_epoch != epoch_ms:
             self.capturetime_epoch = epoch_ms
         
-        # run measurement.execute to get updated results based on current tolerances
-        execute = False
-        if 'execute' in kwargs:
-            execute = kwargs.pop('execute')
-        if execute is True:
-            self.results = self.update_results()
+        self.results = self.update_results()
 
         # Aggregate the tolerance states into single measure
         self.metadata['tolstate'] = 'Pass'
@@ -289,7 +284,6 @@ class Frame(SimpleDoc, mongoengine.Document):
         
         if newFrame and Session().framebuffer:
             self._addToBuffer()
-        
         
         # Once everything else is saved, publish result
         # Do not place any other save actions after this line or realtime objects will miss data

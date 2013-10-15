@@ -128,7 +128,7 @@ class StillCamera(object):
             img = self._scv_cam.getImage()
         if self.crop:
             img = img.crop(self.crop)
-        if self.rotate:
+        if hasattr(self, 'rotate'):
             if self.rotate == 90:
                 img = img.rotate90()
             elif self.rotate == 180:

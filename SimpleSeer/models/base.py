@@ -41,6 +41,8 @@ class Picklable(object):
             ret['id'] = self.id
 
         for k in self._data.keys():
+            #if k == 'capturetime':
+            #    import pdb; pdb.set_trace()
             if k == 'id': continue
             
             if not k:
@@ -51,8 +53,8 @@ class Picklable(object):
                 continue
             if (hasattr(v, "__json__")):
                 ret[k] = v.__json__()
-            elif isinstance(v, datetime):
-                ret[k] = calendar.timegm(v.timetuple())
+            #elif isinstance(v, datetime):
+            #    ret[k] = calendar.timegm(v.timetuple())
             elif isinstance(v, mongoengine.fields.GridFSProxy):
                 if v is None:
                     ret[k] = None
