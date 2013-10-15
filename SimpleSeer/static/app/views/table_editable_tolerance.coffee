@@ -86,12 +86,17 @@ module.exports = class ToleranceTable extends EditableTable
             raw[f][b.get('method')].push(rule)
 
     # Insert the new rows
-    for b,a in @variables.newrows
-      if raw[b]
-        @_modal('<p class="center">The part number you entered already exists. Please enter in a unique value.</p>')
-        @variables.newrows.pop()
+    nr = _.clone @variables.newrows
+    @variables.newrows = []
+    for b,a in nr
+      if raw[b] and typeof(raw[b]) == 'string'
+        # Do Nothing
+      else if raw[b] and typeof(raw[b]) == 'object'
+        # Do nothing
       else
         raw[b] = {'metadata.Part Number':b}
+        @variables.newrows.push(b)
+
 
     rows = []
     for a,b of raw
