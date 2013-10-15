@@ -387,10 +387,10 @@ def login():
 @route("/reauth", methods=["GET", "POST"])
 @login_required
 def reauth():
-  if request.method == "POST":
-    confirm_login()
-    return redirect(request.args.get("next") or url_for("index"))
-  return render_template("reauth.html")
+    if request.method == "POST":
+        confirm_login()
+        return redirect(request.args.get("next") or url_for("index"))
+    return render_template("reauth.html")
 
 @route("/logout")
 @login_required
