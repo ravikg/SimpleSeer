@@ -164,7 +164,6 @@ class FrameFeature(SimpleEmbeddedDoc, mongoengine.EmbeddedDocument):
     def __getstate__(self):
         ret = {}
         skipfields = ["featurepickle", "children"]
-        
         #handle all the normal fields
         for k in self._data.keys():
             if k in skipfields:

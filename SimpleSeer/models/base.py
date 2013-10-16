@@ -91,8 +91,8 @@ class Picklable(object):
             elif k == 'imgfile':
                 grid_id = state['imgfile'][-24:]
                 self._data['imgfile'] = mongoengine.fields.GridFSProxy(ObjectId(grid_id))
-            elif k == 'capturetime':
-                self._data[k] = datetime.utcfromtimestamp(v)
+            #elif k == 'capturetime':
+            #    self._data[k] = datetime.utcfromtimestamp(v)
             elif k == 'features':
                 feats = []
                 for feat in v:
