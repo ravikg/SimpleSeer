@@ -160,6 +160,7 @@ class Core(object):
         # First do all features, then do all results            
         if not frame.id in self._queue:
             self.schedule(frame, inspections)
+
         try:
             features = [ feat for feat in self._queue[frame.id].pop('features') ]
         except TimeoutError:
