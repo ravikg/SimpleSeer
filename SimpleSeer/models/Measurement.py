@@ -209,9 +209,15 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
 
                 for rule in self.tolerance_list:
                     try:
-                       complex(rule.rule['value'])
+                        # The tolerance in tolerance_list is a DB REF!
+                        tolerance_id = rule._DBRef__id
+                        rule = Tolerance.objects(id=tolerance_id)[0]
+                    except AttributeError:
+                        pass
+                    try:
+                        complex(rule.rule['value'])
                     except ValueError:
-                       continue
+                        continue
                     if rule['criteria'].values()[0] == 'all' or (rule['criteria'].keys()[0] in frame.metadata and frame.metadata[rule['criteria'].keys()[0]] == rule['criteria'].values()[0]):
                         criteriaFunc = "testField %s %s" % (rule['rule']['operator'], rule['rule']['value'])
                         match = eval(criteriaFunc, {}, {'testField': testField})

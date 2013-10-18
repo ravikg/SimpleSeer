@@ -259,7 +259,8 @@ class Frame(SimpleDoc, mongoengine.Document):
         if self.capturetime_epoch != epoch_ms:
             self.capturetime_epoch = epoch_ms
         
-        self.results = self.update_results()
+        if not len(self.results):
+            self.results = self.update_results()
 
         # Aggregate the tolerance states into single measure
         self.metadata['tolstate'] = 'Pass'
