@@ -284,7 +284,8 @@ class Foreman():
         for i in insps:
             try:
                 features = i.execute(frame)
-            except:
+            except Exception as e:
+                log.warn("Failed execution with exception {}".format(e))
                 features = []
             for feat in features:
                 yield feat
