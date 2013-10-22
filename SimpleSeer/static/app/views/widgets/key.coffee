@@ -39,21 +39,22 @@ module.exports = class Key extends SubView
           if retVal[i].state is "fail"
             for mment in SimpleSeer.measurements.models
               if mment.get("name") is retVal[i].prop
-                # Found the matching measurement
-                units = mment.get("units")
                 values = []
-                label = ""
-                tol = ""
-                wrap = if units is "deg" then "&deg;" else ""
-                unit = mment.get("units").replace("deg", "")
-                val = Number(retVal[i].value)
+                tolerance_list = mment.get("tolerance_list")
+                if tolerance_list
+                  units = mment.get("units")
+                  label = ""
+                  tol = ""
+                  wrap = if units is "deg" then "&deg;" else ""
+                  unit = mment.get("units").replace("deg", "")
+                  val = Number(retVal[i].value)
+                  for tol in tolerance_list
+                    if tol.get?
+                      if tol.get("criteria")["Part Number"] is "all" or tol.get("criteria")["Part Number"] is @model.get("metadata")["Part Number"]
+                        values.push tol.get("rule")
+                  values.sort()
 
-                for tol in mment.get("tolerance_list")
-                  if tol.get("criteria")["Part Number"] is "all" or tol.get("criteria")["Part Number"] is @model.get("metadata")["Part Number"]
-                    values.push tol.get("rule")
-                values.sort()
-
-                if values
+                if values is true
                   _.each values, (o, i) =>
                     if o.operator == "<" and val > o.value
                       label = "Max";
@@ -64,6 +65,6 @@ module.exports = class Key extends SubView
 
                   retVal[i].tolerances = {label: label, value: tol + unit + wrap}
                 break
-
+                
     return {features: retVal, count: retVal.length}
 
