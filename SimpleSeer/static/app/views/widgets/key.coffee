@@ -48,10 +48,6 @@ module.exports = class Key extends SubView
                 unit = mment.get("units").replace("deg", "")
                 val = Number(retVal[i].value)
 
-                # Loop tolerances and get min / max
-
-                #
-
                 for tol in mment.get("tolerance_list")
                   if tol.get("criteria")["Part Number"] is "all" or tol.get("criteria")["Part Number"] is @model.get("metadata")["Part Number"]
                     values.push tol.get("rule")

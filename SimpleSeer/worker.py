@@ -34,7 +34,7 @@ def backfill_meta(frame_id, inspection_ids, measurement_ids, tolerance_ids):
     from SeerCloud.OLAPUtils import RealtimeOLAP
     from SeerCloud.models.OLAP import OLAP
     from .Filter import Filter
-    
+
     try:
         f = M.Frame.objects.get(id = frame_id)
         
