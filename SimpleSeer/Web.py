@@ -58,7 +58,7 @@ def load_user(id):
 
 
 
-if len(M.User.objects) and session.requireAuth:
+if len(M.User.objects) == 0 and session.requireAuth:
     log.warn('****************************************************************')
     log.warn('* WARNING:')
     log.warn('* Application configured to require auth, but there are no users yet')

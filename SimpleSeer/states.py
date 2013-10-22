@@ -286,8 +286,8 @@ class Core(object):
                     log.warn("No state.error defined")
                     raise e
 
-                audit_trail.append(None)
-                return audit_trail
+                    audit_trail.append(None)
+                    return audit_trail
 
     def set_rate(self, rate_in_hz):
         self._clock = util.Clock(rate_in_hz, sleep=gevent.sleep)
