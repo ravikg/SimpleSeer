@@ -42,6 +42,7 @@ module.exports = class ToleranceTable extends EditableTable
   _settings: =>
     settings = super()
     settings.styles.push('margin-top: 35px;')
+    settings.default_tolerances = @options.default_tolerances ? []
     return settings
 
 
@@ -75,15 +76,16 @@ module.exports = class ToleranceTable extends EditableTable
     for b,a in data
       if b.get('tolerance_list')?.length > 0
         for d,c in b.get('tolerance_list')
-          for e,f of d.get('criteria')
-            if !raw[f]
-              raw[f] = {'metadata.Part Number':f}
-            if !raw[f][b.get('method')]
-              raw[f][b.get('method')] = []
-            rule = _.clone d.get('rule')
-            rule.measurement_id = b.get('id')
-            rule.tolerance_id = d.get('id')
-            raw[f][b.get('method')].push(rule)
+          if d.get?
+            for e,f of d.get('criteria')
+              if !raw[f]
+                raw[f] = {'metadata.Part Number':f}
+              if !raw[f][b.get('method')]
+                raw[f][b.get('method')] = []
+              rule = _.clone d.get('rule')
+              rule.measurement_id = b.get('id')
+              rule.tolerance_id = d.get('id')
+              raw[f][b.get('method')].push(rule)
 
     # Insert the new rows
     nr = _.clone @variables.newrows
@@ -190,6 +192,9 @@ module.exports = class ToleranceTable extends EditableTable
 
     cell.raw = value
     cell.classes = value.classes ? []
+    if settings.classes
+      for o,i in settings.classes
+        cell.classes.push(o)
     if notEmpty
       cell.classes.push('notEmpty')
 
@@ -225,6 +230,8 @@ module.exports = class ToleranceTable extends EditableTable
       target.parents('.td').addClass('notEmpty')
     else
       target.parents('.td').removeClass('notEmpty')
+
+
 
     obj = {}
     if target then obj.target = target
