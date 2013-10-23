@@ -43,6 +43,12 @@ module.exports = class ToleranceTable extends EditableTable
     settings = super()
     settings.styles.push('margin-top: 35px;')
     settings.default_tolerances = @options.default_tolerances ? []
+    settings.measurements = {}
+    for m in Application.measurements.models
+      settings.measurements[m.get('id')] = m.get('method')
+      for y,x in settings.columns
+        if y.data.key == m.get('method')
+          settings.columns[x]['measurement_id'] = m.get('id')
     return settings
 
 
@@ -50,13 +56,10 @@ module.exports = class ToleranceTable extends EditableTable
   ''' GETTING / SETTING DATA '''
 
   _collection: =>
-    collection = Application.measurements
-    if collection.models.length
-      for o,i in collection.models
-        for y,x in @settings.columns
-          if o.get('method') is y.data.key
-            @settings.columns[x]['measurement_id'] = o.get('id')
-
+    collection = new Backbone.Collection([], {
+      model: @settings.model
+    })
+    collection.url = @settings.url
     collection.on('reset', @_data)
     return collection
 
@@ -74,18 +77,28 @@ module.exports = class ToleranceTable extends EditableTable
     data = super(data)
     raw = {}
     for b,a in data
-      if b.get('tolerance_list')?.length > 0
-        for d,c in b.get('tolerance_list')
-          if d.get?
-            for e,f of d.get('criteria')
-              if !raw[f]
-                raw[f] = {'metadata.Part Number':f}
-              if !raw[f][b.get('method')]
-                raw[f][b.get('method')] = []
-              rule = _.clone d.get('rule')
-              rule.measurement_id = b.get('id')
-              rule.tolerance_id = d.get('id')
-              raw[f][b.get('method')].push(rule)
+      key = b.get('key')
+
+      if key
+        criteria = b.get('criteria')
+        measurement_id = b.get('measurement_id')
+
+        if measurement_id
+
+          if @settings.measurements[measurement_id]
+            method = @settings.measurements[measurement_id]
+
+            if !raw[key]
+              raw[key] = {'metadata.Part Number':key}
+
+            if !raw[key][method]
+              raw[key][method] = []
+
+            rule = _.clone b.get('rule')
+            rule.measurement_id = measurement_id
+            rule.tolerance_id = b.get('id')
+
+            raw[key][method].push(rule)
 
     # Insert the new rows
     nr = _.clone @variables.newrows
@@ -232,7 +245,6 @@ module.exports = class ToleranceTable extends EditableTable
       target.parents('.td').removeClass('notEmpty')
 
 
-
     obj = {}
     if target then obj.target = target
     if id then obj.id = id
@@ -249,16 +261,6 @@ module.exports = class ToleranceTable extends EditableTable
     # Write the tolerance id to the UI so we can just write directly now.
     if tid
       @saveInfo.target.attr('data-tolerance-id', tid)
-    # Save the new tolerance to the measurement
-    if !@saveInfo.tolerance_id and @saveInfo.measurement_id
-      measurement = Application.measurements.get(id=@saveInfo.measurement_id)
-      if !measurement.attributes.tolerance_list
-        measurement.attributes.tolerance_list = []
-      measurement.attributes.tolerance_list.push(o)
-      delete(measurement.attributes.formatted)
-      measurement.save()
-      # Put the new tolerance in the tolerance list
-      Application.tolerance_list.fetch({async:false})
 
   destroyCleanup: (t=undefined, o=undefined) =>
     return
@@ -266,17 +268,14 @@ module.exports = class ToleranceTable extends EditableTable
   saveCell: (obj) =>
     @saveInfo = {}
     if obj.tolerance_id and obj.measurement_id
-      @saveInfo['tolerance_id'] = obj.tolerance_id
-      @saveInfo['measurement_id'] = obj.measurement_id
       @saveInfo['target'] = obj.target
-      tolerance = Application.tolerance_list.where({id:obj.tolerance_id})
-      for o,i in tolerance
-        if !obj.value
-          o.destroy({success:@destroyCleanup})
-        else
-          o.attributes.rule.value = obj.value
-          o.attributes.id = obj.tolerance_id
-          o.save({}, {wait:true, success:@saveCleanup})
+      tolerance = @collection.get(obj.tolerance_id)
+      if !obj.value
+        tolerance.destroy({success:@destroyCleanup})
+      else
+        tolerance.attributes.rule.value = obj.value
+        delete(tolerance.attributes.formatted)
+        tolerance.save({}, {wait:true, success:@saveCleanup})
 
     else if obj.measurement_id
       @saveInfo['measurement_id'] = obj.measurement_id
@@ -284,6 +283,9 @@ module.exports = class ToleranceTable extends EditableTable
       criteria = {}
       if obj.part
         criteria['Part Number'] = String(obj.part)
+        key = String(obj.part)
+      else
+        key = ""
       rule = {}
       if obj.operator
         if obj.operator is "min"
@@ -292,7 +294,7 @@ module.exports = class ToleranceTable extends EditableTable
           rule.operator = "<"
       if obj.value
         rule.value = String(obj.value)
-      t = new Tolerance({criteria:criteria, rule:rule})
+      t = new Tolerance({criteria:criteria, rule:rule, key:key, measurement_id:obj.measurement_id})
       t.save({}, {wait:true, success:@saveCleanup})
 
   _saveRow: (options) =>
