@@ -54,7 +54,6 @@ class MeasurementSchema(fes.Schema):
     inspection = V.ObjectId(not_empty=True)
     featurecriteria = V.JSON(if_empty=None, if_missing=None)
     tolerances = fev.Set(if_empty=[])
-    #tolerance_list = V.ReferenceFieldList(ref_type=Tolerance)
     updatetime = fev.UnicodeString()
     conditions = fev.Set(if_empty=[])
     booleans = fev.Set(if_empty=[])
@@ -91,7 +90,6 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
     inspection = mongoengine.ObjectIdField(default=None)
     featurecriteria = mongoengine.DictField(default={})
     tolerances = mongoengine.ListField(default=[])
-    #tolerance_list = mongoengine.ListField(mongoengine.ReferenceField('Tolerance', dbref=False, reverse_delete_rule=mongoengine.PULL))
     updatetime = mongoengine.DateTimeField(default=None)
     conditions = mongoengine.ListField(default=[])
     booleans = mongoengine.ListField(default=[])
@@ -312,7 +310,6 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
     def save(self, *args, **kwargs):
         from ..realtime import ChannelManager
         from ..Session import Session
-        #tolChange = '_changed_fields' in self and 'tolerance_list' in self._changed_fields
 
         # Optional parameter: skipDeps
         try:
@@ -340,13 +337,7 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
             # -Jim
             pass
         ChannelManager().publish('meta/', self)
-        
-        #if not Session().procname == 'meta':
-        #    if tolChange:
-        #        s = Session()
-        #        if s.doBackfill:
-        #            log.info('Sending backfill request to OLAP')
-        #            ChannelManager().rpcSendRequest('backfill/', {'type': 'tolerance', 'id': self.id})
+    
             
     def measurementsBefore(self):
         # Find the list of measurements that need to execute before this one

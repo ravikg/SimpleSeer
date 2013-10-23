@@ -63,17 +63,6 @@ module.exports = class ToleranceTable extends EditableTable
     collection.on('reset', @_data)
     return collection
 
-  #_collection: =>
-  #  collection = Application.measurements
-  #  if collection.models.length
-  #    for o,i in collection.models
-  #      for y,x in @settings.columns
-  #        if o.get('method') is y.data.key
-  #          @settings.columns[x]['measurement_id'] = o.get('id')
-  #
-  #  collection.on('reset', @_data)
-  #  return collection
-
   _formatRow: (row) =>
     formatted = _.clone row.get('formatted')
     part = ""
