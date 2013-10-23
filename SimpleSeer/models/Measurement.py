@@ -4,6 +4,7 @@ from mongoengine import signals as sig
 
 from .base import SimpleDoc, WithPlugins
 from .Result import ResultEmbed
+from .Tolerance import Tolerance
 
 from formencode import validators as fev
 from formencode import schema as fes
@@ -53,7 +54,7 @@ class MeasurementSchema(fes.Schema):
     inspection = V.ObjectId(not_empty=True)
     featurecriteria = V.JSON(if_empty=None, if_missing=None)
     tolerances = fev.Set(if_empty=[])
-    tolerance_list = V.ReferenceFieldList(ref_type=Tolerance)
+    #tolerance_list = V.ReferenceFieldList(ref_type=Tolerance)
     updatetime = fev.UnicodeString()
     conditions = fev.Set(if_empty=[])
     booleans = fev.Set(if_empty=[])
@@ -90,7 +91,7 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
     inspection = mongoengine.ObjectIdField(default=None)
     featurecriteria = mongoengine.DictField(default={})
     tolerances = mongoengine.ListField(default=[])
-    tolerance_list = mongoengine.ListField(mongoengine.ReferenceField('Tolerance', dbref=False, reverse_delete_rule=mongoengine.PULL))
+    #tolerance_list = mongoengine.ListField(mongoengine.ReferenceField('Tolerance', dbref=False, reverse_delete_rule=mongoengine.PULL))
     updatetime = mongoengine.DateTimeField(default=None)
     conditions = mongoengine.ListField(default=[])
     booleans = mongoengine.ListField(default=[])
@@ -186,7 +187,13 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
         return eval('%s %s %s' % (left, mex['op'], right), {}, {})
 
 
+    def getTolerances(self):
+        self.tolerance_list = Tolerance.objects(measurement_id=self.id)
+
     def tolerance(self, frame, results):
+
+        # Get a healthy new list of tolerances!
+        self.getTolerances()
 
         try:
             function_ref = self.get_plugin(self.method)
@@ -208,12 +215,6 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
                 messages = []
 
                 for rule in self.tolerance_list:
-                    try:
-                        # The tolerance in tolerance_list is a DB REF!
-                        tolerance_id = rule._DBRef__id
-                        rule = Tolerance.objects(id=tolerance_id)[0]
-                    except AttributeError:
-                        pass
                     try:
                         complex(rule.rule['value'])
                     except ValueError:
@@ -311,7 +312,7 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
     def save(self, *args, **kwargs):
         from ..realtime import ChannelManager
         from ..Session import Session
-        tolChange = '_changed_fields' in self and 'tolerance_list' in self._changed_fields
+        #tolChange = '_changed_fields' in self and 'tolerance_list' in self._changed_fields
 
         # Optional parameter: skipDeps
         try:
@@ -340,12 +341,12 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
             pass
         ChannelManager().publish('meta/', self)
         
-        if not Session().procname == 'meta':
-            if tolChange:
-                s = Session()
-                if s.doBackfill:
-                    log.info('Sending backfill request to OLAP')
-                    ChannelManager().rpcSendRequest('backfill/', {'type': 'tolerance', 'id': self.id})
+        #if not Session().procname == 'meta':
+        #    if tolChange:
+        #        s = Session()
+        #        if s.doBackfill:
+        #            log.info('Sending backfill request to OLAP')
+        #            ChannelManager().rpcSendRequest('backfill/', {'type': 'tolerance', 'id': self.id})
             
     def measurementsBefore(self):
         # Find the list of measurements that need to execute before this one

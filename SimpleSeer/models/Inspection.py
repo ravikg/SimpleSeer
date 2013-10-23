@@ -205,7 +205,8 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
         toleranced_fields = {}
         
         for m  in self.measurements:
-            for rule in m.tolerance_list + m.tolerances:
+            m.getTolerances()
+            for rule in m.tolerance_list:
                 if rule['criteria'].values()[0] == 'all' or (rule['criteria'].keys()[0] in frame.metadata and frame.metadata[rule['criteria'].keys()[0]] == rule['criteria'].values()[0]):
                     toleranced_fields[m.method] = 1
                     

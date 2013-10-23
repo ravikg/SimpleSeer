@@ -197,6 +197,9 @@ module.exports = class Table extends SubView
     else
       @variables.nodata = false
 
+    if @variables.newrows and @variables.newrows.length >= 1
+      @variables.nodata = false
+
     if !@variables.nodata
       data = @_formatData @collection.models
       if data

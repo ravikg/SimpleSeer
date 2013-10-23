@@ -10,13 +10,15 @@ from SimpleSeer.models.base import SimpleDoc
 
 class ToleranceSchema(fes.Schema):
     id = V.ObjectId()
-    #measurement_id = fev.UnicodeString(if_empty="", if_missing="")
+    measurement_id = V.ObjectId(if_empty=None, if_missing=None)
+    key = fev.UnicodeString(if_missing='')
     criteria = V.JSON(if_empty={}, if_missing={})
     rule = V.JSON(if_empty={}, if_missing={})
 
 class Tolerance(SimpleDoc, mongoengine.Document):
 
-    #measurement_id = mongoengine.ObjectIdField(default=None)
+    measurement_id = mongoengine.ObjectIdField(default=None)
+    key = mongoengine.StringField(default='')
     criteria = mongoengine.DictField(default={})
     rule = mongoengine.DictField(default={})
 
