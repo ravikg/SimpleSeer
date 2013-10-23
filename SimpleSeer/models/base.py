@@ -36,11 +36,15 @@ class Picklable(object):
     #TODO: move into son manipulators
     def __getstate__(self):
         ret = {}
+        
         if hasattr(self, 'id'):
             ret['id'] = self.id
 
         for k in self._data.keys():
+            #if k == 'capturetime':
+            #    import pdb; pdb.set_trace()
             if k == 'id': continue
+            
             if not k:
                 continue
 
@@ -49,18 +53,59 @@ class Picklable(object):
                 continue
             if (hasattr(v, "__json__")):
                 ret[k] = v.__json__()
-            elif isinstance(v, datetime):
-                ret[k] = calendar.timegm(v.timetuple())
+            #elif isinstance(v, datetime):
+            #    ret[k] = calendar.timegm(v.timetuple())
             elif isinstance(v, mongoengine.fields.GridFSProxy):
                 if v is None:
                     ret[k] = None
                 else:
-                    ret[k] = "/grid/"+k+"/" + str(self.id)
+                    ret[k] = "/grid/"+k+"/" + str(self.imgfile.grid_id)
+                    ret[k]
+            elif k == 'features':
+                feats = []
+                for feat in v:
+                    feat_dict = feat._data
+                    if 'featurepickle_b64' in feat_dict:
+                        feat_dict.pop('featurepickle_b64')
+                    feats.append(feat_dict)
+                ret[k] = feats
             else:
                 ret[k] = v
 
         return ret
-
+        
+    def __setstate__(self, state):
+        from bson import ObjectId
+        import mongoengine
+        from datetime import datetime
+        from .FrameFeature import FrameFeature
+        
+        if not '_data' in self:
+            self._data = {}
+        
+        self._changed_fields = []
+        for k, v in state.iteritems():
+            if k == 'id':
+                self._data[None] = ObjectId(v)
+                self.id = ObjectId(v)
+            elif k == 'imgfile':
+                grid_id = state['imgfile'][-24:]
+                self._data['imgfile'] = mongoengine.fields.GridFSProxy(ObjectId(grid_id))
+            #elif k == 'capturetime':
+            #    self._data[k] = datetime.utcfromtimestamp(v)
+            elif k == 'features':
+                feats = []
+                for feat in v:
+                    feature = FrameFeature()
+                    feature._data = feat
+                    feature.inspection = ObjectId(feature.inspection)
+                    feats.append(feature)
+                self.features = feats
+            else:
+                self._data[k] = v
+            
+            self._dynamic_fields = bson.son.SON()
+        
 class SimpleDoc(Picklable):
     meta=dict(auto_create_index=True)
 
@@ -100,10 +145,7 @@ class WithPlugins(object):
         plugins = cls._plugins
         for ep in pkg_resources.iter_entry_points(group):
             log.info('Loading %s plugin %s', group, ep.name)
-            try:
-                plugins[ep.name] = ep.load()
-            except Exception, err:
-                log.error('Failed to load %s plugin %s: %s', group, ep.name, err)
+            plugins[ep.name] = ep.load()
         return plugins
 
 class SONScrub(SONManipulator):

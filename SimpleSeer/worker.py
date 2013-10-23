@@ -1,44 +1,40 @@
-from .Session import Session
 from celery import Celery
 from celery import task
 from celery.exceptions import RetryTaskError
 from celery.contrib import rdb
+from celery.result import ResultSet
 
 from bson import ObjectId
 from gridfs import GridFS
-import Image as PIL
-from SimpleCV import Image
 
-from .util import ensure_plugins, jsonencode
-
-from . import celeryconfig
-
-session = Session()
-celery = Celery()
-celery.config_from_object(celeryconfig)
-ensure_plugins()
+from .util import ensure_plugins 
+from .base import jsonencode, jsondecode
 
 from .realtime import ChannelManager
 from . import models as M
+from .Session import Session
 
+from celery.utils import log
+log = log.get_task_logger(__name__)
 import logging
-log = logging.getLogger()
 
+from . import celeryconfig
+celery = Celery()
+celery.config_from_object(celeryconfig)
+            
+from collections import defaultdict
+            
+ensure_plugins()
 
+"""
+Legacy function for VQL backfill handler
+"""
 @task()
-def ping_worker(number):
-    """
-    Test workers
-    """
-    print "ping worker with number {}".format(number)
-    return number + 1
-    
-@task()
-def backfill_meta(frame_id, inspection_ids, measurement_ids):
+def backfill_meta(frame_id, inspection_ids, measurement_ids, tolerance_ids):
     from SeerCloud.OLAPUtils import RealtimeOLAP
     from SeerCloud.models.OLAP import OLAP
     from .Filter import Filter
-    
+
     try:
         f = M.Frame.objects.get(id = frame_id)
         
@@ -61,7 +57,14 @@ def backfill_meta(frame_id, inspection_ids, measurement_ids):
                 except Exception as e:
                     print 'Error on measurement %s: %s' % (m_id, e)
             
-            f.save()    
+            for m_id in tolerance_ids:
+                try:
+                    m = M.Measurement.objects.get(id=m_id)
+                    m.tolerance(f, f.results)
+                except Exception as e:
+                    print 'Error on tolerance %s: %s' % (m_id, e)
+                
+            f.save(publish=False)    
             
             # Need the filter format for realtime publishing
             ro = RealtimeOLAP()
@@ -82,6 +85,7 @@ def backfill_meta(frame_id, inspection_ids, measurement_ids):
                         ro.sendMessage(chart, data)
                 except Exception as e:
                     print 'Could not publish realtime for %s: %s' % (m_id, e)
+            
         else:
             print 'no image on frame.  skipping'
     except Exception as e:
@@ -89,144 +93,242 @@ def backfill_meta(frame_id, inspection_ids, measurement_ids):
     
     print 'Backfill done on %s' % frame_id
     return frame_id
-    
-    
 
-@task()
-def execute_inspections(inspection_ids, gridfs_id, frame_meta):
-    # Works like execute_inspection below, but takes multiple inspection ID's
-    
-    # If no inspection_ids, assume all inspections
-    if not inspection_ids:
-        inspection_ids = [ i.id for i in M.Inspection.objects ]
-    
-    db = M.Inspection._get_db()
-    fs = GridFS(db)
-    image = Image(PIL.open(fs.get(gridfs_id)))
-    
-    frame = M.Frame()
-    frame.image = image
-    frame.metadata = frame_meta
-    
-    features = []
-    
-    for insp_id in inspection_ids:
-        insp = M.Inspection.objects.get(id=insp_id)
+class InspectionLogHandler(logging.Handler):
+
+    def __init__(self):
+        super(InspectionLogHandler, self).__init__()
         
+    def emit(self, msg):
+        from .realtime import ChannelManager
+        
+        insp = self._getInspectionId(msg.msg)
+        if insp:
+            fra = self._getFrame(msg.msg)
+            if fra:
+                # This should be doing an update of the feature history log
+                # Which we currently do not worry about doing
+                pass
+                
+    def _getInspectionId(self, msg):
+        # Assume the first 24 digits is inspection id
+        potentialId = msg[:24]
+        if ObjectId.is_valid(potentialId):
+            insp = M.Inspection.objects(id=potentialId)
+            if insp:
+                return insp[0].id
+        
+        return None
+        
+    def _getFrame(self, msg):
+        # Assume the first 24 digits is inspection id
+        potentialId = msg[25:49]
+        if ObjectId.is_valid(potentialId):
+            fra = M.Frame.objects(id=potentialId)
+            if fra:
+                return fra[0].id
+        
+        return None
+        
+            
+
+class Foreman():
+# Manages a lot of worker-related tasks
+# This is a borg (speed worker status, plugin checks)
+
+    _useWorkers = False
+    _initialized = False
+    _inspectionLog = None
+    
+    __sharedState = {}
+    
+    def __init__(self):
+        # Checks once to see if worker is running (self.workerRunning)
+        # Add a special log handler for tracking inspection results
+        
+        from .realtime import PubSubHandler
+            
+        self.__dict__ = self.__sharedState
+            
+        if not self._initialized:
+            self._useWorkers = self.workerRunning()
+            self._initialized = True
+            ensure_plugins()
+            
+            log.addHandler(PubSubHandler())
+            log.addHandler(InspectionLogHandler())
+            log.setLevel(20) # INFO 
+
+    def workerRunning(self):
+
+        # Disable workers is set in the config.
+        # Prevents the use of workers for inspections even if worker process is running
+        if Session().disable_workers:
+            return False 
+
+        # To test if worker is running, see if Celery has any queues.  This returns an empty list if not running
+        i = celery.control.inspect()
+        if i.active_queues() is not None:
+            return True
+        else:
+            return False
+
+    def process_inspections(self, frame, inspections=None):
+        """
+        Pass the frame to inspect and an optional list of inspections to run.  
+        If no list of inspections passed, run all matching inspections.
+        Matching inspections defined by:
+        - Does not have a parent inspection (child inspections run by their parent)
+        - The inspection's camera field matches the frame's camera field, or the inspections camera is not set
+        
+        Returns an interator for a list of features
+        """
+        
+        inspKwargs = {'parent__exists': False}
+        if inspections:
+            inspKwargs['id__in'] = inspections
+        
+        insps = M.Inspection.objects(**inspKwargs)
+        
+        # Do this as a loop because it is too big a pain to do an OR with mongoengine:
+        filteredInsps = []
+        for i in insps:
+            if i.camera == frame.camera or not i.camera:
+                filteredInsps.append(i)
+
+        # Run the inspections
+        if self._useWorkers:
+            return self.worker_inspection_iterator(frame, filteredInsps)    
+        else:
+            return self.serial_inspection_iterator(frame, filteredInsps)
+
+    def process_measurements(self, frame, measurements=None):
+        """
+        Pass a frame, which also contains the list of frame features to be measured
+        Optionally, provide a list of measurements.  If not use the default measurement selection criteria
+        which select measurements that reference the inspections that ran on the frame.
+        
+        Note: some measurements return results if an inspection returned no features, so do not filter
+        on measurements matching frame features
+        """
+        
+        measKwargs = {}
+
+        # Get the list of inspections that could have run on this frame
+        inspKwargs = {'parent__exists': False}
+        insps = M.Inspection.objects(**inspKwargs)
+        
+        filteredInspIds = []
+        for i in insps:
+            if i.camera == frame.camera or not i.camera:
+                filteredInspIds.append(i.id)
+
+        measKwargs['inspection__in'] = filteredInspIds
+            
+        if measurements:
+            measKwargs['id__in'] = measurements
+        
+        filteredMeass = M.Measurement.objects(**measKwargs)
+        
+        # Run the measurements
+        if self._useWorkers:
+            return self.worker_measurement_iterator(frame, filteredMeass)
+        else:
+            return self.serial_measurement_iterator(frame, filteredMeass)
+
+    def worker_x_schedule(self, frame, objs, fn):
+        """
+        - For each object (a list of measurements or inspection)
+        - Run the specified function (fn)
+        - On the specified frame
+        - Using workers
+        
+        Returns a celery resultset of tasks that are scheduled to run
+        """
+        scheduled = ResultSet([])
+        for o in objs:
+            scheduled.add(fn.delay(frame, o))
+        return scheduled
+
+    def worker_x_iterator(self, scheduled):
+        """
+        Loop through the scheduled worker tasks.  This will block until each consecutive task is ready
+        Creates the iterator that returns a single feature or result per iteration 
+        (even if the inspection/measurement returned a list, this breaks it up)
+        """
+        itt = scheduled.iterate(timeout=120)
+        for output in itt:
+            for out in output:
+                # de-serialized json features/results do not get their _changed_fields set correctly
+                # so manually do it to make sure mongoengine knows to properly save it
+                for key in out._data.keys():
+                    out._changed_fields.append(key)
+                yield out
+
+    def worker_inspection_iterator(self, frame, insps):
+        # Calls the above worker_x_scheduler and iterator specifically for inspection execution
+        # Combined the scheduling and retrieval of results for simplicity
+        sched = self.worker_x_schedule(frame, insps, self.inspection_execute)
+        return self.worker_x_iterator(sched)
+        
+    def worker_measurement_iterator(self, frame, meass):
+        # Calls the above worker_x_scheduler and iteratorspecifically for measurement execution
+        # Combined the scheduling and retrieval of results for simplicity
+        sched = self.worker_x_schedule(frame, meass, self.measurement_execute)
+        return self.worker_x_iterator(sched)
+            
+    def serial_inspection_iterator(self, frame, insps):
+        """
+        Make the API for a serial inspection work just like a worker inspection, so create an iterator for the features
+        """
+        for i in insps:
+            try:
+                features = i.execute(frame)
+            except Exception as e:
+                log.warn("Failed execution with exception {}".format(e))
+                features = []
+            for feat in features:
+                yield feat
+                
+    def serial_measurement_iterator(self, frame, meass):
+        """
+        Make the API for serial measurement work just like a worker measurement, so create an iterator for the results
+        """
+        for m in meass:
+            results = m.execute(frame)
+            
+            for res in results:
+                for key in res._data.keys():
+                    res._changed_fields.append(key)
+                yield res
+
+    @task
+    def inspection_execute(frame, inspection):
+        """ 
+        This is the function that is run inside the worker to perform inspection.execute
+        """
         try:
-            features += insp.execute(frame)
-            print 'Finished inspection %s on image %s' % (insp_id, gridfs_id)
-        except:
-            print 'Inspection Failed'
-    
-    print 'Finished inspections on image %s' % gridfs_id
-    return [ f.feature for f in features ]
+            log.warn('{} Inspecting {}'.format(inspection.id, frame.id))
+            try:
+                features = inspection.execute(frame)
+            except:
+                return []
+            return features        
+        except Exception as e:
+            log.error(e)
+            print e
+            return []
 
-@task()
-def execute_inspection(inspection_id, gridfs_id, frame_meta):
-    """
-    Run an inspection given an image's gridfs id, and the inspection id
-    """    
-    insp = M.Inspection.objects.get(id = inspection_id)
-    
-    db = insp._get_db()
-    fs = GridFS(db)
-    image = Image(PIL.open(fs.get(gridfs_id)))
-    
-    frame = M.Frame()
-    frame.image = image
-    frame.metadata = frame_meta
-    
-    try:
-        features = insp.execute(frame)
-    except:
-        print "inspection failed"
-        features = []
-    
-    print "Finished running inspection {} on image {}".format(inspection_id, gridfs_id)
-    return ([f.feature for f in features], inspection_id)
-
-    
-@task()
-def update_frame(frameid, inspection):
-    '''
-    **SUMMARY**
-    This function is called using simpleseer worker objects.
-
-    To start a worker create a simpleseer project, then from that directory run:
-
-    >>> simpleseer worker
-
-    Start another terminal window and then run the following from
-    the project directory.  This will act as a task master to all the
-    workers attached to the project, these workers can run on seperate
-    machines as long as they point to the same database.
-    If they are sharing the same database, they should have task delegated
-    to them as long as they have the same code base running.
-
-    >>> simpleseer shell
-    >>> from SimpleSeer.commands.worker import update_frame
-
-    To test that the function works correctly before shipping off to workers
-    you just need to run:
-
-    >>> update_frame((str(frame.id), 'inspection_name_here')
-
-    Now to send the task to to the actual workers you run:
-
-    >>> results = []
-    >>> for frame in M.Frame.objects():
-          results.append(update_frame.delay(str(frame.id), 'inspection_name_here'))
-
-    The 'inspection_name_here' would be the inspection you want the
-    worker to apply to the frame id passed in. For instance 'fastener'.
-
-    To get back results from the workers you can now run:
-
-    >>> [r.get() for r in results]
-
-    Note that this will wait until that worker is finished with their task
-    so this may take a while if one of the workers in the results list
-    are not done.
-    
-
-    **PARAMETERS**
-    * *frameid* - This is the actually id of the frame you want the worker to work on
-    * *inspection* - The inspection method you want to run on the frame, the worker must have this plugin installed
-    
-    '''
-    
-    frame = M.Frame.objects(id=frameid)
-    if not frame:
-      print "Frame ID (%s) was not found" % frameid
-      raise RetryTaskError("Frame ID (%s) was not found" % frameid)
-    
-    frame = frame[0]
-    inspections = M.Inspection.objects(method = inspection)
-    if not inspections:
-      print 'Inspection method (%s) not found' % inspection
-      return 'Inspection method (%s) not found' % inspection
-    insp = inspections[0]
-
-    print "analysing features for frame %s" % str(frame.id)
-    try:
-        img = frame.image
-        if not img:
-           Exception("couldn't read image")
-    except:
-        print "could not read image for frame %s" % str(frame.id)
-        raise Exception("couldn't read image")
-
-    if not img:
-        print "image is empty"
-        return "image is empty"
-
-        
-    if insp.id in [feat.inspection for feat in frame.features]:
-        frame.features = [feat for feat in frame.features if feat.inspection != insp.id]
-    
-
-    frame.features += insp.execute(img)
-    frame.save()
-    print "saved features for frame %s" % str(frame.id)
-    return 'frame %s update successful' % str(frame.id)
+    @task
+    def measurement_execute(frame, measurement):
+        """
+        This is the function that is run inside the worker to perform measurement.execute
+        """
+        try:
+            log.warn('{} Measuring {}'.format(measurement.id, frame.id))
+            results = measurement.execute(frame)
+            return results        
+        except Exception as e:
+            log.error(e)
+            return []
+            

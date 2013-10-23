@@ -1,0 +1,280 @@
+#image-list {
+  width: 100%;
+  height: 100%;
+
+  .item {
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    width: 100%;
+    margin-bottom: 10px;
+
+    &:last-child { margin-bottom: 0px; }
+
+    &.expanded {
+      .body {
+        border-color: #555;
+        background: #FFF;
+        box-shadow: 0px 0px 6px rgba(6, 149, 168, 0.6);
+
+        .canvas-map {
+          border-color: #555;
+          box-shadow: 0px 0px 6px rgba(6, 149, 168, 0.6);
+        }
+
+        .block {
+          border-color: #555;
+        }
+      }
+    }
+
+    .body { 
+      width: 100%;
+      height: 100%;
+      background: #CCC;
+      border: 1px solid #777;
+      font-size: 0px;
+
+      .block {     
+        width: 33.333333%;
+        height: 60px;
+        display: inline-block;
+        font-size: 13px;
+        font-weight: bold;
+        border-right: 1px solid #777;
+        vertical-align: top;
+        padding: 10px;
+
+        &:last-child {
+          border-right: none;
+        }
+      }
+    }
+  }
+}
+
+#image-list {
+  .body {
+    .block.image {
+      position: relative;
+      padding: 0px;
+      
+      .markup { cursor: pointer; }
+      
+      p.capturetime {
+        text-align: center;
+        color: white;
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        text-shadow: 0px 0px 7px #000;
+      }
+      
+      p.passfail {
+        text-align: center;
+        color: white;
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        font-size: 24px;
+        text-shadow: 0px 0px 7px #000;
+      }      
+    }
+          
+    .block.attributes, .block.metadata {
+      li { margin-bottom: 5px; }
+      li div { display: inline-block; }
+      li:last-child { margin-bottom: 0; }
+      
+      .label {
+        color: #666;
+        margin-right: 7px;
+      }
+      
+      .value {
+        color: #333;
+        float: right;
+      }
+    }
+    
+    .block.editmetadata {
+      color: #444;
+      div.elastic.spacedown { margin-bottom: 10px; }
+      div.elastic {
+        position: relative;
+        clear: both;
+        white-space: nowrap;
+        overflow: hidden;
+      }      
+      input, textarea {
+        width: 100%;
+        display:block;
+        border-width:0;
+        background: transparent;
+        color: #222;
+        border: 1px solid #929292;
+        font-size: 1.5em;
+        font-weight: bold;
+        resize: none;
+        padding: 4px 4px 4px 6px;
+        -webkit-transition: background 50ms linear;
+        -moz-transition: background 50ms linear;
+        -moz-box-shadow: inset 0px 0px 1px 0px rgba(0,0,0,.2);
+        -webkit-box-shadow: inset 0px 0px 1px 0px rgba(0,0,0,.2);
+        box-shadow: inset 0px 0px 1px 0px rgba(0,0,0,.2);
+        margin: 2px 0 0 0;
+      }
+      textarea {
+        font-size: 13px;
+      }
+      input:hover, textarea:hover {
+        background: rgba(255, 255, 255, 0.5);
+      }
+      input:focus, textarea:focus {
+        background: #FFFFFF !important;
+      }
+      textarea[data-use=notes] {
+        background: transparent;
+        color: #222;
+        width: 100%;
+        height: 54px;
+        border: 1px solid #888;
+        font-size: 13px !important;
+        font-weight: bold;
+        resize: none;
+        padding: 8px;
+      
+        -webkit-transition: background 50ms linear;
+        -moz-transition: background 50ms linear;
+      
+        &:focus {
+          background: white !important;
+        }
+      
+        &:hover {
+          background: rgba(255, 255, 255, 0.5);
+        }
+      }      
+    }
+    
+    .block.results {
+      div[data-use=no-results] {
+        padding-top: 123px;
+        text-align: center;   
+      }
+     
+      div.elastic {
+        color: #444;
+        position: relative;
+        clear: both;
+        white-space: nowrap;
+        overflow: hidden;
+      
+        &.niptuck {
+          margin-top: -18px;
+        }
+      
+        &.spacedown {
+          padding: 0;
+          margin-bottom: 10px;
+          border-radius: 1px;
+        }
+      
+        &.interactive {
+          padding: 3px 4px 4px 6px;
+          margin-bottom: 1px;
+          border-radius: 1px;
+        }
+      
+        &.interactive:nth-child(odd) {
+          background: #E0E0E0;
+        }
+      
+        &:last-child { margin-bottom: 0px; }
+      
+        span.label {
+          display: inline-block;
+          float: left;
+          white-space: nowrap;
+        }
+      
+        span.value {
+          display: inline-block;
+          color: #000;
+          white-space: nowrap;
+          right: 8px;
+          float: right;
+        }
+      }      
+    }
+    
+    .block.inspections {
+      padding: 0px;
+      
+      & > div { width: 100%; height: 100%; }
+      
+      .canvas-map {
+        display: none;
+        position: relative;
+        top: 1px;
+        width: 100%;
+        background: #FFF;
+        border: 1px solid #777;
+        border-top: none;
+        z-index: 10;
+        
+        .padder { padding: 10px; }
+        
+        .widget-markupImage {
+          position: relative;
+          canvas { position: absolute; left: 0; top: 0; }
+        }        
+      }
+      
+      .inspection-map {
+        position: relative;
+        text-align: center;
+        height: 100%;
+        width: 100%;
+        
+        .map-figure {
+          position: relative;
+          cursor: pointer;
+          top: 10px;
+        }
+        .map-pointer {
+          position: absolute;
+          bottom: -1px;
+          background: url("/img/seer/arrow-drawer.png") no-repeat;
+          width: 19px;
+          height: 9px;
+          display: none;
+        }
+      }
+    }
+  }
+
+  .body.Fail {
+    background-color: #FFCACA;
+
+    .block.image {
+      p.passfail { color: red; }
+    } 
+
+    .block.results {
+      .interactive { background: none !important; }
+      .interactive.fail {
+        color: #8F0000;
+        .value { color: #8F0000; }
+        background: #C59B9B !important;
+      }      
+    }
+  }  
+
+  .body.Warn {
+    background-color: #FFECCB;
+
+    .block.image {
+      p.passfail { color: #FFAD00; }
+    }
+  }    
+}

@@ -150,6 +150,7 @@ module.exports = class View extends Backbone.View
   # Recursively destroys subviews, then destroys itself
   remove: =>
     @clearSubviews()
+    @$el.off().unbind().remove()
     super()
 
   # Override in child class.  Runs after render is fired
@@ -193,6 +194,8 @@ module.exports = class View extends Backbone.View
   # Recursively destroys subviews.  This is done automatically in `@remove`
   clearSubviews: =>
     for name, subview of @subviews
+      if !_.isEmpty subview
+        subview.clearSubviews()
       subview.remove()
       subview.unbind()
     @subviews = {}
@@ -206,3 +209,22 @@ module.exports = class View extends Backbone.View
   addCustomEvent: (name, callback) =>
     @events[name] = callback
     return
+    
+  error:(e) =>
+    ctr = String(@.constructor).match(/function\s(.*)\(\)/)[1]
+    str = "#{ctr}: {name: #{@options.name}, id: #{@options.id}}"
+    console.log " "
+    console.group "%c#{str}", "color: red"
+    console.error "Error: #{e}"
+    console.groupEnd()
+    console.log(" ")
+    
+    $.ajax
+      type:"POST"
+      url:"/log/error"
+      data:
+        "location":Backbone.history.fragment
+        "response":
+          "module": str
+          "error": e
+      dataType:"json"

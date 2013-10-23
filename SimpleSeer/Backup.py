@@ -10,7 +10,7 @@ import models as M
 
 from .realtime import ChannelManager
 import mongoengine
-from bson import ObjectId
+from bson import ObjectId, DBRef
 
 import logging
 log = logging.getLogger(__name__)
@@ -23,7 +23,8 @@ class Backup:
         # By default saves to file names seer_export.json, overwriting previous file
         # Pass overwrite = False to append timestamp to file name (preventing overwrite of previous file)
     
-        exportable = [{'name': 'Inspection', 'sort': 'method'}, 
+        exportable = [{'name': 'Tolerance', 'sort': 'id'},
+                      {'name': 'Inspection', 'sort': 'method'}, 
                       {'name': 'Measurement', 'sort': 'method'}, 
                       {'name': 'Watcher', 'sort': 'name'},
                       {'name': 'OLAP', 'sort': 'name'}, 
@@ -52,10 +53,13 @@ class Backup:
                     
                     exportDict = {}
                     for key, val in objDict.iteritems():
-                        if key == None:
-                            exportDict['id'] = str(val)
-                        elif key and val != getattr(objClass, key).default:
-                            exportDict[key] = Backup.toPythonType(val)
+                        try:
+                            if key == None:
+                                exportDict['id'] = str(val)
+                            elif key and val != getattr(objClass, key).default:
+                                exportDict[key] = Backup.toPythonType(val)
+                        except AttributeError:
+                            pass
                         
                     toExport.append({'type': exportName, 'obj': exportDict})
         yaml = dump(toExport, default_flow_style=False)
@@ -79,6 +83,8 @@ class Backup:
             return str(obj)
         elif type(obj) == ObjectId:
             return str(obj)
+        elif type(obj) == DBRef:
+            return str(obj.id)
         elif type(obj) == dict:
             return { str(key): Backup.toPythonType(val) for key, val in obj.iteritems() }    
         elif type(obj) == list:
@@ -164,7 +170,7 @@ class Backup:
                 #log.info('Updating %s' % model)
             except:
                 model = M.__getattribute__(o['type'])()
-                model._data[None] = o['obj']['id']
+                model.id = ObjectId(o['obj']['id'])
                 #log.info('Creating new %s' % o['type'])
             
             for k, v in o['obj'].iteritems():
@@ -178,16 +184,15 @@ class Backup:
                 if k != 'id':
                     if type(getattr(getattr(M, (o['type'])), k)) == mongoengine.base.ObjectIdField:
                         model.__setattr__(k, ObjectId(v))
+                    elif type(getattr(getattr(M, (o['type'])), k)) == mongoengine.ListField and type(getattr(getattr(M, (o['type'])), k).__dict__.get('field',None)) == mongoengine.fields.ReferenceField:
+                        v = [ObjectId(x) for x in v]
+                        model.__setattr__(k, v)
                     else:
                         model.__setattr__(k, v)
                 
             
             if not checkOnly:
-                # When saving make sure measurements dont re-run their backfill
-                if o['type'] == 'Measurement':
-                    model.save(skipBackfill=True)
-                else:
-                    model.save()
+                model.save()
             else:
                 same = False
                 for existing in M.__getattribute__(o['type']).objects:
@@ -202,9 +207,6 @@ class Backup:
                     log.warn('* Exporting changes to meta will overwrite existing settings')
                     log.warn('****************************************************************')
                 
-        
-                    
-    
         if not skip and M.Frame.objects.count():
             log.info('Backfill run in olap process.  Make sure olap and worker are running.')
         elif not checkOnly:

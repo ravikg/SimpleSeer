@@ -1,32 +1,66 @@
-<div id="records-list">
+<div id="image-list">
   {{#each records}}
-  <div class="record-list-item">
-    <div class="body">
-      <div class="block image">
-        <img src="/grid/thumbnail_file/{{attributes.id}}">
-        <div class="camera">{{attributes.camera}} {{attributes.capturetime}}</div>
-      </div>
-      <div class="block content">
-        <div class="block attributes">
-        	<ul>
-          {{#key_value attributes}}
-            {{#not_in this needle=this.key haystack=../../blackList.fields }}
-            <li><span class="label">{{this.key}}:</span><span class="value">{{this.value}}</span></li>
+  <div class="item" data-id="{{id}}">
+    <div class="body {{attributes.metadata.tolstate}}">
+      {{#each ../blocks}}
+      <div class="block {{this}}">
+        
+        {{#if_eq this compare="image"}}
+          <div data-id="{{../../id}}" class="markup" style="background-image: url('/grid/thumbnail_file/{{../../id}}');"></div>
+          <p class="capturetime">{{#capturetime ../../attributes.capturetime_epoch}}{{/capturetime}}</p>
+          <p class="passfail"><span class="value" style="text-transform:uppercase;">{{../../attributes.metadata.tolstate}}</span></p>
+        {{/if_eq}}
+        
+        
+        {{#if_eq this compare="attributes"}}
+          <ul>
+          {{#key_value ../../attributes}}
+            {{#not_in this needle=this.key haystack=../../../../blackList.fields }}
+              {{#if_eq this.key compare="capturetime_epoch"}}
+                <li><span class="label">Capture Time:</span><span class="value">{{#capturetime ../this.value}}{{/capturetime}}</span></li>
+              {{/if_eq}}
+              {{#unless_eq this.key compare="capturetime_epoch"}}
+                <li><span class="label">{{../this.key}}:</span><span class="value">{{../this.value}}</span></li>
+              {{/unless_eq}}
             {{/not_in}}
           {{/key_value}}
           </ul>
-        </div>
-        <div class="block metadata">
+        {{/if_eq}}
+        
+        {{#if_eq this compare="metadata"}}
           <ul>
-          {{#key_value attributes.metadata}}
-            {{#not_in this needle=this.key haystack=../../blackList.metadata }}
+          {{#key_value ../../attributes.metadata}}
+            {{#not_in this needle=this.key haystack=../../../../blackList.metadata }}
               <li><span class="label">{{this.key}}:</span><span class="value">{{this.value}}</span></li>
             {{/not_in}}
           {{/key_value}}
           </ul>
-        </div>
+        {{/if_eq}}
+        
+        {{#if_eq this compare="editmetadata"}}
+          {{#editablemetalist ../../attributes.metadata ../../../metafields}}{{/editablemetalist}}
+
+          <div class="elastic spacedown bottom">
+            Notes
+            <textarea data-use="notes">{{../../attributes.metadata.Notes}}</textarea>
+          </div>        
+        {{/if_eq}}
+        
+        {{#if_eq this compare="inspections"}}
+          <div id="inspection_{{../../attributes.id}}"></div>
+        {{/if_eq}}
+        
+        {{#if_eq this compare="results"}}
+          {{#resultlist ../../attributes.results ../../../blackList "No Results"}}{{/resultlist}}
+        {{/if_eq}}
+        
       </div>
+      {{/each}}
     </div>
   </div>
   {{/each}}
+</div>
+
+<div class="no-records" style="display:none;">
+	<h1 style="text-align: center; font-size:21px; padding:20px;">No records matching search criteria</h1>
 </div>

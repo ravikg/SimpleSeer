@@ -174,11 +174,14 @@ Handlebars.registerHelper "resultlist", (results, blacklist,text="No Results") -
   tpl = ""
 
   r = 0
+
   _.each results, (result) =>
     if result.state?
       r++
 
-  if !results or results.length is 0 or !r
+  count = 0
+
+  if !results or results.length is 0
     tpl += "<div data-use=\"no-results\" class=\"centered\">#{text}</div>"
   else
 
@@ -190,12 +193,11 @@ Handlebars.registerHelper "resultlist", (results, blacklist,text="No Results") -
       if k1 is k2 then return 0
       if k1 < k2 then return -1
     )
-
     for result in results
       unless ~blacklist.fields.indexOf(result.measurement_name)
-        value = result.numeric or ""
-        value = value or result.string
-        unless value is undefined
+        value = if result.numeric? then result.numeric.toFixed(result.mmm.get("fixdig")) else if result.string? then result.string else undefined
+        if value
+          count++
           obj = result.mmm
           label = "#{obj.get('label')}"
           if obj.get('units')
@@ -204,6 +206,10 @@ Handlebars.registerHelper "resultlist", (results, blacklist,text="No Results") -
             unit = ""
           if value is "" then unit = "--"
           tpl += "<div class=\"elastic interactive #{if result.state is 1 then "fail" else "pass"}\" data-feature=\"#{result.measurement_name}\"><span class=\"label\">#{label}:</span><span class=\"value\">#{value}#{unit}</span><div class=\"clearfix\"></div></div>"
+  
+    if count == 0
+      tpl += "<div data-use=\"no-results\" class=\"centered\">#{text}</div>"    
+
   return new Handlebars.SafeString tpl
 
 Handlebars.registerHelper "metalist", (results, template) ->
@@ -223,7 +229,7 @@ Handlebars.registerHelper "editablemetalist", (results={}, template) ->
   return new Handlebars.SafeString tpl
 
 Handlebars.registerHelper "capturetime", (time) ->
-  str = new moment(parseInt(time)).format("M/D/YYYY h:mm a")
+  str = new moment(parseInt(time)).format("M/D/YYYY HH:mm")
   return new Handlebars.SafeString str
 
 Handlebars.registerHelper "tolstate", (results) ->

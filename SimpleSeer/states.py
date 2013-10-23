@@ -2,10 +2,12 @@ import time
 from collections import deque
 from Queue import Queue, Empty
 from cStringIO import StringIO
-from worker import ping_worker, execute_inspection
+from worker import Foreman
 
-import zmq
 import gevent
+import signal
+
+from .Session import Session
 
 from . import models as M
 from . import util
@@ -13,24 +15,10 @@ from .base import jsondecode, jsonencode
 from .camera import StillCamera, VideoCamera
 
 from realtime import ChannelManager
+from celery.exceptions import TimeoutError
 
 import logging
 log = logging.getLogger(__name__)
-
-def nextInInterval(frame, field, interval):
-    currentValue = 0
-    try:
-        currentValue = getattr(frame, field)
-    except:
-        currentValue = frame.metadata[field]
-        field = 'metadata__' + field
-    
-    roundValue = currentValue - (currentValue % interval)
-    kwargs = {'%s__gte' % field: roundValue, '%s__lt' % field: currentValue, 'camera': frame.camera}
-    if M.Frame.objects(**kwargs).count() == 0:
-        return True
-    return False
-
 
 class Core(object):
     '''Implements the core functionality of SimpleSeer
@@ -40,6 +28,7 @@ class Core(object):
        - watch
     '''
     _instance=None
+    _queue = {} # Processing queue if frames are scheduled
 
     class Transition(Exception):
         def __init__(self, state):
@@ -62,7 +51,8 @@ class Core(object):
         self.log = logging.getLogger(__name__)
         self._mem_prof_ticker = 0
         self._channel_manager = ChannelManager(shareConnection=False)
-    
+        self._subscriptions = []
+
         for cinfo in config.cameras:
             cam = StillCamera(**cinfo)
             video = cinfo.get('video')
@@ -74,42 +64,18 @@ class Core(object):
 
         util.load_plugins()
         self.reloadInspections()
-        
-        if not self.config.skip_worker_check and not self.config.framebuffer:
-            self.workerCheck(5.0) #wait up to 5s for worker processes
-        
-        if self.config.framebuffer and not self.config.skip_worker_check:
+
+        if self.config.framebuffer:
             log.warn("Framebuffer is active, while worker is enabled.  Workers can not handle framebuffer calls, so you should add skip_worker_check: 1 to the config")
-        
+
         self.lastframes = deque()
         self.framecount = 0
         self.reset()
-        
+
     @classmethod
     def get(cls):
         return cls._instance
-        
-    def workerCheck(self, timeout = 0.5, checkinterval = 0.1):
-        result = ping_worker.delay(1)
-        checktime = time.time()
-        self.log.info("checking for worker process")
-        
-        self._worker_checked = checktime
-        while not result.ready():
-            time.sleep(checkinterval)
-            if time.time() - checktime > timeout:
-                self.log.info("worker check timeout")
-                self._worker_enabled = False
-                return False
-        
-        if result.get() == 2:
-            self.log.info("worker found")
-            self._worker_enabled = True
-            return True
-        else:
-            self._worker_enabled = False
-            return False
-                
+
     def reloadInspections(self):
         i = list(M.Inspection.objects)
         m = list(M.Measurement.objects)
@@ -120,17 +86,17 @@ class Core(object):
 
     def subscribe(self, name):
         # Create thread that listens for event specified by name
-        # If message received, trigger that event 
-        
+        # If message received, trigger that event
+
         def callback(msg):
             data = jsondecode(msg.body)
             self.trigger(name, data)
-            
+
         def listener():
             self._channel_manager.subscribe(name, callback)
-        
+
         gevent.spawn_link_exception(listener)
-    
+
     def publish(self, name, data):
         self._channel_manager.publish(name, data)
 
@@ -163,7 +129,7 @@ class Core(object):
         cameras = self.cameras
         if len(indexes):
             cameras = [ self.cameras[i] for i in indexes ]
-        
+
         currentframes = [ cam.getFrame() for cam in cameras ]
 
         while len(self.lastframes) >= (self._config.max_frames or 30):
@@ -175,120 +141,76 @@ class Core(object):
             new_frame_ids.append(frame.id)
 
         return currentframes
-    
-    """
-    This is probably not used any more.  commenting out to make sure
-        
-    def inspect(self, frames = []):
-        if not len(frames) and not len(self.lastframes):
-            frames = self.capture()
-        elif not len(frames):
-            frames = self.lastframes[-1]
-        
-        for frame in frames:
-            frame.features = []
-            frame.results = []
-            for inspection in self.inspections:
-                if inspection.parent:  #root parents only
-                    continue
-                
-                if inspection.camera and frame.camera != inspection.camera:
-                    #this camera, or all cameras if no camera is specified
-                    continue
-                
-                feats = inspection.execute(frame.image)
-                frame.features.extend(feats)
-                for m in inspection.measurements:
-                    m.execute(frame, feats)
-                    
-            for watcher in self.watchers:
-                watcher.check(frame.results)
-    """
-    
-    
-    def process(self, frame):
-        if self._worker_enabled:
-            async_results = self.process_async(frame)
-            return self.process_async_complete(frame, async_results)
-        
-        frame.features = []
-        frame.results = []
-        
-        # all times are in seconds, not ms
-        ct_epoch = int(frame.capturetime.strftime("%s"))
-        for inspection in M.Inspection.objects:
-            if inspection.parent:
-                continue
-            if inspection.camera and inspection.camera != frame.camera:
-                continue
-            if 'interval' in inspection.parameters and not nextInInterval(frame, inspection.parameters['intervalField'], inspection.parameters['interval']):
-                continue
-            
-            features = inspection.execute(frame)
-            frame.features += features
-            
-            for m in inspection.measurements:
-                if 'interval' in m.parameters and not nextInInterval(frame, m.parameters['intervalField'], m.parameters['interval']):
-                    continue
-            
-                m.execute(frame, features)
-            
-    def process_async(self, frame):
-        frame.features = []
-        frame.results = []
-        frame.save_image()
-        #make sure the image is in gridfs (does nothing if already saved)
-        
-        results_async = []
-        inspections = list(M.Inspection.objects)
-        #allocate each inspection to a celery task
 
-        # all times are in seconds, not ms
-        for inspection in M.Inspection.objects:
-            if inspection.parent:
-                continue
-            if inspection.camera and inspection.camera != frame.camera:
-                continue
-            if 'interval' in inspection.parameters and not nextInInterval(frame, inspection.parameters['intervalField'], inspection.parameters['interval']):
-                continue
-            results_async.append(execute_inspection.delay(inspection.id, frame.imgfile.grid_id, frame.metadata))
-        
-        return results_async
-        
-    def process_async_complete(self, frame, results_async):
-        
-        #note that async results refer to Celery results, and not Frame results
-        results_complete = []
-        ct_epoch = int(frame.capturetime.strftime("%s"))
-        while not len(results_complete) == len(results_async):
-            new_ready_results = []
-            for index, r in enumerate(results_async):
-                if not index in results_complete and r.ready():
-                    new_ready_results.append(index)
-                    
-            for result_index in new_ready_results:
-                (scvfeatures, inspection_id) = results_async[result_index].get()
-                insp = M.Inspection.objects.get(id=inspection_id)
-                features = []
-                
-                
-                for scvfeature in scvfeatures:
-                    scvfeature.image = frame.image 
-                    ff = M.FrameFeature()
-                    ff.setFeature(scvfeature)
-                    ff.inspection = insp.id
-                    features.append(ff)
-                
-                frame.features += features
-                #import pdb;pdb.set_trace()
-                for m in insp.measurements:
-                    if 'interval' in m.parameters and not nextInInterval(frame, m.parameters['intervalField'], m.parameters['interval']):
-                        continue
-                    m.execute(frame, features)
-                    
-            results_complete += new_ready_results
-            time.sleep(0.2)
-                
+    def schedule(self, frame, inspections=None, workers=True):
+        # Create a queue that hold the inspection iterator for this frame (which will start the inspection if worker running)
+        fm = Foreman()
+        if fm.workerRunning() == False or Session().disable_workers == True:
+            fm._useWorkers = False
+        self._queue[frame.id] = {}
+        self._queue[frame.id]['features'] = fm.process_inspections(frame, inspections)
+
+    def process(self, frame, inspections=None, measurements=None, overwrite=True, clean=False):
+        # WARNING: Workers cannot process the frame if it has not
+        # been saved to the database yet. We will automatically
+        # save the frame if workers are enabled.
+        if not frame.id and Foreman().workerRunning():
+            frame.save()
+
+        # First do all features, then do all results            
+        if not frame.id in self._queue:
+            self.schedule(frame, inspections)
+
+        try:
+            features = [ feat for feat in self._queue[frame.id].pop('features') ]
+        except TimeoutError:
+            log.warn("Worker timed out!  All further inspections will be ran in line.")
+            self._worker_enabled = False
+            self.schedule(frame, inspections, False)
+            # Note: even though we're not using workers anymore, a TimeoutError exception can still be thrown, and will bubble up.
+            features = [ feat for feat in self._queue[frame.id].pop('features') ]
+
+        if clean:
+            frame.features = []
+
+        if overwrite:
+            # Find a list of inspection id from new inspection
+            # Use those to find list of features from old frame that are not in list of new
+            # Then append those features to the list of new features
+            if features:
+                newInspections = { feature.inspection: 1 for feature in features }.keys()
+            else:
+                newInspections = []
+            keptFeatures = [ feature for feature in frame.features if not feature.inspection in newInspections ]
+            features += keptFeatures
+
+            frame.features = []
+
+        frame.features += features
+
+        # Now that we know we have features, can process measurements
+        if not 'results' in self._queue[frame.id]:
+            fm = Foreman()
+            self._queue[frame.id]['results'] = fm.process_measurements(frame, measurements)
+
+        results = [ res for res in self._queue[frame.id].pop('results') ]
+
+        if clean:
+            frame.results = []
+
+        if overwrite:
+            if results:
+                newResults = { result.measurement_name: 1 for result in results }.keys()
+            else:
+                newResults = []
+            keptResults = [ result for result in frame.results if not result.measurement_name in newResults ]
+            results += keptResults
+
+            frame.results = []
+
+        frame.results += results
+        self._queue.pop(frame.id)
+
     @property
     def results(self):
         ret = []
@@ -296,9 +218,9 @@ class Core(object):
             results = []
             for f in frameset:
                 results += [f.results for f in frameset]
-            
+
             ret.append(results)
-            
+
         return ret
 
     """
@@ -308,7 +230,7 @@ class Core(object):
     def get_measurement(self, name):
         return M.Measurement.objects(name=name).next()
     """
-    
+
     def state(self, name):
         if name in self._states: return self._states[name]
         s = self._states[name] = State(self, name)
@@ -332,7 +254,9 @@ class Core(object):
 
     def on(self, state_name, event_name):
         state = self.state(state_name)
-        self.subscribe(event_name)
+        if event_name not in self._subscriptions:
+            self.subscribe(event_name)
+            self._subscriptions.append(event_name)
         return state.on(event_name)
 
     def run(self, audit=False):
@@ -350,8 +274,20 @@ class Core(object):
                     self._cur_state = None
                 else:
                     self._cur_state = self.state(t.state)
-        audit_trail.append(None)
-        return audit_trail
+            except Exception, e:
+                estate = self._states.get('error',None)
+                if estate:
+                    log.error("{} error raised in {}".format(e.__class__.__name__, self._cur_state.name))
+                    _next = estate.run()
+                    audit_trail.append(estate)
+                    if _next:
+                        self._cur_state = _next
+                else:
+                    log.warn("No state.error defined")
+                    raise e
+
+                    audit_trail.append(None)
+                    return audit_trail
 
     def set_rate(self, rate_in_hz):
         self._clock = util.Clock(rate_in_hz, sleep=gevent.sleep)
@@ -362,13 +298,13 @@ class Core(object):
         #~ from guppy import hpy
         self._handle_events()
         self._clock.tick()
-            
+
         if self.config.memprofile:
             self._mem_prof_ticker += 1
             if self._mem_prof_ticker == int(self.config.memprofile):
                 self._mem_prof_ticker = 0
                 #~ self.log.info(hpy().heap())
-            
+
     def _handle_events(self):
         while True:
             try:

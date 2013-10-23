@@ -4,6 +4,7 @@ from mongoengine import signals as sig
 
 from .base import SimpleDoc, WithPlugins
 from .Result import ResultEmbed
+from .Tolerance import Tolerance
 
 from formencode import validators as fev
 from formencode import schema as fes
@@ -12,12 +13,37 @@ import formencode as fe
 from datetime import datetime
 
 from SimpleSeer import validators as V
-
+from Tolerance import Tolerance
 import logging
 log = logging.getLogger()
 
 
+class ResultValidator(fev.FancyValidator):
+    def _to_python(self, value, state):
+        if value is None: return None
+        if isinstance(value, dict) or isinstance(value, list):
+            if len(value):
+                results = []
+                for r in value:
+                    if r == ResultEmbed:
+                        results.append(r)
+                    elif type(r) == dict:
+                        re = ResultEmbed()
+                        re._data = {}
+                        re._data.update(r)
+                        results.append(re)
+            return results
+        raise fev.Invalid('invalid Result object', value, state)
+
+    def _from_python(self, value, state):
+        if value is None: return None
+        if isinstance(value, dict):
+            return value
+        raise fev.Invalid('invalid Python dict', value, state)
+
+
 class MeasurementSchema(fes.Schema):
+    id = V.ObjectId()
     name = fev.UnicodeString(not_empty=True) #TODO, validate on unique name
     label = fev.UnicodeString(if_missing=None)
     labelkey = fev.UnicodeString(if_missing=None)
@@ -73,7 +99,11 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
         'ordering': ['executeorder']
     }
 
-    def execute(self, frame, features):
+    def execute(self, frame, features=None):
+        
+        if not features:
+            features = frame.features
+        
         featureset = self.findFeatureset(features)
         #this will catch nested features
 
@@ -103,10 +133,10 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
             hasToleranceFunction = hasattr(function_ref, 'tolerance')
 
         if self.booleans:
-            values = self.testBooleans(values, self.booleans, frame.results)
+            values = self.testBooleans(values, self.booleans, values)
 
         if self.conditions:
-            conds = self.testBooleans(values, self.conditions, frame.results)
+            conds = self.testBooleans(values, self.conditions, values)
             values = [ v for v, c in zip(values, conds) if c ]
 
         results = self.toResults(frame, values)
@@ -155,7 +185,21 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
         return eval('%s %s %s' % (left, mex['op'], right), {}, {})
 
 
+    def getTolerances(self):
+        self.tolerance_list = Tolerance.objects(measurement_id=self.id)
+
     def tolerance(self, frame, results):
+
+        # Get a healthy new list of tolerances!
+        self.getTolerances()
+
+        try:
+            function_ref = self.get_plugin(self.method)
+            hasToleranceFunction = hasattr(function_ref, 'tolerance')
+            if hasToleranceFunction:
+                return function_ref.tolerance(frame, results)
+        except:
+            pass                
 
         for result in results:
             if result.measurement_name == self.name:
@@ -167,7 +211,12 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
 
                 result.state = 0
                 messages = []
-                for rule in self.tolerances:
+
+                for rule in self.tolerance_list:
+                    try:
+                        complex(rule.rule['value'])
+                    except ValueError:
+                        continue
                     if rule['criteria'].values()[0] == 'all' or (rule['criteria'].keys()[0] in frame.metadata and frame.metadata[rule['criteria'].keys()[0]] == rule['criteria'].values()[0]):
                         criteriaFunc = "testField %s %s" % (rule['rule']['operator'], rule['rule']['value'])
                         match = eval(criteriaFunc, {}, {'testField': testField})
@@ -201,7 +250,6 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
 
         return results
 
-    
     def backfillTolerances(self):
         from .Frame import Frame
         from .Alert import Alert
@@ -218,7 +266,6 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
                 frame.save(publish=False)
         Alert.clear()
         Alert.refresh('backfill')
-        res = ChannelManager().rpcSendRequest('olap_req/', {'action': 'rebuild'})
 
     def findFeatureset(self, features):
 
@@ -258,21 +305,11 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
                 measurement_id=self.id,
                 measurement_name=self.name)
             for i, v in enumerate(values) ]
-        frame.results.extend(results)
         return results
 
     def save(self, *args, **kwargs):
         from ..realtime import ChannelManager
-
-        # Optional parameter: skipBackfill
-        try:
-            skipBackfill = kwargs.pop('skipBackfill')
-        except:
-            skipBackfill = 0
-
-        if not skipBackfill:
-            if '_changed_fields' not in dir(self) or 'tolerances' in self._changed_fields:
-                self.backfillTolerances()
+        from ..Session import Session
 
         # Optional parameter: skipDeps
         try:
@@ -291,11 +328,17 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
             if m.name == self.name and m.id != self.id:
                 log.info('trying to save measurements with duplicate names: %s' % m.name)
                 self.name = self.name + '_1'
-
-
-        super(Measurement, self).save(*args, **kwargs)
+        try:
+            super(Measurement, self).save(*args, **kwargs)
+        except mongoengine.ValidationError:
+            # TODO:
+            # This is thrown when importing tolerances, and i have no idea why.
+            # commiting this code as the importing of tolerances is a blocker
+            # -Jim
+            pass
         ChannelManager().publish('meta/', self)
-
+    
+            
     def measurementsBefore(self):
         # Find the list of measurements that need to execute before this one
         before = []

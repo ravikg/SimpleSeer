@@ -1,0 +1,6 @@
+{{#each metadata}}
+    <p>{{this.key}}:</p>
+    <input type="text" name="{{this.key}}" value="{{this.value}}">
+{{/each}}
+    <p>Notes:</p>
+    <textarea>{{notes}}</textarea>

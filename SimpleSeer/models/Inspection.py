@@ -1,4 +1,5 @@
 from copy import deepcopy
+from bson import ObjectId
 
 import mongoengine
 from mongoengine import signals as sig
@@ -14,13 +15,14 @@ from datetime import datetime
 
 from .base import SimpleDoc, WithPlugins
 from .Measurement import Measurement
-from .FrameFeature import FrameFeature
+from .FrameFeature import FrameFeature, FeatureFactory
 from .Frame import Frame
 
 import logging
 log = logging.getLogger()
 
 class InspectionSchema(fes.Schema):
+    id = V.ObjectId()
     parent = V.ObjectId(if_empty=None, if_missing=None)
     name = fev.UnicodeString(not_empty=True)
     method = fev.UnicodeString(not_empty=True)
@@ -30,6 +32,25 @@ class InspectionSchema(fes.Schema):
     richattributes = V.JSON(if_empty=dict, if_missing=None)
     morphs = fe.ForEach(fev.UnicodeString(), convert_to_list=True)
 
+class InspectionValidator(fev.FancyValidator):
+    def _to_python(self, value, state):
+        if value is None: return None
+        if isinstance(value, dict) or isinstance(value, list):
+            inspections = []
+            if len(value):
+                for inspection in value:
+                    if type(inspection) == ObjectId:
+                        inspections.append(inspection)
+                    else:
+                        inspections.append(ObjectId(inspection))
+            return inspections
+        raise fev.Invalid('invalid Feature object', value, state)
+
+    def _from_python(self, value, state):
+        if value is None: return None
+        if isinstance(value, dict):
+            return value
+        raise fev.Invalid('invalid Python dict', value, state)
 
 class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
     """
@@ -112,24 +133,27 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
         
         # For legacy testing, make sure we have a frame and not an image
         if not type(frame) == Frame:
-            log.warn('inspection execute not expects a frame instead of an image')
+            log.warn('inspection execute expects a frame instead of an image')
             return []
         
         # Pull the frame metadata into the inspection's metadata
-        
         self.parameters['metadata'] = frame.metadata
-        #execute the morphs?
+        self.parameters['tolerances'] = self.tolerances(frame)
         
         #recursion stopper so we don't accidentally end up in any loops
         if parents.has_key(self.id):
             return []
         
-        method_ref = self.get_plugin(self.method)
+        #method_ref = self.get_plugin(self.method)
         #get the ROI function that we want
         #note that we should validate/roi method
         
         startexectime = datetime.now()
-        featureset = method_ref(frame.image)
+        if self.parameters.get('returnFactory', False):
+            featureset, tmp = FeatureFactory()(frame, self)
+        else:
+            featureset = FeatureFactory()(frame, self)
+            
         execdelta = datetime.now() - startexectime
         
         exectime = float(execdelta.seconds) + execdelta.microseconds / 1000000.0
@@ -143,10 +167,11 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
             frameFeatSet = featureset
         else:
             for feat in featureset:
-                ff = FrameFeature()
-                ff.setFeature(feat)
-                ff.exectime = exectime
-                frameFeatSet.append(ff)
+                if feat:
+                    ff = FrameFeature()
+                    ff.setFeature(feat)
+                    ff.exectime = exectime
+                    frameFeatSet.append(ff)
     
         if "skip" in self.parameters or "limit" in self.parameters:
             frameFeatSet = frameFeatSet[self.parameters.get("skip",None):self.parameters.get("limit",None)]
@@ -176,6 +201,17 @@ class Inspection(SimpleDoc, WithPlugins, mongoengine.Document):
                 
         return frameFeatSet
 
+    def tolerances(self, frame):
+        toleranced_fields = {}
+        
+        for m  in self.measurements:
+            m.getTolerances()
+            for rule in m.tolerance_list:
+                if rule['criteria'].values()[0] == 'all' or (rule['criteria'].keys()[0] in frame.metadata and frame.metadata[rule['criteria'].keys()[0]] == rule['criteria'].values()[0]):
+                    toleranced_fields[m.method] = 1
+                    
+        return toleranced_fields.keys()
+                    
     def save(self, *args, **kwargs):
         from ..realtime import ChannelManager
         

@@ -29,51 +29,80 @@ class Session():
     __shared_state = dict(
         _config = {})
     
-    def __init__(self, yaml_config_dir = '', procname='simpleseer'):
+    def __init__(self, yaml_config_dir = '.', procname='simpleseer', config_override={}):
         self.__dict__ = self.__shared_state
         
-        if not yaml_config_dir:
+        if self._config != {}:
             return  #return the existing shared context
+        self.config_override = config_override
 
-        config_dict = self.read_config(yaml_config_dir)
-        log.info("Loaded configuration from %s" % config_dict['yaml_config'])
-        
-        # Look for alternate config files with name hostname_simpleseer.cfg
-        alt_config_filename = gethostname() + '_simpleseer.cfg'
-        alt_config = path(yaml_config_dir) / alt_config_filename
-        if os.path.isfile(alt_config):
-            log.info('Overriding configuration with %s' % alt_config)
-            alt_config_dict = yaml.load(open(alt_config))
-            config_dict.update(alt_config_dict)
-        
-        self.configure(config_dict)
+        self.reload_config(yaml_config_dir, config_override)
+
         if not self.procname:
             self.procname = procname
     
         #self.appname = self.get_app_name('.')
-
+        self.log = log
         self.appname = self.database
         self._known_triggers = {}
     
+    def reload_config(self, yaml_config_dir = '.', config_override={}):
+        try:
+            db = mongoengine.connection.get_db()
+            log.info("Disconnecting from db")
+            mongoengine.connection.disconnect()
+        except mongoengine.ConnectionError:
+            pass
+
+        config_dict = self.read_config(yaml_config_dir)
+        for k,v in config_override.iteritems():
+            config_dict[k] = v
+        log.info("Loaded configuration from %s" % config_dict['yaml_config'])        
+        self.configure(config_dict)
+
     @staticmethod
-    def read_config(yaml_config_dir=''):
-        yaml_config = path(yaml_config_dir) / "simpleseer.cfg"
+    def read_config(yaml_config_dir='.', yaml_config_file="simpleseer.cfg"):
+        yaml_config = path(yaml_config_dir) / yaml_config_file
 
         if yaml_config_dir == "." and not os.path.isfile(yaml_config):
             yaml_config_dir = "/etc/simpleseer"
-            yaml_config = path(yaml_config_dir) / "simpleseer.cfg"
+            yaml_config = path(yaml_config_dir) / yaml_config_file
         retVal = yaml.load(open(yaml_config))
         retVal['yaml_config'] = yaml_config
+
+        # Look for alternate config files with name hostname_simpleseer.cfg
+        alt_config_filename = "{0}_{1}".format(gethostname(),yaml_config_file)
+        alt_config = path(yaml_config_dir) / alt_config_filename
+        if os.path.isfile(alt_config):
+            log.info('Overriding configuration with %s' % alt_config)
+            alt_config_dict = yaml.load(open(alt_config))
+            retVal.update(alt_config_dict)
+
         return retVal
     
     def configure(self, d):
         from .models.base import SONScrub
+        import socket
         self._config = d
+        self._config['hostname'] = socket.gethostname()
+        if not hasattr(self, 'database') or self.database == '':
+            raise Exception('Database not defined in config')
+        if not hasattr(self, 'mongo') or self.mongo == '':
+            raise Exception('Mongo not defined inconfig')
+        
         if self.mongo.get('master', False):
             master = self.mongo.pop("master")
             mongoengine.connect(self.database, **master)
         mongoengine.connect(self.database, **self.mongo)
-        db = mongoengine.connection.get_db()
+        db = mongoengine.connection.get_db(**{"reconnect":True})
+
+        if self.forcemongomaster:
+            if db.command('isMaster')['ismaster']:
+                log.info("MongoDB isMaster: true")
+            else:
+                log.info("MongoDB isMaster: false")
+                raise Exception("MongoDB must be the master!")
+        
         db.add_son_manipulator(SONScrub())
         self.log = logging.getLogger(__name__)
         

@@ -5,7 +5,7 @@ import mock
 
 from SimpleSeer import util
 
-class TestJsonify(unittest.TestCase):
+class Test(unittest.TestCase):
 
     @util.jsonify
     def _jsonified(self, x):
@@ -27,8 +27,6 @@ class TestJsonify(unittest.TestCase):
     def test_jsonify_none(self, jsonencode, make_response):
         self._jsonified(None)
         jsonencode.assert_called_with({})
-
-class TestUTFConvert(unittest.TestCase):
 
     def test_convert_str(self):
         encoded = util.utf8convert('foo')
@@ -56,8 +54,6 @@ class TestUTFConvert(unittest.TestCase):
         x = MyObject()
         encoded = util.utf8convert(x)
         assert encoded is x
-
-class TestClock(unittest.TestCase):
 
     def test_clock(self):
         c = util.Clock(100)

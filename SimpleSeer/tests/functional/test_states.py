@@ -6,7 +6,7 @@ import mock
 
 from SimpleSeer.states import Core
 
-class TestStateMachine(unittest.TestCase):
+class Test(unittest.TestCase):
 
     def setUp(self):
         config = mock.Mock()

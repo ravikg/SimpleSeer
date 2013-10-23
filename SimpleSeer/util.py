@@ -90,6 +90,12 @@ def jsonify(f):
         return resp
     return decorated_function
 
+def isnumeric(v):
+    try:
+        complex(v)
+        return True
+    except ValueError:
+        return False
 
 #cribbed from
 #http://stackoverflow.com/questions/1254454/fastest-way-to-convert-a-dicts-keys-values-from-unicode-to-str

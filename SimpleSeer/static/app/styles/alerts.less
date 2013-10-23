@@ -5,7 +5,7 @@
 #messages {
   position: fixed;
   top: 43px; right: 8px;
-  z-index: 9999;
+  z-index: 999999;
   width: 350px;
 }
 
@@ -47,6 +47,13 @@
     background-color: #dff0d8;
     border-color: #468847;
     color: #468847;
+  }
+
+  &.alert-warning {
+    box-shadow: 0px 1px 5px rgba(58, 135, 173, 0.2);
+    background-color: #FFFF99;
+    border-color: #FFFF00;
+    color: #996600;
   }
 
   &.alert-danger, &.alert-error {

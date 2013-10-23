@@ -23,48 +23,46 @@ DEBUG = True
 log = logging.getLogger(__name__)
 
 from flask.ext.login import (LoginManager, current_user, login_required,
-                            login_user, logout_user, UserMixin, AnonymousUser,
+                            login_user, logout_user, UserMixin,
                             confirm_login, fresh_login_required)
+
 class User(UserMixin):
-    def __init__(self, name, id, password=None,active=True):
-        self.name = name
-        self.id = id
-        self.password = password
-        self.active = active
+    def __init__(self, userModel):
+        self.name = userModel.username
+        self.id = userModel.id
+        self.active = True
+        self.model = userModel
 
     def is_active(self):
         return self.active
 
-
-class Anonymous(AnonymousUser):
-    name = u"Anonymous"
-
+login_manager = LoginManager()
+login_manager.login_view = "login"
+login_manager.refresh_view = "reauth"
+login_manager.login_message = u"Please log in to access this page."
 
 appauth = False
 session = Session()
-
 timestamp = time.time()
-USERS = {1: User(str(timestamp), int(timestamp), str(timestamp), False)}
-
-if session.login:
-  USERS = {
-      1: User(session.login['username'], 1, session.login['password']),
-  }
-
-USER_NAMES = dict((u.name, u) for u in USERS.itervalues())
-login_manager = LoginManager()
-login_manager.anonymous_user = Anonymous
-login_manager.login_view = "login"
-login_manager.login_message = u"Please log in to access this page."
-login_manager.refresh_view = "reauth"
+app = Flask(__name__)
+app.config.from_object(__name__)
 
 @login_manager.user_loader
 def load_user(id):
-    return USERS.get(int(id))
+    try:
+        query = M.User.objects.get(id=id)
+        user = User(query)
+        return user
+    except:
+        return None
 
-app = Flask(__name__)
-DEBUG = True
-app.config.from_object(__name__)
+
+
+if len(M.User.objects) == 0 and session.requireAuth:
+    log.warn('****************************************************************')
+    log.warn('* WARNING:')
+    log.warn('* Application configured to require auth, but there are no users yet')
+    log.warn('****************************************************************')
 
 def make_app(*args,**kwargs):
     settings = Session()
@@ -77,8 +75,7 @@ def make_app(*args,**kwargs):
 
     # TODO: change this key, its horrible.
     app.secret_key = 'secretkey'
-    # commented out auth for now!
-    #login_manager.setup_app(app)
+    login_manager.setup_app(app)
 
     @app.teardown_request
     def teardown_request(exception):
