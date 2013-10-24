@@ -64,8 +64,8 @@ module.exports = class Series extends FilterCollection
     #console.log response
     @raw = response.data
     #super(response)
-    if @realtime
-      @subscribe(response.chart)
+    #if @realtime
+    @subscribe(response.chart)
     clean = @_clean response.data
     return clean
 
