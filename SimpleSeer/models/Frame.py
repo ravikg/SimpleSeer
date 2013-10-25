@@ -237,11 +237,9 @@ class Frame(SimpleDoc, mongoengine.Document):
         from .Measurement import Measurement
         results = []
         for m in Measurement.objects:
-            i = Inspection.object.get(id=m.inspection_id)
-            if i.camera is self.camera or i.camera is "all":
-                res = m.execute(self)
-                if len(res):
-                    results.append(res[0])
+            res = m.execute(self)
+            if len(res):
+                results.append(res[0])
         return results
 
     def save(self, *args, **kwargs):
