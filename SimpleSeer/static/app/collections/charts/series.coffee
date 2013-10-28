@@ -43,7 +43,7 @@ module.exports = class Series extends FilterCollection
     #if args.realtime
     #  @subscribe()
     @on("remove",@shiftChart)
-    @on("reset",@onSuccess)
+    #@on("reset",@onSuccess)
     #@fetch()
     return @
 
@@ -174,16 +174,22 @@ module.exports = class Series extends FilterCollection
 
 
   receive: (data) =>
+    models = []
     for o in data.data.m.data
       p = @_formatChartPoint o
-      if @inStack(p)
-        if @accumulate
-          @remove p.x.unix(), {silent: true}
-        @add p, {silent: true}
-        @view.hasData = true
-    @_drawData()
-    if @view.hasData && @view.hasMessage
-      @view.hideMessage()
+      models.push(p)
+    @reset(models)
+      #if @inStack(p)
+      #  console.log "instack"
+      #  if @accumulate
+      #   console.log "accumulate"
+      #    @remove p.x.unix(), {silent: true}
+      #  @add p, {silent: true}
+      #  console.log "past accumulate"
+      #  @view.hasData = true
+    #@_drawData()
+    #if @view.hasData && @view.hasMessage
+    #  @view.hideMessage()
     return
 
   inStack:(point) =>
