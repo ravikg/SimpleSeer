@@ -28,7 +28,7 @@ module.exports = class FilterCollection extends Collection
   # `url` is the path to the restful filter object
   url:"/getFrames"
   # `subscribePath` is the channel the `subscribe` method (websocket/pubsub) uses to listen for events
-  subscribePath:"Chart"
+  subscribePath:"Frame"
   # if `mute` is true, altering the query params will not fire a request to the server.  This is typically used for parent level filtercollections that have other filtercollection bound to it
   mute:false
   # if clearOnFetch is true, the filtercollection will clear its models list for every request (page by page, or changing filters).
