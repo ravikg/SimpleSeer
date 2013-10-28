@@ -1,8 +1,8 @@
 FilterCollection = require "./core/filtercollection"
 
 module.exports = class Table extends FilterCollection
-  subscribePath: "Frame"
-  
+  subscribePath: "Chart"
+
   initialize: (models, args={}) =>
     @filterRoot = "Chart"
     @name = args.name || ''
