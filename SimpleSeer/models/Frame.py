@@ -235,6 +235,7 @@ class Frame(SimpleDoc, mongoengine.Document):
 
     def update_results(self):
         from .Measurement import Measurement
+        from .Inspection import Inspection
         results = []
         for m in Measurement.objects:
             i = Inspection.objects.get(id=m.inspection)
