@@ -122,24 +122,33 @@ module.exports = class Table extends SubView
   ''' GETTING / SETTING DATA '''
 
   # Build the collection and return it
-  _collection: =>
-    bindFilter = Application.context[@options.parent.dashboard.options.parent.options.context].filtercollection
+  _collection: (args={}) =>
+    if args and args.bindFilter?
+      bindFilter = args.bindFilter
+    else if @options.parent.dashboard?
+      bindFilter = Application.context[@options.parent.dashboard.options.context].filtercollection
     collection = new @settings.collection([], {
       bindFilter: bindFilter, 
       model: @settings.model, 
-      url: @settings.url, 
       viewid: @settings.viewid
     })
 
     collection.setParam 'limit', @variables.limit
     collection.setParam 'skip', @variables.skip
 
-    for o,i in @settings.subscribe
-      collection.subscribePath = o
-      collection.subscribe(false,@receive)
-
     collection.on('reset', @_data)
+
     return collection
+
+
+  #subscribe:(channel='Chart/'+@model.attributes.name+'/') =>
+  #  if @model.attributes.realtime && Application.socket
+  #    Application.socket.on 'message:'+channel, @_newData
+  #    if !Application.subscriptions[channel]
+  #      Application.socket.removeListener "message:#channel", @_newData
+  #      Application.subscriptions[channel] = Application.socket.emit 'subscribe', channel
+
+
 
   # Safe function to update the collection with passed params
   # @TODO: Pass set/unset key to params
@@ -161,22 +170,15 @@ module.exports = class Table extends SubView
       @variables.rows = []
       @variables.clearrows = false
 
-  # Handles data messages from socket
-  receive: (data) =>
-    model = @collection.where({id: data.data.id})[0]
-    if data.channel == "framedelete/"
-      if model then @collection.remove(model)
-    if data.channel == "frameupdate/"
-      if model then model.attributes = data.data
-      else @collection.add(data.data, {at: 0})
-    @_data()
-
-
 
   ''' RENDERING '''
 
   # Main data render trigger function
   _data: (a = null, b = null) =>
+    if typeof(a) == 'object'
+      @variables.cleardata = true
+      @variables.clearrows = true
+
     if @collection.getParam?
       if @collection.getParam('skip') is 0
         @variables.cleardata = true
