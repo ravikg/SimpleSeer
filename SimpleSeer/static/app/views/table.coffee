@@ -72,19 +72,14 @@ module.exports = class Table extends SubView
       settings.url = @options.data.url ? 'api/frame'
       settings.viewid = @options.data.viewid ? '5089a6d31d41c855e4628fb0'
       settings.limit = @options.data.limit ? 100
-      settings.limit = 100
     settings.subscribe = @options.subscribe ? []
     settings.columns = @options.columns ? []
     settings.sortable = @options.sortable ? true
     settings.sorttype = @options.sorttype ? 'db'
-    if settings.sortable
-      for o,i in settings.columns
-        o.sortable = o.sortable ? true
-        o.visible = o.visible ? true
-    else
-      for o,i in settings.columns
-        o.sortable = false
-        o.visible = o.visible ? true
+    defaultSort = settings.sortable ? false
+    for o,i in settings.columns
+      o.sortable = o.sortable ? defaultSort
+      o.visible = o.visible ? true
     return settings
 
   # Append addition variables to our class scope
@@ -108,6 +103,7 @@ module.exports = class Table extends SubView
     variables.emptytoggle = false
     variables.scrollElem = '#content #slides'
     variables.left = null
+    variables.navigateId = 0
     if @settings.header is 'float'
       variables.preHTML += '<div class="header">
               <div class="float">
@@ -206,11 +202,29 @@ module.exports = class Table extends SubView
       data = @_formatData @collection.models
       if data
         @variables.data = @variables.data.concat(data)
-        for o,i in @variables.data
-          if @variables.direction is 1
-            @variables.rows.unshift(@_row(o))
-          else
-            @variables.rows.push(@_row(o))
+
+        if @settings.pagination == "num"
+          if @variables.navigateId
+            page = Math.floor(@variables.navigateId / @settings.limit)
+            mod = @variables.navigateId % @settings.limit
+            if mod
+                page++
+              if page == 1
+                @variables.skip = 0
+              else
+                @variables.skip = page * @settings.limit - @settings.limit
+          for o,i in @variables.data
+            if i >= @variables.skip and i < @settings.limit + @variables.skip
+              if @variables.direction is 1
+                @variables.rows.unshift(@_row(o))
+              else
+                @variables.rows.push(@_row(o))
+        else
+          for o,i in @variables.data
+            if @variables.direction is 1
+              @variables.rows.unshift(@_row(o))
+            else
+              @variables.rows.push(@_row(o))
         @render()
     else
       @variables.data = []
@@ -284,8 +298,26 @@ module.exports = class Table extends SubView
 
     return cell
 
+  _pages: =>
+    arr = [1]
+    if @variables.data and @variables.data.length > 0
+      total = @variables.data.length
+      limit = @settings.limit
+      floor = Math.floor(@variables.data.length / @settings.limit)
+      mod = @variables.data.length % @settings.limit
+      if total > limit
+        if floor
+          if mod
+            floor++
+          i = 2
+          while i <= floor
+            arr.push(i)
+            i++
+    return arr
+
   # Pass data to handlebars to render
   getRenderData: =>
+    pages: @_pages()
     toggles: @settings.toggles
     classes: @settings.classes
     styles: @settings.styles
@@ -353,6 +385,7 @@ module.exports = class Table extends SubView
 
   events: =>
     "click th.sortable":"_sort" # Click to sort
+    "click .pagination .item":"_page" # Click to page
     "click .downloads button":"_download" # Click to download
     "click .toggles":"_toggles" # Toggle toggles menu
     "click .toggle":"_toggle" # Toggle toggle
@@ -440,19 +473,20 @@ module.exports = class Table extends SubView
     else if @settings.sorttype is 'js' # Let javascript do the sorting
       @variables.clearrows = true
       @variables.cleardata = true
+      @variables.skip = 0
       if @settings.model
         model = @settings.model
-        
+        spl = key.split(".")
         if direction is 1
           @collection.comparator = (model) ->
-            str = model.get(key) ? ""
+            str = model.get(spl[0])[spl[1]] ? ""
             str = str.toString()
             String.fromCharCode.apply String, _.map(str.split(""), (c) ->
               c.charCodeAt() - 0xffff
             )
         else if direction is -1
           @collection.comparator = (model) ->
-            str = model.get(key) ? ""
+            str = model.get(spl[0])[spl[1]] ? ""
             str = str.toString()
             if !str
               str = "                                                                                                                                 "
@@ -461,6 +495,37 @@ module.exports = class Table extends SubView
             )
         @collection.models = @variables.data
         @collection.sort()
+        @variables.data = _.clone @collection.models
+        @variables.rows = []
+        for o,i in @variables.data
+          if @settings.pagination == "num"
+            if i >= @variables.skip and i < @settings.limit + @variables.skip
+              if @variables.direction is 1
+                @variables.rows.unshift(@_row(o))
+              else
+                @variables.rows.push(@_row(o))
+          else
+            if @variables.direction is 1
+              @variables.rows.unshift(@_row(o))
+            else
+              @variables.rows.push(@_row(o))
+        @render()
+
+  _page: (e) =>
+    page = $(e.target).data('page')
+    if page > 0
+      if page is 1
+        @variables.skip = 0
+      else
+        @variables.skip = page * @settings.limit - @settings.limit
+      @variables.rows = []
+      for o,i in @variables.data
+        if i >= @variables.skip and i < @settings.limit + @variables.skip
+          if @variables.direction is 1
+            @variables.rows.unshift(@_row(o))
+          else
+            @variables.rows.push(@_row(o))
+      @render()
 
   _infinite: =>
     if @collection and @collection.lastavail >= @variables.limit
