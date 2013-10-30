@@ -15,6 +15,7 @@ from contextlib import closing
 from zipfile import ZipFile, ZIP_DEFLATED
 import time
 import shutil
+import signal
 
 class ManageCommand(Command):
     "Simple management tasks that don't require SimpleSeer context"
@@ -96,7 +97,7 @@ class DeployCommand(ManageCommand):
 
 
         print "Reloading supervisord"
-        #subprocess.check_output(['supervisorctl', 'reload'])
+        subprocess.check_output(['supervisorctl', 'reload'])
 
 
 class ServiceCommand(ManageCommand):
@@ -371,22 +372,31 @@ class WorkerCommand(Command):
     def __init__(self, subparser):
         subparser.add_argument("--purge", help="clear out the task queue", action="store_true")
 
+
     def run(self):
 
         # Subscribe to heartbeat
         self.heartbeat(name="worker")
+        try:
+            if self.options.purge:
+                cmd = ('celery', 'purge', '--config', 'SimpleSeer.celeryconfig')
+                proc = subprocess.Popen(cmd)
+                print " ".join(cmd)
+                print "Task queue purged"
+            else:
+                import socket
+                worker_name = socket.gethostname() + '-' + str(time.time())
+                cmd = ['celery','worker','--config',"SimpleSeer.celeryconfig",'-n',worker_name]
+                print " ".join(cmd)
+                proc = subprocess.Popen(cmd)
 
-        if self.options.purge:
-            cmd = ('celery', 'purge', '--config', 'SimpleSeer.celeryconfig')
-            subprocess.call(cmd)
-            print " ".join(cmd)
-            print "Task queue purged"
-        else:
-            import socket
-            worker_name = socket.gethostname() + '-' + str(time.time())
-            cmd = ['celery','worker','--config',"SimpleSeer.celeryconfig",'-n',worker_name]
-            print " ".join(cmd)
-            subprocess.call(cmd)
+                def send_term(proc):
+                    proc.kill()
+                signal.signal(signal.SIGTERM, send_term)
+
+                proc.wait()
+        except Exception as e:
+            proc.kill()
 
 @ManageCommand.simple()
 def BuildCommand(self):
