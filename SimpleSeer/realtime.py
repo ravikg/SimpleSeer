@@ -198,7 +198,6 @@ class ChannelManager(object):
         while self._response[corrid] is None:
             try:
                 channel.wait()
-                log.info('RPC request on %s' % workQueue)
             except (socket.error, IOError) as e:
                 log.warn('Socket error: {}.  Will try to reconnect.'.format(e))
                 conn = self.connect(re_establish=True)
