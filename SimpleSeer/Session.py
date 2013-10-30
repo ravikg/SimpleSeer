@@ -6,7 +6,7 @@ import os.path
 from path import path
 from socket import gethostname
 import logging
-log = logging.getLogger()
+log = logging.getLogger(__name__)
 
 
 
@@ -55,28 +55,82 @@ class Session():
             pass
 
         config_dict = self.read_config(yaml_config_dir)
+
+        # Look for simpleseer.cfg in .
+        if yaml_config_dir == "." and not config_dict['yaml_config']:
+            config_dict = self.read_config("/etc/simpleseer")
+
+        # If none found, look in /etc/simpleseer
+        if not config_dict['yaml_config']:
+            raise Exception("No simpleseer.cfg file could be found! Please see docs for instructions.")
+
         for k,v in config_override.iteritems():
             config_dict[k] = v
+        
         log.info("Loaded configuration from %s" % config_dict['yaml_config'])        
         self.configure(config_dict)
 
+
     @staticmethod
     def read_config(yaml_config_dir='.', yaml_config_file="simpleseer.cfg"):
-        yaml_config = path(yaml_config_dir) / yaml_config_file
 
-        if yaml_config_dir == "." and not os.path.isfile(yaml_config):
-            yaml_config_dir = "/etc/simpleseer"
-            yaml_config = path(yaml_config_dir) / yaml_config_file
-        retVal = yaml.load(open(yaml_config))
-        retVal['yaml_config'] = yaml_config
+        """
+        ./settings/
+                <host>/simpleseer.cfg
+                local/simpleseer.cfg
+                default/simpleseer.cfg
+        ./<host>_simpleseer.cfg  [DEPRECATE]
+        ./simpleseer.cfg         [DEPRECATE]
 
-        # Look for alternate config files with name hostname_simpleseer.cfg
-        alt_config_filename = "{0}_{1}".format(gethostname(),yaml_config_file)
-        alt_config = path(yaml_config_dir) / alt_config_filename
-        if os.path.isfile(alt_config):
-            log.info('Overriding configuration with %s' % alt_config)
-            alt_config_dict = yaml.load(open(alt_config))
-            retVal.update(alt_config_dict)
+        """
+
+        def read_yaml_config(yaml_config_dir, config_filename):
+            yaml_config = path(yaml_config_dir) / config_filename
+            if os.path.isfile(yaml_config):
+                return yaml.load(open(yaml_config))
+            else:
+                return {}
+
+        retVal = {'yaml_config':[]}
+
+        # DEPRECATE
+        # ./simpleseer.cfg
+        config_filename = "{0}".format(yaml_config_file)
+        config_dict = read_yaml_config(yaml_config_dir, config_filename)
+        if config_dict:
+            log.info("simpleseer.cfg is depricated.  Please see docs for instructions.")
+            retVal.update(config_dict)
+            retVal['yaml_config'].append(config_filename)
+
+        # DEPRECATE
+        # ./<host>_simpleseer.cfg
+        config_filename = "{0}_{1}".format(gethostname(), yaml_config_file)
+        config_dict = read_yaml_config(yaml_config_dir, config_filename)
+        if config_dict:
+            log.info("<host>_simpleseer.cfg is depricated.  Please see docs for instructions.")
+            retVal.update(config_dict)
+            retVal['yaml_config'].append(config_filename)
+
+        # ./settings/default/simpleseer.cfg
+        config_filename = "settings/default/{0}".format(yaml_config_file)
+        config_dict = read_yaml_config(yaml_config_dir, config_filename)
+        if config_dict:
+            retVal.update(config_dict)
+            retVal['yaml_config'].append(config_filename)
+
+        # ./settings/local/simpleseer.cfg
+        config_filename = "settings/local/{0}".format(yaml_config_file)
+        config_dict = read_yaml_config(yaml_config_dir, config_filename)
+        if config_dict:
+            retVal.update(config_dict)
+            retVal['yaml_config'].append(config_filename)
+
+        # ./settings/<host>/simpleseer.cfg
+        config_filename = "settings/{0}/{1}".format(gethostname(), yaml_config_file)
+        config_dict = read_yaml_config(yaml_config_dir, config_filename)
+        if config_dict:
+            retVal.update(config_dict)
+            retVal['yaml_config'].append(config_filename)
 
         return retVal
     
