@@ -607,8 +607,9 @@ class UserCommand(Command):
                 fullname = self.options.name or raw_input("Name: ")
                 password = self.options.password or raw_input("Password: ")
                 try:
-                    user = M.User.objects.create(username=username, password=password)
+                    user = M.User.objects.create(username=username)
                     user.name = fullname
+                    user.set_password(password)
                     user.save()
                 except:
                     print "Unexpected error:", sys.exc_info()[0]
