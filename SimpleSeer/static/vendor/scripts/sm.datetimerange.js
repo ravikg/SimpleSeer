@@ -10,9 +10,8 @@ SimpleSeerDateHelper = {
     monthDays: [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
 
     offsetMonth: function(date, span) {
-        var theDate = new Date(date.toISOString());
-        theDate.setMonth(theDate.getMonth() + span);
-        return theDate;
+        var theDate = moment(date).add('month', span)
+        return theDate.toDate();
     },
 
     prettyDate: function(date) {
