@@ -299,20 +299,23 @@ module.exports = class Table extends SubView
     return cell
 
   _pages: =>
-    arr = [1]
-    if @variables.data and @variables.data.length > 0
-      total = @variables.data.length
-      limit = @settings.limit
-      floor = Math.floor(@variables.data.length / @settings.limit)
-      mod = @variables.data.length % @settings.limit
-      if total > limit
-        if floor
-          if mod
-            floor++
-          i = 2
-          while i <= floor
-            arr.push(i)
-            i++
+    if @settings.pagination == "num"
+      arr = [1]
+      if @variables.data and @variables.data.length > 0
+        total = @variables.data.length
+        limit = @settings.limit
+        floor = Math.floor(@variables.data.length / @settings.limit)
+        mod = @variables.data.length % @settings.limit
+        if total > limit
+          if floor
+            if mod
+              floor++
+            i = 2
+            while i <= floor
+              arr.push(i)
+              i++
+    else
+      arr = []
     return arr
 
   # Pass data to handlebars to render

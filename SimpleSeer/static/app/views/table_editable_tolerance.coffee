@@ -8,11 +8,6 @@
 
 module.exports = class ToleranceTable extends EditableTable
 
-  ''' TODO '''
-  '''
-    Make sure javascript sort works for part number
-  '''
-
   ''' INIT '''
   
   initialize: =>
