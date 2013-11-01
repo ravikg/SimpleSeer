@@ -722,3 +722,12 @@ class TestCommand(Command):
             sys.exit(0)
         else:
             sys.exit(1)
+
+@Command.simple(use_gevent=True)
+def PurgeCommand(self):
+    ''' Get rid of all those pesky database objects. Ensure a clean import! '''
+    import SimpleSeer.models as M
+    M.OLAP.objects.delete()
+    M.Chart.objects.delete()
+    M.Dashboard.objects.delete()
+    
