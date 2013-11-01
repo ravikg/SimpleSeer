@@ -53,6 +53,8 @@ class Test(unittest.TestCase):
         d = self.scrubber.transform_incoming(dict(a=_Custom()), None)
         self.assertEqual(d, {'a': 42})
 
+    #removed due to possible deprecation - Tendrid
+    """
     def test_bintype(self):
         self.scrubber.register_bintype(
             _Custom,
@@ -61,42 +63,49 @@ class Test(unittest.TestCase):
         d = self.scrubber.transform_incoming(dict(a=_Custom()), None)
         d = self.scrubber.transform_outgoing(d, None)
         self.assert_(isinstance(d['a'], _Custom))
+    """
 
     def test_bintype_ambiguous(self):
-#        self.scrubber.register_bintype(
-#            _Custom,
-#            lambda v,c: '42',
-#            lambda v,c: _Custom())
-#        self.assertRaises(
-#            ValueError, self.scrubber.register_bintype,
-#            _Custom, lambda v,c: '42', lambda v,c: _Custom())
-#
-#    def test_bintype_array(self):
-#        self.scrubber.register_bintype(
-#            _Custom,
-#            lambda v,c: '42',
-#            lambda v,c: _Custom())
-#        d = self.scrubber.transform_incoming(dict(a=[_Custom()]), None)
-#        d = self.scrubber.transform_outgoing(d, None)
-#        self.assert_(isinstance(d['a'][0], _Custom))
-#
-#    def test_pickle(self):
-#        obj = dict(a=_Custom())
-#        self.scrubber.register_pickled_type(_Custom)
-#        d = self.scrubber.transform_incoming(obj, None)
-#        d1 = self.scrubber.transform_outgoing(d, None)
-#        self.assertEqual(str(d['a']), dumps(_Custom(), protocol=2))
-#        self.assert_(isinstance(d1['a'], _Custom))
-#
-#    def test_pass_unknown(self):
-#        obj = dict(a=_Custom())
-#        d = self.scrubber.transform_incoming(obj, None)
-#        self.assert_(isinstance(d['a'], _Custom))
-#
-#    def test_too_many_bintypes(self):
-#        def gen_type():
-#            class Custom(object): pass
-#            return Custom
+        self.scrubber.register_bintype(
+            _Custom,
+            lambda v,c: '42',
+            lambda v,c: _Custom())
+        self.assertRaises(
+            ValueError, self.scrubber.register_bintype,
+            _Custom, lambda v,c: '42', lambda v,c: _Custom())
+
+    #removed due to possible deprecation - Tendrid
+    """
+    def test_bintype_array(self):
+        self.scrubber.register_bintype(
+            _Custom,
+            lambda v,c: '42',
+            lambda v,c: _Custom())
+        d = self.scrubber.transform_incoming(dict(a=[_Custom()]), None)
+        d = self.scrubber.transform_outgoing(d, None)
+        self.assert_(isinstance(d['a'][0], _Custom))
+    """
+
+    #removed due to possible deprecation - Tendrid
+    """
+    def test_pickle(self):
+        obj = dict(a=_Custom())
+        self.scrubber.register_pickled_type(_Custom)
+        d = self.scrubber.transform_incoming(obj, None)
+        d1 = self.scrubber.transform_outgoing(d, None)
+        self.assertEqual(str(d['a']), dumps(_Custom(), protocol=2))
+        self.assert_(isinstance(d1['a'], _Custom))
+    """
+
+    def test_pass_unknown(self):
+        obj = dict(a=_Custom())
+        d = self.scrubber.transform_incoming(obj, None)
+        self.assert_(isinstance(d['a'], _Custom))
+
+    def test_too_many_bintypes(self):
+        def gen_type():
+            class Custom(object): pass
+            return Custom
         for x in xrange(127):
             self.scrubber.register_bintype(
                 gen_type(), lambda v,c:None, lambda v,c:None)
