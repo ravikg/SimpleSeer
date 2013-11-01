@@ -26,6 +26,7 @@ class UserSchema(fes.Schema):
     filter_extra_fields=True
     name = fev.UnicodeString(not_empty=True)
     username = fev.UnicodeString(not_empty=True, unique=True)
+    _password = fev.UnicodeString(not_empty=True)
 
 class User(SimpleDoc, mongoengine.Document):
     name = mongoengine.StringField()

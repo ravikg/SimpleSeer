@@ -91,7 +91,7 @@ class WebCommand(Command):
         web = WebServer(make_app(test = self.options.test))
 
         from SimpleSeer.Backup import Backup
-        Backup.importAll(None, False, True, True)
+        Backup.importAll(None, False, False, True)
 
         try:
             web.run_gevent_server()
@@ -367,7 +367,8 @@ class MetaCommand(Command):
         subparser.add_argument("--listen", help="(export) Run as daemon listing for changes and exporting when changes found.", action='store_true')
         subparser.add_argument("--file", help="The file name to export/import.  If blank, defaults to seer_export.yaml", default="seer_export.yaml")
         subparser.add_argument('--clean', help="(import) Delete existing metadata before importing", action='store_true')
-        subparser.add_argument('--skipbackfill', help="(import) Do not run a backfill after importing", action='store_true')
+        subparser.add_argument('--backfill', help="(import) Run a backfill after importing", action='store_true')
+        subparser.add_argument('--backfill-measurements', help="(import) Run a measurement backfill after importing", action='store_true')
 
         subparser.add_argument('--procname', default='meta', help='give each process a name for tracking within session')
 
@@ -387,7 +388,13 @@ class MetaCommand(Command):
             if self.options.listen:
                 gevent.spawn_link_exception(Backup.listen())
         elif self.options.subsubcommand == "import":
-            Backup.importAll(self.options.file, self.options.clean, self.options.skipbackfill)
+            backfill = False
+            if self.options.backfill:
+                backfill = 1 # Backfill everything
+            elif self.options.backfill_measurements:
+                backfill = 2 # Backfill measurements
+            
+            Backup.importAll(self.options.file, self.options.clean, backfill)
 
 
 class ExportImagesCommand(Command):
@@ -607,8 +614,9 @@ class UserCommand(Command):
                 fullname = self.options.name or raw_input("Name: ")
                 password = self.options.password or raw_input("Password: ")
                 try:
-                    user = M.User.objects.create(username=username, password=password)
+                    user = M.User.objects.create(username=username)
                     user.name = fullname
+                    user.set_password(password)
                     user.save()
                 except:
                     print "Unexpected error:", sys.exc_info()[0]
@@ -635,7 +643,7 @@ class TestCommand(Command):
     ''' Run the front-end and back-end tests for SimpleSeer. '''
 
     def __init__(self, subparser):
-        subparser.add_argument("-t", "--type", dest="type", default="*", help="Which test suites to run [unit|functional|integration|web|all]")
+        subparser.add_argument("-t", "--type", dest="type", default="unit", help="Which test suites to run [unit|functional|integration|web|all]")
 
     def run(self):
         logs = []
@@ -714,3 +722,4 @@ class TestCommand(Command):
             sys.exit(0)
         else:
             sys.exit(1)
+    

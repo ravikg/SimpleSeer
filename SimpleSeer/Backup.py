@@ -104,7 +104,11 @@ class Backup:
         cm.subscribe('meta/', export)
         
     @classmethod
-    def importAll(self, fname=None, clean=False, skip=False, checkOnly=False):
+    def importAll(self, fname=None, clean=False, backfill=False, checkOnly=False):
+        # Note: 'backfill' can be one of:
+        # - False
+        # - 1: Runs complete backfill
+        # - 2: Runs measurement backfill
         
         if clean:
             log.info('Clear the olap cache')
@@ -175,11 +179,12 @@ class Backup:
             
             for k, v in o['obj'].iteritems():
                 # Enqueue items for backfill only if method changed or if clean
-                if k == 'method' and (v != getattr(model, 'method') or clean) and not skip and M.Frame.objects.count():
+                if k == 'method' and (v != getattr(model, 'method') or clean) and backfill != False and M.Frame.objects.count():
                     if o['type'] == 'Measurement':
                         ChannelManager().rpcSendRequest('backfill/', {'type': 'measurement', 'id': model.id})
                     else:
-                        ChannelManager().rpcSendRequest('backfill/', {'type': 'inspection', 'id': model.id})
+                        if backfill == 1:
+                            ChannelManager().rpcSendRequest('backfill/', {'type': 'inspection', 'id': model.id})
                 
                 if k != 'id':
                     if type(getattr(getattr(M, (o['type'])), k)) == mongoengine.base.ObjectIdField:
@@ -207,7 +212,7 @@ class Backup:
                     log.warn('* Exporting changes to meta will overwrite existing settings')
                     log.warn('****************************************************************')
                 
-        if not skip and M.Frame.objects.count():
+        if backfill != False and M.Frame.objects.count():
             log.info('Backfill run in olap process.  Make sure olap and worker are running.')
         elif not checkOnly:
             log.info('Skipping backfill')

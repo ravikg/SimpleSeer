@@ -22,4 +22,4 @@ class Test(unittest.TestCase):
     def test_userRemove(self):
         dn = open("/dev/null")
         subprocess.call(['simpleseer','user','remove', '-f', 'testuser'], stderr=dn)
-        self.assertEqual(len(M.User.objects), 0)
+        self.assertEqual(len(M.User.objects), 0)      
