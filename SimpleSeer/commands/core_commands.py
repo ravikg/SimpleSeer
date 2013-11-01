@@ -636,7 +636,7 @@ class TestCommand(Command):
     ''' Run the front-end and back-end tests for SimpleSeer. '''
 
     def __init__(self, subparser):
-        subparser.add_argument("-t", "--type", dest="type", default="*", help="Which test suites to run [unit|functional|integration|web|all]")
+        subparser.add_argument("-t", "--type", dest="type", default="unit", help="Which test suites to run [unit|functional|integration|web|all]")
 
     def run(self):
         logs = []

@@ -4,6 +4,8 @@ from SeerCloud.testdata import TestData
 from SimpleSeer.worker import Foreman
 from SimpleSeer.Session import Session
 from SimpleSeer.states import Core
+from SimpleSeer.tests.tools.seer import SeerInstanceTools
+from SimpleSeer.tests.tools.db import DBtools
 
 import logging
 log = logging.getLogger(__name__)
@@ -13,18 +15,28 @@ class Test(unittest.TestCase):
     testData = None
     fm = None
     core = Core(Session('.'))
-    
+    dbcommands = {
+        "master": ["mongod", "--dbpath=/tmp/master", "--logpath=/tmp/master/mongod.log", "--port=27020", "--nojournal", "--noprealloc", "--oplogSize=100"]
+    }       
+    config_override = {"database":"test","mongo":{"host": "127.0.0.1:27020", "port":27020}}
+
     def setUp(self):
+        self.dbs = DBtools(dbs=self.dbcommands)
+        self.dbs.spinup_mongo("master",10)
+        self.dbs.connect(self.config_override) 
+        self.seers = SeerInstanceTools()
+        #import pdb; pdb.set_trace()
+
         self.testData = TestData()
         self.testData.makeMeasurements(1)
         self.testData.makeFrames(5)
         self.fm = Foreman()
         
     def tearDown(self):
-        self.testData.remove()
-        
+        self.testData.remove()        
         del self.testData    
         del self.fm
+        self.dbs.killall_mongo()
 
     def testWorker(self):
         
