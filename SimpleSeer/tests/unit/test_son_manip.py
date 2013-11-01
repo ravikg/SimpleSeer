@@ -1,68 +1,68 @@
-#import re
-#import unittest
-#from datetime import datetime
-#from cPickle import dumps
-#
-#import bson
-#
-#from SimpleSeer.models.base import SONScrub
-#
-#class _Custom(object): pass
-#class _Custom1(_Custom): pass
-#
-#
-#class Test(unittest.TestCase):
-#
-#    def setUp(self):
-#        self.registry = SONScrub.clear_registry()
-#        self.scrubber = SONScrub()
-#
-#    def tearDown(self):
-#        SONScrub.restore_registry(self.registry)
-#
-#    def test_default(self):
-#        obj = dict(a=1, b=[2,3], c=dict(d='foo'))
-#        d = self.scrubber.transform_incoming(obj, None)
-#        self.assertEqual(d, obj)
-#
-#    def test_scrub(self):
-#        self.scrubber.scrub_type(_Custom)
-#        d = self.scrubber.transform_incoming(dict(a=_Custom()), None)
-#        self.assertEqual(d, {})
-#
-#    def test_scrub_subobj(self):
-#        self.scrubber.scrub_type(_Custom)
-#        d = self.scrubber.transform_incoming(
-#            dict(a=dict(a=_Custom())), None)
-#        self.assertEqual(d, {'a':{}})
-#
-#    def test_scrub_array(self):
-#        self.scrubber.scrub_type(_Custom)
-#        d = self.scrubber.transform_incoming(
-#            dict(a=[_Custom()]), None)
-#        self.assertEqual(d, {'a':[]})
-#
-#    def test_scrub_subclass(self):
-#        self.scrubber.scrub_type(_Custom)
-#        d = self.scrubber.transform_incoming(
-#            dict(a=_Custom1()), None)
-#        self.assertEqual(d, {})
-#
-#    def test_bsonify(self):
-#        self.scrubber.register_bsonifier(_Custom, lambda v,c: 42)
-#        d = self.scrubber.transform_incoming(dict(a=_Custom()), None)
-#        self.assertEqual(d, {'a': 42})
-#
-#    def test_bintype(self):
-#        self.scrubber.register_bintype(
-#            _Custom,
-#            lambda v,c: '42',
-#            lambda v,c: _Custom())
-#        d = self.scrubber.transform_incoming(dict(a=_Custom()), None)
-#        d = self.scrubber.transform_outgoing(d, None)
-#        self.assert_(isinstance(d['a'], _Custom))
-#
-#    def test_bintype_ambiguous(self):
+import re
+import unittest
+from datetime import datetime
+from cPickle import dumps
+
+import bson
+
+from SimpleSeer.models.base import SONScrub
+
+class _Custom(object): pass
+class _Custom1(_Custom): pass
+
+
+class Test(unittest.TestCase):
+
+    def setUp(self):
+        self.registry = SONScrub.clear_registry()
+        self.scrubber = SONScrub()
+
+    def tearDown(self):
+        SONScrub.restore_registry(self.registry)
+
+    def test_default(self):
+        obj = dict(a=1, b=[2,3], c=dict(d='foo'))
+        d = self.scrubber.transform_incoming(obj, None)
+        self.assertEqual(d, obj)
+
+    def test_scrub(self):
+        self.scrubber.scrub_type(_Custom)
+        d = self.scrubber.transform_incoming(dict(a=_Custom()), None)
+        self.assertEqual(d, {})
+
+    def test_scrub_subobj(self):
+        self.scrubber.scrub_type(_Custom)
+        d = self.scrubber.transform_incoming(
+            dict(a=dict(a=_Custom())), None)
+        self.assertEqual(d, {'a':{}})
+
+    def test_scrub_array(self):
+        self.scrubber.scrub_type(_Custom)
+        d = self.scrubber.transform_incoming(
+            dict(a=[_Custom()]), None)
+        self.assertEqual(d, {'a':[]})
+
+    def test_scrub_subclass(self):
+        self.scrubber.scrub_type(_Custom)
+        d = self.scrubber.transform_incoming(
+            dict(a=_Custom1()), None)
+        self.assertEqual(d, {})
+
+    def test_bsonify(self):
+        self.scrubber.register_bsonifier(_Custom, lambda v,c: 42)
+        d = self.scrubber.transform_incoming(dict(a=_Custom()), None)
+        self.assertEqual(d, {'a': 42})
+
+    def test_bintype(self):
+        self.scrubber.register_bintype(
+            _Custom,
+            lambda v,c: '42',
+            lambda v,c: _Custom())
+        d = self.scrubber.transform_incoming(dict(a=_Custom()), None)
+        d = self.scrubber.transform_outgoing(d, None)
+        self.assert_(isinstance(d['a'], _Custom))
+
+    def test_bintype_ambiguous(self):
 #        self.scrubber.register_bintype(
 #            _Custom,
 #            lambda v,c: '42',
