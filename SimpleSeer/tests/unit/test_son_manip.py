@@ -138,6 +138,3 @@ class Test(unittest.TestCase):
             k=bson.ObjectId())
         d = self.scrubber.transform_incoming(obj, None)
         self.assertEqual(obj, d)
-
-suite = unittest.TestLoader().loadTestsFromTestCase(Test)
-unittest.TextTestRunner(verbosity=2).run(suite)
