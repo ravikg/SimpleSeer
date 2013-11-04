@@ -307,7 +307,8 @@ module.exports = class ToleranceTable extends EditableTable
       @variables.newrows.push(id)
       @variables.cleardata = true
       @variables.clearrows = true
-      @_data()
+      @collection.fetch()
+      #@_data()
 
   _modal:(m='') =>
     SimpleSeer.modal.show
