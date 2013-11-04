@@ -93,44 +93,19 @@ class Session():
 
         retVal = {'yaml_config':[]}
 
-        # DEPRECATE
-        # ./simpleseer.cfg
-        config_filename = "{0}".format(yaml_config_file)
-        config_dict = read_yaml_config(yaml_config_dir, config_filename)
-        if config_dict:
-            log.info("simpleseer.cfg is depricated.  Please see docs for instructions.")
-            retVal.update(config_dict)
-            retVal['yaml_config'].append(config_filename)
+        config_filenames = ["{0}".format(yaml_config_file),
+                             "{0}_{1}".format(gethostname(), yaml_config_file),
+                             "settings/default/{0}".format(yaml_config_file),
+                             "settings/local/{0}".format(yaml_config_file),
+                             "settings/{0}/{1}".format(gethostname(), yaml_config_file)]
 
-        # DEPRECATE
-        # ./<host>_simpleseer.cfg
-        config_filename = "{0}_{1}".format(gethostname(), yaml_config_file)
-        config_dict = read_yaml_config(yaml_config_dir, config_filename)
-        if config_dict:
-            log.info("<host>_simpleseer.cfg is depricated.  Please see docs for instructions.")
-            retVal.update(config_dict)
-            retVal['yaml_config'].append(config_filename)
+        for config_filename in config_filenames:
+            config_dict = read_yaml_config(yaml_config_dir, config_filename)
+            if config_dict:
+                retVal.update(config_dict)
+                retVal['yaml_config'].append(config_filename)
 
-        # ./settings/default/simpleseer.cfg
-        config_filename = "settings/default/{0}".format(yaml_config_file)
-        config_dict = read_yaml_config(yaml_config_dir, config_filename)
-        if config_dict:
-            retVal.update(config_dict)
-            retVal['yaml_config'].append(config_filename)
-
-        # ./settings/local/simpleseer.cfg
-        config_filename = "settings/local/{0}".format(yaml_config_file)
-        config_dict = read_yaml_config(yaml_config_dir, config_filename)
-        if config_dict:
-            retVal.update(config_dict)
-            retVal['yaml_config'].append(config_filename)
-
-        # ./settings/<host>/simpleseer.cfg
-        config_filename = "settings/{0}/{1}".format(gethostname(), yaml_config_file)
-        config_dict = read_yaml_config(yaml_config_dir, config_filename)
-        if config_dict:
-            retVal.update(config_dict)
-            retVal['yaml_config'].append(config_filename)
+        print "Loaded simpleseer.cfg files: {}".format(retVal['yaml_config'])
 
         return retVal
     
