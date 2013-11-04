@@ -86,7 +86,7 @@ class DeployCommand(ManageCommand):
 
         if os.path.exists(supervisor_link):
             if os.path.isdir(supervisor_link):
-                os.removedirs(supervisor_link)
+                shutil.rmtree(supervisor_link)
             if os.path.isfile(supervisor_link):
                 os.remove(supervisor_link)
 
