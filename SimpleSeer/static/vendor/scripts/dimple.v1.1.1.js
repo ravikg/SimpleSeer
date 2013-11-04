@@ -117,7 +117,8 @@ var dimple = {
                 max = Math.floor(Math.abs(this._max), 0).toString();
                 min = Math.floor(Math.abs(this._min), 0).toString();
                 len = Math.max(min.length, max.length);
-                if (len > 3) {
+                // BHR: Set to false to skip the compression
+                if (false) {
                     chunks = Math.min(Math.floor((len - 1) / 3), 4);
                     suffix = "kmBT".substring(chunks - 1, chunks);
                     dp = (len - chunks * 3 <= 1 ? 1 : 0);
