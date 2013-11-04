@@ -8,11 +8,6 @@
 
 module.exports = class ToleranceTable extends EditableTable
 
-  ''' TODO '''
-  '''
-    Make sure javascript sort works for part number
-  '''
-
   ''' INIT '''
   
   initialize: =>
@@ -63,6 +58,7 @@ module.exports = class ToleranceTable extends EditableTable
     collection.on('reset', @_data)
     return collection
 
+
   _formatRow: (row) =>
     formatted = _.clone row.get('formatted')
     part = ""
@@ -103,6 +99,7 @@ module.exports = class ToleranceTable extends EditableTable
     # Insert the new rows
     nr = _.clone @variables.newrows
     @variables.newrows = []
+    newrow = null
     for b,a in nr
       if raw[b] and typeof(raw[b]) == 'string'
         # Do Nothing
@@ -111,7 +108,13 @@ module.exports = class ToleranceTable extends EditableTable
       else
         raw[b] = {'metadata.Part Number':b}
         @variables.newrows.push(b)
+        newrow = b
 
+    i = 1
+    for a,b of raw
+      if a == newrow
+        @variables.navigateId = i
+      i++
 
     rows = []
     for a,b of raw
@@ -146,8 +149,9 @@ module.exports = class ToleranceTable extends EditableTable
 
         else
           row[k] = d
-
-      model = new @variables._model({formatted:row})
+      send = {formatted:row, metadata:{}}
+      send.metadata[@settings.columns[0].title] = row[@settings.columns[0].data.key]
+      model = new @variables._model(send)
       rows.push(model)
     
     return rows
@@ -303,7 +307,8 @@ module.exports = class ToleranceTable extends EditableTable
       @variables.newrows.push(id)
       @variables.cleardata = true
       @variables.clearrows = true
-      @_data()
+      @collection.fetch()
+      #@_data()
 
   _modal:(m='') =>
     SimpleSeer.modal.show
