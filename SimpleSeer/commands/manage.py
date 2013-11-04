@@ -81,9 +81,14 @@ class DeployCommand(ManageCommand):
         print "Linking %s to %s" % (self.options.directory, link)
         os.symlink(self.options.directory, link)
 
+        
         supervisor_link = self.supervisor_link
+
         if os.path.exists(supervisor_link):
-            os.remove(supervisor_link)
+            if os.path.isdir(supervisor_link):
+                os.removedirs(supervisor_link)
+            if os.path.isfile(supervisor_link):
+                os.remove(supervisor_link)
 
         src_supervisor = "{0}/settings/{1}/conf.d".format(link, self.options.type)
         if not os.path.exists(src_supervisor):
