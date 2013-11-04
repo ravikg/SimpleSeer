@@ -24,6 +24,11 @@ class SeerInstanceTools(object):
         self.seer_instance[instance].kill()
         del self.seer_instance[instance]
 
+    def terminate_seer(self,instance):
+        log.info("killing {0}".format(instance))
+        self.seer_instance[instance].terminate()
+        del self.seer_instance[instance]
+
     def spinup_seer(self, type, config='./config/test_simpleseer.cfg', config_override={}, pipe=None):
         args = ['simpleseer','--config-override={}'.format(config_override), type]
         self.seer_instance[type] = subprocess.Popen(args, stdout=pipe, stderr=pipe)

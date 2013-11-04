@@ -279,6 +279,7 @@ def imgfile(frame_id):
     frame = frame[0]
     resp = make_response(frame.imgfile.read(), 200)
     resp.headers['Content-Type'] = frame.imgfile.content_type
+    resp.headers['Cache-Control'] = "Cache-Control: max-age=86400, must-revalidate"
     if 'download' in params:
         resp.headers['Content-disposition'] = 'attachment; filename="%s-%s.jpg"' % \
             (frame.camera.replace(' ','_'), frame.capturetime.strftime("%Y-%m-%d_%H_%M_%S"))
@@ -308,6 +309,7 @@ def thumbnail(frame_id):
 
     resp = make_response(frame.thumbnail_file.read(), 200)
     resp.headers['Content-Type'] = frame.thumbnail_file.content_type
+    resp.headers['Cache-Control'] = "Cache-Control: max-age=86400, must-revalidate"
     return resp
 
 @route('/ping', methods=['GET', 'POST'])

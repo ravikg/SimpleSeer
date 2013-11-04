@@ -235,11 +235,14 @@ class Frame(SimpleDoc, mongoengine.Document):
 
     def update_results(self):
         from .Measurement import Measurement
+        from .Inspection import Inspection
         results = []
         for m in Measurement.objects:
-            res = m.execute(self)
-            if len(res):
-                results.append(res[0])
+            i = Inspection.objects.get(id=m.inspection)
+            if i.camera == self.camera or i.camera == "all":
+                res = m.execute(self)
+                if len(res):
+                    results.append(res[0])
         return results
 
     def save(self, *args, **kwargs):

@@ -208,7 +208,6 @@ class Core(object):
 
             frame.results = []
 
-        frame.results += results
         self._queue.pop(frame.id)
 
     @property

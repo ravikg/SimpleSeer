@@ -200,6 +200,13 @@ class FrameFeature(SimpleEmbeddedDoc, mongoengine.EmbeddedDocument):
             p1x,p1y = p2x,p2y
 
         return inside  
+
+    def __repr__(self):
+        ftype = "FrameFeature"
+        if self.featuretype:
+           ftype = self.featuretype 
+        return "<SimpleSeer %s Object %d,%d at (%s, %s)>" % (
+            ftype, self.width, self.height, self.x, self.y)        
         
 
 class FeatureFactory(SimpleDoc, mongoengine.Document):

@@ -359,6 +359,7 @@ module.exports = class FilterCollection extends Collection
         for i,me of meas
           frame.results.push me
         frames.push frame
+      @subscribe(response.chart)
       return frames
     else
       @totalavail = response.total_frames
