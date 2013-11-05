@@ -310,6 +310,7 @@ module.exports = class ToleranceTable extends EditableTable
       @collection.fetch()
       #@_data()
 
+
   _modal:(m='') =>
     SimpleSeer.modal.show
       title: "New Tolerance"

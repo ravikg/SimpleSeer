@@ -104,6 +104,7 @@ module.exports = class Table extends SubView
     variables.scrollElem = '#content #slides'
     variables.left = null
     variables.navigateId = 0
+    variables.page = 1
     if @settings.header is 'float'
       variables.preHTML += '<div class="header">
               <div class="float">
@@ -121,7 +122,7 @@ module.exports = class Table extends SubView
   _collection: (args={}) =>
     if args and args.bindFilter?
       bindFilter = args.bindFilter
-    else if @options.parent.dashboard?
+    else if @options.parent.dashboard? and Application.context[@options.parent.dashboard.options.context]?.filtercollection?
       bindFilter = Application.context[@options.parent.dashboard.options.context].filtercollection
     collection = new @settings.collection([], {
       bindFilter: bindFilter, 
@@ -320,6 +321,7 @@ module.exports = class Table extends SubView
 
   # Pass data to handlebars to render
   getRenderData: =>
+    page: @variables.page
     pages: @_pages()
     toggles: @settings.toggles
     classes: @settings.classes
@@ -347,6 +349,9 @@ module.exports = class Table extends SubView
     if @settings.hideEmpty
       if @variables.emptytoggle
         @$el.find('.static tbody').prepend('<tr><td class="td showhidden" colspan="' + @settings.columns.length + '"><button class="button">Show hidden rows?</button></td></tr>')
+        
+    page = @variables.page
+    $(".pagination .item[data-page='#{page}'").addClass('selected')
 
   # Used to initilize or update floating header
   _header: () =>
@@ -528,6 +533,7 @@ module.exports = class Table extends SubView
             @variables.rows.unshift(@_row(o))
           else
             @variables.rows.push(@_row(o))
+      @variables.page = page
       @render()
 
   _infinite: =>
