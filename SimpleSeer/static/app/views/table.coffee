@@ -477,18 +477,19 @@ module.exports = class Table extends SubView
       @variables.clearrows = true
       @variables.cleardata = true
       @variables.skip = 0
+      @sortedCollection = new Backbone.Collection(@variables.data, {model: @settings.model})
       if @settings.model
         model = @settings.model
         spl = key.split(".")
         if direction is 1
-          @collection.comparator = (model) ->
+          @sortedCollection.comparator = (model) ->
             str = model.get(spl[0])[spl[1]] ? ""
             str = str.toString()
             String.fromCharCode.apply String, _.map(str.split(""), (c) ->
               c.charCodeAt() - 0xffff
             )
         else if direction is -1
-          @collection.comparator = (model) ->
+          @sortedCollection.comparator = (model) ->
             str = model.get(spl[0])[spl[1]] ? ""
             str = str.toString()
             if !str
@@ -496,9 +497,9 @@ module.exports = class Table extends SubView
             String.fromCharCode.apply String, _.map(str.split(""), (c) ->
               0xffff - c.charCodeAt()
             )
-        @collection.models = @variables.data
-        @collection.sort()
-        @variables.data = _.clone @collection.models
+        @sortedCollection.sort()
+        console.log @sortedCollection
+        @variables.data = _.clone @sortedCollection.models
         @variables.rows = []
         for o,i in @variables.data
           if @settings.pagination == "num"
