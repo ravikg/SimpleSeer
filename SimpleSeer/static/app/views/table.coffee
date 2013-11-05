@@ -498,7 +498,6 @@ module.exports = class Table extends SubView
               0xffff - c.charCodeAt()
             )
         @sortedCollection.sort()
-        console.log @sortedCollection
         @variables.data = _.clone @sortedCollection.models
         @variables.rows = []
         for o,i in @variables.data
