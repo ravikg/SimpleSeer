@@ -108,6 +108,7 @@ module.exports = class ToleranceTable extends EditableTable
         # Do nothing
         newrow = b
         Application.alert("Part already exists", 'warning')
+        $('#messages .alert').last().delay(5000).fadeOut('fast')
       else
         raw[b] = {'metadata.Part Number':b}
         @variables.newrows.push(b)
@@ -288,11 +289,13 @@ module.exports = class ToleranceTable extends EditableTable
       if !obj.value
         tolerance.destroy({success:@destroyCleanup})
         Application.alert('Tolerance Deleted', "success")
+        $('#messages .alert').last().delay(3000).fadeOut('fast')
       else
         tolerance.attributes.rule.value = obj.value
         delete(tolerance.attributes.formatted)
         tolerance.save({}, {wait:true, success:@saveCleanup})
         Application.alert('Tolerance Updated', "success")
+        $('#messages .alert').last().delay(3000).fadeOut('fast')
 
     else if obj.measurement_id
       @saveInfo['measurement_id'] = obj.measurement_id
@@ -314,6 +317,7 @@ module.exports = class ToleranceTable extends EditableTable
       t = new Tolerance({criteria:criteria, rule:rule, key:key, measurement_id:obj.measurement_id})
       t.save({}, {wait:true, success:@saveCleanup})
       Application.alert('Tolerance Created', "success")
+      $('#messages .alert').last().delay(3000).fadeOut('fast')
 
   _saveRow: (options) =>
     if options and options.part
