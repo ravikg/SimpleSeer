@@ -105,6 +105,7 @@ module.exports = class Table extends SubView
     variables.left = null
     variables.navigateId = 0
     variables.page = 1
+    variables.init = 0
     if @settings.header is 'float'
       variables.preHTML += '<div class="header">
               <div class="float">
@@ -204,16 +205,22 @@ module.exports = class Table extends SubView
       if data
         @variables.data = @variables.data.concat(data)
 
+        if !@variables.init
+          @variables.init = 1
+          @variables.sortdirection = 1
+          @$(".table th.sortable:first").click()
+          return
+
         if @settings.pagination == "num"
           if @variables.navigateId
             page = Math.floor(@variables.navigateId / @settings.limit)
             mod = @variables.navigateId % @settings.limit
             if mod
                 page++
-              if page == 1
-                @variables.skip = 0
-              else
-                @variables.skip = page * @settings.limit - @settings.limit
+            if page == 1
+              @variables.skip = 0
+            else
+              @variables.skip = page * @settings.limit - @settings.limit
           for o,i in @variables.data
             if i >= @variables.skip and i < @settings.limit + @variables.skip
               if @variables.direction is 1
@@ -351,7 +358,16 @@ module.exports = class Table extends SubView
         @$el.find('.static tbody').prepend('<tr><td class="td showhidden" colspan="' + @settings.columns.length + '"><button class="button">Show hidden rows?</button></td></tr>')
         
     page = @variables.page
+    if @variables.navigateId
+      page = Math.floor(@variables.navigateId / @settings.limit) + 1
+      @variables.navigateId = 0
     $(".pagination .item[data-page='#{page}'").addClass('selected')
+
+    if @variables.highlight
+      highlight = @variables.highlight
+      $("tr[data-part='#{highlight}']").addClass("highlighted")
+      if $("tr[data-part='#{highlight}']").length > 0
+        $("#content #slides").scrollTop($("tr[data-part='#{highlight}']").offset().top - 150)
 
   # Used to initilize or update floating header
   _header: () =>
@@ -412,7 +428,6 @@ module.exports = class Table extends SubView
       @variables.emptytoggle = false
 
   _sort: (e, trigger = null) =>
-
     direction = @variables.sortdirection
     kind = (if e.currentTarget then 'event' else 'filter')
     if kind is 'event'
@@ -490,21 +505,28 @@ module.exports = class Table extends SubView
           @sortedCollection.comparator = (model) ->
             str = model.get(spl[0])[spl[1]] ? ""
             str = str.toString()
-            String.fromCharCode.apply String, _.map(str.split(""), (c) ->
-              c.charCodeAt() - 0xffff
-            )
+            return str
         else if direction is -1
           @sortedCollection.comparator = (model) ->
             str = model.get(spl[0])[spl[1]] ? ""
             str = str.toString()
             if !str
               str = "                                                                                                                                 "
-            String.fromCharCode.apply String, _.map(str.split(""), (c) ->
-              0xffff - c.charCodeAt()
-            )
+            return str
         @sortedCollection.sort()
+        if direction is -1
+          @sortedCollection.models.reverse()
         @variables.data = _.clone @sortedCollection.models
         @variables.rows = []
+        if @variables.navigateId
+          page = Math.floor(@variables.navigateId / @settings.limit)
+          mod = @variables.navigateId % @settings.limit
+          if mod
+              page++
+          if page == 1
+            @variables.skip = 0
+          else
+            @variables.skip = page * @settings.limit - @settings.limit
         for o,i in @variables.data
           if @settings.pagination == "num"
             if i >= @variables.skip and i < @settings.limit + @variables.skip
