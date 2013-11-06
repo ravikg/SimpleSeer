@@ -103,8 +103,11 @@ module.exports = class ToleranceTable extends EditableTable
     for b,a in nr
       if raw[b] and typeof(raw[b]) == 'string'
         # Do Nothing
+        newrow = b
       else if raw[b] and typeof(raw[b]) == 'object'
         # Do nothing
+        newrow = b
+        Application.alert("Part already exists", 'warning')
       else
         raw[b] = {'metadata.Part Number':b}
         @variables.newrows.push(b)
