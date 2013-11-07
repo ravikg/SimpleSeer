@@ -4,11 +4,11 @@ from formencode import schema as fes
 from SimpleSeer.models.base import SimpleDoc
 
 
-class GlobalSettingSchema(fes.Schema):
+class ApplicationSettingSchema(fes.Schema):
     name = fev.UnicodeString()
     val = fev.UnicodeString(if_empty="", if_missing="")
 
-class GlobalSetting(SimpleDoc, mongoengine.Document):
+class ApplicationSetting(SimpleDoc, mongoengine.Document):
     name = mongoengine.StringField(unique=True)
     val = mongoengine.StringField(default='')
 
@@ -30,7 +30,7 @@ class GlobalSetting(SimpleDoc, mongoengine.Document):
             
     def save(self, *args, **kwargs):        
         from SimpleSeer.realtime import ChannelManager
-        super(GlobalSetting, self).save(*args, **kwargs)
+        super(ApplicationSetting, self).save(*args, **kwargs)
         ChannelManager().publish('meta/', self)
 
 
