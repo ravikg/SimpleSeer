@@ -103,18 +103,30 @@ module.exports = class ToleranceTable extends EditableTable
     for b,a in nr
       if raw[b] and typeof(raw[b]) == 'string'
         # Do Nothing
+        newrow = b
       else if raw[b] and typeof(raw[b]) == 'object'
         # Do nothing
+        newrow = b
+        Application.alert("Part already exists", 'warning')
+        $('#messages .alert').last().delay(5000).fadeOut('fast')
       else
         raw[b] = {'metadata.Part Number':b}
         @variables.newrows.push(b)
         newrow = b
 
-    i = 1
-    for a,b of raw
-      if a == newrow
-        @variables.navigateId = i
-      i++
+    if newrow != null
+      sorted = []
+      for a,b of raw
+        sorted.push(a)
+
+      sorted.sort()
+
+      i = 1
+      for a,b in sorted
+        if a == newrow
+          @variables.highlight = newrow
+          @variables.navigateId = i
+        i++
 
     rows = []
     for a,b of raw
@@ -276,10 +288,14 @@ module.exports = class ToleranceTable extends EditableTable
       tolerance = @collection.get(obj.tolerance_id)
       if !obj.value
         tolerance.destroy({success:@destroyCleanup})
+        Application.alert('Tolerance Deleted', "success")
+        $('#messages .alert').last().delay(3000).fadeOut('fast')
       else
         tolerance.attributes.rule.value = obj.value
         delete(tolerance.attributes.formatted)
         tolerance.save({}, {wait:true, success:@saveCleanup})
+        Application.alert('Tolerance Updated', "success")
+        $('#messages .alert').last().delay(3000).fadeOut('fast')
 
     else if obj.measurement_id
       @saveInfo['measurement_id'] = obj.measurement_id
@@ -300,6 +316,8 @@ module.exports = class ToleranceTable extends EditableTable
         rule.value = String(obj.value)
       t = new Tolerance({criteria:criteria, rule:rule, key:key, measurement_id:obj.measurement_id})
       t.save({}, {wait:true, success:@saveCleanup})
+      Application.alert('Tolerance Created', "success")
+      $('#messages .alert').last().delay(3000).fadeOut('fast')
 
   _saveRow: (options) =>
     if options and options.part
@@ -307,8 +325,10 @@ module.exports = class ToleranceTable extends EditableTable
       @variables.newrows.push(id)
       @variables.cleardata = true
       @variables.clearrows = true
+      @variables.init = 0
       @collection.fetch()
       #@_data()
+
 
   _modal:(m='') =>
     SimpleSeer.modal.show
