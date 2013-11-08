@@ -1,11 +1,17 @@
 ###                                           
- __   _   _      ___   _     ____  __   ____  ____  ___  
-( (` | | | |\/| | |_) | |   | |_  ( (` | |_  | |_  | |_) 
-_)_) |_| |_|  | |_|   |_|__ |_|__ _)_) |_|__ |_|__ |_| \ 
+ __   _   _      ___   _     ____
+( (` | | | |\/| | |_) | |   | |_  
+_)_) |_| |_|  | |_|   |_|__ |_|__ 
+ __   ____  ____  ___  
+( (` | |_  | |_  | |_) 
+_)_) |_|__ |_|__ |_| \ 
 
 ###
 
-[ Router ] = [ require("lib/router") ]
+[ Router, Toolbar ] = [
+  require("lib/router"),
+  require("views/toolbar")
+]
 
 module.exports = Application =
 
@@ -16,6 +22,10 @@ module.exports = Application =
 
     @router = new Router()
     @cloud = false
+
+    @toolbar = new Toolbar()
+    $(document.body).append( @toolbar.$el )
+    @toolbar.render()
 
     if settings.in_cloud
       Application.cloud = require('cloud')
