@@ -51,6 +51,7 @@ exports.config =
         'stylesheets/seer.css': (path) -> true
       order:
         before: [
+          'vendor/styles/reset.css'
           'app/styles/fonts.less',
           'vendor/styles/gridsystem.css',
           'vendor/styles/bootstrap.css'
