@@ -142,14 +142,15 @@ module.exports = SeerApplication =
   _serveralert: (msg) ->
     window.SimpleSeer.alert(msg['data']['message'], msg['data']['severity'])
 
-  _heartbeat_pong: (msg)->
+  _heartbeat_pong: (msg) ->
+    channel = msg['channel'].replace("ping","pong")
     data = msg['data']
     timestamp = new moment().unix()
     data['name'] = 'chrome'
     data['status'] = true
     data['message'] = 'pong'
     data['timestamp_pong'] = timestamp
-    @socket['namespaces']['/rt'].emit('publish', 'heartbeat_pong/', JSON.stringify(data))
+    @socket['namespaces']['/rt'].emit('publish', channel, JSON.stringify(data))
 
   # Returns the loading status of the application.
   isLoading: =>
