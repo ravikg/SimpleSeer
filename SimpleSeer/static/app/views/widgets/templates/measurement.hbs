@@ -1,5 +1,0 @@
-<select>
-    {{#each measurements}}
-    <option value="{{this.attributes.name}}" {{#if_eq ../default compare=this.attributes.name}}selected="selected"{{/if_eq}}>{{this.attributes.label}}</option>
-    {{/each}}
-</select>

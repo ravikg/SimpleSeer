@@ -1,9 +1,0 @@
-<div class="radio-group">
-  {{#each radios}}
-    <div class="radio {{this.classes}}" id={{this.id}}>
-      {{#each this.radio}}
-        <input type="radio" id="{{this.id}}" name="{{this.name}}" value="{{this.value}}" {{#if this.checked}}checked{{/if}}/><label class="unselectable" for="{{this.id}}">{{this.label}}</label>
-      {{/each}}
-    </div>
-  {{/each}}
-</div>
