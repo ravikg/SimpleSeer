@@ -45,7 +45,7 @@ def backfill_meta(frame_id, inspection_ids, measurement_ids, tolerance_ids):
                     i = M.Inspection.objects.get(id=i_id)
                     
                     if not i.parent:
-                        if not i.camera or i.camera == f.camera: 
+                        if i.camera == 'all' or not i.camera or i.camera == f.camera: 
                             f.features += i.execute(f)
                 except Exception as e:
                     print 'Error on inspection %s: %s' % (i_id, e)
@@ -193,7 +193,7 @@ class Foreman():
         # Do this as a loop because it is too big a pain to do an OR with mongoengine:
         filteredInsps = []
         for i in insps:
-            if i.camera == frame.camera or not i.camera:
+            if i.camera == 'all' or i.camera == frame.camera or not i.camera:
                 filteredInsps.append(i)
 
         # Run the inspections
@@ -220,7 +220,7 @@ class Foreman():
         
         filteredInspIds = []
         for i in insps:
-            if i.camera == frame.camera or not i.camera:
+            if i.camera == 'all' or i.camera == frame.camera or not i.camera:
                 filteredInspIds.append(i.id)
 
         measKwargs['inspection__in'] = filteredInspIds
