@@ -487,6 +487,11 @@ module.exports = class Table extends SubView
       head.css('left', offset.left)
 
   _scrollDown: () =>
+    if @settings.size == "widget"
+      offset = @$el.find('.table.static thead').offset()
+      head = @$el.find('.header')
+      head.css('top', offset.top)
+      
     down = @variables.scroll.scrollTop()
     head = @$el.find('.header')
     if down > 0
