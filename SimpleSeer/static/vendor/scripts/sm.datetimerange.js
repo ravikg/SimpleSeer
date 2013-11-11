@@ -75,7 +75,7 @@ $.widget("ui.datetimerange", {
         if( options.endDate - options.startDate < 2592000000 ) {
             self._theMonth = new Date(options.endDate);
         } else {
-            self._theMonth = SimpleSeerDateHelper.offsetMonth(options.startDate, 1);
+            self._theMonth = SimpleSeerDateHelper.offsetMonth(options.endDate, 0);
         }
     },
 
