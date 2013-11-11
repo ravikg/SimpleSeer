@@ -101,6 +101,7 @@ module.exports = SeerApplication =
       onPage: =>
         @getActiveTab().trigger 'page'
 
+
   _preinitialize: ->
     tc = require 'collections/tab_container'
     @tabs = new tc()

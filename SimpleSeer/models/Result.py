@@ -15,6 +15,7 @@ class ResultEmbed(SimpleEmbeddedDoc, mongoengine.EmbeddedDocument):
     measurement_name = mongoengine.StringField()
     state = mongoengine.IntField()
     message = mongoengine.StringField()
+    tolerance_object = mongoengine.DictField()
 
     def __repr__(self):
         # Make this compatible with embedded objects from worker (no _data)
@@ -43,6 +44,7 @@ class ResultEmbed(SimpleEmbeddedDoc, mongoengine.EmbeddedDocument):
             result.inspection_name = self.inspection_name
             result.measurement_id = self.measurement_id
             result.measurement_name = self.measurement_name
+            result.tolerance_object = self.tolerance_object
         return result, created
 
 

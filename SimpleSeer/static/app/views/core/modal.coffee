@@ -54,6 +54,10 @@ module.exports = class Modal extends View
     if @options.form
       $(@$(".form input[type=text]").get(0)).focus()
 
+    # Allow modals to be dragged around
+    $("#modal-body").draggable()
+
+
   clear: =>
     @$el.fadeOut(120).parents("#modal").removeClass("visible")
     @reset()
