@@ -8,9 +8,10 @@ _)_) |_|__ |_|__ |_| \
 
 ###
 
-[ Router, Toolbar ] = [
+[ Router, Toolbar, Tabs ] = [
   require("lib/router"),
-  require("views/toolbar")
+  require("views/toolbar"),
+  require("views/tabs")
 ]
 
 module.exports = Application =
@@ -26,6 +27,10 @@ module.exports = Application =
     @toolbar = new Toolbar()
     $(document.body).append( @toolbar.$el )
     @toolbar.render()
+
+    @tabs = new Tabs()
+    $(document.body).append( @tabs.$el )
+    @tabs.render()
 
     if settings.in_cloud
       Application.cloud = require('cloud')
