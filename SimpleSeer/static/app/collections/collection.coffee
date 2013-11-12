@@ -41,5 +41,5 @@ module.exports = class Collection extends Backbone.Collection
   fetch: (args) =>
     if @cachebust
       @url = @url.replace /(\?cachebust\=\d+)/g, ""
-      @url += "?cachebust="+new moment().valueOf()
+      @url += "?cb="+new moment().valueOf()
     super(args)

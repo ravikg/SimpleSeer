@@ -3,7 +3,7 @@ module.exports = class View extends Backbone.View
   initialize: (options={}) =>
     super()
     @subviews = {}
-    @events = {}
+    #@events = {}
     @firstRender = true
 
     @options = {}
@@ -178,7 +178,7 @@ module.exports = class View extends Backbone.View
       subview.unbind()
     @subviews = {}
 
-  customEvent: (event) =>
+  ###customEvent: (event) =>
     @events[event]?()
     for name, subview of @subviews
       subview.customEvent(event)
@@ -186,7 +186,7 @@ module.exports = class View extends Backbone.View
 
   addCustomEvent: (name, callback) =>
     @events[name] = callback
-    return
+    return###
     
   error:(e) =>
     ctr = String(@.constructor).match(/function\s(.*)\(\)/)[1]

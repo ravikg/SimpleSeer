@@ -27,9 +27,9 @@ module.exports = Application =
       @subscriptions = {}
       @socket = io.connect('/rt')
       @socket.on('connect', @socketHandlers)   
-
-    @router = new Router()
        
+    @router = new Router()
+
     @alert = new Alert()
     @alert.initialize()
 
@@ -42,7 +42,7 @@ module.exports = Application =
 
     @tabs = new Tabs()
     $(document.body).append( @tabs.$el )
-    @tabs.render()
+    # Explicitly not rendering here..
 
     @cloud = false
     if settings.in_cloud

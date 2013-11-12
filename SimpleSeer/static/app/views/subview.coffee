@@ -2,8 +2,11 @@
 
 module.exports = class SubView extends View
 
-  initialize: =>
+  initialize:(options) =>
     super()
+    @options = {}
+    if options?
+      @options = options    
     @htmltags = {}
 
   render: =>
@@ -23,7 +26,7 @@ module.exports = class SubView extends View
         $(@options.selector).append('<'+tagName+' class="'+className+'" id="'+@options.append+'" '+tags+'/>')
       @setElement @options.parent.$ '#'+@options.append
     else
-      el = $ @options.selector
+      el = $( @options.selector )
       foo = @setElement el
       el.addClass className
       # Use `@htmltags` to pass key-pair values in as tags
