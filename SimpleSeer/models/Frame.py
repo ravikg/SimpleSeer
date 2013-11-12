@@ -266,7 +266,7 @@ class Frame(SimpleDoc, mongoengine.Document):
             self.results = self.update_results()
 
         # Aggregate the tolerance states into single measure
-        if not self.metadata.get("tolstate", False) or self['metadata'] in ['Pass','Fail','Warn']:
+        if not self.metadata.get("tolstate", False) or self.metadata.get("tolstate", False) in ['Pass','Fail','Warn']:
             self.metadata['tolstate'] = 'Pass'
             for r in self.results:
                 if r.state > 0:
