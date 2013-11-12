@@ -266,13 +266,14 @@ class Frame(SimpleDoc, mongoengine.Document):
             self.results = self.update_results()
 
         # Aggregate the tolerance states into single measure
-        self.metadata['tolstate'] = 'Pass'
-        for r in self.results:
-            if r.state > 0:
-                self.metadata['tolstate'] = 'Fail'
-        
-        if len(self.results) == 0:
-            self.metadata['tolstate'] = 'Warn'
+        if not self.metadata.get("tolstate", False) or self['metadata'] in ['Pass','Fail','Warn']:
+            self.metadata['tolstate'] = 'Pass'
+            for r in self.results:
+                if r.state > 0:
+                    self.metadata['tolstate'] = 'Fail'
+            
+            if len(self.results) == 0:
+                self.metadata['tolstate'] = 'Warn'
 
         self.updatetime = datetime.utcnow()
         
