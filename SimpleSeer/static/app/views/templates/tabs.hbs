@@ -1,16 +1,9 @@
 <div class="bar">
-	<div class="tab">
-		<p class="title">DASHBOARD</p>
+	{{#each tabs}}
+	<div class="tab{{#if active}} active{{/if}}">
+		<p class="title">{{ title }}</p>
 	</div>
-	<div class="tab">
-		<p class="title">DATA</p>
-	</div>
-	<div class="tab">
-		<p class="title">CHARTS</p>
-	</div>
-	<div class="tab">
-		<p class="title">REPORTS</p>
-	</div>
+	{{/each}}
 </div>
 
 <div class="content">
