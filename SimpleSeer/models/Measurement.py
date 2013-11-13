@@ -223,6 +223,8 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
 
                         if not match:
                             result.state = 1
+                            # Add the tolerance to the result, so that data is preserved.
+                            result.tolerance_object = rule['rule']
                             if 'msg' in rule:
                                 messages.append(rule['msg'])
                             elif 'msgfeat' in rule:
@@ -245,6 +247,7 @@ class Measurement(SimpleDoc, WithPlugins, mongoengine.Document):
                                         messages.append(featMsg)
                             else:
                                 messages.append("%s %s %s" % (self.label, rule['rule']['operator'], rule['rule']['value']))
+
 
                 result.message = ",".join(messages)
 

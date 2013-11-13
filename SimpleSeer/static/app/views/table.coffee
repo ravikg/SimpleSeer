@@ -123,6 +123,8 @@ module.exports = class Table extends SubView
   _collection: (args={}) =>
     if args and args.bindFilter?
       bindFilter = args.bindFilter
+    else if @options.parent.dashboard? and @options.parent.dashboard.options.parent.options.context
+      bindFilter = Application.context[@options.parent.dashboard.options.parent.options.context].filtercollection
     else if @options.parent.dashboard? and Application.context[@options.parent.dashboard.options.context]?.filtercollection?
       bindFilter = Application.context[@options.parent.dashboard.options.context].filtercollection
     collection = new @settings.collection([], {

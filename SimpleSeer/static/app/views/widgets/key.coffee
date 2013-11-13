@@ -26,42 +26,38 @@ module.exports = class Key extends SubView
 
       rs = {}
       for i,o of @model.get('results')
+        rs[o.measurement_name] = {}
         if o.state
-          rs[o.measurement_name] = 'fail'
+          rs[o.measurement_name]['state'] = 'fail'
+          if o.tolerance_object
+            rs[o.measurement_name]['values'] = o.tolerance_object
         else
-          rs[o.measurement_name] = 'pass'
+          rs[o.measurement_name]['state'] = 'pass'
 
       _.each retVal, (o,i) =>
 
         if rs[o.prop]?
-          retVal[i].state = rs[o.prop]
+          retVal[i].state = rs[o.prop].state
 
           if retVal[i].state is "fail"
+
             for mment in SimpleSeer.measurements.models
               if mment.get("name") is retVal[i].prop
-                values = []
-                tolerance_list = mment.get("tolerance_list")
-                if tolerance_list
-                  units = mment.get("units")
-                  label = ""
-                  tol = ""
-                  wrap = if units is "deg" then "&deg;" else ""
-                  unit = mment.get("units").replace("deg", "")
-                  val = Number(retVal[i].value)
-                  for tol in tolerance_list
-                    if tol.get?
-                      if tol.get("criteria")["Part Number"] is "all" or tol.get("criteria")["Part Number"] is @model.get("metadata")["Part Number"]
-                        values.push tol.get("rule")
-                  values.sort()
+                units = mment.get("units")
+                label = ""
+                tol = 
+                wrap = if units is "deg" then "&deg;" else ""
+                unit = mment.get("units").replace("deg", "")
+                val = Number(retVal[i].value)
 
-                if values is true
-                  _.each values, (o, i) =>
-                    if o.operator == "<" and val > o.value
-                      label = "Max";
-                      tol = "#{o.value}"
-                    if o.operator == ">" and val < o.value
-                      label = "Min";
-                      tol = "#{o.value}"
+                if rs[o.prop].values
+                  v = rs[o.prop]['values']
+                  if v.operator == "<" and val > v.value
+                    label = "Max"
+                    tol = "#{v.value}"
+                  if v.operator == ">" and val < v.value
+                    label = "Min"
+                    tol = "#{v.value}"
 
                   retVal[i].tolerances = {label: label, value: tol + unit + wrap}
                 break
