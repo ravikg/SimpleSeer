@@ -207,7 +207,7 @@ module.exports = class Table extends SubView
       if data
         @variables.data = @variables.data.concat(data)
 
-        if !@variables.init
+        if !@variables.init and @settings.sorttype == 'js'
           @variables.init = 1
           @variables.sortdirection = 1
           @$(".table th.sortable:first").click()
