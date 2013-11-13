@@ -253,8 +253,12 @@ module.exports = class ToleranceTable extends EditableTable
     values = []
     target.parent('span').children('input').each ->
       v = $(this).val()
-      if v or String(v) == "0"
+      if v
         values.push(v)
+      else if String(v) == "0" or v == 0
+        Application.alert('0 is not a valid tolerance', "error")
+        $('#messages .alert').last().delay(3000).fadeOut('fast')
+      return
     if values.length
       target.parents('.td').addClass('notEmpty')
     else
@@ -316,6 +320,7 @@ module.exports = class ToleranceTable extends EditableTable
         rule.value = String(obj.value)
       t = new Tolerance({criteria:criteria, rule:rule, key:key, measurement_id:obj.measurement_id})
       t.save({}, {wait:true, success:@saveCleanup})
+      @collection.add(t)
       Application.alert('Tolerance Created', "success")
       $('#messages .alert').last().delay(3000).fadeOut('fast')
 
