@@ -23,37 +23,37 @@ module.exports = Application =
     if settings
       @settings = settings
 
-    if window.WebSocket?
+    window.document.title = @settings.ui_pagename
+
+    if WebSocket?
       @subscriptions = {}
-      @socket = io.connect('/rt')
-      @socket.on('connect', @socketHandlers)   
+      @socket = io.connect("/rt")
+      @socket.on("connect", @socketHandlers)   
        
     @router = new Router()
-
     @alert = new Alert()
-    @alert.initialize()
-
     @health = new Health()
-    @health.initialize()
-
     @toolbar = new Toolbar()
-    $(document.body).append( @toolbar.$el )
-    @toolbar.render()
-
     @tabs = new Tabs()
+
+    @alert.initialize()
+    @health.initialize()
+    $(document.body).append( @toolbar.$el )
     $(document.body).append( @tabs.$el )
-    # Explicitly not rendering here..
+    @toolbar.render()
 
     @cloud = false
     if settings.in_cloud
-      Application.cloud = require('cloud')
+      Application.cloud = require("cloud")
       Application.cloud.initialize()
+
+    Backbone.history.start()
 
   socketHandlers: ->
     if @socket?
-      @socket.on 'timeout', -> console.error 'websocket timeout'
-      @socket.on 'error', -> console.error 'websocket error'
-      @socket.on 'disconnect', -> console.error 'websocket disconnect'
+      @socket.on 'timeout',    -> console.error "websocket timeout"
+      @socket.on 'error',      -> console.error "websocket error"
+      @socket.on 'disconnect', -> console.error "websocket disconnect"
 
   subscribe:(channel, handler) ->
     if @socket?

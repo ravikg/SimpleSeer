@@ -35,19 +35,17 @@ module.exports = class Tabs extends View
   setTab:(tab) =>
     @$(".tab.active").removeClass("active")
     @$(".tab[data-id=#{tab.model_id}]").addClass("active")
-    @$(".content .area").hide()
+    @$(".content .area").removeClass("active")
 
-    Application.router.navigate("tab/#{@_sanitizeName(tab.name)}")
+    name = @_sanitizeName(tab.name)
+    Application.router.navigate("tab/#{name}")
 
     if !@subviews["tab-#{tab.model_id}"]?
-      try
-        file = require("views/#{tab.view}")
-        selector = ".area[data-id=#{tab.model_id}]"
-        sv = @addSubview("tab-#{tab.model_id}", file, @$(selector))
-        sv.render()
-      catch error
-        console.error("Couldn't load 'views/#{tab.view}'")
-    @$(".content .area[data-id=#{tab.model_id}]").show()
+      file = require("views/#{tab.view}")
+      selector = ".area[data-id=#{tab.model_id}] div"
+      sv = @addSubview("tab-#{tab.model_id}", file, @$(selector))
+      sv.render()
+    @$(".content .area[data-id=#{tab.model_id}]").addClass("active")
 
   loadTabByName:(name) =>
     tab = null

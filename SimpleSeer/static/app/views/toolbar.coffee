@@ -8,3 +8,6 @@ module.exports = class Toolbar extends View
 
 	getRenderData: =>
 		client: Application.settings.ui_pagename
+
+	addWidget:(name, widget) =>
+		#@addSubview(name, widget, @$(".right"))
