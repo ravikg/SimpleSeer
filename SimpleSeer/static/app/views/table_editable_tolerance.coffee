@@ -249,16 +249,20 @@ module.exports = class ToleranceTable extends EditableTable
     tolerance_id = target.data('tolerance-id')
     value = target.val()
   
+    if String(value) == "0" or value == 0
+      Application.alert('Invalid tolerance', "error")
+      $('#messages .alert').last().delay(3000).fadeOut('fast')
+      $(e.target).val('')
+      $(e.target).focus()
+      return
+
     # Highlight new cells with data
     values = []
     target.parent('span').children('input').each ->
       v = $(this).val()
       if v
         values.push(v)
-      else if String(v) == "0" or v == 0
-        Application.alert('0 is not a valid tolerance', "error")
-        $('#messages .alert').last().delay(3000).fadeOut('fast')
-      return
+
     if values.length
       target.parents('.td').addClass('notEmpty')
     else

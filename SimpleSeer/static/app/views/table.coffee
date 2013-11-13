@@ -370,6 +370,7 @@ module.exports = class Table extends SubView
       $("tr[data-part='#{highlight}']").addClass("highlighted")
       if $("tr[data-part='#{highlight}']").length > 0
         $("#content #slides").scrollTop($("tr[data-part='#{highlight}']").offset().top - 150)
+      $("tr[data-part='#{highlight}'] td:nth-child(2) input:first-child'").focus()
 
   # Used to initilize or update floating header
   _header: () =>
