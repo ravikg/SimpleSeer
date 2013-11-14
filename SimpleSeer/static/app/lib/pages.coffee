@@ -6,6 +6,7 @@ module.exports = class Pages
     @state = ""
 
   setPage:(Page) =>
+    @close(false)
     @page = new Page
     $(document.body).append( @page.$el )
     @page.render()
