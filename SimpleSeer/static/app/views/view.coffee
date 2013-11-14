@@ -106,3 +106,6 @@ module.exports = class View extends Backbone.View
         @addSubview("template-#{Number(new Date())}", viewClass, div, options)
         placeholder.removeAttr("data-options")
         placeholder.removeAttr("data-subview")
+
+  visible: =>
+    return @$el.is(":visible")
