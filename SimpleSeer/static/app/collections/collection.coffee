@@ -4,7 +4,7 @@ module.exports = class Collection extends Backbone.Collection
     @tries = 0
     @maxTries = 10
     @timeout = 15000 #15 seconds
-    @cachebust = true 
+    @cachebust = true
 
   sync: =>
     args = arguments

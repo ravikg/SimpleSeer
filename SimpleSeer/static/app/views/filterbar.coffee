@@ -5,3 +5,6 @@
 
 module.exports = class FilterBar extends SubView
 	template: Template
+
+	afterRender: =>
+		#console.log @

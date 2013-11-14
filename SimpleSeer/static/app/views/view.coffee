@@ -10,12 +10,18 @@ module.exports = class View extends Backbone.View
       # automatically anymore.
       @options = options
 
+    if @options.parent?
+      @options.tab = @_findTabParent()
+
     if @.constructor?
       # Add the 'data-widget="Constructor"'
       # property for ease of stylesheets.
       ctor = String(@.constructor)
       ptn = ctor.match(/function (.*)\(\)/)
-      if ptn[1]? then @$el.attr("data-widget", ptn[1])          
+      if ptn[1]? then @$el.attr("data-widget", ptn[1])
+
+  _findTabParent: =>
+    return {}     
 
   template: => return
 

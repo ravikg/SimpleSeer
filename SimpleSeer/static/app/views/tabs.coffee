@@ -20,12 +20,9 @@ module.exports = class Tabs extends View
     tabs = @collection.models[0].get("tabs")
     return {tabs: tabs}
 
-  _tabWhere:(query, singleton=true) =>
+  _tabWhere:(query) =>
     models = @collection.models[0].get("tabs")
-    if singleton
-      return _.findWhere(models, query)
-    else
-      return _.where(models, query)
+    return _.findWhere(models, query)
 
   clickEvent:(e) =>
     id = $(e.currentTarget).data("id")
@@ -45,6 +42,7 @@ module.exports = class Tabs extends View
       selector = ".area[data-id=#{tab.model_id}] div"
       sv = @addSubview("tab-#{tab.model_id}", file, @$(selector))
       sv.render()
+      
     @$(".content .area[data-id=#{tab.model_id}]").addClass("active")
 
   loadTabByName:(name) =>

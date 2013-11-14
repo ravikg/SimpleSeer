@@ -6,19 +6,25 @@ module.exports = class SubView extends View
     super(options)
 
   render: =>
-    if @rendered then return @
-    tagName = @tagName || 'div'
-    className = @className || ''
+    tagName = @tagName or "div"
+    className = @className or ""
     
     if @options.append
-      parent = @options.parent.$
-      if !parent('#'+@options.append).length
-        $(@options.selector).append('<#{tagName} class="#{className}" id="#{@options.append}"/>')
-      @setElement( parent('#'+@options.append) )
+      # Append the subview to the container
+      # at @options.append.
+      parentEl = @options.parent.$el
+      container = parentEl.find(@options.append)
+      if container.length
+        el = $("<#{tagName}/>").addClass(className)
+        container.append( el )
+        @setElement( el )
     else
+      # Turn the container at @options.selector
+      # into the subview.
       el = $( @options.selector )
-      @setElement( el )
       el.addClass( className )
+      @setElement( el )
+      
 
     if @.constructor?
       # Add the 'data-widget="Constructor"'
