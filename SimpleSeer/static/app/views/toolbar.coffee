@@ -1,24 +1,33 @@
 [View, Template] = [
-	require("views/view"),
-	require("./templates/toolbar")
+  require("views/view"),
+  require("./templates/toolbar")
 ]
 
 module.exports = class Toolbar extends View
-	template: Template
+  template: Template
 
-	initialize: =>
-		super()
-		@items = 0
+  initialize: =>
+    super()
+    @items = 0
 
-	getRenderData: =>
-		client: Application.settings.ui_pagename
+  events: =>
+    "click [data-widget=MenuItem]": "clickEvent"
 
-	addItem:(view) =>
-		name = "menuitem-#{@items++}"
-		options = { append: @$(".right") }
-		sv = @addSubview(name, require(view), null, options)
-		sv.render()
+  clickEvent:(e) =>
+    # Find the subview based on
+    # the event target.
+    for i, sv of @subviews
+      if sv.el is e.currentTarget
+        sv.onClick?()
 
-	afterRender: =>
-		@addItem("views/menuitem")
-		@addItem("views/menuitem")
+  getRenderData: =>
+    client: Application.settings.ui_pagename
+
+  addItem:(view) =>
+    name = "menuitem-#{@items++}"
+    options = { append: @$(".right") }
+    sv = @addSubview(name, require(view), null, options)
+    sv.render()
+
+  afterRender: =>
+    @addItem("views/menuitem")

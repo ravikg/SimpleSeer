@@ -5,3 +5,6 @@
 
 module.exports = class MenuItem extends SubView
 	template: Template
+
+	onClick: =>
+		Application.pages.loadPageByName("settings")

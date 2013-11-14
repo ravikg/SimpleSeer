@@ -9,10 +9,16 @@ module.exports = class Router extends Backbone.Router
   tab:(name=undefined, query="") =>
     # TODO: query will set up the filter bar
     # and widget states.
+    Application.pages.close(false)
     if name?
       Application.tabs?.loadTabByName(name)
     else
       Application.tabs?.loadDefaultTab()
 
-  page: =>
-    console.log "Hit page"
+
+  page:(name=undefined) =>
+    if name?
+      Application.pages?.loadPageByName(name)
+    else
+      Application.tabs?.loadDefaultTab()
+    
