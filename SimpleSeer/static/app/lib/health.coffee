@@ -10,7 +10,7 @@ module.exports = class HealthCheck
     if host[0] in locals
       Application.subscribe("#{hostname}_heartbeat_ping/", @pong)
 
-  ping: ->
+  ping: =>
     onSuccess = =>
       @panicCount = 0
       setTimeout(@ping, 10000)
@@ -21,7 +21,7 @@ module.exports = class HealthCheck
       if( @panicCount >= 2 ) then PanicMode?()
       setTimeout(@ping, 10000) 
 
-    $.getJSON("/ping", (onSuccess)).fail(onError)
+    $.getJSON("/ping", onSuccess).fail(onError)
     return
     
   pong:(msg) =>

@@ -6,22 +6,19 @@ module.exports = class View extends Backbone.View
     @subviews = {}
     @options = {}
     if options?
-      # Backbone doesn't strap this
-      # automatically anymore.
+      # Backbone doesn't strap this automatically anymore.
       @options = options
 
     if @options.parent?
       @options.tab = @_findTabParent()
 
     if @.constructor?
-      # Add the 'data-widget="Constructor"'
-      # property for ease of stylesheets.
+      # Add the 'data-widget="Constructor"' attr for stylesheets.
       ctor = String(@.constructor)
       ptn = ctor.match(/function (.*)\(\)/)
       if ptn[1]? then @$el.attr("data-widget", ptn[1])
 
-  _findTabParent: =>
-    return {}     
+  _findTabParent: => return {}     
 
   template: => return
 
@@ -48,7 +45,7 @@ module.exports = class View extends Backbone.View
 
   render: =>
     @_bindKeys()
-    @$el.html @template @getRenderData()
+    @$el.html @template( @getRenderData() )
     @scrapeTemplates()
     @renderSubviews()
     @afterRender()
@@ -83,6 +80,7 @@ module.exports = class View extends Backbone.View
   # - options:
   #     - append: A string reference to an DOM element ID.  If append is passed in, instead of the widget destroying all content inside of `selector` it appends a div with the id of `append` into the `selector`.  This way multiple subviews can be in the same container.
   #     - Any other items passed in will be available in the subview as `@options.myItem` where `myItem` is the key of options here.
+  #
   addSubview: (name, viewClass, selector, options) =>
     options = options or {}
     _.extend(options, {parent: @, selector: selector})
@@ -103,7 +101,8 @@ module.exports = class View extends Backbone.View
         placeholder = $(div)
         viewClass = require placeholder.data("subview")
         options = placeholder.data("options") || {}
-        @addSubview("template-#{Number(new Date())}", viewClass, div, options)
+        count = Object.keys(@subviews).length
+        @addSubview("template-#{count}", viewClass, div, options)
         placeholder.removeAttr("data-options")
         placeholder.removeAttr("data-subview")
 

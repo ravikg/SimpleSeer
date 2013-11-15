@@ -3,6 +3,6 @@
 	require("collections/collection")
 ]
 
-module.exports = class TabCollection extends Collection
+module.exports = class Tabs extends Collection
   url: "/api/tabcontainer"
   model: Model

@@ -15,7 +15,6 @@ module.exports = class Router extends Backbone.Router
     else
       Application.tabs?.loadDefaultTab()
 
-
   page:(name=undefined) =>
     if name?
       Application.pages?.loadPageByName(name)
