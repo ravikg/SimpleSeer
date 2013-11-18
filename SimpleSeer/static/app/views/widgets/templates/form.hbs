@@ -1,21 +1,29 @@
 {{#each items}}
 
-  <div data-id="{{ id }}" {{#if required}}data-required="required"{{/if}}>
-    <label>{{label}}{{#if required}}<span>*</span>{{/if}}</label>
-
+  <div class="item" data-id="{{ id }}" {{#if required}}data-required="required"{{/if}}>
     {{#if_eq type compare="text"}}
-      <input type="text" data-key="{{ id }}" value="{{ value }}">
+      <div class="grp right">
+        <label>{{../label}}{{#if ../required}}<span class="req">*</span>{{/if}}</label>
+        <input type="text" data-key="{{ ../../id }}" value="{{ ../../value }}">
+      </div>
     {{/if_eq}}
 
     {{#if_eq type compare="password"}}
-      <input type="password" data-key="{{ id }}" value="{{ value }}">
+      <div class="grp right">
+        <label>{{../label}}{{#if ../required}}<span class="req">*</span>{{/if}}</label>
+        <input type="password" data-key="{{ ../../id }}" value="{{ ../../value }}">
+      </div>
     {{/if_eq}}
 
     {{#if_eq type compare="textarea"}}
-      <textarea data-key="{{ id }}" value="{{ value }}">
+      <div class="grp right">
+        <label>{{../label}}{{#if ../required}}<span class="req">*</span>{{/if}}</label>
+        <textarea data-key="{{ id }}" value="{{ value }}">
+      </div>
     {{/if_eq}}
 
     {{#if_eq type compare="radio"}}
+      <label>{{../label}}{{#if ../required}}<span class="req">*</span>{{/if}}</label>
       {{#each ../values}}
         <div class="grp">
           <input type="radio" name="{{ ../../id }}" data-key="{{ ../../id }}" value="{{ this }}">
@@ -25,6 +33,7 @@
     {{/if_eq}}
 
     {{#if_eq type compare="checkbox"}}
+      <label>{{../label}}{{#if ../required}}<span class="req">*</span>{{/if}}</label>
       {{#each ../values}}
         <div class="grp">
           <input type="checkbox" name="{{ ../../id }}" data-key="{{ ../../id }}" value="{{ this }}">
@@ -34,44 +43,15 @@
     {{/if_eq}}
 
     {{#if_eq type compare="select"}}
-      <input type="text" data-key="{{ id }}" value="{{ value }}">
+      <div class="grp right">
+        <label>{{../label}}{{#if ../required}}<span class="req">*</span>{{/if}}</label>
+        <select data-key="{{ ../id }}" {{#if multiple}}multiple="multiple"{{/if}}>
+        {{#each ../values}}
+          <option value="{{ ../../id }}">{{ this }}</option>
+        {{/each}}
+        </select>
+      </div>
     {{/if_eq}}
-
   </div>
 
 {{/each}}
-
-<!---
-<div data-formbuilder='1'>
-  for element in form
-    <div data-id=\"#{element.id}\""
-    if element.required
-      str += " data-required=\"required\""
-    str += ">"
-    str += "<label>#{element.label}"
-
-    if element.required
-      str += "<span>*</span> "
-    str += ":</label><br>"
-
-    switch element.type
-      when "text"
-        str += "<input type=\"text\" data-key=\"#{element.id}\" value=\"#{element.value or ''}\">"
-      when "password"
-        str += "<input type=\"password\" data-key=\"#{element.id}\" value=\"#{element.value or ''}\">"
-      when "textarea"
-        str += "<textarea data-key=\"#{element.id}\">#{element.value or ''}</textarea>"
-      when "radio"
-        for option in element.values
-          str += "<input type=\"radio\" name=\"#{element.id}\" data-key=\"#{element.id}\" value=\"#{option.value}\"> #{option.name}<br>"
-      when "checkbox"
-        for option in element.values
-          str += "<input type=\"checkbox\" name=\"#{element.id}\" data-key=\"#{element.id}\" value=\"#{option.value}\"> #{option.name}<br>"
-      when "select"
-        str += "<select data-key=\"#{element.id}\" #{if element.multiple then "multiple=\"multiple\"" else ""}>"
-        for option in element.values
-          str += "<option value=\"#{option.value}\">#{option.name}</option>"
-        str += "</select>"
-
-  </div>
-</div>-->

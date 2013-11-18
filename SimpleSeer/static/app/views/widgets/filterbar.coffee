@@ -5,12 +5,12 @@
 
 module.exports = class FilterBar extends SubView
   template: Template
+
   form: [
-    {id: "email", type: "text", value: "", label: "E-Mail:", required: true},
-    {id: "name", type: "text", value: "", label: "Name:"},
-    {id: "pw", type: "password", value: "", label: "Password:"},
-    {id: "sex", type: "radio", values: ["Male", "Female"], label: "Sex:"},
-    {id: "color", type: "checkbox", values: ["Green", "Red", "Blue"], label: "Color:"}
+    {id: "email", type: "text", value: "", label: "PART #"},
+    {id: "name", type: "text", value: "", label: "LOT #"},
+    {id: "pw", type: "password", value: "", label: "MACHINE #"},
+    {id: "location", type: "select", values: ["PASS", "FAIL"], label: "PASS/FAIL"}
   ]
 
   events: =>
@@ -25,6 +25,7 @@ module.exports = class FilterBar extends SubView
   closeFilter: =>
     @$(".addFilter").removeClass("active")
     @$(".menu").hide()
+    console.log @subviews["template-form"].submit()
 
   getRenderData: =>
     return {formoptions: JSON.stringify({"form": @form})}
