@@ -8,13 +8,13 @@ _)_) |_|__ |_|__ |_| \
 
 ###
 
-[ Router, Toolbar, Tabs, Pages, Alert, Health ] = [
+[ Router, Pages, Alert, Health, Toolbar, Tabs ] = [
   require("lib/router"),
-  require("views/toolbar"),
-  require("views/tabs"),
   require("lib/pages"),
   require("lib/alert"),
-  require("lib/health")
+  require("lib/health"),
+  require("views/widgets/toolbar"),
+  require("views/widgets/tabs")  
 ]
 
 module.exports = Application =
@@ -54,9 +54,9 @@ module.exports = Application =
 
   socketHandlers: ->
     if @socket?
-      @socket.on 'timeout',    -> console.error "websocket timeout"
-      @socket.on 'error',      -> console.error "websocket error"
-      @socket.on 'disconnect', -> console.error "websocket disconnect"
+      @socket.on("timeout",   (-> console.error "websocket timeout"))
+      @socket.on("error",     (-> console.error "websocket error"))
+      @socket.on("disconnect",(-> console.error "websocket disconnect"))
 
   subscribe:(channel, handler) ->
     if @socket?

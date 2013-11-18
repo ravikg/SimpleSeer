@@ -30,4 +30,4 @@ module.exports = class Toolbar extends View
     sv.render()
 
   afterRender: =>
-    @addItem("views/menuitem")
+    @addItem("views/widgets/menuitem")
