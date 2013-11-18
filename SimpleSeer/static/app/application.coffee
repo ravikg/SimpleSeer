@@ -8,13 +8,14 @@ _)_) |_|__ |_|__ |_| \
 
 ###
 
-[ Router, Pages, Alert, Health, Toolbar, Tabs ] = [
+[ Router, Pages, Alert, Health, Toolbar, Tabs, HBS ] = [
   require("lib/router"),
   require("lib/pages"),
   require("lib/alert"),
   require("lib/health"),
   require("views/widgets/toolbar"),
-  require("views/widgets/tabs")  
+  require("views/widgets/tabs"),
+  require("lib/handlebars")
 ]
 
 module.exports = Application =

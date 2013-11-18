@@ -5,3 +5,6 @@
 
 module.exports = class FramesView extends SubView
 	template: Template
+
+	afterRender: =>
+		console.log @subviews
