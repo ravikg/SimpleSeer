@@ -1,70 +1,79 @@
 [data-widget=Tabs] {
-	width: 100%;
-	height: 100%;
-	position: absolute;
-	padding-top: 36px;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  padding-top: 36px;
 
-	background: #E7E7E7;
-	
-	box-sizing: border-box;
-	-moz-box-sizing: border-box;
-	
-	-webkit-touch-callout: none;
-	-webkit-user-select: none;
-	-khtml-user-select: none;
-	-moz-user-select: none;
-	-ms-user-select: none;
-	user-select: none;	
+  background: #E7E7E7;
+  
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;  
 
-	div.bar {
-		height: 26px;
-		line-height: 25px;
-		background: #909090;
-		border-bottom: 1px solid #666666;
+  div.bar {
+    height: 26px;
+    line-height: 25px;
+    background: #909090;
+    border-bottom: 1px solid #666666;
 
-		/* Fixes inline-block spacing */
-		font-size: 0px;
+    /* Fixes inline-block spacing */
+    font-size: 0px;
 
-		div.tab {
-			display: inline-block;
-			vertical-align: top;
-			background: #909090;
-			padding: 1px 10px 0 10px;
-			cursor: pointer;
-			height: 25px;
-			border-right: 1px solid #666;
+    position: relative;
+    z-index: 120;
 
-			&.active {
-				height: 26px;
-				background: #e7e7e7;
-				cursor: default;
-				box-shadow: 0 1px 0 #e7e7e7;
-			}
+    div.tab {
+      display: inline-block;
+      vertical-align: top;
+      background: #909090;
+      padding: 1px 10px 0 10px;
+      cursor: pointer;
+      height: 25px;
+      border-right: 1px solid #666;
 
-			&:first-child { padding-left: 10px; }
+      &.active {
+        height: 26px;
+        background: #e7e7e7;
+        cursor: default;
+        box-shadow: 0 1px 0 #e7e7e7;
+        position: relative;
+        z-index: 1;
+      }
 
-			p.title {
-				color: #404040;
-				font-size: 10pt;
-				text-transform: uppercase;
-			}
-		}
+      &:first-child { padding-left: 10px; }
 
-		div.tab.active + div.tab {
-			border-left-color: transparent !important;
-		}
-	}
+      p.title {
+        color: #404040;
+        font-size: 10pt;
+        text-transform: uppercase;
+      }
+    }
 
-	div.content {
-		width: 100%;
-		height: 100%;
+    div.tab.active + div.tab {
+      border-left-color: transparent !important;
+    }
+  }
 
-		div.area { 
-			width: 100%;
-			height: 100%;
-			display: none;
+  div.content {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    padding-top: 63px;
 
-			&.active { display: block; }
-		}	
-	}
+    div.area { 
+      width: 100%;
+      height: 100%;
+      display: none;
+
+      &.active { display: block; }
+    } 
+  }
 }

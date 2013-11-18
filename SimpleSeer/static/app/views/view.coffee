@@ -2,18 +2,18 @@ module.exports = class View extends Backbone.View
 
   initialize: (options={}) =>
     super()
-
     @subviews = {}
     @options = {}
+
+    # Backbone doesn't strap this automatically anymore.
     if options?
-      # Backbone doesn't strap this automatically anymore.
       @options = options
 
     if @options.parent?
       @options.tab = @_findTabParent()
 
+    # Add the 'data-widget="Constructor"' attr for stylesheets.
     if @.constructor?
-      # Add the 'data-widget="Constructor"' attr for stylesheets.
       ctor = String(@.constructor)
       ptn = ctor.match(/function (.*)\(\)/)
       if ptn[1]? then @$el.attr("data-widget", ptn[1])
@@ -99,10 +99,15 @@ module.exports = class View extends Backbone.View
     if templates.length
       for div in templates
         placeholder = $(div)
+        id = placeholder.data("id")
+        
+        if @subviews["template-#{id}"]?
+          @subviews["template-#{id}"].remove()
+          delete @subviews["template-#{id}"]
+
         viewClass = require placeholder.data("subview")
         options = placeholder.data("options") || {}
-        count = Object.keys(@subviews).length
-        @addSubview("template-#{count}", viewClass, div, options)
+        @addSubview("template-#{id}", viewClass, div, options)
         placeholder.removeAttr("data-options")
         placeholder.removeAttr("data-subview")
 
