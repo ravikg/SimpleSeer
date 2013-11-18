@@ -1,0 +1,41 @@
+[data-widget=SideBar] {
+  min-width: 75px;
+  max-width: 500px;
+  width: 200px;
+  height: auto;
+  position: absolute;
+  box-sizing: border-box;
+  display: block;
+  top: 0;
+  bottom: 62px;
+  border-right: 1px solid #333;
+
+  .header {
+    position: absolute;
+    left: 0;
+    right: 0;
+    padding: 3px 10px;
+    border-color: #808080;
+    border-bottom: 1px solid;
+    color: #404040;
+    background: #ACACAC;
+    font-weight: 400;
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    z-index: 20;
+  }
+
+  div {
+    &.content {
+      width: 100%;
+      height: auto;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      z-index: 10;
+      overflow-y: scroll;
+      margin-top: 24px;
+    }
+  }
+}
