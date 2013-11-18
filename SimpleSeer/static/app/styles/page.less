@@ -1,0 +1,51 @@
+/**
+ * [data-widgets$=Page] will match:
+ * - Page
+ * - SettingsPage
+ * Not:
+ * - PageTurk
+ */
+
+[data-widget$=Page] {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  padding-top: 36px;
+
+  background: #fff;
+  
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+
+  div.bar {
+    height: 76px;
+    line-height: 75px;
+    background: #fff;
+    border-bottom: 1px solid #bbb;
+
+    p.title {
+      color: #404040;
+      font-size: 25pt;
+      margin-left: 20px;
+      font-family: "OpenSansLight";
+      display: inline-block;
+    }
+
+    button.close {
+      float: right;
+      margin-right: 20px;
+      margin-top: 27px;
+    }
+  }
+
+  div.content {
+    width: 100%;
+    height: 100%;
+
+    .sidebar {
+      width: 220px;
+      height: 100%;
+      background: #eee;
+    }
+  }
+}

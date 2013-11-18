@@ -1,21 +1,30 @@
-# Move Application health check into here
+module.exports = class HealthCheck
 
-module.exports = class HealthCheck  
+  initialize: =>
+    @panicCount = 0
+    @ping()
 
-  _pingStatus: ->
+    host = window.location.host.split(":")
+    hostname = Application.settings.hostname || ''
+    locals = ["127.0.0.1", "localhost"]
+    if host[0] in locals
+      Application.subscribe("#{hostname}_heartbeat_ping/", @pong)
+
+  ping: =>
     onSuccess = =>
-      window.panicCount = 0
-      setTimeout(SimpleSeer._pingStatus, 10000)
-      PanicMode(false)
+      @panicCount = 0
+      setTimeout(@ping, 10000)
+      PanicMode?(false)
+      
     onError = =>
-      window.panicCount++
-      if( window.panicCount >= 2 )
-        PanicMode()
-      setTimeout(SimpleSeer._pingStatus, 10000) 
-    $.getJSON("/ping", (onSuccess)).fail(onError)
+      @panicCount++
+      if( @panicCount >= 2 ) then PanicMode?()
+      setTimeout(@ping, 10000) 
+
+    $.getJSON("/ping", onSuccess).fail(onError)
     return
     
-  _heartbeat_pong: (msg)->
+  pong:(msg) =>
     data = msg['data']
     timestamp = new moment().unix()
     data['name'] = 'chrome'

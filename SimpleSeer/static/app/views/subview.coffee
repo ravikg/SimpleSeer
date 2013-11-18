@@ -2,52 +2,36 @@
 
 module.exports = class SubView extends View
 
-  initialize: =>
-    super()
-    @htmltags = {}
+  initialize:(options) =>
+    super(options)
 
   render: =>
-    if @rendered then return @
-
-    tagName = @tagName || 'div'
-    className = @className || ''
+    tagName = @tagName or "div"
+    className = @className or ""
     
-    # Use `append` when creating a subview to append subview to an html element
     if @options.append
-      # Use `@htmltags` to pass key-pair values in as tags
-      # ie:  `{style:'width:100%;'}` becomes `style="width:100%;"`
-      tags = ''
-      for i,o of @htmltags
-        tags+= i+'="'+o+'" '
-      if !@options.parent.$('#'+@options.append).length
-        $(@options.selector).append('<'+tagName+' class="'+className+'" id="'+@options.append+'" '+tags+'/>')
-      @setElement @options.parent.$ '#'+@options.append
+      # Append the subview to the container
+      # at @options.append.
+      parentEl = @options.parent.$el
+      container = parentEl.find(@options.append)
+      if container.length
+        el = $("<#{tagName}/>").addClass(className)
+        container.append( el )
+        @setElement( el )
     else
-      el = $ @options.selector
-      foo = @setElement el
-      el.addClass className
-      # Use `@htmltags` to pass key-pair values in as tags
-      # ie:  `{style:'width:100%;'}` becomes `style="width:100%;"`
-      for i,o of @htmltags
-        el.attr i,o
+      # Turn the container at @options.selector
+      # into the subview.
+      el = $( @options.selector )
+      el.addClass( className )
+      @setElement( el )
+      
+
+    if @.constructor?
+      # Add the 'data-widget="Constructor"'
+      # property for ease of stylesheets.
+      ctor = String(@.constructor)
+      ptn = ctor.match(/function (.*)\(\)/)
+      if ptn[1]? then @$el.attr("data-widget", ptn[1])          
+
     super()
     return @
-
-  select: =>
-    if @filtercollection?
-      @filtercollection.fetch({filtered:true})
-
-  # Used for pagination
-  _pageTrigger: =>
-    @trigger 'page'
-    for i,o of @subviews
-      if !o.onPage?
-        o._pageTrigger()
-    return
-
-  _scrollTrigger: (per) =>
-    @trigger 'scroll', per
-    for i,o of @subviews
-      if !o.onScroll?
-        o._scrollTrigger(per)
-    return

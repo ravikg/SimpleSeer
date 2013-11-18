@@ -1,0 +1,13 @@
+<div class="bar">
+	{{#each tabs}}
+	<div class="tab{{#if selected}} active{{/if}}" data-id="{{ model_id }}">
+		<p class="title">{{ name }}</p>
+	</div>
+	{{/each}}
+</div>
+
+<div class="content">
+	{{#each tabs}}
+	<div class="area" data-id="{{ model_id }}"><div></div></div>
+	{{/each}}
+</div>

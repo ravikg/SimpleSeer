@@ -1,0 +1,60 @@
+[data-widget=FilterBar] {
+	width: 100%;
+	height: 36px;
+	line-height: 35px;
+	
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	
+	background: #fff url("/img/seer/filterbar.png") repeat-x;
+	border-bottom: 1px solid #646464;
+
+	div.viewSwitch {
+		display: inline-block;
+		vertical-align: top;
+		margin-left: 10px;	
+		margin-right: 20px;	
+
+		div.view {
+			display: inline-block;
+			vertical-align: top;
+			height: 19px;
+			width: 21px;
+			border: 2px solid #393a3d;
+			margin-top: 6px;
+			cursor: pointer;
+			outline: none;
+			background: transparent;
+
+			&:first-child { border-radius: 3px 0 0 3px; }
+			&:last-child { border-radius: 0 3px 3px 0; }
+
+
+			&.active {
+				background: #393a3d;
+				border-color: #393a3d;
+			}
+		}
+
+		div.view + div.view {
+			border-left-width: 0px;
+		}
+	}
+
+	div.filter { 
+		display: inline-block;
+		vertical-align: top;
+		margin-right: 30px;
+
+		p.title {
+			color: #333;
+			font-size: 10pt;
+			font-family: "Open Sans", sans-serif;
+			cursor: pointer;
+		}
+
+		&.add {
+			p.title { color: #0074B3; }
+		}
+	}
+}
