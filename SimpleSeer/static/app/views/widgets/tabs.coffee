@@ -54,12 +54,9 @@ module.exports = class Tabs extends View
     @$(".content .area[data-id=#{tab.model_id}]").addClass("active")
 
   loadTabByName:(name, query) =>
-    tab = null
-    # Search for tab in models
     for model in @collection.models[0].get("tabs")
       if @_sanitizeName(model.name) == @_sanitizeName(name)
-        @setTab(model, query)
-        return
+        return @setTab(model, query)
     console.error "Couldn't select tab '#{name}'"
 
   loadDefaultTab: =>
