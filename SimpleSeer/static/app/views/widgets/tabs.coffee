@@ -36,29 +36,34 @@ module.exports = class Tabs extends View
     tab = @_tabWhere({"model_id": id})
     @setTab(tab)
 
-  setTab:(tab) =>
+  setTab:(tab, query) =>
     @$(".tab.active").removeClass("active")
     @$(".tab[data-id=#{tab.model_id}]").addClass("active")
     @$(".content .area").removeClass("active")
 
     name = @_sanitizeName(tab.name)
-    Application.router.navigate("tab/#{name}")
+
+    if query?
+      params = JSON.stringify(query)
+      Application.router.navigate("tab/#{name}/#{params}")
+    else 
+      Application.router.navigate("tab/#{name}")
 
     if !@subviews["tab-#{tab.model_id}"]?
       file = require("views/#{tab.view}")
       selector = ".area[data-id=#{tab.model_id}] div"
       sv = @addSubview("tab-#{tab.model_id}", file, @$(selector))
-      sv.tab = sv
       sv.render()
+      sv.select(query)
       
     @$(".content .area[data-id=#{tab.model_id}]").addClass("active")
 
-  loadTabByName:(name) =>
+  loadTabByName:(name, query) =>
     tab = null
     # Search for tab in models
     for model in @collection.models[0].get("tabs")
       if @_sanitizeName(model.name) == @_sanitizeName(name)
-        @setTab(model)
+        @setTab(model, query)
         return
     console.error "Couldn't select tab '#{name}'"
 

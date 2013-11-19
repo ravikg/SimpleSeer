@@ -5,6 +5,7 @@ module.exports = class View extends Backbone.View
     @subviews = {}
     @options = {}
     @_keyBindings = []
+    @keyEvents = {}
 
     # Backbone doesn't strap this automatically anymore.
     if options?
@@ -34,12 +35,11 @@ module.exports = class View extends Backbone.View
     if events instanceof Function
       events = events()
     for key, value of events
-      @_keyBindings.push(key)
-      KeyboardJS.on(key, @[value])
-
+      @_keyBindings.push(KeyboardJS.on(key, @[value]))
+      
   undelegateKeyEvents: =>
-    for key in @_keyBindings
-      KeyboardJS.clear(key)
+    for binding in @_keyBindings
+      binding.clear()
 
   render: =>
     @$el.html @template( @getRenderData() )
@@ -64,6 +64,14 @@ module.exports = class View extends Backbone.View
     for i,o of @subviews
       o.reflow()
     return
+
+  select:(params) =>
+    for key, subview of @subviews
+      subview.select?(params)
+
+  unselect:() =>
+    for key, subview of @subviews
+      subview.unselect?()
 
   # Adds a subview to the current view.
   #
