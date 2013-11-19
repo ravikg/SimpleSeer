@@ -10,6 +10,13 @@ module.exports = class Tabs extends View
   events: =>
     {"click .tab": "clickEvent"}
 
+  keyEvents: =>
+    {"ctrl + e": "envisionEvent"}
+
+  envisionEvent:(e) =>
+    e.preventDefault()
+    console.log "Shit worked!"
+
   initialize: =>
     super()
     @collection = new Collection()
@@ -41,6 +48,7 @@ module.exports = class Tabs extends View
       file = require("views/#{tab.view}")
       selector = ".area[data-id=#{tab.model_id}] div"
       sv = @addSubview("tab-#{tab.model_id}", file, @$(selector))
+      sv.tab = sv
       sv.render()
       
     @$(".content .area[data-id=#{tab.model_id}]").addClass("active")

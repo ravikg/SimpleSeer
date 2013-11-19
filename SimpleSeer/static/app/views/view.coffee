@@ -4,13 +4,11 @@ module.exports = class View extends Backbone.View
     super()
     @subviews = {}
     @options = {}
+    @_keyBindings = []
 
     # Backbone doesn't strap this automatically anymore.
     if options?
       @options = options
-
-    if @options.parent?
-      @options.tab = @_findTabParent()
 
     # Add the 'data-widget="Constructor"' attr for stylesheets.
     if @.constructor?
@@ -18,7 +16,13 @@ module.exports = class View extends Backbone.View
       ptn = ctor.match(/function (.*)\(\)/)
       if ptn[1]? then @$el.attr("data-widget", ptn[1])
 
-  _findTabParent: => return {}     
+  getTabParent:(item=@) =>
+    if item instanceof require("views/widgets/tabs")
+      return item
+    else if item.options.parent?
+      return @getTabParent(item.options.parent)
+    else
+      return undefined
 
   template: => return
 
@@ -26,33 +30,29 @@ module.exports = class View extends Backbone.View
   
   afterRender: => return
 
-  _bindKeys: =>
-    id = if typeof @id == "function" then @id() else @id
-    if id and @keyBindings
-      for i,o of @keyBindings
-        key = 0
-        for _key in i.split("+")
-          if _key == "alt" or _key == "ctrl" or _key == "shift"
-            key += application._keyCodes[_key]
-          else
-            key += "_" + _key
-        if !application._keyBindings[key]?
-          application._keyBindings[key] = {}
-        if !application._keyBindings[key][id]?
-          application._keyBindings[key][id] = []
-        if @[o] not in application._keyBindings[key][id]
-          application._keyBindings[key][id].push @[o]
+  delegateKeyEvents:(events=@keyEvents) =>
+    if events instanceof Function
+      events = events()
+    for key, value of events
+      @_keyBindings.push(key)
+      KeyboardJS.on(key, @[value])
+
+  undelegateKeyEvents: =>
+    for key in @_keyBindings
+      KeyboardJS.clear(key)
 
   render: =>
-    @_bindKeys()
     @$el.html @template( @getRenderData() )
     @scrapeTemplates()
     @renderSubviews()
+    @delegateKeyEvents()
     @afterRender()
     return @
 
   remove: =>
     @clearSubviews()
+    @undelegateKeyEvents()
+    @undelegateEvents()
     @$el.off().unbind().remove()
     super()
 
