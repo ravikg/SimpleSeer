@@ -3,19 +3,25 @@
 	height: 35px;
 	line-height: 35px;
 	display: inline-block;
-
+	font-size: 0px;
 	cursor: pointer;
-	color: #CCCCCC;
-	font-size: 11pt;	
 	border-left: 1px solid #000;
+	vertical-align: top;
 	
 	&:hover { background:  #444; }
 	&:active { background: #111; }
+
+	img.icon, p.title { display: inline-block; }
 	
 	img.icon {
 		display: inline-block;
 		vertical-align: top;
 		margin-top: 10px;
-		margin-right: 9px;
+	}
+
+	p.title {
+		color: #CCCCCC;
+		font-size: 11pt;			
+		margin-left: 9px;
 	}
 }
