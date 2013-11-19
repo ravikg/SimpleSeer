@@ -23,11 +23,13 @@ module.exports = class Toolbar extends View
   getRenderData: =>
     client: Application.settings.ui_pagename
 
-  addItem:(view) =>
+  addItem:(view, options) =>
     name = "menuitem-#{@items++}"
-    options = { append: @$(".right") }
+    options = _.extend(options, { append: @$(".right") })
     sv = @addSubview(name, require(view), null, options)
     sv.render()
 
   afterRender: =>
-    @addItem("views/widgets/menuitem")
+    def = "views/widgets/menuitem"
+    @addItem(def, {title: "", icon: "/img/seer/Header_Image_Settings.svg"})
+    @addItem(def, {title: "Login", icon: "/img/seer/Header_Image_User.svg"})
