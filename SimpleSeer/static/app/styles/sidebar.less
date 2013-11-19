@@ -7,21 +7,63 @@
   box-sizing: border-box;
   display: block;
   border-right: 1px solid #333;
+  background: #CCC;
 
   .header {
     position: absolute;
     left: 0;
     right: 0;
-    padding: 3px 10px;
+    padding: 3px 20px 3px 10px;
     border-color: #808080;
     border-bottom: 1px solid;
-    color: #404040;
     background: #ACACAC;
+    color: #404040;
     font-weight: 400;
     font-size: 13px;
     overflow: hidden;
     text-overflow: ellipsis;
     z-index: 20;
+    cursor: pointer;
+
+    .action {
+      width: 15px;
+      height: 8px;
+      position: absolute;
+      top: 8px;
+      right: 6px;
+      background: transparent url("/img/seer/sidebar_open.svg") no-repeat;
+      -webkit-transform: rotate(180deg);
+      -moz-transform: rotate(180deg);
+      -ms-transform: rotate(180deg);
+      -o-transform: rotate(180deg);
+      transform: rotate(180deg);
+    }
+  }
+
+  &[data-state=closed] {
+    min-width: 25px;
+    width: 25px !important;
+
+    .header {
+      .title {
+        opacity: 0;
+      }
+      .action {
+        -webkit-transform: rotate(0deg);
+        -moz-transform: rotate(0deg);
+        -ms-transform: rotate(0deg);
+        -o-transform: rotate(0deg);
+        transform: rotate(0deg);
+        right: 3px;
+      }
+    }
+
+    div {
+      &.content {
+        display: none;
+        overflow: hidden;
+      }
+    }
   }
 
   div {
@@ -34,7 +76,49 @@
       z-index: 10;
       overflow-y: scroll;
       margin-top: 24px;
-      background: #FFF;
+      background: #CCC;
+
+      .item {
+        float: left;
+        width: 100%;
+        position: relative;
+
+        .status {
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          width: 15px;
+          background: #999;
+
+          &.Fail {
+            background: #C54739;
+          }
+        }
+
+        .metadata {
+          padding: 5px 10px 5px 20px;
+          color: #404040;
+          background: #CCC;
+          border-bottom: 1px solid #AAA;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      
+        &.active {
+          .status {
+            &.Pass {
+              background: #78B33F;
+            }
+            &.Fail {
+              background: #C54739;
+            }
+          }
+          .metadata {
+            color: #FFF;
+            background: #555;
+          }
+        }
+      }
     }
   }
 }
