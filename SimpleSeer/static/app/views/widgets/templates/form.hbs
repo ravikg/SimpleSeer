@@ -4,21 +4,21 @@
     {{#if_eq type compare="text"}}
       <div class="grp right">
         <label>{{../label}}{{#if ../required}}<span class="req">*</span>{{/if}}</label>
-        <input type="text" data-key="{{ ../../id }}" value="{{ ../../value }}">
+        <input type="text" data-key="{{ ../id }}" value="{{ ../default }}">
       </div>
     {{/if_eq}}
 
     {{#if_eq type compare="password"}}
       <div class="grp right">
         <label>{{../label}}{{#if ../required}}<span class="req">*</span>{{/if}}</label>
-        <input type="password" data-key="{{ ../../id }}" value="{{ ../../value }}">
+        <input type="password" data-key="{{ ../id }}" value="{{ ../default }}">
       </div>
     {{/if_eq}}
 
     {{#if_eq type compare="textarea"}}
       <div class="grp right">
         <label>{{../label}}{{#if ../required}}<span class="req">*</span>{{/if}}</label>
-        <textarea data-key="{{ id }}" value="{{ value }}">
+        <textarea data-key="{{ ../id }}">{{ ../default }}</textarea>
       </div>
     {{/if_eq}}
 
@@ -45,9 +45,10 @@
     {{#if_eq type compare="select"}}
       <div class="grp right">
         <label>{{../label}}{{#if ../required}}<span class="req">*</span>{{/if}}</label>
-        <select data-key="{{ ../id }}" {{#if multiple}}multiple="multiple"{{/if}}>
+        <select data-default="{{ ../default }}" data-key="{{ ../id }}" {{#if multiple}}multiple="multiple"{{/if}}>
+        {{#if_eq ../default compare="-"}}<option value="-">All</option>{{/if_eq}}
         {{#each ../values}}
-          <option value="{{ ../../id }}">{{ this }}</option>
+          <option value="{{ this }}">{{ this }}</option>
         {{/each}}
         </select>
       </div>

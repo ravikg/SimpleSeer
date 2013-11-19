@@ -1,44 +1,48 @@
 [data-widget=Form] {
-	& > .item { 
-		margin-bottom: 15px;
-		&:last-child { margin-bottom: 0px; }
-	}
+  & > .item { 
+    margin-bottom: 15px;
+    &:last-child { margin-bottom: 0px; }
+  }
 
-	.grp {
-		&.left { text-align: left; }
-		&.right { text-align: right; }		
+  .grp {
+    &.left { text-align: left; }
+    &.right { text-align: right; }    
 
-		line-height: 21px; 
-		input, label { vertical-align: middle; }
-	}
+    line-height: 21px; 
+    input, label { vertical-align: middle; }
+  }
 
-	.grp.right {
-		label { margin-right: 5px; }
-	}
+  .grp.right {
+    label {
+      margin-right: 5px;
+    }
+  }
 
-	input[type=text],
-	input[type=password],
-	textarea,
-	select {
-		margin: 0;
-		padding: 3px;
-		border: 1px solid #777;
-		outline: none;
-		font-family: "Open Sans";
-	}
+  input[type=text],
+  input[type=password],
+  textarea,
+  select {
+    margin: 0;
+    padding: 3px;
+    border: 1px solid #777;
+    outline: none;
+    font-family: "Open Sans";
+  }
 
-	select {
-		padding: 2px;
-		min-width: 154px;
-	}
+  textarea { width: 147px; }
 
-	input[type=radio],
-	input[type=checkbox] {
-		margin: 0;
-		margin-left: 5px;
-	}
+  select {
+    padding: 2px;
+    min-width: 154px;
+  }
 
-	label span.req {
-		color: red;
-	}
+  input[type=radio],
+  input[type=checkbox] {
+    margin: 0;
+    margin-left: 5px;
+  }
+
+  label span.req {
+    color: red;
+  }
 }
