@@ -1,5 +1,15 @@
 <div class="container">
-  <div class="header">{{title}}</div>
+  <div class="header">
+    <span class="title">{{title}}</span>
+    <div class="action"></div>
+  </div>
   <div class="resize" data-handle="w"></div>
-  <div class="content"></div>
+  <div class="content">
+    {{#each frames}}
+      <div class="item" data-mongo="{{this.attributes.id}}">
+        <div class="status {{this.attributes.metadata.tolstate}}"></div>
+        <div class="metadata">{{this.attributes.metadata.tpm}}</div>
+      </div>
+    {{/each}}
+  </div>
 </div>
