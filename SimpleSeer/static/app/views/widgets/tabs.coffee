@@ -10,13 +10,6 @@ module.exports = class Tabs extends View
   events: =>
     {"click .tab": "clickEvent"}
 
-  keyEvents: =>
-    {"ctrl + e": "envisionEvent"}
-
-  envisionEvent:(e) =>
-    e.preventDefault()
-    console.log "Shit worked!"
-
   initialize: =>
     super()
     @collection = new Collection()
@@ -54,8 +47,10 @@ module.exports = class Tabs extends View
       selector = ".area[data-id=#{tab.model_id}] div"
       sv = @addSubview("tab-#{tab.model_id}", file, @$(selector))
       sv.render()
-      sv.select(query)
-      
+    else
+      sv = @subviews["tab-#{tab.model_id}"]
+    
+    sv.select(query)  
     @$(".content .area[data-id=#{tab.model_id}]").addClass("active")
 
   loadTabByName:(name, query) =>

@@ -1,5 +1,8 @@
 module.exports = class View extends Backbone.View
 
+  #keyEvents: =>
+  #  {"ctrl + e": "fn"}
+
   initialize: (options={}) =>
     super()
     @subviews = {}
