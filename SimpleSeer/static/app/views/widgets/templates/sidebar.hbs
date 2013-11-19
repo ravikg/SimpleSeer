@@ -6,7 +6,7 @@
   <div class="resize" data-handle="w"></div>
   <div class="content">
     {{#each frames}}
-      <div class="item" data-mongo="{{this.attributes.id}}">
+      <div class="item" data-value="{{this.attributes.metadata.tpm}}">
         <div class="status {{this.attributes.metadata.tolstate}}"></div>
         <div class="metadata">{{this.attributes.metadata.tpm}}</div>
       </div>

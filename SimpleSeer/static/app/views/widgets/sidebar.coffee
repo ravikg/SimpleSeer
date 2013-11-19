@@ -8,10 +8,10 @@ module.exports = class SideBar extends SubView
   template: Template
   title: "ASSEMBLIES"
   type: "Assembly"
-  keys: ["tpm"]
   frames: []
 
   initialize: (options) =>
+    console.log options
     @collection = new Backbone.Collection([], {model: Model})
     @collection.url = "api/frame"
     @collection.fetch({'success': @receive})
@@ -23,8 +23,10 @@ module.exports = class SideBar extends SubView
       for model in data.models
         if model.get('metadata')['type'] is @type
           @frames.push(model)
-    console.log @frames
     @render()
+
+  select: =>
+    console.log arguments
 
   events: =>
     'click .header': @_slide
@@ -34,13 +36,14 @@ module.exports = class SideBar extends SubView
     $(@$el.get(0)).attr 'data-state', (if $(@$el.get(0)).attr('data-state') is 'closed' then 'open' else 'closed')
 
   _select: (e) =>
-    console.log e
-    $(e.target).closest('.item').addClass('active')
+    @$el.find('.item.active').removeClass('active')
+    item = $(e.target).closest('.item')
+    item.addClass('active')
+    value = item.attr('data-value')
 
   getRenderData: =>
     title: @title
     frames: @frames
-    keys: @keys
 
 
 
