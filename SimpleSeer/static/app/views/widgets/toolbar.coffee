@@ -33,7 +33,7 @@ module.exports = class Toolbar extends View
     @addItem("views/widgets/menuitem", {
       title: "",
       icon: "/img/seer/Header_Image_Settings.svg",
-      onClick: => Application.loadPageByName("settings")
+      onClick: => Application.pages.loadPageByName("settings")
     })
-    
+
     @addItem("views/menus/user")
