@@ -20,6 +20,10 @@ module.exports = class Tabs extends View
     tabs = @collection.models[0].get("tabs")
     return {tabs: tabs}
 
+  afterRender: =>
+    refl = _.throttle(@reflow, 300)
+    $(window).unbind("resize").bind("resize", refl)
+
   _tabWhere:(query) =>
     models = @collection.models[0].get("tabs")
     return _.findWhere(models, query)
