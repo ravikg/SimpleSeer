@@ -11,7 +11,7 @@ $(function() {
         $(e.target).closest('.resizable').css("height",b.pageY);
       }
 
-      $(e.target).closest('.container').find('.reciprocate').css('left', $(e.target).closest('.resizable').width())
+      $(e.target).closest('.container').find('.reciprocate').css('left', $(e.target).closest('.resizable').width() + 1)
 
     })
   });
