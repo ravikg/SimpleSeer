@@ -10,4 +10,34 @@
     width: 100%;
     background: #FFF;
   }
+
+  .content-wrapper {
+    position: absolute;
+    top: 0px;
+    left: 25px;
+    right: 0px;
+    bottom: 0px;
+    background: #000;
+  }
+
+  .spacer {
+    background: #005A82;
+    &.Pass {
+      background: #78B33F;
+    }
+    &.Fail {
+      background: #C54739;
+    }
+    &.top {
+      height: 10px;
+      width: 100%;
+    }
+    &.bottom {
+      height: 50px;
+      width: 100%;
+      position: absolute;
+      bottom: 0px;
+      left: 0px;
+    }
+  }
 }
