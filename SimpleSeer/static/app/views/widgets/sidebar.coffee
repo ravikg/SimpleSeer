@@ -8,10 +8,11 @@ module.exports = class SideBar extends SubView
   template: Template
   title: "ASSEMBLIES"
   type: "Assembly"
+  key: 'tpm'
   frames: []
+  selected: null
 
   initialize: (options) =>
-    console.log options
     @collection = new Backbone.Collection([], {model: Model})
     @collection.url = "api/frame"
     @collection.fetch({'success': @receive})
@@ -25,9 +26,11 @@ module.exports = class SideBar extends SubView
           @frames.push(model)
     @render()
 
-  select: =>
-    console.log arguments
-
+  select: (params) =>
+    if params and params[@key]?
+      @selected = params[@key]
+      @afterRender()
+      
   events: =>
     'click .header': @_slide
     'click .item': @_select
@@ -40,11 +43,16 @@ module.exports = class SideBar extends SubView
     item = $(e.target).closest('.item')
     item.addClass('active')
     value = item.attr('data-value')
+    Application.router.navigate("#tab/data/{\"" + @key + "\":\"" + value + "\"}", {trigger: true})
 
   getRenderData: =>
     title: @title
     frames: @frames
 
+  afterRender: =>
+    if @selected
+      @$el.find('.item.active').removeClass('active')
+      @$el.find(".item[data-value=#{@selected}]:first").addClass('active')
 
 
 
