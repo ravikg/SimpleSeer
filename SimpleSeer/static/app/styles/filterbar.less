@@ -28,24 +28,7 @@
   }
 
   div.filter { 
-    display: inline-block;
-    vertical-align: top;
     margin-left: 30px;
-
-    p.title {
-      color: #333;
-      font-size: 10pt;
-      font-family: "Open Sans", sans-serif;
-      cursor: pointer;
-      display: inline-block;
-    }
-
-    img {
-      display: inline-block;
-    }
-  }
-
-  div.addFilter {
     position: relative;
     z-index: 120;
     display: inline-block;
@@ -60,12 +43,27 @@
      * adding the border. */
     border: 1px solid transparent;
 
-    color: #0074B3;
+
+    p.title {
+      color: #333;
+      font-size: 10pt;
+      font-family: "Open Sans", sans-serif;
+      cursor: pointer;
+      display: inline-block;
+    }
+
+    img {
+      display: inline-block;
+    }
 
     &.active {
       background: #DFDFDF;
       border: 1px solid #636363;
       border-bottom: none;
+    }    
+
+    &.add {
+      color: #0074B3;
     }
   }
 

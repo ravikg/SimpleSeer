@@ -56,7 +56,7 @@ module.exports = class Tabs extends View
     for key, sv of @subviews
       sv.unselect()
     sv.select(query)  
-    
+
     @$(".content .area[data-id=#{tab.model_id}]").addClass("active")
 
   getActiveSubview: =>
