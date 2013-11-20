@@ -7,8 +7,8 @@ module.exports = class FilterBar extends SubView
   template: Template
 
   form: [
-    {id: "vin", type: "text", value: "", label: "VIN"},
-    {id: "tpm", type: "text", value: "", label: "TPM"},
+    {id: "vin", type: "text", value: "", label: "VIN #"},
+    {id: "tpm", type: "text", value: "", label: "TPM #"},
     #{id: "Machine Number", type: "text", value: "", label: "MACHINE #"},
     #{id: "tolstate", type: "select", values: ["PASS", "FAIL"], default: "-", label: "PASS / FAIL"},
   ]
@@ -18,17 +18,35 @@ module.exports = class FilterBar extends SubView
     @filters = []
 
   events: =>
-    "click .addFilter": "openMenu"
+    "click .filter": "openMenu"
     "click [data-action=apply]": "closeMenuAndApply"
     "click [data-action=cancel]": "closeMenuAndReset"
+    "keypress input[type=text]": "enterToClose"
 
-  openMenu: =>
-    @$(".addFilter").addClass("active")
-    offset = @$(".addFilter").offset().left
+  keyEvents: =>
+    {"esc": "escToClose"}
+
+  enterToClose:(e) =>
+    if e.which is 13 and @$(".filter.active").length
+      e.preventDefault()
+      @closeMenuAndApply()
+
+  escToClose:(e) =>
+    if @$(".filter.active").length
+      e.preventDefault()
+      @closeMenu()
+
+  setMenu: =>
+
+  openMenu:(e) =>
+    @$(".filter.active").removeClass("active")
+    filter = $(e.currentTarget)
+    filter.addClass("active")
+    offset = filter.offset().left
     @$(".menu").css("left", offset).show()
 
   closeMenu: =>
-    @$(".addFilter").removeClass("active")
+    @$(".filter").removeClass("active")
     @$(".menu").hide()
 
   closeMenuAndApply: =>

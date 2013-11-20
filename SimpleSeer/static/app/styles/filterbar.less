@@ -7,7 +7,7 @@
   -moz-box-sizing: border-box;
   
   background: #fff url("/img/seer/filterbar.png") repeat-x;
-  border-bottom: 1px solid #646464;
+  border-bottom: 1px solid #2B2D2E;
   color: #444;
 
   div.viewSwitch {
@@ -28,21 +28,9 @@
   }
 
   div.filter { 
-    display: inline-block;
-    vertical-align: top;
     margin-left: 30px;
-
-    p.title {
-      color: #333;
-      font-size: 10pt;
-      font-family: "Open Sans", sans-serif;
-      cursor: pointer;
-    }
-  }
-
-  div.addFilter {
     position: relative;
-    z-index: 110;
+    z-index: 120;
     display: inline-block;
     height: 27px;
     line-height: 27px;
@@ -55,12 +43,27 @@
      * adding the border. */
     border: 1px solid transparent;
 
-    color: #0074B3;
+
+    p.title {
+      color: #333;
+      font-size: 10pt;
+      font-family: "Open Sans", sans-serif;
+      cursor: pointer;
+      display: inline-block;
+    }
+
+    img {
+      display: inline-block;
+    }
 
     &.active {
       background: #DFDFDF;
       border: 1px solid #636363;
       border-bottom: none;
+    }    
+
+    &.add {
+      color: #0074B3;
     }
   }
 
@@ -68,7 +71,7 @@
     display: none;
     position: absolute;
     top: 30px;
-    z-index: 100;
+    z-index: 110;
     min-width: 200px;
 
     background: #DFDFDF;

@@ -7,15 +7,13 @@ module.exports = class MenuItem extends SubView
   template: Template
 
   initialize:(options) =>
-  	super(options)
-  	@title = options.title || ""
-  	@icon  = options.icon  || "/img/seer/Header_Image_Settings.svg"
+    super(options)
+    @title = options.title
+    @icon  = options.icon
+    @onClick = options.onClick || =>
 
   getRenderData: =>
-  	return {
-  		title: @title
-  		icon: @icon
-  	}
-
-  onClick: =>
-    Application.pages.loadPageByName("settings")
+    return {
+      title: @title
+      icon: @icon
+    }

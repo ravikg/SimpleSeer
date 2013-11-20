@@ -18,11 +18,11 @@
 
   div.wrapper {
     position: absolute;
+    z-index: 90;
     left: 0;
     right: 0;
     display: inline-block;
     height: 100%;
-    border-right: 1px solid #414141;
 
     div.item {
       float: left;
@@ -37,8 +37,8 @@
       color: #ccc;
       font-size: 8pt;
       line-height: 8pt;
-      margin-top: 5px;
       text-transform: uppercase;
+      margin-top: 4px;
     }
 
     div.value {
@@ -47,10 +47,7 @@
       line-height: 10pt;
       font-weight: 600;
       margin-top: 3px;
-    }
-
-    &:first-child {
-      padding-left: 10px;
+      margin-bottom: 4px
     }
 
     div.edit {
@@ -70,7 +67,7 @@
     div.notes {
       float: right;
       background: #CCC;
-      color: #6D6D6D;
+      color: #6d6d6d;
       font-size: 13px;
       text-shadow: none;
       padding: 0px 10px;

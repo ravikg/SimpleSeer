@@ -34,9 +34,8 @@ module.exports = class Tabs extends View
     @setTab(tab)
 
   setTab:(tab, query) =>
-    @$(".tab.active").removeClass("active")
+    @$(".tab.active, .content .area").removeClass("active")
     @$(".tab[data-id=#{tab.model_id}]").addClass("active")
-    @$(".content .area").removeClass("active")
 
     name = @_sanitizeName(tab.name)
 
@@ -54,8 +53,17 @@ module.exports = class Tabs extends View
     else
       sv = @subviews["tab-#{tab.model_id}"]
     
+    for key, sv of @subviews
+      sv.unselect()
     sv.select(query)  
+
     @$(".content .area[data-id=#{tab.model_id}]").addClass("active")
+
+  getActiveSubview: =>
+    id = @$(".tab.active").data("id")
+    if @subviews["tab-#{id}"]?
+      return @subviews["tab-#{id}"]
+    return
 
   loadTabByName:(name, query) =>
     for model in @collection.models[0].get("tabs")

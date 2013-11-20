@@ -3,6 +3,7 @@ module.exports = class Router extends Backbone.Router
   routes: =>
     "": "tab"
     "tab/:name": "tab"
+    "tab/:name/": "tab"
     "tab/:name/:query": "tab"
     "page/:name": "page"
 
@@ -11,7 +12,7 @@ module.exports = class Router extends Backbone.Router
     # and widget states.
     if query?
       query = JSON.parse(query)
-      
+
     Application.pages.close(false)
     if name?
       Application.tabs?.loadTabByName(name, query)

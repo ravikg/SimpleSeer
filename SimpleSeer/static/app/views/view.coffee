@@ -8,7 +8,6 @@ module.exports = class View extends Backbone.View
     @subviews = {}
     @options = {}
     @_keyBindings = []
-    @keyEvents = {}
 
     # Backbone doesn't strap this automatically anymore.
     if options?
@@ -22,7 +21,7 @@ module.exports = class View extends Backbone.View
 
   getTabParent:(item=@) =>
     if item instanceof require("views/widgets/tabs")
-      return item
+      return item.getActiveSubview()
     else if item.options.parent?
       return @getTabParent(item.options.parent)
     else
@@ -34,11 +33,12 @@ module.exports = class View extends Backbone.View
   
   afterRender: => return
 
-  delegateKeyEvents:(events=@keyEvents) =>
+  delegateKeyEvents:(events=@keyEvents||{}) =>
     if events instanceof Function
       events = events()
-    for key, value of events
-      @_keyBindings.push(KeyboardJS.on(key, @[value]))
+    for key, handler of events
+      fn = ((e)=> if @visible() then @[handler](e))
+      @_keyBindings.push(KeyboardJS.on(key, fn))
       
   undelegateKeyEvents: =>
     for binding in @_keyBindings
@@ -111,16 +111,13 @@ module.exports = class View extends Backbone.View
       for div in templates
         placeholder = $(div)
         id = placeholder.data("id")
-        
         if @subviews["template-#{id}"]?
           @subviews["template-#{id}"].remove()
           delete @subviews["template-#{id}"]
-
         viewClass = require placeholder.data("subview")
         options = placeholder.data("options") || {}
         @addSubview("template-#{id}", viewClass, div, options)
-        placeholder.removeAttr("data-options")
-        placeholder.removeAttr("data-subview")
+        placeholder.removeAttr("data-options").removeAttr("data-subview")
 
   visible: =>
     return @$el.is(":visible")
