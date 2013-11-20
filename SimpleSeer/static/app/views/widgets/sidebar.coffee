@@ -6,10 +6,12 @@
 
 module.exports = class SideBar extends SubView
   template: Template
-  title: "ASSEMBLIES"
-  key: 'tpm'
   frames: []
   selected: null
+
+  # TODO: Put in YAML
+  title: "ASSEMBLIES"
+  key: 'tpm'
 
   receive: (data) =>
     @frames = data
@@ -18,7 +20,7 @@ module.exports = class SideBar extends SubView
   select: (params) =>
     if params and params[@key]?
       @selected = params[@key]
-      @afterRender()
+      @render()
       
   events: =>
     'click .header': @_slide
@@ -40,8 +42,9 @@ module.exports = class SideBar extends SubView
 
   afterRender: =>
     if @selected
-      @$el.find('.item.active').removeClass('active')
+      @$el.find(".item.active").removeClass('active')
       @$el.find(".item[data-value=#{@selected}]:first").addClass('active')
-
+    else
+      @$el.find(".item:first").addClass('active')
 
 
