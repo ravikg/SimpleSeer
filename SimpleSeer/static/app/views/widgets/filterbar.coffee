@@ -7,8 +7,8 @@ module.exports = class FilterBar extends SubView
   template: Template
 
   form: [
-    {id: "vin", type: "text", value: "", label: "VIN"},
-    {id: "tpm", type: "text", value: "", label: "TPM"},
+    {id: "vin", type: "text", value: "", label: "VIN #"},
+    {id: "tpm", type: "text", value: "", label: "TPM #"},
     #{id: "Machine Number", type: "text", value: "", label: "MACHINE #"},
     #{id: "tolstate", type: "select", values: ["PASS", "FAIL"], default: "-", label: "PASS / FAIL"},
   ]

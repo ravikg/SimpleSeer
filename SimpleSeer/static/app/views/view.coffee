@@ -22,7 +22,7 @@ module.exports = class View extends Backbone.View
 
   getTabParent:(item=@) =>
     if item instanceof require("views/widgets/tabs")
-      return item
+      return item.getActiveSubview()
     else if item.options.parent?
       return @getTabParent(item.options.parent)
     else

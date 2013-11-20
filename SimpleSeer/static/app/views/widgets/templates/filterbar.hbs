@@ -1,19 +1,21 @@
 <div class="viewSwitch">
-	<img data-which="image" data-state="active" src="/img/seer/View_Toggle_Image_Active.svg">
-	<img data-which="list" data-state="inactive" src="/img/seer/View_Toggle_List_Inactive.svg">
+  <img data-which="image" data-state="active" src="/img/seer/View_Toggle_Image_Active.svg">
+  <img data-which="list" data-state="inactive" src="/img/seer/View_Toggle_List_Inactive.svg">
 </div>
 
 <div class="addFilter">+ Filter</div>
 <div class="menu">
-	<div data-id="form" data-subview="views/widgets/form" data-options="{{ formoptions }}"></div>
-	<div class="actions">
-		<span data-action="cancel">Cancel</span>
-		<span data-action="apply">Apply</span>
-	</div>
+  <div data-id="form" data-subview="views/widgets/form" data-options="{{ formoptions }}"></div>
+  <div class="actions">
+    <span data-action="cancel">Cancel</span>
+    <span data-action="apply">Apply</span>
+  </div>
 </div>
 
 {{#each filters}}
 <div class="filter">
-	<p class="title">{{title}}</p>
+  <p class="title">{{title}}</p>
+  <img data-action="remove" src="/img/seer/Items_Remove_Filter.svg">
+  <img data-action="edit" src="/img/seer/Items_Dropdown.svg">
 </div>
 {{/each}}
