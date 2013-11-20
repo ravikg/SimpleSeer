@@ -5,9 +5,6 @@
   z-index: 100;
   position: absolute;
   
-  box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  
   background: #555555;
   border-top: 1px solid #2B2D2E;
   border-bottom: 1px solid #2B2D2E;
@@ -21,17 +18,16 @@
   user-select: none;  
 
   div.wrapper {
-    width: 100%;
+    position: absolute;
+    left: 0;
+    right: 0;
     display: inline-block;
-    vertical-align: top;
-    height: 35px;
+    height: 100%;
     border-right: 1px solid #414141;
-    padding-right: 36px;
-    padding-left: 12px;
 
     div.item {
       float: left;
-      margin: 5px 0px 5px 10px;
+      margin: 7px 0px 5px 10px;
       padding-right: 15px;
       border-right: 1px solid #414141;
     }
@@ -59,13 +55,30 @@
 
     div.edit {
       display: inline-block;
-      vertical-align: top;
-      height: 44px;
-      margin-left: 12px;
+      width: 20px;
+      height: 20px;
+      background-image: url("/img/seer/Items_Edit_Dark.svg");
+      cursor: pointer;
+      background-repeat: no-repeat;
+      margin: 13px 0px 10px 15px;
 
-      img {
-        margin-top: 12px;
-        cursor: pointer;
+      &:hover {
+        background-image: url("/img/seer/Items_Edit_Dark_Hover.svg");
+      }
+    }
+
+    div.notes {
+      float: right;
+      background: #CCC;
+      color: #6D6D6D;
+      font-size: 13px;
+      text-shadow: none;
+      padding: 0px 10px;
+      cursor: pointer;
+
+      &:hover {
+        color: #FFF;
+        background: #555;
       }
     }
   }

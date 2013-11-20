@@ -7,23 +7,12 @@
 module.exports = class SideBar extends SubView
   template: Template
   title: "ASSEMBLIES"
-  type: "Assembly"
   key: 'tpm'
   frames: []
   selected: null
 
-  initialize: (options) =>
-    @collection = new Backbone.Collection([], {model: Model})
-    @collection.url = "api/frame"
-    @collection.fetch({'success': @receive})
-    super(options)
-
   receive: (data) =>
-    @frames = []
-    if data.models
-      for model in data.models
-        if model.get('metadata')['type'] is @type
-          @frames.push(model)
+    @frames = data
     @render()
 
   select: (params) =>
