@@ -23,11 +23,16 @@ module.exports = class SideBar extends SubView
       @render()
       
   events: =>
-    'click .header': @_slide
-    'click .item': @_select
+    'click .header': '_slide'
+    'click .item': '_select'
+    'mouseup .resize': 'reciprocate'
+
+  reciprocate: =>
+    @options.parent.reflow()
 
   _slide: (e) =>
     $(@$el.get(0)).attr 'data-state', (if $(@$el.get(0)).attr('data-state') is 'closed' then 'open' else 'closed')
+    setTimeout(@reciprocate,10)
 
   _select: (e) =>
     @$el.find('.item.active').removeClass('active')

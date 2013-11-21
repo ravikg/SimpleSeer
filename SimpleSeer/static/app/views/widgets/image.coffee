@@ -54,7 +54,6 @@ module.exports = class Image extends SubView
     @zoomer = @$el.find('.zoom')
 
   _fill: =>
-
     if @frame.width() > @img.width()
       if @img.width < @width
         @img.width(@frame.width())
@@ -107,7 +106,8 @@ module.exports = class Image extends SubView
     @$el.find('.controls input[type="range"]').attr('min', parseInt(@fillScale * 100, 10)).attr('max', parseInt(@maxScale * 100, 10)).val(parseInt(@scale * 100, 10))
 
   _zoom: (e, delta=0, scale=0) =>
-
+    @zoomed = true
+    
     if e.offsetX? and e.offsetY?
       x1 = e.offsetX
       y1 = e.offsetY
