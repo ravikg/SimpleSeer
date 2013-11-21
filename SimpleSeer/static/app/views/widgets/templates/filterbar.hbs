@@ -3,6 +3,7 @@
   <img data-which="list" data-state="inactive" src="/img/seer/View_Toggle_List_Inactive.svg">
 </div>
 
+{{#unless locked}}
 <div class="filter add">+ Filter</div>
 <div class="menu">
   <div data-id="form" data-subview="views/widgets/form" data-options="{{ formoptions }}"></div>
@@ -11,11 +12,8 @@
     <span data-action="apply">Apply</span>
   </div>
 </div>
+{{/unless}}
 
-{{#each filters}}
-<div class="filter">
-  <p class="title">{{title}}</p>
-  <img data-action="remove" src="/img/seer/Items_Remove_Filter.svg">
-  <img data-action="edit" src="/img/seer/Items_Dropdown.svg">
-</div>
-{{/each}}
+<div data-id="filt1" data-subview="views/widgets/filter" data-options='{"title": "VIN", "type": "field"}'/>
+<div data-id="filt2" data-subview="views/widgets/filter" data-options='{"title": "TPM", "type": "field"}'/>
+<!--<div data-id="filt2" data-subview="views/widgets/filter" data-options='{"title": "Part", "type": "select", "value": [1, 2, 3]}'/>-->

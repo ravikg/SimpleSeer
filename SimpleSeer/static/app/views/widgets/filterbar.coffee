@@ -9,8 +9,6 @@ module.exports = class FilterBar extends SubView
   form: [
     {id: "vin", type: "text", value: "", label: "VIN #"},
     {id: "tpm", type: "text", value: "", label: "TPM #"},
-    #{id: "Machine Number", type: "text", value: "", label: "MACHINE #"},
-    #{id: "tolstate", type: "select", values: ["PASS", "FAIL"], default: "-", label: "PASS / FAIL"},
   ]
 
   initialize:(options) =>
@@ -21,15 +19,9 @@ module.exports = class FilterBar extends SubView
     "click .filter": "openMenu"
     "click [data-action=apply]": "closeMenuAndApply"
     "click [data-action=cancel]": "closeMenuAndReset"
-    "keypress input[type=text]": "enterToClose"
 
   keyEvents: =>
     {"esc": "escToClose"}
-
-  enterToClose:(e) =>
-    if e.which is 13 and @$(".filter.active").length
-      e.preventDefault()
-      @closeMenuAndApply()
 
   escToClose:(e) =>
     if @$(".filter.active").length
@@ -39,10 +31,18 @@ module.exports = class FilterBar extends SubView
   setMenu: =>
 
   openMenu:(e) =>
-    @$(".filter.active").removeClass("active")
     filter = $(e.currentTarget)
-    filter.addClass("active")
     offset = filter.offset().left
+
+    console.log filter.data("key")
+
+    if !filter.hasClass("add")
+      @form = [{id: filter.data("key"), type: "text", value: filter.data("value"), label: filter.data("label")}]
+      @subviews["template-form"].options.form = @form
+      @subviews["template-form"].render()
+
+    @$(".filter.active").removeClass("active")
+    filter.addClass("active")      
     @$(".menu").css("left", offset).show()
 
   closeMenu: =>
@@ -66,10 +66,11 @@ module.exports = class FilterBar extends SubView
     @render()
 
   addFilter:(key, value) =>
-    @filters.push({title: "#{key}: #{value}", value: value})
+    @filters.push({label: "#{key}: #{value}", value: value, key: key})
 
   getRenderData: =>
     return {
       formoptions: JSON.stringify({"form": @form})
-      filters: @filters
+      filters: @filters,
+      locked: true
     }
