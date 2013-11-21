@@ -7,14 +7,53 @@
   top: 61px;
   bottom: 50px;
 
-  .image {
+  .frame {
     width: 100%;
     height: 100%;
     box-sizing: border-box;
     padding: 20px;
 
-    img {
-      width: 100%;
+    .image {
+      img {
+        width: 100%;
+        height: 100%;
+      }
+    }
+
+    .zoom {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      width: 110px;
+      height: 125px;
+      background: #AAA;
+
+      .thumbnail {
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        right: 5px;
+        height: auto;
+
+        img {
+          width: 100%;
+          height: auto;
+        }
+      }
+
+      input[type="text"] {
+        position: absolute;
+        bottom: 5px;
+        left: 5px;
+        width: 35px;
+      }
+
+      input[type="range"] {
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        width: 55px;
+      }
     }
   }
 }
