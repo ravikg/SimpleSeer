@@ -20,6 +20,10 @@ module.exports = class Tabs extends View
     tabs = @collection.models[0].get("tabs")
     return {tabs: tabs}
 
+  afterRender: =>
+    refl = _.throttle(@reflow, 300)
+    $(window).unbind("resize").bind("resize", refl)
+
   _tabWhere:(query) =>
     models = @collection.models[0].get("tabs")
     return _.findWhere(models, query)
@@ -29,29 +33,42 @@ module.exports = class Tabs extends View
     tab = @_tabWhere({"model_id": id})
     @setTab(tab)
 
-  setTab:(tab) =>
-    @$(".tab.active").removeClass("active")
+  setTab:(tab, query) =>
+    @$(".tab.active, .content .area").removeClass("active")
     @$(".tab[data-id=#{tab.model_id}]").addClass("active")
-    @$(".content .area").removeClass("active")
 
     name = @_sanitizeName(tab.name)
-    Application.router.navigate("tab/#{name}")
+
+    if query?
+      params = JSON.stringify(query)
+      Application.router.navigate("tab/#{name}/#{params}")
+    else 
+      Application.router.navigate("tab/#{name}")
 
     if !@subviews["tab-#{tab.model_id}"]?
       file = require("views/#{tab.view}")
       selector = ".area[data-id=#{tab.model_id}] div"
       sv = @addSubview("tab-#{tab.model_id}", file, @$(selector))
       sv.render()
-      
+    else
+      sv = @subviews["tab-#{tab.model_id}"]
+    
+    for key, sv of @subviews
+      sv.unselect()
+    sv.select(query)  
+
     @$(".content .area[data-id=#{tab.model_id}]").addClass("active")
 
-  loadTabByName:(name) =>
-    tab = null
-    # Search for tab in models
+  getActiveSubview: =>
+    id = @$(".tab.active").data("id")
+    if @subviews["tab-#{id}"]?
+      return @subviews["tab-#{id}"]
+    return
+
+  loadTabByName:(name, query) =>
     for model in @collection.models[0].get("tabs")
       if @_sanitizeName(model.name) == @_sanitizeName(name)
-        @setTab(model)
-        return
+        return @setTab(model, query)
     console.error "Couldn't select tab '#{name}'"
 
   loadDefaultTab: =>

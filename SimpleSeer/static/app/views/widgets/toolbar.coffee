@@ -11,7 +11,7 @@ module.exports = class Toolbar extends View
     @items = 0
 
   events: =>
-    "click [data-widget=MenuItem]": "clickEvent"
+    "click [data-widget]": "clickEvent"
 
   clickEvent:(e) =>
     # Find the subview based on
@@ -23,11 +23,17 @@ module.exports = class Toolbar extends View
   getRenderData: =>
     client: Application.settings.ui_pagename
 
-  addItem:(view) =>
+  addItem:(view, options={}) =>
     name = "menuitem-#{@items++}"
-    options = { append: @$(".right") }
+    options = _.extend(options, { append: @$(".right") })
     sv = @addSubview(name, require(view), null, options)
     sv.render()
 
   afterRender: =>
-    @addItem("views/widgets/menuitem")
+    @addItem("views/widgets/menuitem", {
+      title: "",
+      icon: "/img/seer/Header_Image_Settings.svg",
+      onClick: => Application.pages.loadPageByName("settings")
+    })
+
+    @addItem("views/menus/user")

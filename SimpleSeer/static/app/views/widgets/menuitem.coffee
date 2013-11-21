@@ -6,5 +6,14 @@
 module.exports = class MenuItem extends SubView
   template: Template
 
-  onClick: =>
-    Application.pages.loadPageByName("settings")
+  initialize:(options) =>
+    super(options)
+    @title = options.title
+    @icon  = options.icon
+    @onClick = options.onClick || =>
+
+  getRenderData: =>
+    return {
+      title: @title
+      icon: @icon
+    }

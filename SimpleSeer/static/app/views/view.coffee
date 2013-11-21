@@ -1,24 +1,31 @@
 module.exports = class View extends Backbone.View
 
+  #keyEvents: =>
+  #  {"ctrl + e": "fn"}
+
   initialize: (options={}) =>
     super()
-
     @subviews = {}
     @options = {}
+    @_keyBindings = []
+
+    # Backbone doesn't strap this automatically anymore.
     if options?
-      # Backbone doesn't strap this automatically anymore.
       @options = options
 
-    if @options.parent?
-      @options.tab = @_findTabParent()
-
+    # Add the 'data-widget="Constructor"' attr for stylesheets.
     if @.constructor?
-      # Add the 'data-widget="Constructor"' attr for stylesheets.
       ctor = String(@.constructor)
       ptn = ctor.match(/function (.*)\(\)/)
       if ptn[1]? then @$el.attr("data-widget", ptn[1])
 
-  _findTabParent: => return {}     
+  getTabParent:(item=@) =>
+    if item instanceof require("views/widgets/tabs")
+      return item.getActiveSubview()
+    else if item.options.parent?
+      return @getTabParent(item.options.parent)
+    else
+      return undefined
 
   template: => return
 
@@ -26,33 +33,29 @@ module.exports = class View extends Backbone.View
   
   afterRender: => return
 
-  _bindKeys: =>
-    id = if typeof @id == "function" then @id() else @id
-    if id and @keyBindings
-      for i,o of @keyBindings
-        key = 0
-        for _key in i.split("+")
-          if _key == "alt" or _key == "ctrl" or _key == "shift"
-            key += application._keyCodes[_key]
-          else
-            key += "_" + _key
-        if !application._keyBindings[key]?
-          application._keyBindings[key] = {}
-        if !application._keyBindings[key][id]?
-          application._keyBindings[key][id] = []
-        if @[o] not in application._keyBindings[key][id]
-          application._keyBindings[key][id].push @[o]
+  delegateKeyEvents:(events=@keyEvents||{}) =>
+    if events instanceof Function
+      events = events()
+    for key, handler of events
+      fn = ((e)=> if @visible() then @[handler](e))
+      @_keyBindings.push(KeyboardJS.on(key, fn))
+      
+  undelegateKeyEvents: =>
+    for binding in @_keyBindings
+      binding.clear()
 
   render: =>
-    @_bindKeys()
     @$el.html @template( @getRenderData() )
     @scrapeTemplates()
     @renderSubviews()
+    @delegateKeyEvents()
     @afterRender()
     return @
 
   remove: =>
     @clearSubviews()
+    @undelegateKeyEvents()
+    @undelegateEvents()
     @$el.off().unbind().remove()
     super()
 
@@ -64,6 +67,14 @@ module.exports = class View extends Backbone.View
     for i,o of @subviews
       o.reflow()
     return
+
+  select:(params) =>
+    for key, subview of @subviews
+      subview.select?(params)
+
+  unselect:() =>
+    for key, subview of @subviews
+      subview.unselect?()
 
   # Adds a subview to the current view.
   #
@@ -99,12 +110,14 @@ module.exports = class View extends Backbone.View
     if templates.length
       for div in templates
         placeholder = $(div)
+        id = placeholder.data("id")
+        if @subviews["template-#{id}"]?
+          @subviews["template-#{id}"].remove()
+          delete @subviews["template-#{id}"]
         viewClass = require placeholder.data("subview")
         options = placeholder.data("options") || {}
-        count = Object.keys(@subviews).length
-        @addSubview("template-#{count}", viewClass, div, options)
-        placeholder.removeAttr("data-options")
-        placeholder.removeAttr("data-subview")
+        @addSubview("template-#{id}", viewClass, div, options)
+        placeholder.removeAttr("data-options").removeAttr("data-subview")
 
   visible: =>
     return @$el.is(":visible")

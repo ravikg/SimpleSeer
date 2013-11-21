@@ -7,21 +7,21 @@ form, label, legend, table,
 caption, tbody, tfoot,
 thead, tr, th, td, canvas, 
 audio, video {
-	margin: 0;
-	padding: 0;
-	border: 0;
-	font-size: 100%;
-	font: inherit;
-	vertical-align: baseline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: baseline;
 }
 
 ol, ul {
-	list-style: none;
+  list-style: none;
 }
 
 table {
-	border-collapse: collapse;
-	border-spacing: 0;
+  border-collapse: collapse;
+  border-spacing: 0;
 }
 
 body {
@@ -30,4 +30,48 @@ body {
   line-height: 18px;
   color: #000;
   overflow: hidden;
+}
+
+/** Resize Handles **/
+
+.resize {
+  background: transparent;
+  cursor: col-resize;
+  z-index: 100;
+
+  &[data-handle=e], &[data-handle=w] {
+    position: absolute;
+    height: 100%;
+    width: 4px;
+  }
+
+  &[data-handle=e] {
+    left: 0px;
+  }
+
+  &[data-handle=w] {
+    right: -4px;
+  }
+
+  &[data-handle=n], &[data-handle=s] {
+    position: absolute;
+    height: 4px;
+    width: 100%;
+  }
+
+  &[data-handle=n] {
+    top: 0px;
+  }
+
+  &[data-handle=s] {
+    bottom: 0px;
+  }
+}
+
+.scrollY {
+  overflow-y: auto;
+}
+
+.scrollX {
+  overflow-x: auto;
 }
