@@ -16,6 +16,8 @@ module.exports = class Image extends SubView
   events: =>
     'dblclick .image': '_zoom'
     'mousewheel .image': '_mouseWheel'
+    'change input[type=range]': '_range'
+    'change input[type=text]': '_text'
 
   reflow: =>
     if !@zoomed
@@ -102,24 +104,37 @@ module.exports = class Image extends SubView
 
   _updateZoomer: =>
     @$el.find('.controls input[type="text"]').val(parseInt(@scale * 100, 10) + "%")
+    @$el.find('.controls input[type="range"]').attr('min', parseInt(@fillScale * 100, 10)).attr('max', parseInt(@maxScale * 100, 10)).val(parseInt(@scale * 100, 10))
 
-  _zoom: (e, delta=0) =>
-    x1 = e.offsetX
-    y1 = e.offsetY
+  _zoom: (e, delta=0, scale=0) =>
+
+    if e.offsetX? and e.offsetY?
+      x1 = e.offsetX
+      y1 = e.offsetY
+      @img.css('left', (@frame.width()/2) - (x1))
+      @img.css('top', (@frame.height()/2) - (y1))
+    
     w1 = @img.width()
     h1 = @img.height()
-    @img.css('left', (@frame.width()/2) - (x1))
-    @img.css('top', (@frame.width()/2) - (y1))
+
     if delta
       if delta > 0
         @scale += @increment
       if delta < 0
         @scale -= @increment
+      if @scale > @maxScale
+        @scale = @maxScale
     else
       if @scale * 1.5 > @maxScale
-        @scale = 5
+        @scale = @maxScale
       else 
         @scale *= 1.5
+
+    if scale
+      if scale > @maxScale
+        @scale = @maxScale
+      else
+        @scale = scale
 
     if @scale < @fillScale
       @_fill()
@@ -129,10 +144,17 @@ module.exports = class Image extends SubView
       @img.height(@height * @scale)
       w2 = @img.width()
       h2 = @img.height()
+
       @img.css('left', parseInt(@img.css('left'), 10) - ((w2 - w1) / 2))
       @img.css('top', parseInt(@img.css('top'), 10) - ((h2 - h1) / 2))
-    
+
     @_updateZoomer()
 
   _mouseWheel: (e) =>
     @_zoom(e, e.deltaY)
+
+  _range: (e) =>
+    @_zoom(e, 0, $(e.target).val() / 100)
+
+  _text: (e) =>
+    @_zoom(e, 0, parseInt($(e.target).val(),10) / 100)
