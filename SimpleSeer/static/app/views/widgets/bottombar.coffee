@@ -13,7 +13,6 @@ module.exports = class BottomBar extends SubView
 
   receive: (data) =>
     @frames = data
-    console.log @frames
     if @frames and @frames.length > 0 and !@selected
       md = @frames[0].get('metadata')
       @selected = md[@key]
@@ -25,5 +24,4 @@ module.exports = class BottomBar extends SubView
       @render()
 
   getRenderData: =>
-    console.log @selected
     data: @selected

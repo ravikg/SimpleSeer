@@ -23,6 +23,7 @@
     right: 0;
     display: inline-block;
     height: 100%;
+    overflow: hidden;
 
     div.item {
       float: left;
@@ -65,13 +66,15 @@
     }
 
     div.notes {
-      float: right;
       background: #CCC;
       color: #6d6d6d;
       font-size: 13px;
       text-shadow: none;
       padding: 0px 10px;
       cursor: pointer;
+      position: absolute;
+      top: 0;
+      right: 0;
 
       &:hover {
         color: #FFF;
