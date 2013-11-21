@@ -25,3 +25,5 @@ module.exports = class Router extends Backbone.Router
     else
       Application.tabs?.loadDefaultTab()
     
+  setParam:(key, value) =>
+    console.log "Unimplemented"

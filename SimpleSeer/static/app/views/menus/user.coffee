@@ -14,4 +14,4 @@ module.exports = class UserMenuItem extends MenuItem
   	}
 
   onClick: =>
-    Application.pages.loadPageByName("settings")
+    window.location.href = "/login"

@@ -56,4 +56,4 @@ module.exports = class Filter extends SubView
     }
 
   afterRender: =>
-    @$el.data("type", @type)
+    @$el.attr("data-type", @type)
