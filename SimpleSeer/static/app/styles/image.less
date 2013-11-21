@@ -2,7 +2,7 @@
   background: #FFF;
   width: 100%;
   height: auto;
-  overflow: scroll;
+  overflow: hidden;
   position: absolute;
   top: 61px;
   bottom: 50px;
@@ -11,13 +11,14 @@
     width: 100%;
     height: 100%;
     box-sizing: border-box;
-    padding: 20px;
 
     .image {
-      img {
-        width: 100%;
-        height: 100%;
-      }
+      z-index: 99;
+      display: block;
+      background: red;
+      width: 100%;
+      height: 100%;
+      overflow:hidden;
     }
 
     .zoom {
@@ -27,6 +28,7 @@
       width: 110px;
       height: 125px;
       background: #AAA;
+      z-index: 100;
 
       .thumbnail {
         position: absolute;
