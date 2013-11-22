@@ -77,3 +77,6 @@ module.exports = class Filter extends SubView
     @$el.attr("data-value", JSON.stringify(@value))
     #@$el.attr("data-key", @type)
     @$el.attr("data-label", @title)
+
+  toJSON: =>
+    return {title: @title, value: @value, type: @type}
