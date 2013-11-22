@@ -21,7 +21,7 @@ module.exports = class SideBar extends SubView
     if params and params[@key]?
       if @selected != params[@key]
         @selected = params[@key]
-        @render()
+        @afterRender()
       
   events: =>
     'click .header': '_slide'
@@ -40,7 +40,8 @@ module.exports = class SideBar extends SubView
     item = $(e.target).closest('.item')
     item.addClass('active')
     value = item.attr('data-value')
-    Application.router.navigate("#tab/data/{\"" + @key + "\":\"" + value + "\"}", {trigger: true})
+    Application.router.setParam(@key, value)
+    @options.parent.select(Application.router.query)
 
   getRenderData: =>
     title: @title

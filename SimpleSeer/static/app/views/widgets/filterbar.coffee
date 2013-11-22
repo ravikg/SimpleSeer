@@ -14,6 +14,7 @@ module.exports = class FilterBar extends SubView
   initialize:(options) =>
     super(options)
     @filters = []
+    @viewSwitch = false
 
   events: =>
     "click .filter": "openMenu"
@@ -72,5 +73,6 @@ module.exports = class FilterBar extends SubView
     return {
       formoptions: JSON.stringify({"form": @form})
       filters: @filters,
-      locked: true
+      locked: true,
+      viewSwitch: @viewSwitch
     }

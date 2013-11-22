@@ -43,7 +43,8 @@ module.exports = class Tabs extends View
       params = JSON.stringify(query)
       Application.router.navigate("tab/#{name}/#{params}")
     else 
-      Application.router.navigate("tab/#{name}")
+      Application.router.navigate("tab/#{name}/{}")
+      Application.router.clearParams()
 
     if !@subviews["tab-#{tab.model_id}"]?
       file = require("views/#{tab.view}")
