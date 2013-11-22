@@ -22,7 +22,6 @@
         drg_w = $drag.outerWidth(),
         pos_y = $drag.offset().top + drg_h - e.pageY,
         pos_x = $drag.offset().left + drg_w - e.pageX;
-      console.log($drag.offset().left, $drag.offset().top, drg_w, drg_h, frame.offset().left, frame.offset().top, frame.outerWidth(), frame.outerHeight());
       $drag.css('z-index', 99).parents().on("mousemove", function(e) {
         d_left = $drag.offset().left;
         d_top = $drag.offset().top;
@@ -130,7 +129,6 @@
       } else {
         $(this).removeClass('active-handle').parent().removeClass('draggable');
       }
-      $(this).trigger('checkBounds');
     });
 
   }

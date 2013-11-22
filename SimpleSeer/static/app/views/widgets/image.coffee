@@ -35,8 +35,6 @@ module.exports = class Image extends SubView
     # Todo: Check only if within tab context
     $(document).on 'mouseup', =>
       @img.trigger 'imageReleased'
-    @img.bind 'checkBounds', (e) =>
-      @_bounds()
     @img.load =>
       @_stats()
       @_fill()
@@ -80,28 +78,9 @@ module.exports = class Image extends SubView
     @fillScale = @scale
 
   _center: =>
-    console.log "center"
     @img.css('position', 'absolute')
     @img.css('left', (@frame.width()/2) - (@img.width()/2))
     @img.css('top', (@frame.height()/2) - (@img.height()/2))
-
-  _bounds: =>
-    # Left boundary
-    if (@frame.offset().left - @img.offset().left) > @img.width() - 10
-      @img.css('left', -@img.width() + 10)
-
-    # Right boundary
-    if @frame.width() < @img.offset().left - @frame.offset().left
-      @img.css('left', @frame.width() - 10)
-
-    # Top boundary
-    if (@frame.offset().top - @img.offset().top) > @img.height() - 10
-      @img.css('top', -@img.height() + 10)
-
-    # Bottom boundary
-    if @frame.height() < @img.offset().top - @frame.offset().top
-      @img.css('top', @frame.height() - 10)
-
 
   _updateZoomer: =>
     @$el.find('.controls input[type="text"]').val(parseInt(@scale * 100, 10) + "%")
