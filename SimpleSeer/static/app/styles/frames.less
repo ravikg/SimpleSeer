@@ -22,12 +22,14 @@
 
   .spacer {
     background: #005A82;
-    &.Pass {
+    &.Pass, &[data-tolstate=Pass] {
       background: #78B33F;
     }
-    &.Fail {
+    &.Fail, &[data-tolstate=Fail] {
       background: #C54739;
     }
+
+
     &.top {
       height: 13px;
       width: 100%;
