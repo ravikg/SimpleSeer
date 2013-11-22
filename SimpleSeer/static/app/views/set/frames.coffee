@@ -19,6 +19,9 @@ module.exports = class FramesView extends SubView
     @collection.fetch({'success': @receive})
     super(options)
 
+  events: =>
+    'click [data-widget=SideBar] .header': @_slide    
+
   receive: (data) =>
     @frames = []
     if data.models
@@ -30,16 +33,12 @@ module.exports = class FramesView extends SubView
       if @subviews[o]?.receive?
         @subviews[o].receive(@frames)
 
-
   select:(query) =>
     if query.params and query.params[@key]?
       @selected = query.params[@key]
     for i,o of @subviews
       if o.select?
         o.select(query.params)
-
-  events: =>
-    'click [data-widget=SideBar] .header': @_slide
 
   _slide: (e) =>
     @afterRender()
