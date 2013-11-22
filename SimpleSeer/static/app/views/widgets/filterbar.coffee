@@ -17,6 +17,7 @@ module.exports = class FilterBar extends SubView
 
   events: =>
     "click .filter": "openMenu"
+    "click [data-widget=Filter][data-type*=select]": "openMenu"
     "click [data-action=apply]": "closeMenuAndApply"
     "click [data-action=cancel]": "closeMenuAndReset"
 
@@ -30,17 +31,16 @@ module.exports = class FilterBar extends SubView
 
   setMenu: =>
 
+  openFilterEdit:(e) =>
+    @openMenu(e)
+
   openMenu:(e) =>
     filter = $(e.currentTarget)
     offset = filter.offset().left
-
-    console.log filter.data("key")
-
     if !filter.hasClass("add")
-      @form = [{id: filter.data("key"), type: "text", value: filter.data("value"), label: filter.data("label")}]
+      @form = [{id: filter.data("key"), type: "checkbox", values: filter.data("value"), label: filter.data("label")}]
       @subviews["template-form"].options.form = @form
       @subviews["template-form"].render()
-
     @$(".filter.active").removeClass("active")
     filter.addClass("active")      
     @$(".menu").css("left", offset).show()

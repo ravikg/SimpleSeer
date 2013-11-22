@@ -12,6 +12,7 @@ module.exports = class Router extends Backbone.Router
     # and widget states.
     if query?
       query = JSON.parse(query)
+      @query = query
 
     Application.pages.close(false)
     if name?
@@ -26,4 +27,4 @@ module.exports = class Router extends Backbone.Router
       Application.tabs?.loadDefaultTab()
     
   setParam:(key, value) =>
-    console.log "Unimplemented"
+    console.log "Unimplemented", @query
