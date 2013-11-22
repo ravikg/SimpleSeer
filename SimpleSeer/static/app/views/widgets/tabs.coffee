@@ -53,10 +53,10 @@ module.exports = class Tabs extends View
     else
       sv = @subviews["tab-#{tab.model_id}"]
     
-    for key, sv of @subviews
-      sv.unselect()
+    for i, o of @subviews
+      o.unselect()
+    
     sv.select(query)  
-
     @$(".content .area[data-id=#{tab.model_id}]").addClass("active")
 
   getActiveSubview: =>
