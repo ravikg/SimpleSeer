@@ -19,8 +19,9 @@ module.exports = class SideBar extends SubView
 
   select: (params) =>
     if params and params[@key]?
-      @selected = params[@key]
-      @render()
+      if @selected != params[@key]
+        @selected = params[@key]
+        @render()
       
   events: =>
     'click .header': '_slide'
