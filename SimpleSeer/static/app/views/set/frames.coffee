@@ -33,6 +33,10 @@ module.exports = class FramesView extends SubView
       if @subviews[o]?.receive?
         @subviews[o].receive(@frames)
 
+    frame = @_getFrame(@frames)
+    if frame
+      @$el.find('.spacer').attr('data-tolstate', frame.get('metadata').tolstate)
+
   select:(query) =>
     if query.params and query.params[@key]?
       @selected = query.params[@key]
@@ -40,8 +44,27 @@ module.exports = class FramesView extends SubView
       if o.select?
         o.select(query.params)
 
+    frame = @_getFrame(@frames)
+    if frame
+      @$el.find('.spacer').attr('data-tolstate', frame.get('metadata').tolstate)
+
+  events: =>
+    'click [data-widget=SideBar] .header': @_slide
+
   _slide: (e) =>
     @afterRender()
+
+  _getFrame: (frames) =>
+    frame = null
+    if @selected
+      for o,i in frames
+        md = o.get('metadata')
+        if String(md[@key]) is String(@selected)
+          frame = o
+          break
+    else
+      frame = frames[0]
+    return frame
 
   afterRender: =>
     @$el.find('.content-wrapper').css('left', (if @$el.find('[data-widget=SideBar]').width() then @$el.find('[data-widget=SideBar]').width() + 1 else 0 ))

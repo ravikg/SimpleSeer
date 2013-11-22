@@ -99,8 +99,8 @@ module.exports = class Image extends SubView
       h = @img.outerHeight() * rhscale / thscale
       l = (parseInt(@img.css('left'), 10) * -1) * rwscale / twscale
       t = (parseInt(@img.css('top'), 10) * -1) * rhscale / thscale
-      region.css('width', w).css('height', h).css('top', t).css('left', l)
-      console.log "RWScale:", rwscale, "RHScale", rhscale, "TWScale", twscale, "THScale", thscale, "left:", l, "top:", t, "width", w, "height", h
+      #region.css('width', w).css('height', h).css('top', t).css('left', l)
+      #console.log "RWScale:", rwscale, "RHScale", rhscale, "TWScale", twscale, "THScale", thscale, "left:", l, "top:", t, "width", w, "height", h
     ### END ###
 
 
