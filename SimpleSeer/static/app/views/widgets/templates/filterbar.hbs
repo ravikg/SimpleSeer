@@ -1,10 +1,14 @@
+{{#if viewSwitch}}
 <div class="viewSwitch">
   <img data-which="image" data-state="active" src="/img/seer/View_Toggle_Image_Active.svg">
   <img data-which="list" data-state="inactive" src="/img/seer/View_Toggle_List_Inactive.svg">
 </div>
+{{/if}}
 
 {{#unless locked}}
 <div class="filter add">+ Filter</div>
+{{/unless}}
+
 <div class="menu">
   <div data-id="form" data-subview="views/widgets/form" data-options="{{ formoptions }}"></div>
   <div class="actions">
@@ -12,8 +16,8 @@
     <span data-action="apply">Apply</span>
   </div>
 </div>
-{{/unless}}
+
 
 <div data-id="filt1" data-subview="views/widgets/filter" data-options='{"title": "VIN", "type": "field"}'/>
 <div data-id="filt2" data-subview="views/widgets/filter" data-options='{"title": "TPM", "type": "field"}'/>
-<!--<div data-id="filt2" data-subview="views/widgets/filter" data-options='{"title": "Part", "type": "select", "value": [1, 2, 3]}'/>-->
+<!--<div data-id="filt3" data-subview="views/widgets/filter" data-options='{"title": "Part", "type": "select", "value": [1, 2, 3]}'/>-->

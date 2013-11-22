@@ -31,13 +31,12 @@ module.exports = class FramesView extends SubView
         @subviews[o].receive(@frames)
 
 
-  select: (params) =>
-    if params and params[@key]?
-      @selected = params[@key]
-
+  select:(query) =>
+    if query.params and query.params[@key]?
+      @selected = query.params[@key]
     for i,o of @subviews
       if o.select?
-        o.select(params)
+        o.select(query.params)
 
   events: =>
     'click [data-widget=SideBar] .header': @_slide
