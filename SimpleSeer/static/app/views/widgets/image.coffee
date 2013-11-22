@@ -83,6 +83,27 @@ module.exports = class Image extends SubView
     @img.css('top', (@frame.height()/2) - (@img.height()/2))
 
   _updateZoomer: =>
+
+    ### START ###
+    region = @$el.find('.region')
+    img = @$el.find('.thumbnail img')
+    rwscale = @frame.outerWidth() / @img.outerWidth()
+    rhscale = @frame.outerHeight() / @img.outerHeight()
+    twscale = @img.outerWidth() / img.outerWidth()
+    thscale = @frame.outerHeight() / img.outerHeight()
+
+    if rwscale is 1
+      region.css('top', 0).css('left', 0).css('width', @img.outerWidth() / twscale).css('height', @img.outerHeight() / twscale)
+    else
+      w = @img.outerWidth() * rwscale / twscale
+      h = @img.outerHeight() * rhscale / thscale
+      l = (parseInt(@img.css('left'), 10) * -1) * rwscale / twscale
+      t = (parseInt(@img.css('top'), 10) * -1) * rhscale / thscale
+      region.css('width', w).css('height', h).css('top', t).css('left', l)
+      console.log "RWScale:", rwscale, "RHScale", rhscale, "TWScale", twscale, "THScale", thscale, "left:", l, "top:", t, "width", w, "height", h
+    ### END ###
+
+
     @$el.find('.controls input[type="text"]').val(parseInt(@scale * 100, 10) + "%")
     @$el.find('.controls input[type="range"]').attr('min', parseInt(@fillScale * 100, 10)).attr('max', parseInt(@maxScale * 100, 10)).val(parseInt(@scale * 100, 10))
 
@@ -129,7 +150,31 @@ module.exports = class Image extends SubView
       @img.css('left', parseInt(@img.css('left'), 10) - ((w2 - w1) / 2))
       @img.css('top', parseInt(@img.css('top'), 10) - ((h2 - h1) / 2))
 
+    @_checkBounds()
     @_updateZoomer()
+
+  _checkBounds: =>
+    if @img.outerWidth() <= @frame.outerWidth()
+      if @img.offset().left < @frame.offset().left
+        @img.css('left', 0)
+      if @img.offset().left + @img.outerWidth() > @frame.offset().left + @frame.outerWidth()
+        @img.css('left', @frame.outerWidth() - @img.outerWidth())
+    else
+      if @img.offset().left > @frame.offset().left
+        @img.css('left', 0)
+      if @img.offset().left + @img.outerWidth() < @frame.offset().left + @frame.outerWidth()
+        @img.css('left', @frame.outerWidth() - @img.outerWidth())
+
+    if @img.outerHeight() <= @frame.outerHeight()
+      if @img.offset().top < @frame.offset().top
+        @img.css('top', 0)
+      if @img.offset().top + @img.outerHeight() > @frame.offset().top + @frame.outerHeight()
+        @img.css('top', @frame.outerHeight() - @img.outerHeight())
+    else
+      if @img.offset().top > @frame.offset().top
+        @img.css('top', 0)
+      if @img.offset().top + @img.outerHeight() < @frame.offset().top + @frame.outerHeight()
+        @img.css('top', @frame.outerHeight() - @img.outerHeight())
 
   _mouseWheel: (e) =>
     @_zoom(e, e.deltaY)
