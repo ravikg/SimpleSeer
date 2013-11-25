@@ -17,6 +17,7 @@ module.exports = class Image extends SubView
   selected: null
   frames: []
   frame: null
+  ui: null
 
   key: "tpm"
 
@@ -47,6 +48,16 @@ module.exports = class Image extends SubView
       @rendered = true
       @img.css('opacity', 1.0)
 
+      if @ui
+        if @ui.image
+          scale = if @ui.image.scale then @ui.image.scale else null
+          e = {}
+          if @ui.image.x?
+            e.x = @ui.image.x
+          if @ui.image.y?
+            e.y = @ui.image.y
+          @_zoom(e, 0, parseFloat(@ui.image.scale))
+
   _getFrame: (frames) =>
     frame = null
     if @selected
@@ -65,10 +76,16 @@ module.exports = class Image extends SubView
     @render()
 
   select: (params) =>
-    if params and params[@key]?
-      @selected = params[@key]
-      @frame = @_getFrame(@frames)
-      @render()
+    if params
+      if params[@key]?
+        @selected = params[@key]
+        @frame = @_getFrame(@frames)
+        @render()
+
+      if params['ui']?
+        @ui = params['ui']
+      else
+        @ui = null
 
     if @reflowed and @rendered
       @reflowed = false
@@ -180,13 +197,15 @@ module.exports = class Image extends SubView
 
   _zoom: (e, delta=0, scale=0) =>
     @zoomed = true
-
-    if e.offsetX? and e.offsetY?
+    if e? and e.offsetX? and e.offsetY?
       x1 = e.offsetX
       y1 = e.offsetY
       @img.css('left', (@frame.width()/2) - (x1))
       @img.css('top', (@frame.height()/2) - (y1))
-    
+    else
+      @img.css('left', (@frame.width()/2))
+      @img.css('top', (@frame.height()/2))
+
     w1 = @img.width()
     h1 = @img.height()
 
@@ -220,6 +239,11 @@ module.exports = class Image extends SubView
 
       @img.css('left', parseInt(@img.css('left'), 10) - ((w2 - w1) / 2))
       @img.css('top', parseInt(@img.css('top'), 10) - ((h2 - h1) / 2))
+
+    if e? and e.x?
+      @img.css('left', (e.x) * -1)
+    if e? and e.y?
+      @img.css('top', (e.y) * -1)
 
     @_checkBounds()
     @_updateZoomer()

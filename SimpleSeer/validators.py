@@ -118,9 +118,6 @@ class ReferenceFieldList(fev.FancyValidator):
 
 class GridFSFile(fev.FancyValidator):
 
-    def _to_python(self, value, state):
-        return ''
-
     def _from_python(self, value, state):
         if hasattr(value, 'grid_id'):
             if value.grid_id:

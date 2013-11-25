@@ -26,7 +26,7 @@ module.exports = class SideBar extends SubView
   events: =>
     'click .header': '_slide'
     'click .item': '_select'
-    'mouseup .resize': 'reciprocate'
+    'mousemove .resize': 'reciprocate'
 
   reciprocate: =>
     @options.parent.reflow()
