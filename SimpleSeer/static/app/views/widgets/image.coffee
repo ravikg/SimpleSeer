@@ -44,6 +44,7 @@ module.exports = class Image extends SubView
       @thumbnail_image.load =>
         @_updateZoomer()
       @rendered = true
+      @img.css('opacity', 1.0)
 
   _getFrame: (frames) =>
     frame = null
