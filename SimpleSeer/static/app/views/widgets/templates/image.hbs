@@ -1,17 +1,20 @@
 <div class="frame">
   <div class="image">
-    <img src="{{image_path}}" />
+    <img src="{{imgfile}}" />
   </div>
   <div class="overlay">
     <div class="toggle" data-value="markup"></div>
     <div class="toggle" data-value="fullscreen"></div>
     <div class="zoom">
       <div class="thumbnail">
-        <img src="{{thumbnail_path}}">
+        <div class="frame">
+          <div class="region"></div>
+          <img src="{{thumbnail_file}}">
+        </div>
       </div>
-      <div class="textbox">
+      <div class="controls">
         <input type="text" value="100%" />
-        <input type="range" name="points" min="1" max="10">
+        <input type="range" name="points" step="50" min="100" max="500">
       </div>
     </div>
   </div>

@@ -1,12 +1,13 @@
 [data-widget=Filter] { 
   display: inline-block;
   position: relative;
+  top: 3px;
   z-index: 120;
-  height: 33px;
-  line-height: 33px;
+  height: 27px;
+  line-height: 27px;
   padding: 0 7px;
-  cursor: pointer;
   background: transparent;
+  margin-left: 3px;
   
   /* The transparent border prevents the 
    * block from jumping when dynamically
@@ -18,8 +19,13 @@
     color: #333;
     font-size: 10pt;
     font-family: "Open Sans", sans-serif;
-    cursor: pointer;
     display: inline-block;
+  }
+
+
+  &[data-type=select],
+  &[data-type=multiselect] {
+    p.title {cursor: pointer;}
   }
 
   p.title + input {
@@ -28,12 +34,29 @@
     top: 1px;    
   }
 
-  img {
-    display: inline-block;
+  input {
+    width: 126px;
+    padding-right: 20px !important;
+
+    &.unsaved {
+      background: #fed;
+    }
   }
 
   img[data-action=edit] {
-    margin-left: 3px;
+    display: inline-block;
+    position: relative;
+    margin-left: 5px;
+    top: -1px;
+    cursor: pointer;
+  }
+
+  img[data-action=clear] {
+    position: absolute;
+    right: 11px;
+    top: 6px;
+    cursor: pointer;
+    display: none;
   }
 
   &.active {

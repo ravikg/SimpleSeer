@@ -19,22 +19,29 @@ module.exports = class SideBar extends SubView
 
   select: (params) =>
     if params and params[@key]?
-      @selected = params[@key]
-      @render()
+      if @selected != params[@key]
+        @selected = params[@key]
+        @afterRender()
       
   events: =>
-    'click .header': @_slide
-    'click .item': @_select
+    'click .header': '_slide'
+    'click .item': '_select'
+    'mouseup .resize': 'reciprocate'
+
+  reciprocate: =>
+    @options.parent.reflow()
 
   _slide: (e) =>
     $(@$el.get(0)).attr 'data-state', (if $(@$el.get(0)).attr('data-state') is 'closed' then 'open' else 'closed')
+    setTimeout(@reciprocate,10)
 
   _select: (e) =>
     @$el.find('.item.active').removeClass('active')
     item = $(e.target).closest('.item')
     item.addClass('active')
     value = item.attr('data-value')
-    Application.router.navigate("#tab/data/{\"" + @key + "\":\"" + value + "\"}", {trigger: true})
+    Application.router.setParam(@key, value)
+    @options.parent.select(Application.router.query)
 
   getRenderData: =>
     title: @title

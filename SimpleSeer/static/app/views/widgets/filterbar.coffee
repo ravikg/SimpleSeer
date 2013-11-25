@@ -1,5 +1,6 @@
-[ SubView, Template ] = [
+[ SubView, Filter, Template ] = [
   require("views/subview"),
+  require("views/widgets/filter")
   require("./templates/filterbar")
 ]
 
@@ -14,9 +15,38 @@ module.exports = class FilterBar extends SubView
   initialize:(options) =>
     super(options)
     @filters = []
+    #@viewSwitch = false
 
+  select: =>
+    @filters = Application.router.getFilters()
+    @setFilterValues()
+
+  filtersToURL: =>
+    @filters = @getFilterValues()
+    Application.router.setFilters(@filters)
+
+  getFilterValues: =>
+    filters = []
+    for i,o of @subviews
+      if o instanceof Filter
+        val = o.toJSON()
+        if val != null
+          filters.push( val )
+    return filters
+
+  setFilterValues: =>
+    for i, o of @subviews
+      if o instanceof Filter
+        field = _.findWhere(@filters, {field: o.field})
+        if field?
+          o.setValue(field.value)
+        else
+          o.setValue(undefined)
+
+  ###
   events: =>
     "click .filter": "openMenu"
+    "click [data-widget=Filter][data-type*=select]": "openMenu"
     "click [data-action=apply]": "closeMenuAndApply"
     "click [data-action=cancel]": "closeMenuAndReset"
 
@@ -28,19 +58,16 @@ module.exports = class FilterBar extends SubView
       e.preventDefault()
       @closeMenu()
 
-  setMenu: =>
+  openFilterEdit:(e) =>
+    @openMenu(e)
 
   openMenu:(e) =>
     filter = $(e.currentTarget)
     offset = filter.offset().left
-
-    console.log filter.data("key")
-
     if !filter.hasClass("add")
-      @form = [{id: filter.data("key"), type: "text", value: filter.data("value"), label: filter.data("label")}]
+      @form = [{id: filter.data("key"), type: "checkbox", values: filter.data("value"), label: filter.data("label")}]
       @subviews["template-form"].options.form = @form
       @subviews["template-form"].render()
-
     @$(".filter.active").removeClass("active")
     filter.addClass("active")      
     @$(".menu").css("left", offset).show()
@@ -65,12 +92,12 @@ module.exports = class FilterBar extends SubView
         @addFilter(key, value)
     @render()
 
-  addFilter:(key, value) =>
-    @filters.push({label: "#{key}: #{value}", value: value, key: key})
+  ###
 
   getRenderData: =>
     return {
-      formoptions: JSON.stringify({"form": @form})
-      filters: @filters,
-      locked: true
+      #formoptions: JSON.stringify({"form": @form})
+      #filters: @filters,
+      #locked: true,
+      #viewSwitch: @viewSwitch
     }

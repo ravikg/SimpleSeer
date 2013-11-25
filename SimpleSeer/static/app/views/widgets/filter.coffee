@@ -8,26 +8,42 @@ module.exports = class Filter extends SubView
 
   initialize:(options) =>
     super(options)
-
+    # Can be one of:
+    # - select, multiselect, field, date, time
+    @type  = options.type || "field"
+    @field = options.field || ""
     @title = options.title || ""
     @value = options.value || ""
-
-    # Can be one of:
-    # - select
-    # - multiselect
-    # - field
-    # - date
-    # - time
-    @type  = options.type || "field"
     
-
   events: =>
-    "keypress input[type=text]": "enterToApply"    
+    "keypress input[type=text]": "enterToApply"
+    "keyup input[type=text]": "onInputKeyUp"
+    "click [data-action=clear]": "clearData"
 
+  clearData: =>
+    @$("input[type=text]").val("")
+    @$("[data-action=clear]").hide()
+    @value = null
+    @signalFilterRefresh()
+
+  onInputKeyUp:(e) =>
+    # display bg if no value but text entered
+    # display close if value
+    if !@value?
+      @$("[data-action=clear]").hide()
+    else
+      @$("[data-action=clear]").show()
+    if !@value? and @$("input[type=text]").val().length > 0
+      @$("input[type=text]").addClass("unsaved")
+    else
+      @$("input[type=text]").removeClass("unsaved")    
+  
   enterToApply:(e) =>
     if e.which is 13
       e.preventDefault()
-      console.log("Unimplemented")
+      @value = $(e.currentTarget).val()
+      @signalFilterRefresh()
+    else 
 
   getPlural: =>
     if @value instanceof Array && @value.length > 1
@@ -40,6 +56,11 @@ module.exports = class Filter extends SubView
       return @value.join(", ")
     else
       return @value
+
+  setValue:(value) =>
+    @value = value
+    @render()
+    @onInputKeyUp()
 
   getFriendlyLabel: =>
     switch @type
@@ -56,4 +77,15 @@ module.exports = class Filter extends SubView
     }
 
   afterRender: =>
-    @$el.data("type", @type)
+    @$el.attr("data-type", @type)
+    @$el.attr("data-value", JSON.stringify(@value))
+    @$el.attr("data-key", @field)
+    @$el.attr("data-label", @title) 
+
+  toJSON: =>
+    if !@value
+      return null
+    return {field: @field, value: @value}
+
+  signalFilterRefresh: =>
+    @options.parent.filtersToURL()

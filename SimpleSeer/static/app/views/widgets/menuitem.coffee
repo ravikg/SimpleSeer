@@ -10,7 +10,8 @@ module.exports = class MenuItem extends SubView
     super(options)
     @title = options.title
     @icon  = options.icon
-    @onClick = options.onClick || =>
+    if options.onClick?
+      @onClick = options.onClick
 
   getRenderData: =>
     return {

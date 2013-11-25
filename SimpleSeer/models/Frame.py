@@ -24,6 +24,7 @@ from ..util import LazyProperty
 
 
 class FrameSchema(fes.Schema):
+    id = V.ObjectId()
     allow_extra_fields=True
     filter_extra_fields=True
     capturetime = V.DateTime(if_missing=None)
@@ -37,6 +38,8 @@ class FrameSchema(fes.Schema):
     width = fev.Int(if_empty=0, if_missing=0)
     metadata = V.JSON(if_empty={}, if_missing={})
     notes = fev.UnicodeString(if_empty="", if_missing="")
+    imgfile = V.GridFSFile(if_missing='', if_empty='')
+    thumbnail_file = V.GridFSFile(if_missing='', if_empty='')
     #TODO, make this feasible as a formencode schema for upload
 
 
@@ -251,7 +254,7 @@ class Frame(SimpleDoc, mongoengine.Document):
         
         #TODO: sometimes we want a frame with no image data, basically at this
         #point we're trusting that if that were the case we won't call .image
-        self.save_image()
+        self.gridfs_id = self.save_image()
 
         epoch_ms = timegm(self.capturetime.timetuple()) * 1000 + self.capturetime.microsecond / 1000
         # Mongo will automatically fix the datetime but not the epoch
