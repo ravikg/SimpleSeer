@@ -59,6 +59,11 @@ module.exports = class Filter extends SubView
     else
       return @value
 
+  setValue:(value) =>
+    @value = value
+    @render()
+    @onInputKeyUp()
+
   getFriendlyLabel: =>
     switch @type
       when "field"
@@ -77,7 +82,7 @@ module.exports = class Filter extends SubView
     @$el.attr("data-type", @type)
     @$el.attr("data-value", JSON.stringify(@value))
     @$el.attr("data-key", @field)
-    @$el.attr("data-label", @title)
+    @$el.attr("data-label", @title) 
 
   toJSON: =>
     if !@value
@@ -85,4 +90,4 @@ module.exports = class Filter extends SubView
     return {field: @field, value: @value}
 
   signalFilterRefresh: =>
-    @options.parent.refreshFilters()
+    @options.parent.filtersToURL()

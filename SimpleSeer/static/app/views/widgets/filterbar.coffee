@@ -15,14 +15,44 @@ module.exports = class FilterBar extends SubView
   initialize:(options) =>
     super(options)
     @filters = []
-    @viewSwitch = false
+    #@viewSwitch = false    
 
+  ###
   events: =>
     "click .filter": "openMenu"
     "click [data-widget=Filter][data-type*=select]": "openMenu"
     "click [data-action=apply]": "closeMenuAndApply"
     "click [data-action=cancel]": "closeMenuAndReset"
+  ###
 
+  select: =>
+    @filters = Application.router.getFilters()
+    @setFilterValues()
+
+  filtersToSubviews: =>
+    #iterate @filters
+      # create subview
+
+  filtersToURL: =>
+    @filters = @getFilterValues()
+    Application.router.setFilters(@filters)
+
+  getFilterValues: =>
+    filters = []
+    for i,o of @subviews
+      if o instanceof Filter
+        val = o.toJSON()
+        if val != null
+          filters.push( val )
+    return filters
+
+  setFilterValues: =>
+    for i, o of @subviews
+      if o instanceof Filter
+        field = _.findWhere(@filters, {field: o.field})
+        if field?
+          o.setValue(field.value)
+  ###
   keyEvents: =>
     {"esc": "escToClose"}
 
@@ -30,8 +60,6 @@ module.exports = class FilterBar extends SubView
     if @$(".filter.active").length
       e.preventDefault()
       @closeMenu()
-
-  setMenu: =>
 
   openFilterEdit:(e) =>
     @openMenu(e)
@@ -66,24 +94,12 @@ module.exports = class FilterBar extends SubView
       if value?
         @addFilter(key, value)
     @render()
-
-  getFilterValues: =>
-    filters = []
-    for i,o of @subviews
-      if o instanceof Filter
-        val = o.toJSON()
-        if val != null
-          filters.push( val )
-    return filters
-
-  refreshFilters: =>
-    @filters = @getFilterValues()
-    Application.router.setFilters(@filters)
+  ###
 
   getRenderData: =>
     return {
-      formoptions: JSON.stringify({"form": @form})
-      filters: @filters,
-      locked: true,
-      viewSwitch: @viewSwitch
+      #formoptions: JSON.stringify({"form": @form})
+      #filters: @filters,
+      #locked: true,
+      #viewSwitch: @viewSwitch
     }
