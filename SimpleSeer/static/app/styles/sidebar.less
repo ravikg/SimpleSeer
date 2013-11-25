@@ -14,8 +14,7 @@
     left: 0;
     right: 0;
     padding: 3px 20px 3px 10px;
-    border-color: #808080;
-    border-bottom: 1px solid;
+    border-bottom: 1px solid #808080;
     background: #ACACAC;
     color: #404040;
     font-weight: 400;
@@ -43,8 +42,11 @@
   &[data-state=closed] {
     min-width: 25px;
     width: 25px !important;
+    background: #acacac;
 
     .header {
+      border-bottom-color: transparent;
+      
       .title {
         opacity: 0;
       }
@@ -90,10 +92,10 @@
           top: 0;
           bottom: 0;
           width: 15px;
-          background: #999;
+          background: #7c7c7c;
 
           &.Fail {
-            background: #C54739;
+            background: #CF665B;
           }
         }
 

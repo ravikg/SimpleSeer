@@ -10,6 +10,10 @@ module.exports = class MetaData extends SubView
   frames: []
   frame: null
 
+  # TODO: TPM, VIN may need to be at the front
+  # of the metabar according to Jackie. Be concious
+  # of this moving forward.
+
   # TODO: Put in YAML
   key: 'tpm'
   blacklist: ['tolstate', 'type']
@@ -73,8 +77,10 @@ module.exports = class MetaData extends SubView
       @$(".notes-editor").hide()
 
   saveNoteAndClose: =>
+    console.log @frame.get("notes")
     @frame.set("notes", @$("textarea").html())
     @frame?.save()
+    console.log @frame.get("notes")
     @$(".notes").removeClass("expanded")
     @$(".notes-editor").hide()
     @render()

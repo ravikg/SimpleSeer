@@ -42,6 +42,7 @@ module.exports = class Filter extends SubView
     if e.which is 13
       e.preventDefault()
       @value = $(e.currentTarget).val()
+      #check if empty string, lol
       @signalFilterRefresh()
     else 
 
@@ -65,7 +66,7 @@ module.exports = class Filter extends SubView
   getFriendlyLabel: =>
     switch @type
       when "field"
-        return "#{@title}:"
+        return "#{@title}"
       else
         return "#{@title}#{@getPlural()} #{@getValue()}"
 

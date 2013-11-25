@@ -8,4 +8,4 @@ module.exports = class SettingsPage extends Page
 
   initialize: =>
     super()
-    @title = "Settings"
+    @title = "Settings & Administration"
