@@ -146,5 +146,4 @@ class ModelHandler(object):
             for x in self.schema.fields.keys():
                 to_validate[x] = obj[x]
             retVal.append(self.schema.from_python(to_validate))
-        #import pdb; pdb.set_trace()
         return 200, retVal
