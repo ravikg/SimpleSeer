@@ -123,13 +123,7 @@
       } else {
         $(this).removeClass('active-handle').parent().removeClass('draggable');
       }
-    }).on("imageReleased", function() {
-      if(opt.handle === "") {
-        $(this).removeClass('draggable');
-      } else {
-        $(this).removeClass('active-handle').parent().removeClass('draggable');
-      }
+      $(this).trigger('updateZoomer');
     });
-
   }
 })(jQuery);
