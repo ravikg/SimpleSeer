@@ -9,6 +9,7 @@ module.exports = class Filter extends SubView
   initialize:(options) =>
     super(options)
 
+    @field = options.field || ""
     @title = options.title || ""
     @value = options.value || ""
 
@@ -19,31 +20,31 @@ module.exports = class Filter extends SubView
     # - date
     # - time
     @type  = options.type || "field"
-
-    # Need something for the old autofill 
-    # filters.
     
-
   events: =>
     "keypress input[type=text]": "enterToApply"
-    "keyup input[type=text]": "updateClearButtons"
+    "keyup input[type=text]": "onInputKeyUp"
     "click [data-action=clear]": "clearData"
 
   clearData: =>
     @$("input[type=text]").val("")
     @$("[data-action=clear]").hide()
-    # trigger param removal
+    @value = null
+    @signalFilterRefresh()
 
-  updateClearButtons:(e) =>
-    if !$(e.currentTarget).val().length
+  onInputKeyUp:(e) =>
+    if !@value
+      @$("input[type=text]").addClass("unsaved")
       @$("[data-action=clear]").hide()
-    else if $(e.currentTarget).val().length
+    else
+      @$("input[type=text]").removeClass("unsaved")
       @$("[data-action=clear]").show()
   
   enterToApply:(e) =>
     if e.which is 13
       e.preventDefault()
-      console.log("Unimplemented")
+      @value = $(e.currentTarget).val()
+      @signalFilterRefresh()
     else 
 
   getPlural: =>
@@ -75,8 +76,13 @@ module.exports = class Filter extends SubView
   afterRender: =>
     @$el.attr("data-type", @type)
     @$el.attr("data-value", JSON.stringify(@value))
-    #@$el.attr("data-key", @type)
+    @$el.attr("data-key", @field)
     @$el.attr("data-label", @title)
 
   toJSON: =>
-    return {title: @title, value: @value, type: @type}
+    if !@value
+      return null
+    return {field: @field, value: @value}
+
+  signalFilterRefresh: =>
+    @options.parent.refreshFilters()

@@ -1,5 +1,6 @@
-[ SubView, Template ] = [
+[ SubView, Filter, Template ] = [
   require("views/subview"),
+  require("views/widgets/filter")
   require("./templates/filterbar")
 ]
 
@@ -66,8 +67,18 @@ module.exports = class FilterBar extends SubView
         @addFilter(key, value)
     @render()
 
-  addFilter:(key, value) =>
-    @filters.push({label: "#{key}: #{value}", value: value, key: key})
+  getFilterValues: =>
+    filters = []
+    for i,o of @subviews
+      if o instanceof Filter
+        val = o.toJSON()
+        if val != null
+          filters.push( val )
+    return filters
+
+  refreshFilters: =>
+    @filters = @getFilterValues()
+    Application.router.setFilters(@filters)
 
   getRenderData: =>
     return {
