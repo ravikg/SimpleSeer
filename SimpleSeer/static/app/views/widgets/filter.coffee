@@ -9,8 +9,8 @@ module.exports = class Filter extends SubView
   initialize:(options) =>
     super(options)
     # Can be one of:
-    # - select, multiselect, field, date, time
-    @type  = options.type || "field"
+    # - select, multiselect, text, date, time
+    @type  = options.type || "text"
     @field = options.field || ""
     @title = options.title || ""
     @value = options.value || ""

@@ -1,8 +1,11 @@
 [data-widget=MetaData] {
   width: 100%;
   height: 46px;
+  color: #fff;
+  font-size: 13px;
   line-height: 46px;
   position: absolute;
+  z-index: 200;
   
   background: #555555;
   border-top: 1px solid #2B2D2E;
@@ -23,7 +26,10 @@
     right: 0;
     display: inline-block;
     height: 100%;
-    overflow: hidden;
+
+    div.value, div.key {
+      text-shadow: 0px 1px 0px #3D3D3D;
+    }
 
     div.item {
       float: left;
@@ -31,8 +37,6 @@
       padding-right: 10px;
       border-right: 1px solid #414141;
     }
-
-    div { text-shadow: 0px 1px 0px #3D3D3D; }
 
     div.key {
       color: #ccc;
@@ -67,18 +71,85 @@
 
     div.notes {
       background: #555;
-      color: #fff;
-      font-size: 13px;
-      text-shadow: none;
       padding: 0px 10px;
-      cursor: pointer;
       position: absolute;
       top: 0;
       right: 0;
+      height: 100%;
 
       &:hover {
         color: #6d6d6d;
         background: #ccc;
+      }
+
+      img {
+        position: relative;
+        top: 17px;
+        left: 1px;          
+        display: none;
+        cursor: pointer;
+      }
+
+      span.add {
+        color: #fff;
+        font-size: 13px;
+        cursor: pointer;
+      }
+
+      span.title {
+        display: none;
+        color: #808080;
+        font-size: 13px;
+      }
+
+      span.sac {
+        display: none;
+        color: #0074B3;
+        font-size: 13px;
+        float: right;   
+        cursor: pointer;   
+      }
+
+      &.full {
+        background: #FFFF90;
+        span.add { display: none; }
+        span.title { display: none; }
+        span.sac { display: none; }
+        img { display: block; }
+      }
+
+      &.expanded {
+        width: 330px;
+        border-bottom: 1px solid #808080;
+        background: #FFFF90;
+        span.add { display: none; }
+        span.title { display: block; }
+        span.sac { display: block; }
+        img { display: none; }
+      }
+    }
+
+    div.notes-editor {
+      display: none;
+      top: 47px;
+      position: relative;
+      width: 350px;
+      height: 200px;
+      background: #FFD;
+      float: right;
+
+      textarea {
+        box-sizing: border-box;
+        width: 100%;
+        height: 100%;
+        background: none;
+        border: none;
+        padding: 10px;
+        margin: 0;    
+        outline: none;
+        font-size: 13px;
+        font-family: "Open Sans";
+        resize: none;    
       }
     }
   }

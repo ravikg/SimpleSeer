@@ -14,6 +14,11 @@ module.exports = class MetaData extends SubView
   key: 'tpm'
   blacklist: ['tolstate', 'type']
 
+  events: =>
+    "click .notes .add": "toggleNotes"
+    "click .notes img": "toggleNotes"
+    "click .notes .sac": "saveNoteAndClose"
+
   select: (params) =>
     if params and params[@key]?
       @selected = params[@key]
@@ -47,6 +52,7 @@ module.exports = class MetaData extends SubView
   # THIS FUNCTION WOULD BE OVERWRITTEN BY YAML CONFIG --
   # i.e. The user could specify exact fields to use and in which order
   _format: (frame) =>
+    console.dir(frame)
     fields = []
     if frame
       for i,o of frame.get('metadata')
@@ -57,3 +63,18 @@ module.exports = class MetaData extends SubView
 
   getRenderData: =>
     fields: @_format(@frame)
+    notes: @frame?.get("notes")
+
+  toggleNotes: =>
+    @$(".notes").toggleClass("expanded")
+    if @$(".notes").hasClass("expanded")
+      @$(".notes-editor").show()
+    else 
+      @$(".notes-editor").hide()
+
+  saveNoteAndClose: =>
+    @frame.set("notes", @$("textarea").html())
+    @frame?.save()
+    @$(".notes").removeClass("expanded")
+    @$(".notes-editor").hide()
+    @render()
