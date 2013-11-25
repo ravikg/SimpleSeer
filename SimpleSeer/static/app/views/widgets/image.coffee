@@ -21,6 +21,23 @@ module.exports = class Image extends SubView
 
   key: "tpm"
 
+  initialize:(options) =>
+    super(options)
+    $(document).on 'mouseup', (e) =>
+
+      # Squash event memory leak for main image
+      if $._data(@img[0], "events").mouseup? and $._data(@img[0], "events").mouseup.length > 0
+        @img.off 'mouseup'
+      if $._data(@img[0], "events").mousemove? and $._data(@img[0], "events").mousemove.length > 0
+        @img.off 'mousemove'
+
+      # Squash event memory leak for thumbnail image
+      if $._data(@region[0], "events").mouseup? and $._data(@region[0], "events").mouseup.length > 0
+        @region.off 'mouseup'
+      if $._data(@region[0], "events").mousemove? and $._data(@region[0], "events").mousemove.length > 0
+        @region.off 'mousemove'
+      
+
   getRenderData: =>
     if @frame and @frame.get?
       id = @frame.get('id')
@@ -245,7 +262,9 @@ module.exports = class Image extends SubView
     if e? and e.y?
       @img.css('top', (e.y) * -1)
 
-    @_checkBounds()
+
+    # TODO: Figure out why this borks the zoomer widget
+    #@_checkBounds()
     @_updateZoomer()
 
   _checkBounds: =>
@@ -270,6 +289,29 @@ module.exports = class Image extends SubView
         @img.css('top', 0)
       if @img.offset().top + @img.outerHeight() < @frame.offset().top + @frame.outerHeight()
         @img.css('top', @frame.outerHeight() - @img.outerHeight())
+
+  _checkRegionBounds: =>
+    if @region.outerWidth() <= @thumbnail.outerWidth()
+      if @region.offset().left < @thumbnail.offset().left
+        @region.css('left', 0)
+      if @region.offset().left + @region.outerWidth() > @thumbnail.offset().left + @thumbnail.outerWidth()
+        @region.css('left', @thumbnail.outerWidth() - @region.outerWidth())
+    else
+      if @region.offset().left > @thumbnail.offset().left
+        @region.css('left', 0)
+      if @region.offset().left + @region.outerWidth() < @thumbnail.offset().left + @thumbnail.outerWidth()
+        @region.css('left', @thumbnail.outerWidth() - @region.outerWidth())
+
+    if @region.outerHeight() <= @thumbnail.outerHeight()
+      if @region.offset().top < @thumbnail.offset().top
+        @region.css('top', 0)
+      if @region.offset().top + @region.outerHeight() > @thumbnail.offset().top + @thumbnail.outerHeight()
+        @region.css('top', @thumbnail.outerHeight() - @region.outerHeight())
+    else
+      if @region.offset().top > @thumbnail.offset().top
+        @region.css('top', 0)
+      if @region.offset().top + @region.outerHeight() < @thumbnail.offset().top + @thumbnail.outerHeight()
+        @region.css('top', @thumbnail.outerHeight() - @region.outerHeight())
 
   _mouseWheel: (e) =>
     @_zoom(e, e.deltaY)
