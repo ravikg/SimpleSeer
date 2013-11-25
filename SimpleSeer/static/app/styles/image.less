@@ -28,7 +28,7 @@
       width: 110px;
       height: 125px;
       background: #AAA;
-      z-index: 100;
+      z-index: 101;
 
       .thumbnail {
         position: absolute;
@@ -73,13 +73,14 @@
   }
 
   .overlay {
-    opacity: .3;
-    transition: opacity .25s ease-in-out;
-     -moz-transition: opacity .25s ease-in-out;
-     -webkit-transition: opacity .25s ease-in-out;
-       
-    &:hover {
-      opacity: 1.0;
+    &> div {
+      opacity: .3;
+      transition: opacity .25s ease-in-out;
+       -moz-transition: opacity .25s ease-in-out;
+       -webkit-transition: opacity .25s ease-in-out;
+      &:hover {
+        opacity: 1.0;
+      }
     }
   }
 }
