@@ -15,23 +15,11 @@ module.exports = class FilterBar extends SubView
   initialize:(options) =>
     super(options)
     @filters = []
-    #@viewSwitch = false    
-
-  ###
-  events: =>
-    "click .filter": "openMenu"
-    "click [data-widget=Filter][data-type*=select]": "openMenu"
-    "click [data-action=apply]": "closeMenuAndApply"
-    "click [data-action=cancel]": "closeMenuAndReset"
-  ###
+    #@viewSwitch = false
 
   select: =>
     @filters = Application.router.getFilters()
     @setFilterValues()
-
-  filtersToSubviews: =>
-    #iterate @filters
-      # create subview
 
   filtersToURL: =>
     @filters = @getFilterValues()
@@ -52,7 +40,16 @@ module.exports = class FilterBar extends SubView
         field = _.findWhere(@filters, {field: o.field})
         if field?
           o.setValue(field.value)
+        else
+          o.setValue(undefined)
+
   ###
+  events: =>
+    "click .filter": "openMenu"
+    "click [data-widget=Filter][data-type*=select]": "openMenu"
+    "click [data-action=apply]": "closeMenuAndApply"
+    "click [data-action=cancel]": "closeMenuAndReset"
+
   keyEvents: =>
     {"esc": "escToClose"}
 
@@ -94,6 +91,7 @@ module.exports = class FilterBar extends SubView
       if value?
         @addFilter(key, value)
     @render()
+
   ###
 
   getRenderData: =>

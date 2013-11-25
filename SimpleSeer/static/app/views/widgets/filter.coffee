@@ -8,18 +8,12 @@ module.exports = class Filter extends SubView
 
   initialize:(options) =>
     super(options)
-
+    # Can be one of:
+    # - select, multiselect, field, date, time
+    @type  = options.type || "field"
     @field = options.field || ""
     @title = options.title || ""
     @value = options.value || ""
-
-    # Can be one of:
-    # - select
-    # - multiselect
-    # - field
-    # - date
-    # - time
-    @type  = options.type || "field"
     
   events: =>
     "keypress input[type=text]": "enterToApply"
@@ -33,12 +27,16 @@ module.exports = class Filter extends SubView
     @signalFilterRefresh()
 
   onInputKeyUp:(e) =>
-    if !@value
-      @$("input[type=text]").addClass("unsaved")
+    # display bg if no value but text entered
+    # display close if value
+    if !@value?
       @$("[data-action=clear]").hide()
     else
-      @$("input[type=text]").removeClass("unsaved")
       @$("[data-action=clear]").show()
+    if !@value? and @$("input[type=text]").val().length > 0
+      @$("input[type=text]").addClass("unsaved")
+    else
+      @$("input[type=text]").removeClass("unsaved")    
   
   enterToApply:(e) =>
     if e.which is 13
