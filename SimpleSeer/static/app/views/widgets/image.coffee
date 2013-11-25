@@ -41,6 +41,7 @@ module.exports = class Image extends SubView
       @_stats()
       @_fill()
       @_center()
+      @_updateZoomer()
       @thumbnail_image.load =>
         @_updateZoomer()
       @rendered = true
