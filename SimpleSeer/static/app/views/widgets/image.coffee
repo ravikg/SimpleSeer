@@ -12,6 +12,8 @@ module.exports = class Image extends SubView
   zoomed: false
   maxScale: 5
   increment: .5
+  reflowed: false
+  rendered: false
 
   events: =>
     'dblclick .image': '_zoom'
@@ -21,11 +23,19 @@ module.exports = class Image extends SubView
     'updateZoomer .image img': '_updateZoomer'
     'updateZoomer .overlay .region': '_updateImage'
 
+  select: =>
+    if @reflowed and @rendered
+      @reflowed = false
+      @reflow()
+
   reflow: =>
-    if !@zoomed
-      @_fill()
-      @_center()
-      @_updateZoomer()
+    if @visible()
+      if !@zoomed
+        @_fill()
+        @_center()
+        @_updateZoomer()
+    else
+      @reflowed = true
 
   getRenderData: =>
     thumbnail_path: "http://image.europeancarweb.com/f/tires/products/epcp_1103_bridgestone_america_new_ultra_high_performance_tires/32457691/epcp-1103-05-o%2Bbridgestone-america-new-ultra-high-performance-tires%2BRE960AS.jpg"
@@ -48,6 +58,7 @@ module.exports = class Image extends SubView
       @_fill()
       @_center()
       @_updateZoomer()
+      @rendered = true
 
   _stats: =>
     @width = @img.width()
