@@ -18,6 +18,8 @@ module.exports = class Image extends SubView
     'mousewheel .image': '_mouseWheel'
     'change input[type=range]': '_range'
     'change input[type=text]': '_text'
+    'updateZoomer .image img': '_updateZoomer'
+    'updateZoomer .overlay .region': '_updateImage'
 
   reflow: =>
     if !@zoomed
@@ -32,9 +34,15 @@ module.exports = class Image extends SubView
   afterRender: =>
     @_set()
     @img.drags()
-    # Todo: Check only if within tab context
-    $(document).on 'mouseup', =>
-      @img.trigger 'imageReleased'
+    @region.drags()
+
+    #@$(".image img").on 'updateZoomer', (e) =>
+    #  console.log "Image updated", e
+    #  @_updateZoomer()
+
+    #@$(".overlay .region").on 'updateZoomer', (e) =>
+    #  console.log "Thumbnail updated", e
+
     @img.load =>
       @_stats()
       @_fill()
@@ -50,6 +58,8 @@ module.exports = class Image extends SubView
     @image = @$el.find('.image')
     @img = @$el.find('.image img')
     @zoomer = @$el.find('.zoom')
+    @region = @$el.find('.region')
+    @thumbnail = @$el.find('.thumbnail')
 
   _fill: =>
     if @frame.width() > @img.width()
@@ -83,29 +93,46 @@ module.exports = class Image extends SubView
     @img.css('top', (@frame.height()/2) - (@img.height()/2))
 
   _updateZoomer: =>
-
-    ### START ###
-    region = @$el.find('.region')
     img = @$el.find('.thumbnail img')
-    rwscale = @frame.outerWidth() / @img.outerWidth()
-    rhscale = @frame.outerHeight() / @img.outerHeight()
-    twscale = @img.outerWidth() / img.outerWidth()
-    thscale = @frame.outerHeight() / img.outerHeight()
+    @thumbnail.css('height', img.height())
+    scale = @img.outerWidth() / img.outerWidth()
+    frame_width_scale = @frame.outerWidth() / @img.outerWidth()
+    frame_height_scale = @frame.outerHeight() / @img.outerHeight()
+    frame_to_thumb_width_scale = @frame.outerWidth() / img.outerWidth()
+    frame_to_thumb_height_scale = @frame.outerHeight() / img.outerHeight()
 
-    if rwscale is 1
-      region.css('top', 0).css('left', 0).css('width', @img.outerWidth() / twscale).css('height', @img.outerHeight() / twscale)
+    if @frame.outerWidth() >= @img.outerWidth()
+      w = @img.outerWidth() / scale
+      l = 0
+    else 
+      w = img.outerWidth() / (@img.outerWidth() / frame_to_thumb_width_scale / img.outerWidth())
+      l = Math.abs(parseInt(@img.css('left'), 10)) * frame_width_scale / frame_to_thumb_width_scale
+
+    if @frame.outerHeight() >= @img.outerHeight()
+      h = @img.outerHeight() / scale
+      t = 0
     else
-      w = @img.outerWidth() * rwscale / twscale
-      h = @img.outerHeight() * rhscale / thscale
-      l = (parseInt(@img.css('left'), 10) * -1) * rwscale / twscale
-      t = (parseInt(@img.css('top'), 10) * -1) * rhscale / thscale
-      #region.css('width', w).css('height', h).css('top', t).css('left', l)
-      #console.log "RWScale:", rwscale, "RHScale", rhscale, "TWScale", twscale, "THScale", thscale, "left:", l, "top:", t, "width", w, "height", h
-    ### END ###
+      h = img.outerHeight() / (@img.outerHeight() / frame_to_thumb_height_scale / img.outerHeight())
+      t = Math.abs(parseInt(@img.css('top'), 10)) * frame_height_scale / frame_to_thumb_height_scale
 
-
+    @region.css('top', t).css('left', l).css('width', w).css('height', h)
     @$el.find('.controls input[type="text"]').val(parseInt(@scale * 100, 10) + "%")
     @$el.find('.controls input[type="range"]').attr('min', parseInt(@fillScale * 100, 10)).attr('max', parseInt(@maxScale * 100, 10)).val(parseInt(@scale * 100, 10))
+
+  _updateImage: (e) =>
+    img = @$el.find('.thumbnail img')
+    scale = @img.outerWidth() / img.outerWidth()
+    frame_width_scale = @frame.outerWidth() / @img.outerWidth()
+    frame_height_scale = @frame.outerHeight() / @img.outerHeight()
+    frame_to_thumb_width_scale = @frame.outerWidth() / img.outerWidth()
+    frame_to_thumb_height_scale = @frame.outerHeight() / img.outerHeight()
+
+    rl = parseInt(@region.css('left'), 10) 
+    rt = parseInt(@region.css('top'), 10)
+    il = (Math.abs(parseInt(rl)) / frame_width_scale * frame_to_thumb_width_scale) * -1
+    it = (Math.abs(parseInt(rt)) / frame_height_scale * frame_to_thumb_height_scale) * -1
+
+    @img.css('top', it).css('left', il)
 
   _zoom: (e, delta=0, scale=0) =>
     @zoomed = true
