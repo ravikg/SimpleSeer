@@ -14,6 +14,64 @@ module.exports = class Image extends SubView
   increment: .5
   reflowed: false
   rendered: false
+  selected: null
+  frames: []
+  frame: null
+
+  key: "tpm"
+
+  getRenderData: =>
+    if @frame and @frame.get?
+      id = @frame.get('id')
+      imgfile = "/grid/imgfile/" + id
+      thumbnail_file = "/grid/thumbnail_file/" + id
+    else
+      imgfile = ''
+      thumbnail_file = ''
+
+    imgfile: imgfile
+    thumbnail_file: thumbnail_file
+
+  afterRender: =>
+    @_set()
+    @img.drags()
+    @region.drags()
+
+    @img.load =>
+      @_stats()
+      @_fill()
+      @_center()
+      @thumbnail_image.load =>
+        @_updateZoomer()
+      @rendered = true
+
+  _getFrame: (frames) =>
+    frame = null
+    if @selected
+      for o,i in frames
+        md = o.get('metadata')
+        if String(md[@key]) is String(@selected)
+          frame = o
+          break
+    else
+      frame = frames[0]
+    return frame
+
+  receive: (data) =>
+    @frames = data
+    @frame = @_getFrame(@frames)
+    @render()
+
+  select: (params) =>
+    if params and params[@key]?
+      @selected = params[@key]
+      @frame = @_getFrame(@frames)
+      @render()
+
+    if @reflowed and @rendered
+      @reflowed = false
+      @reflow()
+
 
   events: =>
     'dblclick .image': '_zoom'
@@ -23,11 +81,6 @@ module.exports = class Image extends SubView
     'updateZoomer .image img': '_updateZoomer'
     'updateZoomer .overlay .region': '_updateImage'
 
-  select: =>
-    if @reflowed and @rendered
-      @reflowed = false
-      @reflow()
-
   reflow: =>
     if @visible()
       if !@zoomed
@@ -36,29 +89,6 @@ module.exports = class Image extends SubView
         @_updateZoomer()
     else
       @reflowed = true
-
-  getRenderData: =>
-    thumbnail_path: "http://image.europeancarweb.com/f/tires/products/epcp_1103_bridgestone_america_new_ultra_high_performance_tires/32457691/epcp-1103-05-o%2Bbridgestone-america-new-ultra-high-performance-tires%2BRE960AS.jpg"
-    image_path: "http://image.europeancarweb.com/f/tires/products/epcp_1103_bridgestone_america_new_ultra_high_performance_tires/32457691/epcp-1103-05-o%2Bbridgestone-america-new-ultra-high-performance-tires%2BRE960AS.jpg"
-
-  afterRender: =>
-    @_set()
-    @img.drags()
-    @region.drags()
-
-    #@$(".image img").on 'updateZoomer', (e) =>
-    #  console.log "Image updated", e
-    #  @_updateZoomer()
-
-    #@$(".overlay .region").on 'updateZoomer', (e) =>
-    #  console.log "Thumbnail updated", e
-
-    @img.load =>
-      @_stats()
-      @_fill()
-      @_center()
-      @_updateZoomer()
-      @rendered = true
 
   _stats: =>
     @width = @img.width()
@@ -71,6 +101,7 @@ module.exports = class Image extends SubView
     @zoomer = @$el.find('.zoom')
     @region = @$el.find('.region')
     @thumbnail = @$el.find('.thumbnail')
+    @thumbnail_image = @$el.find('.thumbnail img')
 
   _fill: =>
     if @frame.width() > @img.width()

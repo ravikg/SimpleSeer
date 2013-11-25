@@ -13,8 +13,8 @@ module.exports = class Frame extends Model
         if !response.features[name]
           response.features[name] = []
         response.features[name].push(new Plugin(f))
-    delete response.thumbnail_file
-    delete response.imgfile
+    #delete response.thumbnail_file
+    #delete response.imgfile
     return response
 
   save:(attributes, options) =>
