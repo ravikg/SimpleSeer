@@ -16,13 +16,13 @@
       } else {
         var $drag = $(this).addClass('active-handle').parent().addClass('draggable');
       }
-      var frame = $el.closest('.frame');
+      var frame = $el.closest('.frame:visible');
       var z_idx = $drag.css('z-index'),
         drg_h = $drag.outerHeight(),
         drg_w = $drag.outerWidth(),
         pos_y = $drag.offset().top + drg_h - e.pageY,
         pos_x = $drag.offset().left + drg_w - e.pageX;
-      $drag.css('z-index', 99).parents().on("mousemove", function(e) {
+      $drag.css('z-index', 99).on("mousemove", function(e) {
         d_left = $drag.offset().left;
         d_top = $drag.offset().top;
         l = 0;
