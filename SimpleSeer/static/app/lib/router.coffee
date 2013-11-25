@@ -29,6 +29,13 @@ module.exports = class Router extends Backbone.Router
       Application.pages?.loadPageByName(name)
     else
       Application.tabs?.loadDefaultTab()
+
+  setFilters:(filters) =>
+    @query.filters = filters
+    @updateURLWithQuery(false)
+
+  getFilters: =>
+    return @query.filters
     
   setParam:(key, value, trigger) =>
     @query.params[key] = value

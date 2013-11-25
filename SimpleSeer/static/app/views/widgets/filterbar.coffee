@@ -1,5 +1,6 @@
-[ SubView, Template ] = [
+[ SubView, Filter, Template ] = [
   require("views/subview"),
+  require("views/widgets/filter")
   require("./templates/filterbar")
 ]
 
@@ -14,8 +15,35 @@ module.exports = class FilterBar extends SubView
   initialize:(options) =>
     super(options)
     @filters = []
-    @viewSwitch = false
+    #@viewSwitch = false
 
+  select: =>
+    @filters = Application.router.getFilters()
+    @setFilterValues()
+
+  filtersToURL: =>
+    @filters = @getFilterValues()
+    Application.router.setFilters(@filters)
+
+  getFilterValues: =>
+    filters = []
+    for i,o of @subviews
+      if o instanceof Filter
+        val = o.toJSON()
+        if val != null
+          filters.push( val )
+    return filters
+
+  setFilterValues: =>
+    for i, o of @subviews
+      if o instanceof Filter
+        field = _.findWhere(@filters, {field: o.field})
+        if field?
+          o.setValue(field.value)
+        else
+          o.setValue(undefined)
+
+  ###
   events: =>
     "click .filter": "openMenu"
     "click [data-widget=Filter][data-type*=select]": "openMenu"
@@ -29,8 +57,6 @@ module.exports = class FilterBar extends SubView
     if @$(".filter.active").length
       e.preventDefault()
       @closeMenu()
-
-  setMenu: =>
 
   openFilterEdit:(e) =>
     @openMenu(e)
@@ -66,13 +92,12 @@ module.exports = class FilterBar extends SubView
         @addFilter(key, value)
     @render()
 
-  addFilter:(key, value) =>
-    @filters.push({label: "#{key}: #{value}", value: value, key: key})
+  ###
 
   getRenderData: =>
     return {
-      formoptions: JSON.stringify({"form": @form})
-      filters: @filters,
-      locked: true,
-      viewSwitch: @viewSwitch
+      #formoptions: JSON.stringify({"form": @form})
+      #filters: @filters,
+      #locked: true,
+      #viewSwitch: @viewSwitch
     }
