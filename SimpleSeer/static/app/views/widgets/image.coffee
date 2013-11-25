@@ -268,6 +268,7 @@ module.exports = class Image extends SubView
     @_updateZoomer()
 
   _checkBounds: =>
+    # TODO: Make this also be able to check the region boundaries
     if @img.outerWidth() <= @frame.outerWidth()
       if @img.offset().left < @frame.offset().left
         @img.css('left', 0)
@@ -289,29 +290,6 @@ module.exports = class Image extends SubView
         @img.css('top', 0)
       if @img.offset().top + @img.outerHeight() < @frame.offset().top + @frame.outerHeight()
         @img.css('top', @frame.outerHeight() - @img.outerHeight())
-
-  _checkRegionBounds: =>
-    if @region.outerWidth() <= @thumbnail.outerWidth()
-      if @region.offset().left < @thumbnail.offset().left
-        @region.css('left', 0)
-      if @region.offset().left + @region.outerWidth() > @thumbnail.offset().left + @thumbnail.outerWidth()
-        @region.css('left', @thumbnail.outerWidth() - @region.outerWidth())
-    else
-      if @region.offset().left > @thumbnail.offset().left
-        @region.css('left', 0)
-      if @region.offset().left + @region.outerWidth() < @thumbnail.offset().left + @thumbnail.outerWidth()
-        @region.css('left', @thumbnail.outerWidth() - @region.outerWidth())
-
-    if @region.outerHeight() <= @thumbnail.outerHeight()
-      if @region.offset().top < @thumbnail.offset().top
-        @region.css('top', 0)
-      if @region.offset().top + @region.outerHeight() > @thumbnail.offset().top + @thumbnail.outerHeight()
-        @region.css('top', @thumbnail.outerHeight() - @region.outerHeight())
-    else
-      if @region.offset().top > @thumbnail.offset().top
-        @region.css('top', 0)
-      if @region.offset().top + @region.outerHeight() < @thumbnail.offset().top + @thumbnail.outerHeight()
-        @region.css('top', @thumbnail.outerHeight() - @region.outerHeight())
 
   _mouseWheel: (e) =>
     @_zoom(e, e.deltaY)
