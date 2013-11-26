@@ -264,7 +264,7 @@ module.exports = class Image extends SubView
 
 
     # TODO: Figure out why this borks the zoomer widget
-    #@_checkBounds()
+    @_checkBounds()
     @_updateZoomer()
 
   _checkBounds: =>
