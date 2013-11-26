@@ -33,7 +33,9 @@ module.exports = class Filter extends SubView
       @$("[data-action=clear]").hide()
     else
       @$("[data-action=clear]").show()
-    if !@value? and @$("input[type=text]").val().length > 0
+
+    val = @$("input[type=text]").val()
+    if (!@value? or @value != val) and val.length > 0
       @$("input[type=text]").addClass("unsaved")
     else
       @$("input[type=text]").removeClass("unsaved")    
@@ -42,7 +44,8 @@ module.exports = class Filter extends SubView
     if e.which is 13
       e.preventDefault()
       @value = $(e.currentTarget).val()
-      #check if empty string, lol
+      if @value.replace(/\s/g, "") is ""
+        @value = null
       @signalFilterRefresh()
     else 
 
