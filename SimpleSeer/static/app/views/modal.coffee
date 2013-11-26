@@ -20,3 +20,11 @@ module.exports = class Modal extends View
   show: =>
     @render()
     @$el.show()
+
+  getRenderData: =>
+    return {opt: JSON.stringify({form: [
+      {field: "metadata.vin", type: "select", values: ["Nasty", "Awesome"], label: "Part Type"},
+      {field: "metadata.tpm", type: "text", value: "", label: "Part #"},
+      {field: "metadata.tpm", type: "text", value: "", label: "Lot #"},
+      {field: "metadata.tpm", type: "text", value: "", label: "Machine #"},
+    ]})}

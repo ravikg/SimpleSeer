@@ -85,4 +85,4 @@ module.exports = class MetaData extends SubView
 
   editMeta: =>
     Application.modal.show()
-    setTimeout(Application.modal.clear, 3000)
+    #setTimeout(Application.modal.clear, 3000)
