@@ -60,6 +60,8 @@ module.exports = class MetaData extends SubView
     if frame
       for i,o of frame.get('metadata')
         if not (i in @blacklist)
+          if i == 'datetime'
+            o = moment(o).format('MM/DD/YYYY HH:mm:ss')
           fields.push({'key':i, 'value':o})
     fields.sort(@_keySort)
     return fields
