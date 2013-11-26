@@ -21,7 +21,12 @@
   }
 
   .spacer {
-    background: #005A82;
+    background: #808080;
+
+    &.Neutral, &[data-tolstate=Neutral] {
+      background: #005A82;      
+    }
+
     &.Pass, &[data-tolstate=Pass] {
       background: #78B33F;
     }
