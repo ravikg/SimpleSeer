@@ -10,6 +10,9 @@ module.exports = class Modal extends View
     super()
     Application.subscribe("modal/", @receive)
 
+  events: =>
+    "click button": "clear"
+
   receive:(data) =>
     type = data.data.severity
     message = data.data.message
