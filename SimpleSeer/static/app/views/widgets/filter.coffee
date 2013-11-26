@@ -35,11 +35,15 @@ module.exports = class Filter extends SubView
       @$("[data-action=clear]").show()
 
     val = @$("input[type=text]").val()
-    if (!@value? or @value != val) and val.length > 0
-      @$("input[type=text]").addClass("unsaved")
+    if @value != val
+      if val.replace(/\s/g, "") is "" and (@value is null or @value is undefined)
+        @$("input[type=text]").removeClass("unsaved")
+      else
+        @$("input[type=text]").addClass("unsaved")
     else
       @$("input[type=text]").removeClass("unsaved")    
-  
+
+
   enterToApply:(e) =>
     if e.which is 13
       e.preventDefault()
