@@ -130,11 +130,14 @@
       
         &.active {
           .status {
-            &.Pass {
+            &.Pass, &[data-tolstate=Pass] {
               background: #78B33F;
             }
-            &.Fail {
+            &.Fail, &[data-tolstate=Fail] {
               background: #C54739;
+            }
+            &.Neutral, &[data-tolstate=Neutral] {
+              background: #005A82;      
             }
           }
           .metadata {

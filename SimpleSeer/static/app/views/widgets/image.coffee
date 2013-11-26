@@ -305,11 +305,20 @@ module.exports = class Image extends SubView
   _markUp: (e) =>
     state = $(e.target).attr('data-state')
     if !state or state == "off"
+      $(e.target).attr('title', 'Turn Markup Off')
       $(e.target).attr('data-state', 'on')
     else
+      $(e.target).attr('title', 'Turn Markup On')
       $(e.target).attr('data-state', 'off')
 
   _fullScreen: (e) =>
+    # TODO: Can we generalize this?
+    # Custom title tags
+    if @frame.hasClass("fullscreen")
+      @frame.find(".toggles .toggle[data-value=fullscreen]").attr('title', 'Enter Fullscreen')
+    else
+      @frame.find(".toggles .toggle[data-value=fullscreen]").attr('title', 'Exit Fullscreen')
+
     @frame.toggleClass("fullscreen")
     @frame.find('div.exit').toggle()
     @_fill()
