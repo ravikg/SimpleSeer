@@ -8,12 +8,12 @@ _)_) |_|__ |_|__ |_| \
 
 ###
 
-[ Router, Pages, Alert, Modal, Health, Toolbar, Tabs, HBS ] = [
+[ Router, Pages, Alert, Health, Modal, Toolbar, Tabs, HBS ] = [
   require("lib/router"),
   require("lib/pages"),
   require("lib/alert"),
-  require("lib/modal"),
   require("lib/health"),
+  require("views/modal"),
   require("views/widgets/toolbar"),
   require("views/widgets/tabs"),
   require("lib/handlebars")
@@ -46,6 +46,7 @@ module.exports = Application =
     @pages.initialize()
     $(document.body).append( @toolbar.$el )
     $(document.body).append( @tabs.$el )
+    $(document.body).append( @modal.$el )
     @toolbar.render()
 
     @cloud = false

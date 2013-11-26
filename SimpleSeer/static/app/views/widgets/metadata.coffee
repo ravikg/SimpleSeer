@@ -22,6 +22,7 @@ module.exports = class MetaData extends SubView
     "click .notes .add": "toggleNotes"
     "click .notes img": "toggleNotes"
     "click .notes .sac": "saveNoteAndClose"
+    "click [data-action=edit]": "editMeta"
 
   select: (params) =>
     if params and params[@key]?
@@ -81,3 +82,7 @@ module.exports = class MetaData extends SubView
     @$(".notes").removeClass("expanded")
     @$(".notes-editor").hide()
     @render()
+
+  editMeta: =>
+    Application.modal.show()
+    setTimeout(Application.modal.clear, 3000)
