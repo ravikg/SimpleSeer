@@ -7,6 +7,15 @@
   top: 60px;
   bottom: 65px;
 
+  &.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    z-index: 300;
+  }
+
   .frame {
     width: 100%;
     height: 100%;
@@ -15,13 +24,60 @@
     .image {
       z-index: 99;
       display: block;
-      background: #000;
+      background-color: #000;
+      background-image: url("/img/seer/Background_Dark.png");
       width: 100%;
       height: 100%;
       overflow:hidden;
 
       img {
         opacity: 0;
+      }
+    }
+
+    .toggles {
+      position: absolute;
+      z-index: 102;
+      top: 15px;
+      right: 15px;
+
+      .toggle {
+        width: auto;
+        height: 20px;
+        float:right;
+        cursor: pointer;
+        background-color: #414141;
+        color: #FFF;
+        font-size: 11px;
+        line-height: 19px;
+        background-repeat: no-repeat;
+        -webkit-border-radius: 2px;
+        -moz-border-radius: 2px;
+        border-radius: 2px;
+
+        &[data-value=markup] {
+          width: 30px;
+          margin-right: 10px;
+          background-image: url("/img/seer/Items_Markings_Off_Markings_Off.svg");
+
+          &[data-state=on] {
+            background-image: url("/img/seer/Items_Markings_On_Markings_On.svg");
+          }
+        }
+
+        &[data-value=fullscreen] {
+          min-width: 20px;
+          background-image: url("/img/seer/Items_Fullscreen_Fullscreen.svg");
+          
+          div {
+            padding: 0px 5px 0px 20px;
+            display: none;
+          }
+        }
+
+        &:hover {
+          background-color: #383838;
+        }
       }
     }
 
@@ -75,16 +131,4 @@
       }
     }
   }
-
-  /*.overlay {
-    &> div {
-      opacity: .3;
-      transition: opacity 100ms ease-in-out;
-       -moz-transition: opacity 100ms ease-in-out;
-       -webkit-transition: opacity 100ms ease-in-out;
-      &:hover {
-        opacity: 1.0;
-      }
-    }
-  }*/
 }

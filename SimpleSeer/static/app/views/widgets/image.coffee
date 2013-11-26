@@ -11,7 +11,7 @@ module.exports = class Image extends SubView
   height: 0
   zoomed: false
   maxScale: 5
-  increment: .5
+  increment: 0.5
   reflowed: false
   rendered: false
   selected: null
@@ -116,6 +116,11 @@ module.exports = class Image extends SubView
     'change input[type=text]': '_text'
     'updateZoomer .image img': '_updateZoomer'
     'updateZoomer .overlay .region': '_updateImage'
+    'click .toggle[data-value=markup]': '_markUp'
+    'click .toggle[data-value=fullscreen]': '_fullScreen'
+
+  keyEvents: =>
+    {"esc": "_exitFullScreen"}
 
   reflow: =>
     if @visible()
@@ -262,13 +267,10 @@ module.exports = class Image extends SubView
     if e? and e.y?
       @img.css('top', (e.y) * -1)
 
-
-    # TODO: Figure out why this borks the zoomer widget
     @_checkBounds()
     @_updateZoomer()
 
   _checkBounds: =>
-    # TODO: Make this also be able to check the region boundaries
     if @img.outerWidth() <= @frame.outerWidth()
       if @img.offset().left < @frame.offset().left
         @img.css('left', 0)
@@ -299,3 +301,22 @@ module.exports = class Image extends SubView
 
   _text: (e) =>
     @_zoom(e, 0, parseInt($(e.target).val(),10) / 100)
+
+  _markUp: (e) =>
+    state = $(e.target).attr('data-state')
+    if !state or state == "off"
+      $(e.target).attr('data-state', 'on')
+    else
+      $(e.target).attr('data-state', 'off')
+
+  _fullScreen: (e) =>
+    @frame.toggleClass("fullscreen")
+    @frame.find('div.exit').toggle()
+    @_fill()
+    @_center()
+
+  _exitFullScreen: (e) =>
+    @frame.removeClass("fullscreen")
+    @frame.find('div.exit').css('display', 'none')
+    @_fill()
+    @_center()
