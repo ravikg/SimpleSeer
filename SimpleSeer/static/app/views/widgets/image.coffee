@@ -21,6 +21,23 @@ module.exports = class Image extends SubView
 
   key: "tpm"
 
+  initialize:(options) =>
+    super(options)
+    $(document).on 'mouseup', (e) =>
+
+      # Squash event memory leak for main image
+      if $._data(@img[0], "events").mouseup? and $._data(@img[0], "events").mouseup.length > 0
+        @img.off 'mouseup'
+      if $._data(@img[0], "events").mousemove? and $._data(@img[0], "events").mousemove.length > 0
+        @img.off 'mousemove'
+
+      # Squash event memory leak for thumbnail image
+      if $._data(@region[0], "events").mouseup? and $._data(@region[0], "events").mouseup.length > 0
+        @region.off 'mouseup'
+      if $._data(@region[0], "events").mousemove? and $._data(@region[0], "events").mousemove.length > 0
+        @region.off 'mousemove'
+      
+
   getRenderData: =>
     if @frame and @frame.get?
       id = @frame.get('id')
@@ -245,10 +262,13 @@ module.exports = class Image extends SubView
     if e? and e.y?
       @img.css('top', (e.y) * -1)
 
+
+    # TODO: Figure out why this borks the zoomer widget
     @_checkBounds()
     @_updateZoomer()
 
   _checkBounds: =>
+    # TODO: Make this also be able to check the region boundaries
     if @img.outerWidth() <= @frame.outerWidth()
       if @img.offset().left < @frame.offset().left
         @img.css('left', 0)
