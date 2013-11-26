@@ -56,7 +56,6 @@ module.exports = class MetaData extends SubView
   # THIS FUNCTION WOULD BE OVERWRITTEN BY YAML CONFIG --
   # i.e. The user could specify exact fields to use and in which order
   _format: (frame) =>
-    console.dir(frame)
     fields = []
     if frame
       for i,o of frame.get('metadata')
@@ -77,10 +76,8 @@ module.exports = class MetaData extends SubView
       @$(".notes-editor").hide()
 
   saveNoteAndClose: =>
-    console.log @frame.get("notes")
-    @frame.set("notes", @$("textarea").html())
-    @frame?.save()
-    console.log @frame.get("notes")
+    @frame.attributes.notes = @$("textarea").val()
+    @frame.save()
     @$(".notes").removeClass("expanded")
     @$(".notes-editor").hide()
     @render()

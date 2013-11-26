@@ -75,3 +75,20 @@ body {
 .scrollX {
   overflow-x: auto;
 }
+
+body {
+  *::-webkit-scrollbar { width: 12px; background-color: #414141; }
+  *::-webkit-scrollbar-corner { background-color: #d1d1d1; }
+  *::-webkit-scrollbar-thumb {
+    background: #888 url("/img/seer/grippy.png") no-repeat center center;
+    border: 1px solid #444;
+    &:horizontal { border-width: 1px 0 0 0; }
+    &:vertical { border-width: 0 0 0 1px; }
+  }
+  *::-webkit-scrollbar-track {
+    border: 1px solid #555;
+    background-color: #d1d1d1;
+    &:horizontal { border-width: 1px 0 0 0; }
+    &:vertical { border-width: 0 0 0 1px; }
+  }
+}
