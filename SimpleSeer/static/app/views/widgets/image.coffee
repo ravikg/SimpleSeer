@@ -315,9 +315,9 @@ module.exports = class Image extends SubView
     # TODO: Can we generalize this?
     # Custom title tags
     if @frame.hasClass("fullscreen")
-      @frame.find(".toggles .toggle[data-value=fullscreen]").attr('title', 'Turn Fullscreen On')
+      @frame.find(".toggles .toggle[data-value=fullscreen]").attr('title', 'Enter Fullscreen')
     else
-      @frame.find(".toggles .toggle[data-value=fullscreen]").attr('title', 'Turn Fullscreen Off')
+      @frame.find(".toggles .toggle[data-value=fullscreen]").attr('title', 'Exit Fullscreen')
 
     @frame.toggleClass("fullscreen")
     @frame.find('div.exit').toggle()
