@@ -21,9 +21,14 @@ module.exports = class SideBar extends SubView
     if data
       if data.channel = "frameupdate/"
         dv = if data.data.metadata?[@key]? then data.data.metadata[@key] else ''
+        notes = if data.data.notes then data.data.notes else ''
         if dv
-          if @$(".item[data-value=#{dv}] .status .note-box").length is 0
-            @$(".item[data-value=#{dv}] .status").append('<div class="note-box"></div>')
+          if notes
+            if @$(".item[data-value=#{dv}] .status .note-box").length is 0
+              @$(".item[data-value=#{dv}] .status").append('<div class="note-box"></div>')
+          else
+            if @$(".item[data-value=#{dv}] .status .note-box").length is 1
+              @$(".item[data-value=#{dv}] .status .note-box").remove()
 
   select: (params) =>
     if params and params[@key]?
