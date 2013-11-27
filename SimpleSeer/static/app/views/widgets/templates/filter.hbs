@@ -1,15 +1,19 @@
-  <p class="title">{{friendly}}</p>
-  <!--<img data-action="remove" src="/img/seer/Items_Remove_Filter.svg">-->
-  
-  {{#if_eq type compare="select"}}
-  <img data-action="edit" src="/img/seer/Items_Dropdown.svg">
-  {{/if_eq}}
+<p class="title">{{friendly}}</p>
 
-  {{#if_eq type compare="multiselect"}}
-  <img data-action="edit" src="/img/seer/Items_Dropdown.svg">
-  {{/if_eq}}
+{{#if_eq type compare="select"}}
+<img data-action="edit" src="/img/seer/Items_Dropdown.svg">
+{{/if_eq}}
 
-  {{#if_eq type compare="field"}}
-  <input type="text" value="{{../value}}">
-  <img data-action="clear" src="/img/seer/Items_Remove_Input.svg">
-  {{/if_eq}}
+{{#if_eq type compare="multiselect"}}
+<img data-action="edit" src="/img/seer/Items_Dropdown.svg">
+{{/if_eq}}
+
+{{#if_eq type compare="field"}}
+<input type="text" value="{{../value}}">
+<img data-action="clear" src="/img/seer/Items_Remove_Input.svg">
+{{/if_eq}}
+
+{{#if_eq type compare="datetime"}}
+<img data-action="edit" src="/img/seer/Items_Dropdown.svg">
+<img data-action="remove" src="/img/seer/Items_Remove_Input.svg">
+{{/if_eq}}

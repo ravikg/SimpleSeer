@@ -2,7 +2,7 @@
   width: 100%;
   height: 100%;
   position: absolute;
-  padding-top: 40px;
+  padding-top: 48px;
 
   background: #E7E7E7;
   
@@ -19,8 +19,8 @@
   div.bar {
     height: 26px;
     line-height: 27px;
-    background: #909090;
-    border-bottom: 1px solid #404040;
+    background: #222;
+    border-bottom: 1px solid #222;
 
     /* Fixes inline-block spacing */
     font-size: 0px;
@@ -31,11 +31,11 @@
     div.tab {
       display: inline-block;
       vertical-align: top;
-      background: #909090;
+      background: #5a5a5a;
       padding: 1px 10px 0 10px;
       cursor: pointer;
       height: 25px;
-      border-right: 1px solid #404040;
+      border-right: 1px solid #333;
       font-family: "IntervalBold";
 
       &.active {
@@ -45,12 +45,21 @@
         box-shadow: 0 2px 0 #e7e7e7;
         position: relative;
         z-index: 1;
+
+        p.title { color: #333; }
       }
 
-      &:first-child { padding-left: 10px; }
+      &:first-child { padding-left: 10px; margin-left: 6px; }
+      &:last-child { border-right: none; }
+
+      &:not(.active) {
+        &:hover {
+          background: #444;
+        }
+      }
 
       p.title {
-        color: #404040;
+        color: #ccc;
         font-size: 10pt;
         text-transform: uppercase;
       }
@@ -67,7 +76,7 @@
     height: 100%;
     top: 0;
     left: 0;
-    padding-top: 67px;
+    padding-top: 75px;
 
     div.area { 
       width: 100%;
