@@ -15,9 +15,8 @@ module.exports = class FramesView extends SubView
   key: 'tpm'
 
   initialize: (options) =>
-    #@collection = new Backbone.Collection([], {model: Model})
     @collection = new FilterCollection([], {model: Model,'viewid':'5089a6d31d41c855e4628fb0'})
-    #@collection.url = "api/frame"
+    Application.subscribe 'frameupdate/', @update
     @collection.on "reset", @receive
     @collection.fetch()
     super(options)
@@ -28,10 +27,9 @@ module.exports = class FramesView extends SubView
   receive: (models) =>
     @frames = []
     for model in models
-      #console.log model.get('metadata')
       if model.get('metadata')['type'] is @type
         @frames.push(model)
-    #console.log @frames
+
     for o,i of @subviews
       if @subviews[o]?.receive?
         @subviews[o].receive(@frames)
@@ -39,6 +37,12 @@ module.exports = class FramesView extends SubView
     frame = @_getFrame(@frames)
     if frame
       @$el.find('.spacer').attr('data-tolstate', frame.get('metadata').tolstate)
+
+  update: (data) =>
+    if data
+      for o,i of @subviews
+        if @subviews[o]?.update?
+          @subviews[o].update(data)
 
   select:(query) =>
     if query.params and query.params[@key]?

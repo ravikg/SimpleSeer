@@ -17,6 +17,14 @@ module.exports = class SideBar extends SubView
     @frames = data
     @render()
 
+  update: (data) =>
+    if data
+      if data.channel = "frameupdate/"
+        dv = if data.data.metadata?[@key]? then data.data.metadata[@key] else ''
+        if dv
+          if @$(".item[data-value=#{dv}] .status .note-box").length is 0
+            @$(".item[data-value=#{dv}] .status").append('<div class="note-box"></div>')
+
   select: (params) =>
     if params and params[@key]?
       if @selected != params[@key]
