@@ -7,14 +7,13 @@
 module.exports = class FilterBar extends SubView
   template: Template
 
-  form: [
-    {id: "vin", type: "text", value: "", label: "VIN #"},
-    {id: "tpm", type: "text", value: "", label: "TPM #"},
-  ]
-
   initialize:(options) =>
     super(options)
     @filters = []
+    @raw = [
+      {field: "metadata.vin", type: "text", value: "", label: "VIN"},
+      {field: "metadata.tpm", type: "text", value: "", label: "TPM"},
+    ]
     #@viewSwitch = false
 
   select: =>

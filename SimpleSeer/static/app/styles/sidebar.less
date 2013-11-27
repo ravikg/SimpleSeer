@@ -5,6 +5,7 @@
   height: 100%;
   position: absolute;
   box-sizing: border-box;
+  -moz-box-sizing: border-box;
   display: block;
   border-right: 1px solid #333;
   background: #CCC;
@@ -14,8 +15,7 @@
     left: 0;
     right: 0;
     padding: 3px 20px 3px 10px;
-    border-color: #808080;
-    border-bottom: 1px solid;
+    border-bottom: 1px solid #808080;
     background: #ACACAC;
     color: #404040;
     font-weight: 400;
@@ -24,6 +24,12 @@
     text-overflow: ellipsis;
     z-index: 20;
     cursor: pointer;
+
+    .title {
+      font-family: "IntervalBold";
+      position: relative;
+      top: 2px;
+    }
 
     .action {
       width: 15px;
@@ -43,12 +49,17 @@
   &[data-state=closed] {
     min-width: 25px;
     width: 25px !important;
+    background: #acacac;
 
     .header {
+      height: 100%;
+      border-bottom-color: transparent;
+
       .title {
         opacity: 0;
       }
       .action {
+        height: 100%;
         -webkit-transform: rotate(0deg);
         -moz-transform: rotate(0deg);
         -ms-transform: rotate(0deg);
@@ -90,16 +101,27 @@
           top: 0;
           bottom: 0;
           width: 15px;
-          background: #999;
+          background: #7c7c7c;
+
+          .note-box {
+            top: 10px;
+            width: 8px;
+            height: 8px;
+            background: #FFFF90;
+            left: 3px;
+            position: relative;            
+          }
 
           &.Fail {
-            background: #C54739;
+            background: #CF665B;
           }
         }
 
         .metadata {
-          padding: 5px 10px 5px 20px;
-          color: #404040;
+          font-family: "IntervalBold";
+          font-size: 13px;
+          padding: 7px 10px 3px 20px;
+          color: #494949;
           background: #CCC;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -111,11 +133,14 @@
       
         &.active {
           .status {
-            &.Pass {
+            &.Pass, &[data-tolstate=Pass] {
               background: #78B33F;
             }
-            &.Fail {
+            &.Fail, &[data-tolstate=Fail] {
               background: #C54739;
+            }
+            &.Neutral, &[data-tolstate=Neutral] {
+              background: #005A82;      
             }
           }
           .metadata {

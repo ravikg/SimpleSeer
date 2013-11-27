@@ -11,14 +11,30 @@ module.exports = class Image extends SubView
   height: 0
   zoomed: false
   maxScale: 5
-  increment: .5
+  increment: 0.5
   reflowed: false
   rendered: false
   selected: null
   frames: []
   frame: null
+  ui: null
 
   key: "tpm"
+
+  initialize:(options) =>
+    super(options)
+    $(document).on 'mouseup', (e) =>
+      # Squash event memory leak for main Image
+      if $._data(@img[0], "events").mouseup? and $._data(@img[0], "events").mouseup.length > 1
+        @img.off 'mouseup'
+      if $._data(@img[0], "events").mousemove? and $._data(@img[0], "events").mousemove.length > 0
+        @img.off 'mousemove'
+      # Squash event memory leak for thumbnail image
+      if $._data(@region[0], "events").mouseup? and $._data(@region[0], "events").mouseup.length > 1
+        @region.off 'mouseup'
+      if $._data(@region[0], "events").mousemove? and $._data(@region[0], "events").mousemove.length > 0
+        @region.off 'mousemove'
+      
 
   getRenderData: =>
     if @frame and @frame.get?
@@ -41,9 +57,21 @@ module.exports = class Image extends SubView
       @_stats()
       @_fill()
       @_center()
+      @_updateZoomer()
       @thumbnail_image.load =>
         @_updateZoomer()
       @rendered = true
+      @img.css('opacity', 1.0)
+
+      if @ui
+        if @ui.image
+          scale = if @ui.image.scale then @ui.image.scale else null
+          e = {}
+          if @ui.image.x?
+            e.x = @ui.image.x
+          if @ui.image.y?
+            e.y = @ui.image.y
+          @_zoom(e, 0, parseFloat(@ui.image.scale))
 
   _getFrame: (frames) =>
     frame = null
@@ -63,10 +91,16 @@ module.exports = class Image extends SubView
     @render()
 
   select: (params) =>
-    if params and params[@key]?
-      @selected = params[@key]
-      @frame = @_getFrame(@frames)
-      @render()
+    if params
+      if params[@key]?
+        @selected = params[@key]
+        @frame = @_getFrame(@frames)
+        @render()
+
+      if params['ui']?
+        @ui = params['ui']
+      else
+        @ui = null
 
     if @reflowed and @rendered
       @reflowed = false
@@ -80,6 +114,11 @@ module.exports = class Image extends SubView
     'change input[type=text]': '_text'
     'updateZoomer .image img': '_updateZoomer'
     'updateZoomer .overlay .region': '_updateImage'
+    'click .toggle[data-value=markup]': '_markUp'
+    'click .toggle[data-value=fullscreen]': '_fullScreen'
+
+  keyEvents: =>
+    {"esc": "_exitFullScreen"}
 
   reflow: =>
     if @visible()
@@ -177,14 +216,19 @@ module.exports = class Image extends SubView
     @img.css('top', it).css('left', il)
 
   _zoom: (e, delta=0, scale=0) =>
-    @zoomed = true
+    if e and e.type and e.type == "dblclick"
+      delta = 1
 
-    if e.offsetX? and e.offsetY?
+    @zoomed = true
+    if e? and e.offsetX? and e.offsetY?
       x1 = e.offsetX
       y1 = e.offsetY
       @img.css('left', (@frame.width()/2) - (x1))
       @img.css('top', (@frame.height()/2) - (y1))
-    
+    else
+      @img.css('left', (@frame.width()/2))
+      @img.css('top', (@frame.height()/2))
+
     w1 = @img.width()
     h1 = @img.height()
 
@@ -196,10 +240,9 @@ module.exports = class Image extends SubView
       if @scale > @maxScale
         @scale = @maxScale
     else
-      if @scale * 1.5 > @maxScale
+      @scale += @increment
+      if @scale > @maxScale
         @scale = @maxScale
-      else 
-        @scale *= 1.5
 
     if scale
       if scale > @maxScale
@@ -218,6 +261,11 @@ module.exports = class Image extends SubView
 
       @img.css('left', parseInt(@img.css('left'), 10) - ((w2 - w1) / 2))
       @img.css('top', parseInt(@img.css('top'), 10) - ((h2 - h1) / 2))
+
+    if e? and e.x?
+      @img.css('left', (e.x) * -1)
+    if e? and e.y?
+      @img.css('top', (e.y) * -1)
 
     @_checkBounds()
     @_updateZoomer()
@@ -253,3 +301,31 @@ module.exports = class Image extends SubView
 
   _text: (e) =>
     @_zoom(e, 0, parseInt($(e.target).val(),10) / 100)
+
+  _markUp: (e) =>
+    state = $(e.target).attr('data-state')
+    if !state or state == "off"
+      $(e.target).attr('title', 'Turn Markup Off')
+      $(e.target).attr('data-state', 'on')
+    else
+      $(e.target).attr('title', 'Turn Markup On')
+      $(e.target).attr('data-state', 'off')
+
+  _fullScreen: (e) =>
+    # TODO: Can we generalize this?
+    # Custom title tags
+    if @frame.hasClass("fullscreen")
+      @frame.find(".toggles .toggle[data-value=fullscreen]").attr('title', 'Enter Fullscreen')
+    else
+      @frame.find(".toggles .toggle[data-value=fullscreen]").attr('title', 'Exit Fullscreen')
+
+    @frame.toggleClass("fullscreen")
+    @frame.find('div.exit').toggle()
+    @_fill()
+    @_center()
+
+  _exitFullScreen: (e) =>
+    @frame.removeClass("fullscreen")
+    @frame.find('div.exit').css('display', 'none')
+    @_fill()
+    @_center()

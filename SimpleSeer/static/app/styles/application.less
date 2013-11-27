@@ -25,7 +25,7 @@ table {
 }
 
 body {
-  font-family: 'Open Sans', Helvetica, Arial, sans-serif !important;
+  font-family: 'Interval', Helvetica, Arial, sans-serif !important;
   font-size: 13px;
   line-height: 18px;
   color: #000;
@@ -74,4 +74,21 @@ body {
 
 .scrollX {
   overflow-x: auto;
+}
+
+body {
+  *::-webkit-scrollbar { width: 12px; background-color: #404040; }
+  *::-webkit-scrollbar-corner { background-color: #e0e0e0; }
+  *::-webkit-scrollbar-thumb {
+    background: #888 url("/img/seer/grippy.png") no-repeat center center;
+    border: 1px solid #808080;
+    &:horizontal { border-width: 1px 0 0 0; }
+    &:vertical { border-width: 0 0 0 1px; }
+  }
+  *::-webkit-scrollbar-track {
+    border: 1px solid #808080;
+    background-color: #e0e0e0;
+    &:horizontal { border-width: 1px 0 0 0; }
+    &:vertical { border-width: 0 0 0 1px; }
+  }
 }

@@ -100,6 +100,8 @@ class ModelHandler(object):
                 del values['results']
                 del values['features']
                 del values['id']
+                del values['imgfile']
+                del values['thumbnail_file']
             except KeyError:
                 pass
         except fe.Invalid, inv:

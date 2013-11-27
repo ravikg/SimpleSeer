@@ -6,6 +6,10 @@
 module.exports = class MenuItem extends SubView
   template: Template
 
+  # TODO: Tooltips
+  # Settings -> Settings & Administration
+  # User Login
+
   initialize:(options) =>
     super(options)
     @title = options.title

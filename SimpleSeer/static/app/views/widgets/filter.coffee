@@ -9,8 +9,8 @@ module.exports = class Filter extends SubView
   initialize:(options) =>
     super(options)
     # Can be one of:
-    # - select, multiselect, field, date, time
-    @type  = options.type || "field"
+    # - select, multiselect, text, date, time
+    @type  = options.type || "text"
     @field = options.field || ""
     @title = options.title || ""
     @value = options.value || ""
@@ -33,15 +33,23 @@ module.exports = class Filter extends SubView
       @$("[data-action=clear]").hide()
     else
       @$("[data-action=clear]").show()
-    if !@value? and @$("input[type=text]").val().length > 0
-      @$("input[type=text]").addClass("unsaved")
+
+    val = @$("input[type=text]").val()
+    if @value != val
+      if val.replace(/\s/g, "") is "" and (@value is null or @value is undefined)
+        @$("input[type=text]").removeClass("unsaved")
+      else
+        @$("input[type=text]").addClass("unsaved")
     else
       @$("input[type=text]").removeClass("unsaved")    
-  
+
+
   enterToApply:(e) =>
     if e.which is 13
       e.preventDefault()
       @value = $(e.currentTarget).val()
+      if @value.replace(/\s/g, "") is ""
+        @value = null
       @signalFilterRefresh()
     else 
 
@@ -65,7 +73,7 @@ module.exports = class Filter extends SubView
   getFriendlyLabel: =>
     switch @type
       when "field"
-        return "#{@title}:"
+        return "#{@title}"
       else
         return "#{@title}#{@getPlural()} #{@getValue()}"
 

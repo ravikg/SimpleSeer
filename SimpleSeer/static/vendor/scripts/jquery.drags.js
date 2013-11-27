@@ -14,15 +14,15 @@
       if(opt.handle === "") {
         var $drag = $(this).addClass('draggable');
       } else {
-        var $drag = $(this).addClass('active-handle').parent().addClass('draggable');
+        var $drag = $(this).addClass('active-handle').addClass('draggable');
       }
-      var frame = $el.closest('.frame');
+      var frame = $el.closest('.frame:visible');
       var z_idx = $drag.css('z-index'),
         drg_h = $drag.outerHeight(),
         drg_w = $drag.outerWidth(),
         pos_y = $drag.offset().top + drg_h - e.pageY,
         pos_x = $drag.offset().left + drg_w - e.pageX;
-      $drag.css('z-index', 99).parents().on("mousemove", function(e) {
+      $drag.css('z-index', 99).on("mousemove", function(e) {
         d_left = $drag.offset().left;
         d_top = $drag.offset().top;
         l = 0;
@@ -108,20 +108,19 @@
         if(!t) {
           d_top = e.pageY + pos_y - drg_h;
         }
-
         $('.draggable').offset({
           top: d_top,
           left: d_left
         }).on("mouseup", function() {
           $(this).removeClass('draggable').css('z-index', z_idx);
-        });
+        }).trigger('updateZoomer');
       });
       e.preventDefault(); // disable selection
-    }).on("mouseup", function() {
+    }).on("mouseup", function(e) {
       if(opt.handle === "") {
         $(this).removeClass('draggable');
       } else {
-        $(this).removeClass('active-handle').parent().removeClass('draggable');
+        $(this).removeClass('active-handle').removeClass('draggable');
       }
       $(this).trigger('updateZoomer');
     });

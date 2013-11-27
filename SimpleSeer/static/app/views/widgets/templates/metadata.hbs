@@ -9,10 +9,16 @@
       </div>
     </div>
   {{/each}}
-  <div class="edit">
+  <div class="edit" data-action="edit">
   </div>
-  <div class="notes">
-    + Notes
+  <div class="notes {{#if notes}}full{{/if}}{{#unless notes}}empty{{/unless}}">
+    <span class="sac">Save & Close</span>
+    <span class="title">Notes</span>
+    <span class="add">+ Notes</span>
+    <img src="/img/seer/Items_Notes_Bubble.svg" alt="Notes">
+  </div>
+  <div class="notes-editor">
+    <textarea>{{ notes }}</textarea>
   </div>
 </div>
 

@@ -3,18 +3,20 @@
     <img src="{{imgfile}}" />
   </div>
   <div class="overlay">
-    <div class="toggle" data-value="markup"></div>
-    <div class="toggle" data-value="fullscreen"></div>
+    <div class="toggles">
+      <div class="toggle" data-value="fullscreen" alt="Fullscreen" title="Enter Fullscreen"><div class="exit">Exit FullScreen [Esc]</div></div>
+      <div class="toggle" data-value="markup" alt="Markup" title="Turn Markup On"></div>
+    </div>
     <div class="zoom">
       <div class="thumbnail">
         <div class="frame">
           <div class="region"></div>
-          <img src="{{thumbnail_file}}">
+          <img src="{{thumbnail_file}}" draggable="false" style="-moz-user-select: none;">
         </div>
       </div>
       <div class="controls">
         <input type="text" value="100%" />
-        <input type="range" name="points" step="50" min="100" max="500">
+        <input type="range" name="points" step="10" min="100" max="500">
       </div>
     </div>
   </div>

@@ -7,7 +7,11 @@
   <div class="content">
     {{#each frames}}
       <div class="item" data-value="{{this.attributes.metadata.tpm}}">
-        <div class="status {{this.attributes.metadata.tolstate}}"></div>
+        <div class="status {{this.attributes.metadata.tolstate}}">
+          {{#if this.attributes.notes}}
+            <div class="note-box"/>
+          {{/if}}
+        </div>
         <div class="metadata">{{this.attributes.metadata.tpm}}</div>
       </div>
     {{/each}}

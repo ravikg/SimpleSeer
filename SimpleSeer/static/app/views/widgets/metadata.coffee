@@ -10,9 +10,19 @@ module.exports = class MetaData extends SubView
   frames: []
   frame: null
 
+  # TODO: TPM, VIN may need to be at the front
+  # of the metabar according to Jackie. Be concious
+  # of this moving forward.
+
   # TODO: Put in YAML
   key: 'tpm'
   blacklist: ['tolstate', 'type']
+
+  events: =>
+    "click .notes .add": "toggleNotes"
+    "click .notes img": "toggleNotes"
+    "click .notes .sac": "saveNoteAndClose"
+    "click [data-action=edit]": "editMeta"
 
   select: (params) =>
     if params and params[@key]?
@@ -51,9 +61,30 @@ module.exports = class MetaData extends SubView
     if frame
       for i,o of frame.get('metadata')
         if not (i in @blacklist)
+          if i == 'datetime'
+            o = moment(o).format('MM/DD/YYYY HH:mm:ss')
           fields.push({'key':i, 'value':o})
     fields.sort(@_keySort)
     return fields
 
   getRenderData: =>
     fields: @_format(@frame)
+    notes: @frame?.get("notes")
+
+  toggleNotes: =>
+    @$(".notes").toggleClass("expanded")
+    if @$(".notes").hasClass("expanded")
+      @$(".notes-editor").show()
+    else 
+      @$(".notes-editor").hide()
+
+  saveNoteAndClose: =>
+    @frame.attributes.notes = @$("textarea").val()
+    @frame.save()
+    @$(".notes").removeClass("expanded")
+    @$(".notes-editor").hide()
+    @render()
+
+  editMeta: =>
+    Application.modal.show()
+    #setTimeout(Application.modal.clear, 3000)
