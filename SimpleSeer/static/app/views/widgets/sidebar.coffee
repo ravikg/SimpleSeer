@@ -80,7 +80,12 @@ module.exports = class SideBar extends SubView
 
   afterRender: =>
     # TODO: Make this generalized
+    # Build infinite scroll
+    # And then check and make sure our widget has enough data to scroll
     @$el.find("div[data-scroll=infinite]").off('scroll').on('scroll', @_scroll)
+    if not @full and @frames.length > 0 and @$el.find('.content').outerHeight() > 0 and @$el.find("div[data-scroll=infinite]")[0].scrollHeight <= @$el.find('.content').outerHeight()
+      if @options.parent.load?
+        @options.parent.load()
 
     if @selected
       @$el.find(".item.active").removeClass('active')
