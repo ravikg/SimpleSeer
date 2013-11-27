@@ -87,8 +87,10 @@ module.exports = class Image extends SubView
 
   receive: (data) =>
     @frames = data
-    @frame = @_getFrame(@frames)
-    @render()
+    frame = @_getFrame(@frames)
+    if !@frame or @frame.get('id') != frame.get('id')
+      @frame = frame
+      @render()
 
   select: (params) =>
     if params
@@ -134,7 +136,7 @@ module.exports = class Image extends SubView
     @height = @img.height()
 
   _set: =>
-    @frame = $(@$el.get(0))
+    @wrapper = $(@$el.get(0))
     @image = @$el.find('.image')
     @img = @$el.find('.image img')
     @zoomer = @$el.find('.zoom')
@@ -143,26 +145,26 @@ module.exports = class Image extends SubView
     @thumbnail_image = @$el.find('.thumbnail img')
 
   _fill: =>
-    if @frame.width() > @img.width()
+    if @wrapper.width() > @img.width()
       if @img.width < @width
-        @img.width(@frame.width())
+        @img.width(@wrapper.width())
       else
         @img.width(@width)
         @img.height('auto')
 
-    if @frame.height() > @img.height()
+    if @wrapper.height() > @img.height()
       if @img.height < @height
-        @img.height(@frame.height())
+        @img.height(@wrapper.height())
       else
         @img.height(@height)
         @img.width('auto')
 
-    if @frame.width() < @img.width()
-      @img.width(@frame.width())
+    if @wrapper.width() < @img.width()
+      @img.width(@wrapper.width())
       @img.height('auto')
 
-    if @frame.height() < @img.height()
-      @img.height(@frame.height())
+    if @wrapper.height() < @img.height()
+      @img.height(@wrapper.height())
       @img.width('auto')
 
     @scale = @img.width() / @width
@@ -170,26 +172,26 @@ module.exports = class Image extends SubView
 
   _center: =>
     @img.css('position', 'absolute')
-    @img.css('left', (@frame.width()/2) - (@img.width()/2))
-    @img.css('top', (@frame.height()/2) - (@img.height()/2))
+    @img.css('left', (@wrapper.width()/2) - (@img.width()/2))
+    @img.css('top', (@wrapper.height()/2) - (@img.height()/2))
 
   _updateZoomer: =>
     img = @$el.find('.thumbnail img')
     @thumbnail.css('height', img.height())
     scale = @img.outerWidth() / img.outerWidth()
-    frame_width_scale = @frame.outerWidth() / @img.outerWidth()
-    frame_height_scale = @frame.outerHeight() / @img.outerHeight()
-    frame_to_thumb_width_scale = @frame.outerWidth() / img.outerWidth()
-    frame_to_thumb_height_scale = @frame.outerHeight() / img.outerHeight()
+    frame_width_scale = @wrapper.outerWidth() / @img.outerWidth()
+    frame_height_scale = @wrapper.outerHeight() / @img.outerHeight()
+    frame_to_thumb_width_scale = @wrapper.outerWidth() / img.outerWidth()
+    frame_to_thumb_height_scale = @wrapper.outerHeight() / img.outerHeight()
 
-    if @frame.outerWidth() >= @img.outerWidth()
+    if @wrapper.outerWidth() >= @img.outerWidth()
       w = @img.outerWidth() / scale
       l = 0
     else 
       w = img.outerWidth() / (@img.outerWidth() / frame_to_thumb_width_scale / img.outerWidth())
       l = Math.abs(parseInt(@img.css('left'), 10)) * frame_width_scale / frame_to_thumb_width_scale
 
-    if @frame.outerHeight() >= @img.outerHeight()
+    if @wrapper.outerHeight() >= @img.outerHeight()
       h = @img.outerHeight() / scale
       t = 0
     else
@@ -203,10 +205,10 @@ module.exports = class Image extends SubView
   _updateImage: (e) =>
     img = @$el.find('.thumbnail img')
     scale = @img.outerWidth() / img.outerWidth()
-    frame_width_scale = @frame.outerWidth() / @img.outerWidth()
-    frame_height_scale = @frame.outerHeight() / @img.outerHeight()
-    frame_to_thumb_width_scale = @frame.outerWidth() / img.outerWidth()
-    frame_to_thumb_height_scale = @frame.outerHeight() / img.outerHeight()
+    frame_width_scale = @wrapper.outerWidth() / @img.outerWidth()
+    frame_height_scale = @wrapper.outerHeight() / @img.outerHeight()
+    frame_to_thumb_width_scale = @wrapper.outerWidth() / img.outerWidth()
+    frame_to_thumb_height_scale = @wrapper.outerHeight() / img.outerHeight()
 
     rl = parseInt(@region.css('left'), 10) 
     rt = parseInt(@region.css('top'), 10)
@@ -223,11 +225,11 @@ module.exports = class Image extends SubView
     if e? and e.offsetX? and e.offsetY?
       x1 = e.offsetX
       y1 = e.offsetY
-      @img.css('left', (@frame.width()/2) - (x1))
-      @img.css('top', (@frame.height()/2) - (y1))
+      @img.css('left', (@wrapper.width()/2) - (x1))
+      @img.css('top', (@wrapper.height()/2) - (y1))
     else
-      @img.css('left', (@frame.width()/2))
-      @img.css('top', (@frame.height()/2))
+      @img.css('left', (@wrapper.width()/2))
+      @img.css('top', (@wrapper.height()/2))
 
     w1 = @img.width()
     h1 = @img.height()
@@ -271,27 +273,27 @@ module.exports = class Image extends SubView
     @_updateZoomer()
 
   _checkBounds: =>
-    if @img.outerWidth() <= @frame.outerWidth()
-      if @img.offset().left < @frame.offset().left
+    if @img.outerWidth() <= @wrapper.outerWidth()
+      if @img.offset().left < @wrapper.offset().left
         @img.css('left', 0)
-      if @img.offset().left + @img.outerWidth() > @frame.offset().left + @frame.outerWidth()
-        @img.css('left', @frame.outerWidth() - @img.outerWidth())
+      if @img.offset().left + @img.outerWidth() > @wrapper.offset().left + @wrapper.outerWidth()
+        @img.css('left', @wrapper.outerWidth() - @img.outerWidth())
     else
-      if @img.offset().left > @frame.offset().left
+      if @img.offset().left > @wrapper.offset().left
         @img.css('left', 0)
-      if @img.offset().left + @img.outerWidth() < @frame.offset().left + @frame.outerWidth()
-        @img.css('left', @frame.outerWidth() - @img.outerWidth())
+      if @img.offset().left + @img.outerWidth() < @wrapper.offset().left + @wrapper.outerWidth()
+        @img.css('left', @wrapper.outerWidth() - @img.outerWidth())
 
-    if @img.outerHeight() <= @frame.outerHeight()
-      if @img.offset().top < @frame.offset().top
+    if @img.outerHeight() <= @wrapper.outerHeight()
+      if @img.offset().top < @wrapper.offset().top
         @img.css('top', 0)
-      if @img.offset().top + @img.outerHeight() > @frame.offset().top + @frame.outerHeight()
-        @img.css('top', @frame.outerHeight() - @img.outerHeight())
+      if @img.offset().top + @img.outerHeight() > @wrapper.offset().top + @wrapper.outerHeight()
+        @img.css('top', @wrapper.outerHeight() - @img.outerHeight())
     else
-      if @img.offset().top > @frame.offset().top
+      if @img.offset().top > @wrapper.offset().top
         @img.css('top', 0)
-      if @img.offset().top + @img.outerHeight() < @frame.offset().top + @frame.outerHeight()
-        @img.css('top', @frame.outerHeight() - @img.outerHeight())
+      if @img.offset().top + @img.outerHeight() < @wrapper.offset().top + @wrapper.outerHeight()
+        @img.css('top', @wrapper.outerHeight() - @img.outerHeight())
 
   _mouseWheel: (e) =>
     @_zoom(e, e.deltaY)
@@ -314,18 +316,18 @@ module.exports = class Image extends SubView
   _fullScreen: (e) =>
     # TODO: Can we generalize this?
     # Custom title tags
-    if @frame.hasClass("fullscreen")
-      @frame.find(".toggles .toggle[data-value=fullscreen]").attr('title', 'Enter Fullscreen')
+    if @wrapper.hasClass("fullscreen")
+      @wrapper.find(".toggles .toggle[data-value=fullscreen]").attr('title', 'Enter Fullscreen').attr('data-state', 'off')
     else
-      @frame.find(".toggles .toggle[data-value=fullscreen]").attr('title', 'Exit Fullscreen')
+      @wrapper.find(".toggles .toggle[data-value=fullscreen]").attr('title', 'Exit Fullscreen').attr('data-state', 'on')
 
-    @frame.toggleClass("fullscreen")
-    @frame.find('div.exit').toggle()
+    @wrapper.toggleClass("fullscreen")
+    @wrapper.find('div.exit').toggle()
     @_fill()
     @_center()
 
   _exitFullScreen: (e) =>
-    @frame.removeClass("fullscreen")
-    @frame.find('div.exit').css('display', 'none')
+    @wrapper.removeClass("fullscreen")
+    @wrapper.find('div.exit').css('display', 'none')
     @_fill()
     @_center()

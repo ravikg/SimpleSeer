@@ -47,9 +47,9 @@
         height: 20px;
         float:right;
         cursor: pointer;
-        background-color: #414141;
+        background-color: #5a5a5a;
         color: #FFF;
-        font-size: 11px;
+        font-size: 12px;
         line-height: 23px;
         background-repeat: no-repeat;
         -webkit-border-radius: 2px;
@@ -69,15 +69,20 @@
         &[data-value=fullscreen] {
           min-width: 20px;
           background-image: url("/img/seer/Items_Fullscreen_Fullscreen.svg");
+
+          &[data-state=on] {
+            background-image: url("/img/seer/Items_Fullscreen_Exit.svg");
+          }
           
           div {
-            padding: 0px 5px 0px 20px;
+            font-size: 13px;
+            padding: 0px 5px 0px 23px;
             display: none;
           }
         }
 
         &:hover {
-          background-color: #383838;
+          background-color: #444;
         }
       }
     }

@@ -7,16 +7,9 @@
   position: absolute;
   z-index: 200;
   
-  background: #555555;
+  background: #333;
   border-bottom: 1px solid #2B2D2E;
   font-size: 13pt;
-  
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;  
 
   div.wrapper {
     position: absolute;
@@ -34,7 +27,7 @@
       float: left;
       margin: 6px 0px 4px 10px;
       padding-right: 10px;
-      border-right: 1px solid #414141;
+      border-right: 1px solid #5a5a5a;
     }
 
     div.key {
@@ -53,19 +46,22 @@
       font-family: "IntervalBold";
       margin-top: 3px;
       margin-bottom: 4px;
+      letter-spacing: 0.03em;
     }
 
     div.edit {
       display: inline-block;
       width: 20px;
       height: 20px;
+      background-color: #5a5a5a;
       background-image: url("/img/seer/Items_Edit_Dark.svg");
       cursor: pointer;
       background-repeat: no-repeat;
+      border-radius: 3px;
       margin: 14px 0px 10px 10px;
 
       &:hover {
-        background-image: url("/img/seer/Items_Edit_Dark_Hover.svg");
+        background-color: #222;
       }
     }
 

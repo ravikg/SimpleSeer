@@ -21,7 +21,7 @@ module.exports = class Filter extends SubView
     "click [data-action=clear]": "clearData"
 
   clearData: =>
-    @$("input[type=text]").val("")
+    @$("input[type=text]").val("").removeClass("unsaved")
     @$("[data-action=clear]").hide()
     @value = null
     @signalFilterRefresh()

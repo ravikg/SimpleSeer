@@ -26,8 +26,6 @@ module.exports = class Modal extends View
 
   getRenderData: =>
     return {opt: JSON.stringify({form: [
-      {field: "metadata.vin", type: "select", values: ["Nasty", "Awesome"], label: "Part Type"},
-      {field: "metadata.tpm", type: "text", value: "", label: "Part #"},
-      {field: "metadata.tpm", type: "text", value: "", label: "Lot #"},
-      {field: "metadata.tpm", type: "text", value: "", label: "Machine #"},
+      {field: "metadata.vin", type: "text", value: "", label: "VIN"},
+      {field: "metadata.tpm", type: "text", value: "", label: "TPM"},
     ]})}
