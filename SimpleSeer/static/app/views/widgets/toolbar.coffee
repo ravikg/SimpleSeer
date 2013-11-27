@@ -30,10 +30,10 @@ module.exports = class Toolbar extends View
     sv.render()
 
   afterRender: =>
-    @addItem("views/widgets/menuitem", {
+    ###@addItem("views/widgets/menuitem", {
       title: "",
       icon: "/img/seer/Header_Image_Settings.svg",
       onClick: => Application.pages.loadPageByName("settings")
-    })
+    })###
 
     @addItem("views/menus/user")
