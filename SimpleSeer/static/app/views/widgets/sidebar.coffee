@@ -14,6 +14,7 @@ module.exports = class SideBar extends SubView
   key: 'tpm'
 
   receive: (data) =>
+    console.log data
     @frames = data
     @render()
 
