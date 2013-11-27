@@ -5,8 +5,8 @@
 	 width="20px" height="20px" viewBox="0 0 20 20" enable-background="new 0 0 20 20" xml:space="preserve">
 <g>
 	<g>
-		<polygon fill="#8C8C8C" points="3.943,12.272 3.969,15.954 7.611,15.954 		"/>
-		<polygon fill="#8C8C8C" points="4.561,11.641 8.348,15.428 16.816,6.96 12.976,3.12 		"/>
+		<polygon fill="#CCCCCC" points="3.943,12.272 3.969,15.954 7.611,15.954 		"/>
+		<polygon fill="#CCCCCC" points="4.561,11.641 8.348,15.428 16.816,6.96 12.976,3.12 		"/>
 	</g>
 </g>
 </svg>
