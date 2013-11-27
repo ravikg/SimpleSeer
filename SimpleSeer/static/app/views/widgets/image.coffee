@@ -24,15 +24,13 @@ module.exports = class Image extends SubView
   initialize:(options) =>
     super(options)
     $(document).on 'mouseup', (e) =>
-
-      # Squash event memory leak for main image
-      if $._data(@img[0], "events").mouseup? and $._data(@img[0], "events").mouseup.length > 0
+      # Squash event memory leak for main Image
+      if $._data(@img[0], "events").mouseup? and $._data(@img[0], "events").mouseup.length > 1
         @img.off 'mouseup'
       if $._data(@img[0], "events").mousemove? and $._data(@img[0], "events").mousemove.length > 0
         @img.off 'mousemove'
-
       # Squash event memory leak for thumbnail image
-      if $._data(@region[0], "events").mouseup? and $._data(@region[0], "events").mouseup.length > 0
+      if $._data(@region[0], "events").mouseup? and $._data(@region[0], "events").mouseup.length > 1
         @region.off 'mouseup'
       if $._data(@region[0], "events").mousemove? and $._data(@region[0], "events").mousemove.length > 0
         @region.off 'mousemove'
@@ -218,6 +216,9 @@ module.exports = class Image extends SubView
     @img.css('top', it).css('left', il)
 
   _zoom: (e, delta=0, scale=0) =>
+    if e and e.type and e.type == "dblclick"
+      delta = 1
+
     @zoomed = true
     if e? and e.offsetX? and e.offsetY?
       x1 = e.offsetX
@@ -239,10 +240,9 @@ module.exports = class Image extends SubView
       if @scale > @maxScale
         @scale = @maxScale
     else
-      if @scale * 1.5 > @maxScale
+      @scale += @increment
+      if @scale > @maxScale
         @scale = @maxScale
-      else 
-        @scale *= 1.5
 
     if scale
       if scale > @maxScale
