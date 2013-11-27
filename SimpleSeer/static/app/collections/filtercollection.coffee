@@ -58,9 +58,8 @@ module.exports = class FilterCollection extends Collection
     @_sortParams = _.clone @_defaults
 
     super(models,params)
-
     if params?.viewid?
-      olap = require 'models/OLAP'
+      olap = require 'models/olap'
       @dataview = new olap({id:params.viewid})
       @dataview.fetch({async:false})
       params.url = "chart/data/#{@dataview.get('id')}"
@@ -236,8 +235,8 @@ module.exports = class FilterCollection extends Collection
 
   # trigger fired before the fetch method makes request to server
   preFetch:(params)=>
-    if params.modal and !@mute
-      Application.modal.show(params.modal)
+    #if params.modal and !@mute
+    #  Application.modal.show(params.modal)
     if !@clearOnFetch
       @_all = @models
     for o in @callbackStack['pre']
@@ -247,8 +246,8 @@ module.exports = class FilterCollection extends Collection
     return
 
   # trigger fired after the fetch method makes request to server
-  postFetch:()=>
-    Application.modal.clear()
+  postFetch:(fc,data)=>
+    #Application.modal.clear()
     if !@clearOnFetch
       if @getParam('sortorder') == -1
         at = 0
@@ -260,7 +259,7 @@ module.exports = class FilterCollection extends Collection
       @_all = []
     for o in @callbackStack['post']
       if typeof o == 'function'
-        o()
+        o(data)
     @callbackStack['post'] = []
     @trigger 'reset', @models
     return

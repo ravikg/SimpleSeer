@@ -1,7 +1,8 @@
-[ SubView, Template, Model ] = [
+[ SubView, Template, Model, FilterCollection ] = [
   require("views/subview"),
   require("./templates/frames"),
-  require("models/frame")
+  require("models/frame"),
+  require("collections/filtercollection")
 ]
 
 module.exports = class FramesView extends SubView
@@ -14,21 +15,23 @@ module.exports = class FramesView extends SubView
   key: 'tpm'
 
   initialize: (options) =>
-    @collection = new Backbone.Collection([], {model: Model})
-    @collection.url = "api/frame"
-    @collection.fetch({'success': @receive})
+    #@collection = new Backbone.Collection([], {model: Model})
+    @collection = new FilterCollection([], {model: Model,'viewid':'5089a6d31d41c855e4628fb0'})
+    #@collection.url = "api/frame"
+    @collection.on "reset", @receive
+    @collection.fetch()
     super(options)
 
   events: =>
     'click [data-widget=SideBar] .header': @_slide    
 
-  receive: (data) =>
+  receive: (models) =>
     @frames = []
-    if data.models
-      for model in data.models
-        if model.get('metadata')['type'] is @type
-          @frames.push(model)
-
+    for model in models
+      #console.log model.get('metadata')
+      if model.get('metadata')['type'] is @type
+        @frames.push(model)
+    #console.log @frames
     for o,i of @subviews
       if @subviews[o]?.receive?
         @subviews[o].receive(@frames)
