@@ -15,9 +15,7 @@ module.exports = class FramesView extends SubView
   key: 'tpm'
 
   initialize: (options) =>
-    #@collection = new Backbone.Collection([], {model: Model})
-    @collection = new FilterCollection([], {model: Model,'viewid':'5089a6d31d41c855e4628fb0'})
-    #@collection.url = "api/frame"
+    @collection = new FilterCollection([], {model: Model,'viewid':'All'})
     @collection.on "reset", @receive
     @collection.fetch()
     super(options)

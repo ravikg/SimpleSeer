@@ -275,7 +275,7 @@ def imgfile(frame_id):
     params = request.values.to_dict()
     frame = M.Frame.objects(id = bson.ObjectId(frame_id))
     if not frame or not frame[0].imgfile:
-        return "Image not found", 404
+        return "Image not found", {"response_code":404}
     frame = frame[0]
     resp = make_response(frame.imgfile.read(), 200)
     resp.headers['Content-Type'] = frame.imgfile.content_type

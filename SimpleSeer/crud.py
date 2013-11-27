@@ -68,18 +68,24 @@ class ModelHandler(object):
         self.route = route
         self.actions = actions
 
+    # get object by id or name
     def _get_object(self, id):
+        from mongoengine import ValidationError
         try:
             id = bson.ObjectId(id)
         except bson.errors.InvalidId:
-            raise exceptions.NotFound('Invalid ObjectId')
-        objs = self._cls.objects(id=id)
+            if getattr(self._cls, 'name', None):
+                objs = self._cls.objects(name=id)
+            else:
+                raise exceptions.NotFound('Invalid ObjectId')
+        else:
+            try:
+                objs = self._cls.objects(id=id)
+            except ValidationError:
+                raise exceptions.NotFound('Invalid ObjectId')
+
         if not objs:
             raise exceptions.NotFound('Object not found')
-        #import pdb; pdb.set_trace()
-        #print objs[0]
-
-
         return objs[0]
 
     def _get_body(self, body):
