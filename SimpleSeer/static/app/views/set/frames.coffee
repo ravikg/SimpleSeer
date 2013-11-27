@@ -64,7 +64,6 @@ module.exports = class FramesView extends SubView
   load: =>
     @skip += @limit
     @collection.setParam 'skip', @skip
-    #@collection.setParam 'clearOnFetch', @clearOnFetch
     @collection.fetch()
 
   events: =>
