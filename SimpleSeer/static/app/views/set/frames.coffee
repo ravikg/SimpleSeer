@@ -9,6 +9,9 @@ module.exports = class FramesView extends SubView
   template: Template
   frames: []
   selected: null
+  skip: 0
+  limit: 40
+  clearOnFetch: false
 
   # TODO: Put in YAML
   type: "Assembly"
@@ -17,15 +20,15 @@ module.exports = class FramesView extends SubView
   initialize: (options) =>
     @collection = new FilterCollection([], {model: Model,'viewid':'5089a6d31d41c855e4628fb0'})
     Application.subscribe 'frameupdate/', @update
+    @collection.setParam 'limit', @limit
     @collection.on "reset", @receive
     @collection.fetch()
     super(options)
 
   events: =>
-    'click [data-widget=SideBar] .header': @_slide    
+    'click [data-widget=SideBar] .header': @_slide
 
   receive: (models) =>
-    @frames = []
     for model in models
       if model.get('metadata')['type'] is @type
         @frames.push(model)
@@ -33,6 +36,9 @@ module.exports = class FramesView extends SubView
     for o,i of @subviews
       if @subviews[o]?.receive?
         @subviews[o].receive(@frames)
+
+      if models.length is 0
+        @subviews[o].full = true
 
     frame = @_getFrame(@frames)
     if frame
@@ -54,6 +60,12 @@ module.exports = class FramesView extends SubView
     frame = @_getFrame(@frames)
     if frame
       @$el.find('.spacer').attr('data-tolstate', frame.get('metadata').tolstate)
+
+  load: =>
+    @skip += @limit
+    @collection.setParam 'skip', @skip
+    #@collection.setParam 'clearOnFetch', @clearOnFetch
+    @collection.fetch()
 
   events: =>
     'click [data-widget=SideBar] .header': @_slide

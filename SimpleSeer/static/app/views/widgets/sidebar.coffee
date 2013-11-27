@@ -8,14 +8,21 @@ module.exports = class SideBar extends SubView
   template: Template
   frames: []
   selected: null
+  full: false
 
   # TODO: Put in YAML
   title: "ASSEMBLIES"
   key: 'tpm'
 
+  initialize: (options) =>
+    super(options)
+
   receive: (data) =>
     @frames = data
     @render()
+    if @scrollTop
+      @$el.find("div[data-scroll=infinite]").scrollTop(@scrollTop)
+      @scrollTop = 0
 
   update: (data) =>
     if data
@@ -56,11 +63,25 @@ module.exports = class SideBar extends SubView
     Application.router.setParam(@key, value)
     @options.parent.select(Application.router.query)
 
+  _scroll: (e) =>
+    if not @full
+      scrollHeight = e.target.scrollHeight
+      outerHeight = $(e.target).outerHeight()
+      scrollTop = e.target.scrollTop
+
+      if (scrollHeight - outerHeight) == scrollTop
+        if @options.parent.load?
+          @scrollTop = scrollTop
+          @options.parent.load()
+
   getRenderData: =>
     title: @title
     frames: @frames
 
   afterRender: =>
+    # TODO: Make this generalized
+    @$el.find("div[data-scroll=infinite]").off('scroll').on('scroll', @_scroll)
+
     if @selected
       @$el.find(".item.active").removeClass('active')
       @$el.find(".item[data-value=#{@selected}]:first").addClass('active')
@@ -68,3 +89,4 @@ module.exports = class SideBar extends SubView
       @$el.find(".item:first").addClass('active')
 
 
+ 
