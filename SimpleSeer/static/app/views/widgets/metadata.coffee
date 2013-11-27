@@ -32,8 +32,10 @@ module.exports = class MetaData extends SubView
 
   receive: (data) =>
     @frames = data
-    @frame = @_getFrame(@frames)
-    @render()
+    frame = @_getFrame(@frames)
+    if !@frame or @frame.get('id') != frame.get('id')
+      @frame = frame
+      @render()
 
   _getFrame: (frames) =>
     frame = null
