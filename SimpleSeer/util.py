@@ -82,10 +82,13 @@ def jsonify(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         obj = f(*args, **kwargs)
+        response_code = 200
         if obj is None:
             obj = {}
-            
-        resp = make_response(jsonencode(obj), 200)
+        elif type(obj) is int:
+            response_code = obj
+            obj = {"error":"object not found"}
+        resp = make_response(jsonencode(obj), response_code)
         resp.headers["Content-Type"] = 'application/json'
         return resp
     return decorated_function
