@@ -55,7 +55,7 @@ class SimpleSeerProjectTemplate(Template):
         tgt_public = (path(output_dir) / vars['package'] / 'static').abspath()
         # Ensure that brunch build has been run in the source
         with src_brunch:
-            print subprocess.check_output(['brunch', 'build'])
+            print subprocess.call(['brunch', 'build'])
 
         # Create package.json
         package = json.loads((src_brunch / 'package.json').text())
@@ -113,7 +113,7 @@ class SimpleSeerProjectTemplate(Template):
         if settings.in_cloud:
             cloud_brunch = path(pkg_resources.resource_filename('SeerCloud', 'static'))
             with cloud_brunch:
-                print subprocess.check_output(['brunch', 'build'])
+                print subprocess.call(['brunch', 'build'])
             overwrite(
                 cloud_brunch / 'public/javascripts/cloud.js',
                 tgt_brunch / 'vendor/javascripts/cloud.js')
@@ -140,7 +140,7 @@ class SimpleSeerProjectTemplate(Template):
 
         # Ensure that brunch build has been run in the target
         with tgt_brunch:
-            print subprocess.check_output(['brunch', 'build'])
+            print subprocess.call(['brunch', 'build'])
 
 
 def overwrite(src, dst):
