@@ -15,8 +15,8 @@ module.exports = class MetaData extends SubView
   # of this moving forward.
 
   # TODO: Put in YAML
-  key: 'tpm'
-  blacklist: ['tolstate', 'type']
+  key: 'id'
+  blacklist: ['tolstate', 'type', 'workorder']
 
   events: =>
     "click .notes .add": "toggleNotes"
@@ -37,12 +37,13 @@ module.exports = class MetaData extends SubView
       @frame = frame
       @render()
 
-  _getFrame: (frames) =>
+  _getFrame: (frames, i=null) =>
     frame = null
-    if @selected
+    if i != null
+      frame = frames[i]
+    else if @selected
       for o,i in frames
-        md = o.get('metadata')
-        if String(md[@key]) is String(@selected)
+        if o.get(@key) is String(@selected)
           frame = o
           break
     else

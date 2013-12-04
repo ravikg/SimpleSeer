@@ -1,6 +1,7 @@
-[ SubView, Template ] = [
+[ SubView, Template, Model ] = [
   require("views/subview"),
-  require("./templates/image")
+  require("./templates/image"),
+  require("models/frame")
 ]
 
 module.exports = class Image extends SubView
@@ -18,21 +19,23 @@ module.exports = class Image extends SubView
   frames: []
   frame: null
   ui: null
+  showMarkup: true
 
-  key: "tpm"
+  key: "id"
 
   initialize:(options) =>
     super(options)
     $(document).on 'mouseup', (e) =>
       # Squash event memory leak for main Image
-      if $._data(@img[0], "events").mouseup? and $._data(@img[0], "events").mouseup.length > 1
+      if $._data(@img[0], "events")?.mouseup? and $._data(@img[0], "events").mouseup.length > 1
         @img.off 'mouseup'
-      if $._data(@img[0], "events").mousemove? and $._data(@img[0], "events").mousemove.length > 0
+        @_markup()
+      if $._data(@img[0], "events")?.mousemove? and $._data(@img[0], "events").mousemove.length > 0
         @img.off 'mousemove'
       # Squash event memory leak for thumbnail image
-      if $._data(@region[0], "events").mouseup? and $._data(@region[0], "events").mouseup.length > 1
+      if $._data(@region[0], "events")?.mouseup? and $._data(@region[0], "events").mouseup.length > 1
         @region.off 'mouseup'
-      if $._data(@region[0], "events").mousemove? and $._data(@region[0], "events").mousemove.length > 0
+      if $._data(@region[0], "events")?.mousemove? and $._data(@region[0], "events").mousemove.length > 0
         @region.off 'mousemove'
       
 
@@ -61,6 +64,7 @@ module.exports = class Image extends SubView
       @thumbnail_image.load =>
         @_updateZoomer()
       @rendered = true
+      @_markup()
       @img.css('opacity', 1.0)
 
       if @ui
@@ -73,16 +77,26 @@ module.exports = class Image extends SubView
             e.y = @ui.image.y
           @_zoom(e, 0, parseFloat(@ui.image.scale))
 
-  _getFrame: (frames) =>
+  _getFrame: (frames, i=null) =>
     frame = null
-    if @selected
+    if i != null
+      frame = frames[i]
+    else if @selected
       for o,i in frames
-        md = o.get('metadata')
-        if String(md[@key]) is String(@selected)
+        if o.get(@key) is String(@selected)
           frame = o
           break
     else
       frame = frames[0]
+    
+    # If markup, lets get the feature data
+    if @showMarkup
+      if frame and frame.get?
+        f = new Model({id:frame.get('id')})
+        f.fetch({async:false})
+        frame = f
+        console.log "new frame", _.clone frame
+
     return frame
 
   receive: (data) =>
@@ -143,6 +157,7 @@ module.exports = class Image extends SubView
     @region = @$el.find('.region')
     @thumbnail = @$el.find('.thumbnail')
     @thumbnail_image = @$el.find('.thumbnail img')
+    @markup = @$el.find('.markup')
 
   _fill: =>
     if @wrapper.width() > @img.width()
@@ -169,11 +184,13 @@ module.exports = class Image extends SubView
 
     @scale = @img.width() / @width
     @fillScale = @scale
+    @_markup()
 
   _center: =>
     @img.css('position', 'absolute')
     @img.css('left', (@wrapper.width()/2) - (@img.width()/2))
     @img.css('top', (@wrapper.height()/2) - (@img.height()/2))
+    @_markup()
 
   _updateZoomer: =>
     img = @$el.find('.thumbnail img')
@@ -216,6 +233,7 @@ module.exports = class Image extends SubView
     it = (Math.abs(parseInt(rt)) / frame_height_scale * frame_to_thumb_height_scale) * -1
 
     @img.css('top', it).css('left', il)
+    @_markup()
 
   _zoom: (e, delta=0, scale=0) =>
     if e and e.type and e.type == "dblclick"
@@ -271,6 +289,7 @@ module.exports = class Image extends SubView
 
     @_checkBounds()
     @_updateZoomer()
+    @_markup()
 
   _checkBounds: =>
     if @img.outerWidth() <= @wrapper.outerWidth()
@@ -309,9 +328,11 @@ module.exports = class Image extends SubView
     if !state or state == "off"
       $(e.target).attr('title', 'Turn Markup Off')
       $(e.target).attr('data-state', 'on')
+      @$el.find('.markup').toggle()
     else
       $(e.target).attr('title', 'Turn Markup On')
       $(e.target).attr('data-state', 'off')
+      @$el.find('.markup').toggle()
 
   _fullScreen: (e) =>
     # TODO: Can we generalize this?
@@ -331,3 +352,27 @@ module.exports = class Image extends SubView
     @wrapper.find('div.exit').css('display', 'none')
     @_fill()
     @_center()
+
+  _markup: (e) =>
+    if @showMarkup
+      @markup.css('opacity', 0.0).css('display', 'block')
+      @markup.css('left', @img.css('left')).css('top', @img.css('top')).css('width', @img.outerWidth()).css('height', @img.outerHeight())
+
+      @markup.html('')
+      if @frame.get('features')
+        for featuretype, list of @frame.get('features')
+          for o,i in list
+            x = o.raw.x
+            y = o.raw.y
+            width = o.raw.width
+            height = o.raw.height
+            text = o.raw.featuredata.badge
+            @markup.append("<div class=\"feature\" data-x=\"#{x}\" data-y=\"#{y}\" data-width=\"#{width}\" data-height=\"#{height}\" data-status=\"unconfirmed\"><div class=\"text\" direction=\"s\">#{text}</div></div>")
+
+        @$(".feature").each (i, elem) =>
+          $(elem).css('left', parseInt($(elem).attr('data-x'), 10) * @scale).css('top', parseInt($(elem).attr('data-y'), 10) * @scale).css('width', parseInt($(elem).attr('data-width'), 10) * @scale).css('height', parseInt($(elem).attr('data-height'), 10) * @scale)
+
+
+      @markup.css('opacity', 1.0)
+    else
+      @markup.css('display', 'none')

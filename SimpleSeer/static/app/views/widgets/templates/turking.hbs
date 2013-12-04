@@ -1,0 +1,22 @@
+<div class="wrapper">
+  <div class="content">
+    {{#each features}}
+      <div class="feature">
+        <div class="text">
+            <span class="text">{{this.text}}</span> {{this.type}} is <span class="highlighted">highlighted</span>
+        </div>
+        <div class="confirmation">
+          <span>Is this correct?</span>
+          <span class="answer" data-value="yes" data-selected="true">
+            <input type="radio" class="option" id="feature-{{i}}-yes" name="feature-{{i}}" value="yes" checked="checked" />
+            <label>YES</label>
+          </span>
+          <span class="answer" data-value="no">
+            <input type="radio" class="option" id="feature-{{i}}-no" name="feature-{{i}}" value="no" />
+            <label>NO</label>
+          </span>
+        </div>
+      </div>
+    {{/each}}
+  </div>
+</div>

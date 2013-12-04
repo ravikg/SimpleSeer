@@ -99,7 +99,7 @@ class ModelHandler(object):
         except KeyError: # Good, then set a blank ID so our schema validator doesn't fail.
             body['id'] = None
             pass
-
+            
         try:
             values = self.schema.to_python(body, None) # Validate our dict
             try:

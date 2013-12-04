@@ -9,7 +9,7 @@ module.exports = class Frame extends Model
     if features and features.length
       for f in features
         name = f.featuretype.toLowerCase()
-        Plugin = require("plugins/feature/#{name}")
+        Plugin = require("plugins/features/#{name}")
         if !response.features[name]
           response.features[name] = []
         response.features[name].push(new Plugin(f))

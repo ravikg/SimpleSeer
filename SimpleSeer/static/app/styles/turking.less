@@ -1,0 +1,173 @@
+[data-widget=TurkingView] {
+  position: relative;
+  height: 100%;
+
+  & > .container {
+    position: absolute;
+    top: 0px;
+    bottom: 0px;
+    left: 0px;
+    width: 100%;
+    background: #FFF;
+  }
+
+  .content-wrapper {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    bottom: 50px;
+    background: #000;
+    right: 300px;
+  }
+
+  .spacer {
+    background: #808080;
+
+    &.Neutral, &[data-tolstate=Neutral] {
+      background: #005A82;      
+    }
+
+    &.Pass, &[data-tolstate=Pass] {
+      background: #78B33F;
+    }
+    &.Fail, &[data-tolstate=Fail] {
+      background: #C54739;
+    }
+
+
+    &.top {
+      height: 13px;
+      width: 100%;
+    }
+    &.bottom {
+      height: 64px;
+      width: 100%;
+      position: absolute;
+      bottom: 0px;
+      left: 0px;
+    }
+  }
+
+  [data-widget=Image] {
+    top: 47px;
+
+    &.fullscreen {
+      top: 0px;
+    }
+
+    .zoom {
+      display: none;
+    }
+  }
+
+  [data-widget=MetaData] {
+    div.wrapper {
+      div.edit {
+        display: none;
+      }
+      div.notes {
+        display: none;
+      }
+    }
+  }
+
+  [data-widget=Turking] {
+    width: 300px;
+    position: absolute;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    display: block;
+    border-left: 1px solid #333;
+    background: #FFF;
+    top: 0px;
+    right: 0px;
+    bottom: 115px;
+
+    div {
+      &.content {
+        padding: 10px;
+        z-index: 10;
+        background: #FFF;
+      }
+    }
+
+    .feature {
+      border: 1px solid #CCC;
+      border-radius: 5px;
+      margin: 0px 5px 10px;
+      color: #555;
+      font-weight: bold;
+
+      div.text {
+        padding: 5px;
+        margin: 10px 5px;
+
+        span.text {
+          background: #232323;
+          color: #FFF;
+          padding: 7px 6px 3px;
+        }
+
+        span.highlighted {
+          color: #222;
+          padding: 7px 6px 3px;
+          background: rgba(255,255,0,.5);
+        }
+      }
+      div.confirmation {
+        padding: 5px;
+        background: #EEE;
+        text-align: right;
+        font-size: 12px;
+
+        .answer {
+          display: inline-block;
+          height: 20px;
+          border-radius: 5px;
+          cursor: pointer;
+
+          label {
+            margin-right: 5px;
+            cursor: pointer;
+          }
+
+          &[data-selected=true] {
+            &[data-value=yes] {
+              background-color: #B6CC92;
+            }
+            &[data-value=no] {
+              background-color: #EAB4A9;
+            }
+          }
+
+          input[type=radio] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 14px;
+            border: 1px solid #999;
+            margin-bottom: -2px;
+            cursor: pointer;
+          }
+
+          &[data-value=yes] {
+            input[type=radio]:checked {
+              background-color: #69991D;
+              border: 1px solid transparent;
+            }
+          }
+
+          &[data-value=no] {
+            input[type=radio]:checked {
+              background-color: #C5473A;
+              border: 1px solid transparent;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
