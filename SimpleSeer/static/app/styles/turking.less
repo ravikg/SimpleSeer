@@ -92,6 +92,13 @@
       }
     }
 
+    .link {
+      color: #005A82;
+      font-size: 12px;
+      margin-left: 4px;
+      cursor: pointer;
+    }
+
     .feature {
       border: 1px solid #CCC;
       border-radius: 5px;
@@ -112,7 +119,7 @@
         span.highlighted {
           color: #222;
           padding: 7px 6px 3px;
-          background: rgba(255,255,0,.5);
+          background: #FFFCD5;
         }
       }
       div.confirmation {
@@ -130,14 +137,17 @@
           label {
             margin-right: 5px;
             cursor: pointer;
+            font-weight: bold;
           }
 
           &[data-selected=true] {
             &[data-value=yes] {
               background-color: #B6CC92;
+              color: #69991D;
             }
             &[data-value=no] {
               background-color: #EAB4A9;
+              color: #C5473A;
             }
           }
 
