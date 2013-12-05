@@ -1,9 +1,14 @@
 <div class="wrapper">
   <div class="content">
+    <div class="features">
     {{#each features}}
-      <div class="feature">
+      <div class="feature" data-text="{{this.text}}" data-type="{{this.type}}">
         <div class="text">
-            <span class="text">{{this.text}}</span> {{this.type}} is <span class="highlighted">highlighted</span>
+            {{#if this.empty}}
+              <span class="text">{{this.text}} {{this.type}}S</span> in this image
+            {{else}}
+              <span class="text">{{this.text}}</span> {{this.type}} is <span class="highlighted">highlighted</span>
+            {{/if}}
         </div>
         <div class="confirmation">
           <span>Is this correct?</span>
@@ -11,14 +16,24 @@
             <input type="radio" class="option" id="feature-{{i}}-yes" name="feature-{{i}}" value="yes" checked="checked" />
             <label>YES</label>
           </span>
-          <span class="answer" data-value="no">
+          <span class="answer" data-value="no" data-selected="false">
             <input type="radio" class="option" id="feature-{{i}}-no" name="feature-{{i}}" value="no" />
             <label>NO</label>
           </span>
         </div>
       </div>
     {{/each}}
+    </div>
     <div class="link add-feature">+ Add feature</div>
-    <div class="link add-comments">+ Add comments</div>
+    <div class="comments">
+      <div>Comments:</div>
+      <textarea></textarea>
+    </div>
+    <div class="buttons">
+      <div class="button" data-value="previous">&lt; Prev</div>
+      <div class="button" data-value="next">Next &gt;</div>
+    </div>
+    <!--<div class="link add-comments">+ Add comments</div>-->
+    
   </div>
 </div>

@@ -105,3 +105,7 @@ module.exports = class TurkingView extends SubView
     else
       frame = frames[0]
     return frame
+
+  _toggleFeature: (e) =>
+    if @subviews['template-turking']._toggleFeature?
+      @subviews['template-turking']._toggleFeature(e)

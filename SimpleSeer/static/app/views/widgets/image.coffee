@@ -25,6 +25,11 @@ module.exports = class Image extends SubView
 
   initialize:(options) =>
     super(options)
+
+    KeyboardJS.on('ctrl + m', @_markUp)
+    KeyboardJS.on('ctrl + shift + f', @_toggleFullScreen)
+    KeyboardJS.on('esc', @_exitFullScreen)
+
     $(document).on 'mouseup', (e) =>
       # Squash event memory leak for main Image
       if $._data(@img[0], "events")?.mouseup? and $._data(@img[0], "events").mouseup.length > 1
@@ -132,9 +137,7 @@ module.exports = class Image extends SubView
     'updateZoomer .overlay .region': '_updateImage'
     'click .toggle[data-value=markup]': '_markUp'
     'click .toggle[data-value=fullscreen]': '_fullScreen'
-
-  keyEvents: =>
-    {"esc": "_exitFullScreen"}
+    'click .feature .text': '_toggleFeature'
 
   reflow: =>
     if @visible()
@@ -334,6 +337,12 @@ module.exports = class Image extends SubView
       $(e.target).attr('data-state', 'off')
       @$el.find('.markup').toggle()
 
+  _toggleFullScreen: =>
+    if @wrapper.hasClass("fullscreen")
+      @_exitFullScreen()
+    else
+      @_fullScreen()
+
   _fullScreen: (e) =>
     # TODO: Can we generalize this?
     # Custom title tags
@@ -354,6 +363,8 @@ module.exports = class Image extends SubView
     @_center()
 
   _markup: (e) =>
+    # TODO MOVE THIS INTO THE MARK UP WIDGET
+    # HEY SILLY, START HERE!
     if @showMarkup
       @markup.css('opacity', 0.0).css('display', 'block')
       @markup.css('left', @img.css('left')).css('top', @img.css('top')).css('width', @img.outerWidth()).css('height', @img.outerHeight())
@@ -367,12 +378,17 @@ module.exports = class Image extends SubView
             width = o.raw.width
             height = o.raw.height
             text = o.raw.featuredata.badge
-            @markup.append("<div class=\"feature\" data-x=\"#{x}\" data-y=\"#{y}\" data-width=\"#{width}\" data-height=\"#{height}\" data-status=\"unconfirmed\"><div class=\"text\" direction=\"s\">#{text}</div></div>")
+            type = o.raw.featuretype
+            @markup.append("<div class=\"feature\" data-x=\"#{x}\" data-y=\"#{y}\" data-width=\"#{width}\" data-height=\"#{height}\" data-status=\"unconfirmed\"><div class=\"text\" direction=\"s\" data-text=\"#{text}\" data-type=\"#{type}\">#{text}</div></div>")
 
         @$(".feature").each (i, elem) =>
           $(elem).css('left', parseInt($(elem).attr('data-x'), 10) * @scale).css('top', parseInt($(elem).attr('data-y'), 10) * @scale).css('width', parseInt($(elem).attr('data-width'), 10) * @scale).css('height', parseInt($(elem).attr('data-height'), 10) * @scale)
 
-
       @markup.css('opacity', 1.0)
     else
       @markup.css('display', 'none')
+
+  _toggleFeature: (e) =>
+    $(e.currentTarget).closest(".feature").toggleClass('opaque')
+    if @options.parent._toggleFeature?
+      @options.parent._toggleFeature(e)
